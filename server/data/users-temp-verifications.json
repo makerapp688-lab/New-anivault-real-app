@@ -1,0 +1,13 @@
+{
+  "shared_fan_1790136259911@example.com": {
+    "email": "shared_fan_1790136259911@example.com",
+    "username": "UserAlpha_9911",
+    "passwordHash": "b4d544545b169eae723df7e2ac56c3fe145d5467a690937210aceb59612c819e0515c3387e9fc5b5dab09e6b26709fe609df32efa8c9315bc6d93fd54d9e8831",
+    "salt": "78d4101744b7306a438c6cf0fb6b1be9",
+    "codeHash": "4482a5a365204710daaaf209d2c284cb07a4ab54ccdb2e17824567dfa211af47",
+    "expiresAt": 1790136860018,
+    "attempts": 1,
+    "resendCount": 1,
+    "lastResendAt": 1790136260018
+  }
+}

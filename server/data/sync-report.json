@@ -1,0 +1,29 @@
+{
+  "totalScraped": 571,
+  "totalAnime": 571,
+  "totalSeasons": 547,
+  "totalEpisodes": 10831,
+  "moviesCount": 179,
+  "qualifyingMoviesCount": 126,
+  "seriesCount": 392,
+  "genreCounts": {
+    "Action": 291,
+    "Adventure": 210,
+    "Fantasy": 185,
+    "Isekai": 70,
+    "Romance": 119,
+    "Comedy": 237,
+    "Drama": 273,
+    "Mystery": 107,
+    "Sci-Fi": 156,
+    "Horror": 62,
+    "Supernatural": 174,
+    "Sports": 54,
+    "Psychological": 115,
+    "Slice of Life": 120,
+    "Thriller": 137,
+    "Historical": 57,
+    "School": 273
+  },
+  "lastVerifiedAt": "2026-09-20T15:04:16.105Z"
+}
