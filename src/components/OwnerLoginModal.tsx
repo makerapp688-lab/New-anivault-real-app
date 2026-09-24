@@ -8,8 +8,6 @@ interface OwnerLoginModalProps {
   onLoginSuccess: (owner: { email: string; username: string; role: string }) => void;
 }
 
-const AUTHORIZED_OWNER_EMAIL = 'makerapp688@gmail.com';
-
 export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [ownerExists, setOwnerExists] = useState<boolean | null>(null);
   const [mode, setMode] = useState<'login' | 'setup_init' | 'setup_verify'>('login');
@@ -72,7 +70,14 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password })
       });
-      const data = await res.json();
+      let data: any = {};
+      let responseText = '';
+      try {
+        responseText = await res.text();
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = { error: responseText || `HTTP Error ${res.status}: ${res.statusText}` };
+      }
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
@@ -107,11 +112,6 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
       return;
     }
 
-    if (cleanEmail !== AUTHORIZED_OWNER_EMAIL) {
-      setError('Not authorized for Owner account.');
-      return;
-    }
-
     // 2. Username validation
     const cleanUsername = (username || '').trim();
     if (!cleanUsername) {
@@ -138,10 +138,12 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
       });
 
       let data: any = {};
+      let responseText = '';
       try {
-        data = await res.json();
+        responseText = await res.text();
+        data = responseText ? JSON.parse(responseText) : {};
       } catch {
-        data = { error: 'Email verification is currently unavailable. Please try logging in if your account already exists.' };
+        data = { error: responseText || `HTTP Error ${res.status}: ${res.statusText}` };
       }
 
       if (!res.ok) {
@@ -248,7 +250,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black tracking-tight text-white uppercase">AniVault Owner</h2>
+                <h2 className="text-base font-black tracking-tight text-white uppercase">Anivex Owner</h2>
                 <span className="text-[10px] font-mono font-bold text-amber-400 border border-amber-400/60 bg-amber-500/15 px-1.5 py-0.5 rounded">
                   &#123;owner&#125;
                 </span>
@@ -338,7 +340,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="owner@anivault.app"
+                  placeholder="owner@anivex.app"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                 />
               </div>
@@ -392,7 +394,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
                   <span>Permanent Owner Account Already Exists</span>
                 </div>
                 <p className="text-[11px] text-amber-300/80 leading-relaxed">
-                  AniVault enforces exactly ONE permanent Owner account. The permanent Owner account has already been initialized. Please use <strong>Login Account</strong> to sign in.
+                  Anivex enforces exactly ONE permanent Owner account. The permanent Owner account has already been initialized. Please use <strong>Login Account</strong> to sign in.
                 </p>
                 <div className="pt-2">
                   <button
@@ -411,7 +413,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
             ) : (
               <form noValidate onSubmit={handleSetupInit} className="space-y-4">
                 <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-[11px] text-amber-300 leading-relaxed">
-                  <strong>First-Time Setup:</strong> AniVault supports exactly ONE permanent Owner account. A verification code will be emailed to complete setup.
+                  <strong>First-Time Setup:</strong> Anivex supports exactly ONE permanent Owner account. A verification code will be emailed to complete setup.
                 </div>
 
                 <div className="space-y-1.5">
@@ -426,7 +428,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
                         setEmail(e.target.value);
                         if (error) setError(null);
                       }}
-                      placeholder="owner@anivault.app"
+                      placeholder="owner@anivex.app"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                     />
                   </div>
@@ -441,7 +443,7 @@ export const OwnerLoginModal: React.FC<OwnerLoginModalProps> = ({ isOpen, onClos
                       required
                       value={username}
                       onChange={e => setUsername(e.target.value)}
-                      placeholder="e.g. AniVaultOwner"
+                      placeholder="e.g. AnivexOwner"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                     />
                   </div>

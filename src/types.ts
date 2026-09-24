@@ -6,6 +6,8 @@ export interface Artwork {
   isVerified: boolean;
   verificationSource: string;
   aspectRatio: string;
+  verificationStatus?: string;
+  originalArtworkUrl?: string;
 }
 
 export interface RareToonProviderInfo {
@@ -92,11 +94,11 @@ export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface UserAccount {
   id: string;
-  username: string; // Chosen AniVault username
-  name: string;     // Provider account identity (e.g. Apple ID Name, Google account)
+  username: string; // Chosen Anivex username
+  name: string;     // Display identity name
   email?: string;
   avatar?: string;
-  provider: 'guest' | 'google' | 'apple' | 'email';
+  provider: 'guest' | 'email';
   role?: 'user' | 'owner';
   createdAt: string;
 }

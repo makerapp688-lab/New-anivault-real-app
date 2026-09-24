@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Runtime session, ephemeral token, and state caches
+server/data/owner-sessions.json
+server/data/users-sessions.json
+server/data/users-temp-verifications.json
+server/data/oauth-states.json
+server/data/owner-setup-temp.json
+server/data/owner-email-change-temp.json

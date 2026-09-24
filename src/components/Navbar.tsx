@@ -11,7 +11,7 @@ import {
 import { RARETOON_BASE_URL, RARETOON_PROVIDER_NAME } from '../utils/provider.ts';
 import { useUserData } from '../hooks/useUserData.ts';
 import { getAccountAvatar } from '../utils/userStorage.ts';
-import { AniVaultLogo } from './AniVaultLogo.tsx';
+import { AnivexLogo } from './AnivexLogo.tsx';
 
 export type NavTabType = 'browse' | 'mylist' | 'completed' | 'compare' | 'account' | 'watchlist' | 'favorites';
 
@@ -40,11 +40,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => setActiveTab('browse')}
           id="nav-logo-group"
         >
-          <AniVaultLogo size="md" />
+          <AnivexLogo size="md" />
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl font-black text-white dark:text-white light:text-slate-900 tracking-tight font-display">
-                Ani<span className="text-rose-500">Vault</span>
+                Ani<span className="text-rose-500">vex</span>
               </span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/40">
                 CATALOGUE
@@ -176,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="nav-btn-stats"
             onClick={onOpenStats}
             className="h-9 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 light:bg-slate-100 light:hover:bg-slate-200 border border-slate-800 dark:border-slate-800 light:border-slate-300 flex items-center gap-2 text-xs font-semibold text-slate-200 dark:text-slate-200 light:text-slate-800 hover:text-white transition-colors shadow-sm"
-            title="Open AniVault Production Catalogue Report"
+            title="Open Anivex Production Catalogue Report"
           >
             <Database className="w-4 h-4 text-rose-500" />
             <span className="hidden sm:inline">Production Catalogue</span>

@@ -91,7 +91,7 @@ export const AnimeDetailsModal: React.FC<AnimeDetailsModalProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 dark:text-slate-300 light:text-slate-700">
-              AniVault Anime Details
+              Anivex Anime Details
             </span>
           </div>
           <div className="flex items-center gap-2">

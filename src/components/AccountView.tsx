@@ -44,8 +44,8 @@ import {
   switchActiveAccount,
   getAccountAvatar
 } from '../utils/userStorage.ts';
-import { ThemeMode } from '../types.ts';
-import { AniVaultLogo } from './AniVaultLogo.tsx';
+import { ThemeMode, UserAccount } from '../types.ts';
+import { AnivexLogo } from './AnivexLogo.tsx';
 import { OwnerLoginModal } from './OwnerLoginModal.tsx';
 import { OwnerDashboardModal } from './OwnerDashboardModal.tsx';
 import { AccountSwitcherModal } from './AccountSwitcherModal.tsx';
@@ -83,19 +83,20 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
   const [ownerSession, setOwnerSession] = useState<{ authenticated: boolean; owner?: { email: string; username: string; role: string } } | null>(null);
   const [isOwnerLoginOpen, setIsOwnerLoginOpen] = useState(false);
   const [isOwnerDashboardOpen, setIsOwnerDashboardOpen] = useState(false);
+  const [ownerDashboardTab, setOwnerDashboardTab] = useState<string>('overview');
 
   // Bug Report System State
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const [isOwnerBugReportsOpen, setIsOwnerBugReportsOpen] = useState(false);
   const [newBugCount, setNewBugCount] = useState<number>(0);
 
-  const isOwner = account.role === 'owner' || account.id === 'usr_owner' || Boolean(ownerSession?.authenticated);
-  const ownerUsername = account.role === 'owner' ? account.username : ownerSession?.owner?.username || 'Owner';
+  const isOwner = account.role === 'owner' || account.id === 'usr_owner';
+  const ownerUsername = isOwner ? (account.username || ownerSession?.owner?.username || 'Owner') : '';
   const currentAvatarUrl = isOwner ? getAccountAvatar('usr_owner') : (isGuest || account.id === 'guest_user' ? null : getAccountAvatar(account.id));
 
   useEffect(() => {
     checkOwnerSession();
-  }, []);
+  }, [account.id, account.role]);
 
   useEffect(() => {
     if (isOwner) {
@@ -118,9 +119,11 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
     }
   };
 
-  const checkOwnerSession = async () => {
+  const checkOwnerSession = async (overrideAcc?: UserAccount) => {
     try {
-      const token = localStorage.getItem('anivault_owner_session_token');
+      const activeAcc = overrideAcc || account;
+      const isAccOwner = activeAcc.role === 'owner' || activeAcc.id === 'usr_owner';
+      const token = isAccOwner ? localStorage.getItem('anivault_owner_session_token') : null;
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -149,6 +152,11 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
     } catch (err) {
       console.error('Failed to log out owner', err);
     }
+  };
+
+  const openOwnerDashboardTab = (tab: string) => {
+    setOwnerDashboardTab(tab);
+    setIsOwnerDashboardOpen(true);
   };
 
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -210,10 +218,10 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             Account &amp; Preferences
           </h1>
           <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 mt-1">
-            Manage your AniVault profile, customization settings, and account session
+            Manage your Anivex profile, customization settings, and account session
           </p>
         </div>
-        <AniVaultLogo size="lg" className="hidden sm:inline-flex" />
+        <AnivexLogo size="lg" className="hidden sm:inline-flex" />
       </div>
 
       {/* 2. Profile Overview Card */}
@@ -309,16 +317,12 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                     isOwner
                       ? 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
-                      : account.provider === 'apple'
-                      ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
-                      : account.provider === 'google'
-                      ? 'bg-blue-950/80 text-blue-300 border border-blue-700/50'
                       : isGuest
                       ? 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
                       : 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
                   }`}
                 >
-                  {isOwner ? 'Owner' : account.provider === 'apple' ? 'Apple ID' : account.provider === 'google' ? 'Google Account' : isGuest ? 'Guest' : 'Verified Account'}
+                  {isOwner ? 'Owner' : isGuest ? 'Guest' : 'Verified Account'}
                 </span>
 
                 <span className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 truncate max-w-[200px] sm:max-w-xs font-mono">
@@ -375,7 +379,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
               Change Display Username
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-relaxed">
-              This username is shown across your AniVault browsing session.
+              This username is shown across your Anivex browsing session.
             </p>
             <div className="flex gap-2 max-w-md">
               <input
@@ -383,7 +387,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 id="input-account-username"
                 value={usernameInput}
                 onChange={e => setUsernameInput(e.target.value)}
-                placeholder="Enter AniVault username"
+                placeholder="Enter Anivex username"
                 className="flex-1 px-3 py-2 rounded-xl bg-slate-950 dark:bg-slate-950 light:bg-white border border-slate-700 dark:border-slate-700 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-rose-500"
                 required
               />
@@ -471,7 +475,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               type="button"
-              onClick={() => setIsOwnerDashboardOpen(true)}
+              onClick={() => openOwnerDashboardTab('overview')}
               className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-500 text-left transition-all group cursor-pointer shadow-sm"
             >
               <div className="flex items-center gap-3">
@@ -489,7 +493,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             <button
               type="button"
               id="btn-owner-bug-reports"
-              onClick={() => setIsOwnerBugReportsOpen(true)}
+              onClick={() => openOwnerDashboardTab('bugs')}
               className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/50 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm relative overflow-hidden"
             >
               <div className="flex items-center gap-3">
@@ -510,85 +514,133 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
               </div>
             </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400">
-                <Database className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('catalogue')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 group-hover:scale-110 transition-transform">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Catalogue Management</div>
+                  <div className="text-[11px] text-slate-400">Protected administrative view</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Catalogue Management</div>
-                <div className="text-[11px] text-slate-400">Protected administrative view</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-pink-500/10 text-pink-400">
-                <ImageIcon className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('artwork')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-pink-500/10 text-pink-400 group-hover:scale-110 transition-transform">
+                  <ImageIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Artwork Management</div>
+                  <div className="text-[11px] text-slate-400">Posters &amp; asset registry</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Artwork Management</div>
-                <div className="text-[11px] text-slate-400">Posters &amp; asset registry</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400">
-                <RefreshCw className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('overview')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Catalogue Sync</div>
+                  <div className="text-[11px] text-slate-400">RareToon India ingestion</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Catalogue Sync</div>
-                <div className="text-[11px] text-slate-400">RareToon India ingestion</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-yellow-500/10 text-yellow-400">
-                <FolderSync className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('overview')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-yellow-500/10 text-yellow-400 group-hover:scale-110 transition-transform">
+                  <FolderSync className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Full Catalogue Import</div>
+                  <div className="text-[11px] text-slate-400">Batch pipeline control</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Full Catalogue Import</div>
-                <div className="text-[11px] text-slate-400">Batch pipeline control</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400">
-                <Users className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('users')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">User Management</div>
+                  <div className="text-[11px] text-slate-400">Roles &amp; access control</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">User Management</div>
-                <div className="text-[11px] text-slate-400">Roles &amp; access control</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
-                <Settings className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('settings')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">System Settings</div>
+                  <div className="text-[11px] text-slate-400">Environment &amp; runtime</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">System Settings</div>
-                <div className="text-[11px] text-slate-400">Environment &amp; runtime</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400">
-                <Lock className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('settings')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Security Settings</div>
+                  <div className="text-[11px] text-slate-400">Auth &amp; rate limits</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Security Settings</div>
-                <div className="text-[11px] text-slate-400">Auth &amp; rate limits</div>
-              </div>
-            </div>
+            </button>
 
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left flex items-center gap-3 opacity-90">
-              <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400">
-                <Activity className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => openOwnerDashboardTab('audit')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Audit Logs</div>
+                  <div className="text-[11px] text-slate-400">Telemetry &amp; access trail</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">Audit Logs</div>
-                <div className="text-[11px] text-slate-400">Telemetry &amp; access trail</div>
-              </div>
-            </div>
+            </button>
           </div>
 
           {/* Normal Account Access for Owner (Requirement 7 & 8) */}
@@ -603,7 +655,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                     Create Account / Log In
                   </h4>
                   <p className="text-[11px] text-slate-400">
-                    Manage access to AniVault user accounts on this device
+                    Manage access to Anivex user accounts on this device
                   </p>
                 </div>
               </div>
@@ -770,7 +822,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 <span>Owner Session Active</span>
               </div>
               <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600">
-                Ending your Owner session returns AniVault to guest mode on this device.
+                Ending your Owner session returns Anivex to guest mode on this device.
               </p>
             </div>
 
@@ -924,7 +976,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Download the complete AniVault project codebase to test or run locally.
+                Download the complete Anivex project codebase to test or run locally.
               </p>
             </div>
 
@@ -933,26 +985,23 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
               onClick={async () => {
                 try {
                   const ownerToken = localStorage.getItem('anivault_owner_session_token');
-                  const headers: Record<string, string> = {};
-                  if (ownerToken) {
-                    headers['Authorization'] = `Bearer ${ownerToken}`;
-                    headers['x-anivault-owner-session'] = ownerToken;
+                  if (!ownerToken) {
+                    alert('You must be logged in as the verified Owner to download the source code.');
+                    return;
                   }
-                  const res = await fetch('/api/download-source', { headers });
+                  const headers: Record<string, string> = {
+                    'Authorization': `Bearer ${ownerToken}`,
+                    'x-anivault-owner-session': ownerToken
+                  };
+                  // Pre-flight check to show clean user-facing errors on missing files or permissions
+                  const res = await fetch('/api/download-source?check=true', { headers });
                   if (!res.ok) {
                     const err = await res.json().catch(() => ({ error: 'Download failed' }));
                     alert(err.error || 'Failed to download source archive.');
                     return;
                   }
-                  const blob = await res.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'anivault-source-code.tar.gz';
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
+                  // Direct native device-compatible download navigation
+                  window.location.href = `/api/download-source?token=${encodeURIComponent(ownerToken)}`;
                 } catch {
                   alert('An error occurred while downloading source code.');
                 }
@@ -1003,7 +1052,13 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         }}
         onOpenOwnerLogin={() => setIsOwnerLoginOpen(true)}
         onAccountSwitched={(switchedAcc) => {
-          checkOwnerSession();
+          const isSwitchedOwner = switchedAcc.role === 'owner' || switchedAcc.id === 'usr_owner';
+          if (!isSwitchedOwner) {
+            setOwnerSession({ authenticated: false });
+            setIsOwnerDashboardOpen(false);
+            setIsOwnerBugReportsOpen(false);
+          }
+          checkOwnerSession(switchedAcc);
           setUsernameInput(switchedAcc.username || 'AnimeExplorer');
         }}
       />
@@ -1044,6 +1099,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
           setShowAuthModal(true);
         }}
         onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
+        initialTab={ownerDashboardTab}
       />
 
       {/* Profile Photo Modal (Normal Users + Owner) */}

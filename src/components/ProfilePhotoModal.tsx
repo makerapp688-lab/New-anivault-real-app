@@ -53,10 +53,10 @@ export const ProfilePhotoModal: React.FC<ProfilePhotoModalProps> = ({
       return;
     }
 
-    // 2. File size validation (max 5 MB)
-    const MAX_SIZE = 5 * 1024 * 1024;
+    // 2. File size validation (max 20 MB)
+    const MAX_SIZE = 20 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      setErrorMsg('Image size exceeds 5MB limit. Please choose a smaller photo.');
+      setErrorMsg('Image size exceeds 20MB limit. Please choose a smaller photo.');
       return;
     }
 
@@ -89,8 +89,8 @@ export const ProfilePhotoModal: React.FC<ProfilePhotoModalProps> = ({
           const sx = (img.width - minDim) / 2;
           const sy = (img.height - minDim) / 2;
 
-          // Target dimension: 320x320 for crisp avatar rendering at minimal storage
-          const targetDim = 320;
+          // Target dimension: dynamically scale down to a maximum of 1024x1024 to preserve high-fidelity detail
+          const targetDim = Math.min(minDim, 1024);
           const canvas = document.createElement('canvas');
           canvas.width = targetDim;
           canvas.height = targetDim;
@@ -265,7 +265,7 @@ export const ProfilePhotoModal: React.FC<ProfilePhotoModalProps> = ({
             )}
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-500 mt-2">
-            Max 5MB (JPEG, PNG, WebP)
+            Max 20MB (JPEG, PNG, WebP)
           </p>
         </div>
 

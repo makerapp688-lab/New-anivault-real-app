@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { validateOwnerSession } from './owner-auth.js';
+import { logAdminAction } from './audit-logger.js';
 
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
 const BUG_REPORTS_PATH = path.join(DATA_DIR, 'bug-reports.json');
@@ -296,6 +297,15 @@ export function createBugReportsRouter(): Router {
 
       reports[reportIndex] = report;
       saveBugReports(reports);
+
+      const operatorEmail = (req as any).owner?.email || 'makerapp688@gmail.com';
+      logAdminAction(
+        `Update Bug Report: "${id}"`,
+        operatorEmail,
+        'success',
+        id,
+        `Status updated to "${report.status}". notes size: ${report.internalNotes?.length || 0} chars`
+      );
 
       res.json({
         success: true,

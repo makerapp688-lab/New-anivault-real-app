@@ -1,43 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Shield,
-  User,
   Mail,
   Lock,
-  ArrowRight,
-  CheckCircle2,
+  User,
   AlertCircle,
+  CheckCircle2,
   FolderSync,
   Heart,
   Bookmark,
   Check,
+  LogOut,
   Edit2,
   Users,
-  LogOut,
-  Loader2,
+  Shield,
   KeyRound,
-  RotateCcw,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2,
+  ArrowRight
 } from 'lucide-react';
-import { UserAccount } from '../types.ts';
-import { AniVaultLogo } from './AniVaultLogo.tsx';
-import { OtpInput } from './OtpInput.tsx';
 import {
   getCurrentAccount,
-  logoutToGuest,
-  logoutFromServer,
-  setSessionAccount,
-  updateUsername,
+  getUserData,
+  getGuestData,
   hasGuestDataToMigrate,
   migrateGuestDataToAccount,
-  getGuestData,
-  getUserData,
   getSavedAccounts,
+  updateUsername,
+  setSessionAccount,
+  logoutFromServer,
   switchAccount,
   getAccountAvatar
 } from '../utils/userStorage.ts';
+import { UserAccount } from '../types.ts';
+import { AnivexLogo } from './AnivexLogo.tsx';
+import { OtpInput } from './OtpInput.tsx';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -49,8 +47,6 @@ interface AuthModalProps {
 
 interface ProviderStatus {
   email: { configured: boolean; missing: string[] };
-  google: { configured: boolean; missing: string[] };
-  apple: { configured: boolean; missing: string[] };
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -89,7 +85,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
-  const [configNotice, setConfigNotice] = useState<{ provider: 'google' | 'apple' | 'email'; message: string } | null>(null);
   const [showMigratePrompt, setShowMigratePrompt] = useState(false);
   const [pendingAccount, setPendingAccount] = useState<UserAccount | null>(null);
   const [migrationStats, setMigrationStats] = useState<{
@@ -168,7 +163,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isOpen) {
       fetchAuthStatus();
       setAuthError(null);
-      setConfigNotice(null);
       setAuthSuccess(null);
       setRegisterStep('form');
       setVerificationCode('');
@@ -183,42 +177,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     }
   }, [isOpen, initialMode, initialView]);
-
-  // Listen for OAuth postMessage callbacks from Google / Apple popups
-  useEffect(() => {
-    const handleOAuthMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-
-      if (event.data?.type === 'ANIVAULT_OAUTH_SUCCESS') {
-        const user = event.data.user;
-        const sessionToken = event.data.sessionToken;
-        if (user) {
-          const acc: UserAccount = {
-            id: user.id,
-            username: user.username,
-            name: user.name || user.username,
-            email: user.email,
-            provider: user.provider,
-            createdAt: user.createdAt
-          };
-          setSessionAccount(acc, sessionToken);
-
-          if (canMigrate) {
-            setPendingAccount(acc);
-            setShowMigratePrompt(true);
-          } else {
-            onAccountChanged?.();
-            onClose();
-          }
-        }
-      } else if (event.data?.type === 'ANIVAULT_OAUTH_ERROR') {
-        setAuthError(event.data.error || 'OAuth authentication failed.');
-      }
-    };
-
-    window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
-  }, [canMigrate, onAccountChanged, onClose]);
 
   const fetchAuthStatus = async () => {
     try {
@@ -277,7 +235,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleEmailAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    setConfigNotice(null);
     setAuthSuccess(null);
 
     const cleanEmail = emailInput.trim().toLowerCase();
@@ -449,44 +406,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // Trigger real OAuth flow via server popup
-  const handleRealOAuthAttempt = async (provider: 'google' | 'apple') => {
-    setAuthError(null);
-    setConfigNotice(null);
-
-    try {
-      const origin = window.location.origin;
-      const res = await fetch(`/api/auth/${provider}/url?origin=${encodeURIComponent(origin)}`);
-      const data = await res.json();
-
-      if (!res.ok || !data.configured) {
-        setConfigNotice({
-          provider,
-          message: data.message || `${provider === 'google' ? 'Google' : 'Apple'} authentication requires environment configuration.`
-        });
-        return;
-      }
-
-      // Open OAuth popup window
-      const width = 520;
-      const height = 640;
-      const left = Math.max(0, Math.floor(window.screenX + (window.outerWidth - width) / 2));
-      const top = Math.max(0, Math.floor(window.screenY + (window.outerHeight - height) / 2));
-      
-      const popup = window.open(
-        data.url,
-        `anivault_${provider}_oauth`,
-        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=no`
-      );
-
-      if (!popup) {
-        setAuthError('Popup was blocked by your browser. Please allow popups for AniVault to authenticate.');
-      }
-    } catch (err: any) {
-      setAuthError(err.message || `Failed to initiate ${provider} sign in.`);
-    }
-  };
-
   const confirmMigration = (doMigrate: boolean) => {
     if (!pendingAccount) return;
 
@@ -526,9 +445,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 bg-slate-950/90 dark:bg-slate-950/90 light:bg-slate-100 border-b border-slate-800 dark:border-slate-800 light:border-slate-200">
           <div className="flex items-center gap-2.5">
-            <AniVaultLogo size="xs" />
+            <AnivexLogo size="xs" />
             <h2 className="text-base font-bold text-white dark:text-white light:text-slate-900">
-              AniVault Account &amp; Profile
+              Anivex Account &amp; Profile
             </h2>
           </div>
           <button
@@ -580,27 +499,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </button>
                   </div>
                   <div className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">
-                    {isGuest ? 'Guest Session' : `${currentAccount.name} (${currentAccount.email})`}
+                    {isGuest ? 'Guest Session' : `${currentAccount.name} (${currentAccount.email || 'Verified Account'})`}
                   </div>
                 </div>
               </div>
 
               <span
                 className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  currentAccount.provider === 'apple'
-                    ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
-                    : currentAccount.provider === 'google'
-                    ? 'bg-blue-950/80 text-blue-300 border border-blue-700/50'
+                  currentAccount.role === 'owner'
+                    ? 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
                     : isGuest
                     ? 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
                     : 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
                 }`}
               >
-                {currentAccount.provider === 'apple'
-                  ? 'Apple ID'
-                  : currentAccount.provider === 'google'
-                  ? 'Google'
-                  : currentAccount.provider}
+                {currentAccount.role === 'owner'
+                  ? 'Owner'
+                  : isGuest
+                  ? 'Guest'
+                  : 'Verified'}
               </span>
             </div>
 
@@ -736,7 +653,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         setAuthMode('register');
                         setAuthError(null);
                         setAuthSuccess(null);
-                        setConfigNotice(null);
                       }}
                       className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                         authMode === 'register'
@@ -752,7 +668,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         setAuthMode('login');
                         setAuthError(null);
                         setAuthSuccess(null);
-                        setConfigNotice(null);
                       }}
                       className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                         authMode === 'login'
@@ -764,171 +679,171 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </button>
                   </div>
 
-                    {/* EMAIL FORM */}
-                    <form noValidate onSubmit={handleEmailAuthSubmit} className="space-y-3">
-                      {authMode === 'register' && (
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600">
-                              AniVault Display Username
-                            </label>
+                  {/* EMAIL FORM */}
+                  <form noValidate onSubmit={handleEmailAuthSubmit} className="space-y-3">
+                    {authMode === 'register' && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600">
+                            Anivex Display Username
+                          </label>
+                          {usernameStatus === 'checking' && (
+                            <span className="text-[10px] text-amber-400 flex items-center gap-1 font-medium">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Checking database...</span>
+                            </span>
+                          )}
+                          {usernameStatus === 'available' && (
+                            <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <span>Username available</span>
+                            </span>
+                          )}
+                          {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
+                            <span className="text-[10px] text-rose-400 flex items-center gap-1 font-semibold">
+                              <AlertCircle className="w-3 h-3 text-rose-400" />
+                              <span>{usernameMessage || 'Unavailable'}</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                          <input
+                            type="text"
+                            id="input-auth-name"
+                            value={chosenUsername}
+                            onChange={e => {
+                              setChosenUsername(e.target.value);
+                              setAuthError(null);
+                            }}
+                            placeholder="e.g. AnimeExplorer"
+                            className={`w-full pl-9 pr-9 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
+                              usernameStatus === 'available'
+                                ? 'border-emerald-500/70 focus:border-emerald-500'
+                                : usernameStatus === 'unavailable' || usernameStatus === 'invalid'
+                                ? 'border-rose-500/80 focus:border-rose-500'
+                                : 'border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 focus:border-rose-500'
+                            }`}
+                            required
+                          />
+                          <div className="absolute right-3 top-2.5 pointer-events-none">
                             {usernameStatus === 'checking' && (
-                              <span className="text-[10px] text-amber-400 flex items-center gap-1 font-medium">
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                <span>Checking database...</span>
-                              </span>
+                              <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                             )}
                             {usernameStatus === 'available' && (
-                              <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                <span>Username available</span>
-                              </span>
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                             )}
                             {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
-                              <span className="text-[10px] text-rose-400 flex items-center gap-1 font-semibold">
-                                <AlertCircle className="w-3 h-3 text-rose-400" />
-                                <span>{usernameMessage || 'Unavailable'}</span>
-                              </span>
+                              <AlertCircle className="w-4 h-4 text-rose-400" />
                             )}
                           </div>
-                          <div className="relative">
-                            <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                            <input
-                              type="text"
-                              id="input-auth-name"
-                              value={chosenUsername}
-                              onChange={e => {
-                                setChosenUsername(e.target.value);
-                                setAuthError(null);
-                              }}
-                              placeholder="e.g. AnimeExplorer"
-                              className={`w-full pl-9 pr-9 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
-                                usernameStatus === 'available'
-                                  ? 'border-emerald-500/70 focus:border-emerald-500'
-                                  : usernameStatus === 'unavailable' || usernameStatus === 'invalid'
-                                  ? 'border-rose-500/80 focus:border-rose-500'
-                                  : 'border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 focus:border-rose-500'
-                              }`}
-                              required
-                            />
-                            <div className="absolute right-3 top-2.5 pointer-events-none">
-                              {usernameStatus === 'checking' && (
-                                <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                              )}
-                              {usernameStatus === 'available' && (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                              )}
-                              {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
-                                <AlertCircle className="w-4 h-4 text-rose-400" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
-                          Email Address
-                        </label>
-                        <div className="relative">
-                          <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                          <input
-                            type="email"
-                            id="input-auth-email"
-                            value={emailInput}
-                            onChange={e => {
-                              setEmailInput(e.target.value);
-                              setAuthError(null);
-                            }}
-                            placeholder="you@example.com"
-                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
-                            required
-                          />
                         </div>
                       </div>
+                    )}
 
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
-                          Password (min 8 characters)
-                        </label>
-                        <div className="relative">
-                          <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            id="input-auth-password"
-                            value={passwordInput}
-                            onChange={e => {
-                              setPasswordInput(e.target.value);
-                              setAuthError(null);
-                            }}
-                            minLength={8}
-                            placeholder="••••••••••••"
-                            className="w-full pl-9 pr-10 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(p => !p)}
-                            className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                        <input
+                          type="email"
+                          id="input-auth-email"
+                          value={emailInput}
+                          onChange={e => {
+                            setEmailInput(e.target.value);
+                            setAuthError(null);
+                          }}
+                          placeholder="you@example.com"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+                          required
+                        />
                       </div>
+                    </div>
 
-                      {authMode === 'register' && (
-                        <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-normal">
-                          Remember these details — you’ll need them later to sign in.
-                        </p>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
+                        Password (min 8 characters)
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          id="input-auth-password"
+                          value={passwordInput}
+                          onChange={e => {
+                            setPasswordInput(e.target.value);
+                            setAuthError(null);
+                          }}
+                          minLength={8}
+                          placeholder="••••••••••••"
+                          className="w-full pl-9 pr-10 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(p => !p)}
+                          className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {authMode === 'register' && (
+                      <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-normal">
+                        Remember these details — you’ll need them later to sign in.
+                      </p>
+                    )}
+
+                    {authError && (
+                      <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-[11px] text-rose-300 flex items-start gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authError}</span>
+                      </div>
+                    )}
+
+                    {authSuccess && (
+                      <div className="p-2.5 rounded-lg bg-emerald-950/80 border border-emerald-800 text-[11px] text-emerald-300 flex items-start gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authSuccess}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      id="btn-auth-submit"
+                      disabled={loading || (authMode === 'register' && usernameStatus !== 'available')}
+                      className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span>
+                            {authMode === 'register'
+                              ? usernameStatus === 'checking'
+                                ? 'Checking Username...'
+                                : usernameStatus === 'unavailable'
+                                ? 'Username Unavailable'
+                                : usernameStatus === 'invalid'
+                                ? 'Enter Valid Username'
+                                : 'Send Verification Code'
+                              : 'Sign In to Account'}
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
                       )}
+                    </button>
 
-                      {authError && (
-                        <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-[11px] text-rose-300 flex items-start gap-1.5">
-                          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                          <span className="leading-relaxed">{authError}</span>
-                        </div>
-                      )}
-
-                      {authSuccess && (
-                        <div className="p-2.5 rounded-lg bg-emerald-950/80 border border-emerald-800 text-[11px] text-emerald-300 flex items-start gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                          <span className="leading-relaxed">{authSuccess}</span>
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        id="btn-auth-submit"
-                        disabled={loading || (authMode === 'register' && usernameStatus !== 'available')}
-                        className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <span>
-                              {authMode === 'register'
-                                ? usernameStatus === 'checking'
-                                  ? 'Checking Username...'
-                                  : usernameStatus === 'unavailable'
-                                  ? 'Username Unavailable'
-                                  : usernameStatus === 'invalid'
-                                  ? 'Enter Valid Username'
-                                  : 'Send Verification Code'
-                                : 'Sign In to Account'}
-                            </span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </>
-                        )}
-                      </button>
-
-                      {loading && authMode === 'register' && (
-                        <p className="text-[11px] text-center text-slate-400 animate-pulse pt-1">
-                          It may take some time. Please be patient.
-                        </p>
-                      )}
-                    </form>
+                    {loading && authMode === 'register' && (
+                      <p className="text-[11px] text-center text-slate-400 animate-pulse pt-1">
+                        It may take some time. Please be patient.
+                      </p>
+                    )}
+                  </form>
                 </div>
               ) : (
                 /* STEP 2: Real Email Verification Code Form */

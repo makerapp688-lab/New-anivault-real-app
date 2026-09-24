@@ -32,7 +32,7 @@ import { BugReportModal } from './components/BugReportModal.tsx';
 import { AnimeArtwork } from './components/AnimeArtwork.tsx';
 import { CompareAnimeView } from './components/CompareAnimeView.tsx';
 import { AccountView } from './components/AccountView.tsx';
-import { AniVaultLogo } from './components/AniVaultLogo.tsx';
+import { AnivexLogo } from './components/AnivexLogo.tsx';
 import {
   RARETOON_BASE_URL,
   RARETOON_PROVIDER_NAME,
@@ -69,7 +69,15 @@ export function App() {
 
   const [stats, setStats] = useState<CatalogueStats | null>((fallbackReport as unknown) as CatalogueStats);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageInput, setPageInput] = useState<string>('1');
+  const [pageInputError, setPageInputError] = useState<boolean>(false);
   const ITEMS_PER_PAGE = 24;
+
+  // Synchronize pageInput with currentPage
+  useEffect(() => {
+    setPageInput(String(currentPage));
+    setPageInputError(false);
+  }, [currentPage]);
 
   const categoriesSectionRef = useRef<HTMLDivElement>(null);
 
@@ -97,11 +105,11 @@ export function App() {
     syncWithServerSession();
   }, []);
 
-  // Fetch from backend API
+  // Fetch complete catalogue from backend API
   const fetchCatalogue = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/anime?limit=300');
+      const res = await fetch('/api/anime?limit=all');
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.anime) && data.anime.length > 0) {
@@ -328,11 +336,11 @@ export function App() {
         <div className="relative flex flex-col items-center">
           {/* Pulsing beautiful logo container */}
           <div className="w-20 h-20 rounded-2xl bg-rose-600 flex items-center justify-center font-black text-white text-3xl shadow-xl shadow-rose-600/30 animate-pulse">
-            AV
+            AX
           </div>
           <div className="mt-8 flex flex-col items-center space-y-2">
             <h2 className="text-lg font-bold tracking-wider text-slate-200">Restoring Session...</h2>
-            <p className="text-xs text-slate-400">Verifying secure credentials with AniVault</p>
+            <p className="text-xs text-slate-400">Verifying secure credentials with Anivex</p>
           </div>
           {/* Spinner track */}
           <div className="mt-6 w-32 h-1 bg-slate-900 rounded-full overflow-hidden relative">
@@ -715,43 +723,90 @@ export function App() {
               </div>
             )}
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between py-6 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
-                <button
-                  type="button"
-                  id="btn-prev-page"
-                  disabled={currentPage <= 1}
-                  onClick={() => {
-                    setCurrentPage(p => Math.max(1, p - 1));
-                    jumpToTopInstant();
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-900 light:bg-white hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-800 dark:border-slate-800 light:border-slate-300 text-slate-200 dark:text-slate-200 light:text-slate-800 transition-colors cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Previous</span>
-                </button>
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
+                    <button
+                      type="button"
+                      id="btn-prev-page"
+                      disabled={currentPage <= 1}
+                      onClick={() => {
+                        setCurrentPage(p => Math.max(1, p - 1));
+                        jumpToTopInstant();
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-900 light:bg-white hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-800 dark:border-slate-800 light:border-slate-300 text-slate-200 dark:text-slate-200 light:text-slate-800 transition-colors cursor-pointer w-full sm:w-auto justify-center"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Previous</span>
+                    </button>
 
-                <span className="text-xs text-slate-400">
-                  Page <strong className="text-white dark:text-white light:text-slate-900">{currentPage}</strong> of{' '}
-                  <strong className="text-white dark:text-white light:text-slate-900">{totalPages}</strong> ({filteredAnime.length} anime)
-                </span>
+                    <div className="flex flex-col sm:flex-row items-center gap-3.5">
+                      <span className="text-xs text-slate-400">
+                        Page <strong className="text-white dark:text-white light:text-slate-900">{currentPage}</strong> of{' '}
+                        <strong className="text-white dark:text-white light:text-slate-900">{totalPages}</strong> ({filteredAnime.length} anime)
+                      </span>
 
-                <button
-                  type="button"
-                  id="btn-next-page"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => {
-                    setCurrentPage(p => Math.min(totalPages, p + 1));
-                    jumpToTopInstant();
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-900 light:bg-white hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-800 dark:border-slate-800 light:border-slate-300 text-slate-200 dark:text-slate-200 light:text-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const val = pageInput.trim();
+                          if (!val) return;
+                          const pageNum = parseInt(val, 10);
+                          if (isNaN(pageNum) || pageNum < 1 || pageNum > totalPages || !/^\d+$/.test(val)) {
+                            setPageInputError(true);
+                            return;
+                          }
+                          setPageInputError(false);
+                          setCurrentPage(pageNum);
+                          jumpToTopInstant();
+                        }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Go to..."
+                            value={pageInput}
+                            onChange={(e) => {
+                              setPageInput(e.target.value);
+                              setPageInputError(false);
+                            }}
+                            className={`w-16 px-2.5 py-1 text-center text-xs bg-slate-900 dark:bg-slate-900 light:bg-white text-slate-200 dark:text-slate-200 light:text-slate-800 border ${
+                              pageInputError
+                                ? 'border-red-500 focus:border-red-500'
+                                : 'border-slate-800 dark:border-slate-800 light:border-slate-300 focus:border-rose-500'
+                            } rounded-lg focus:outline-none font-medium`}
+                          />
+                          {pageInputError && (
+                            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] py-0.5 px-1.5 rounded shadow-md whitespace-nowrap z-10 font-bold">
+                              1 - {totalPages}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="submit"
+                          className="px-3 py-1 text-xs font-semibold bg-slate-800 dark:bg-slate-800 light:bg-slate-200 text-slate-200 dark:text-slate-200 light:text-slate-800 rounded-lg hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-slate-300 transition-colors border border-slate-700 dark:border-slate-700 light:border-slate-300 cursor-pointer"
+                        >
+                          Go
+                        </button>
+                      </form>
+                    </div>
+
+                    <button
+                      type="button"
+                      id="btn-next-page"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => {
+                        setCurrentPage(p => Math.min(totalPages, p + 1));
+                        jumpToTopInstant();
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-slate-900 light:bg-white hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-800 dark:border-slate-800 light:border-slate-300 text-slate-200 dark:text-slate-200 light:text-slate-800 transition-colors cursor-pointer w-full sm:w-auto justify-center"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
           </>
         )}
       </main>
@@ -762,9 +817,9 @@ export function App() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-md bg-rose-600 flex items-center justify-center font-black text-white text-xs">
-                AV
+                AX
               </div>
-              <span className="font-bold text-white dark:text-white light:text-slate-900">AniVault Foundation</span>
+              <span className="font-bold text-white dark:text-white light:text-slate-900">Anivex Foundation</span>
               <span className="text-slate-500">•</span>
               <span>Anime Discovery &amp; Metadata Engine</span>
             </div>
@@ -796,7 +851,7 @@ export function App() {
 
           <div className="border-t border-slate-900 dark:border-slate-900 light:border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
             <p>
-              AniVault is a catalogue and discovery platform. We do not host or stream media files.
+              Anivex is a catalogue and discovery platform. We do not host or stream media files.
               All watch links connect directly to verified pages on RareToon India (<a href={RARETOON_BASE_URL} className="text-rose-400 hover:underline">{RARETOON_BASE_URL}</a>).
             </p>
             <p>Guest Mode &amp; Account Architecture</p>

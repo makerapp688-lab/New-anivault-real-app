@@ -9,14 +9,13 @@ import {
   testEmailTransport,
   checkServerSecretsDiagnostic
 } from './email-service.js';
-import { validateOwnerSession } from './owner-auth.js';
+import { validateOwnerSession, revokeOwnerSession } from './owner-auth.js';
+import { getSessionSecret } from './session-secret.js';
 
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
 const USERS_ACCOUNTS_PATH = path.join(DATA_DIR, 'users-accounts.json');
 const USERS_TEMP_VERIFICATIONS_PATH = path.join(DATA_DIR, 'users-temp-verifications.json');
 const USERS_SESSIONS_PATH = path.join(DATA_DIR, 'users-sessions.json');
-const OAUTH_STATES_PATH = path.join(DATA_DIR, 'oauth-states.json');
-const OWNER_ACCOUNT_PATH = path.join(DATA_DIR, 'owner-account.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -30,9 +29,7 @@ export interface UserRecord {
   avatar?: string;
   passwordHash?: string;
   salt?: string;
-  provider: 'email' | 'google' | 'apple';
-  googleId?: string;
-  appleId?: string;
+  provider: 'email';
   isVerified: boolean;
   role: 'user';
   createdAt: string;
@@ -64,24 +61,16 @@ export interface UserSession {
   revoked?: boolean;
 }
 
-interface OAuthStateRecord {
-  state: string;
-  provider: 'google' | 'apple';
-  origin: string;
-  expiresAt: number;
-}
-
 // In-memory caches with persistent disk backing
 let usersCache: Record<string, UserRecord> = {};
 let tempVerificationsCache: Record<string, TempUserVerification> = {};
 const activeUserSessions: Map<string, UserSession> = new Map();
-let oauthStatesCache: Record<string, OAuthStateRecord> = {};
 
 export const RESERVED_USERNAMES = new Set([
   'admin',
   'administrator',
   'owner',
-  'anivault',
+  'anivex',
   'system',
   'sysadmin',
   'support',
@@ -98,105 +87,94 @@ export const RESERVED_USERNAMES = new Set([
 ]);
 
 export function normalizeUsername(username: string): string {
-  return (username || '').trim().toLowerCase();
-}
-
-export function validateUsernameFormat(username: string): { valid: boolean; error?: string } {
-  if (!username || typeof username !== 'string') {
-    return { valid: false, error: 'Username is required.' };
-  }
-  const clean = username.trim();
-  if (clean.length < 2 || clean.length > 30) {
-    return { valid: false, error: 'Username must be between 2 and 30 characters.' };
-  }
-  const regex = /^[a-zA-Z0-9_-]{2,30}$/;
-  if (!regex.test(clean)) {
-    return {
-      valid: false,
-      error: 'Username can only contain letters, numbers, hyphens, and underscores.'
-    };
-  }
-  return { valid: true };
-}
-
-function getOwnerAccount(): { email: string; username: string; role: string } | null {
-  try {
-    if (fs.existsSync(OWNER_ACCOUNT_PATH)) {
-      const data = JSON.parse(fs.readFileSync(OWNER_ACCOUNT_PATH, 'utf-8'));
-      if (data && data.email && data.role === 'owner') {
-        return data;
-      }
-    }
-  } catch (err) {
-    console.error('[UserAuth] Error loading owner account for username uniqueness check:', err);
-  }
-  return null;
+  if (!username) return '';
+  return username.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 export function isUsernameAvailable(
-  rawUsername: string,
+  username: string,
   excludeUserId?: string,
   excludeEmail?: string
 ): { available: boolean; reason?: string } {
-  const formatCheck = validateUsernameFormat(rawUsername);
-  if (!formatCheck.valid) {
-    return { available: false, reason: formatCheck.error };
+  if (!username || typeof username !== 'string') {
+    return { available: false, reason: 'Username is required.' };
   }
 
-  const normalized = normalizeUsername(rawUsername);
-
-  // Check reserved system names
-  if (RESERVED_USERNAMES.has(normalized)) {
-    return { available: false, reason: 'This username is reserved and cannot be used.' };
+  const clean = username.trim();
+  if (clean.length < 2 || clean.length > 30) {
+    return { available: false, reason: 'Username must be between 2 and 30 characters.' };
   }
 
-  // Check owner username
-  const owner = getOwnerAccount();
-  if (owner && normalizeUsername(owner.username) === normalized) {
-    return { available: false, reason: 'Username already taken.' };
+  const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+  if (!usernameRegex.test(clean)) {
+    return { available: false, reason: 'Only letters, numbers, hyphens, and underscores are allowed.' };
   }
 
-  // Check existing registered users
+  const norm = normalizeUsername(clean);
+  if (norm.length < 2) {
+    return { available: false, reason: 'Username must contain at least 2 alphanumeric characters.' };
+  }
+
+  if (RESERVED_USERNAMES.has(norm)) {
+    return { available: false, reason: 'This username is reserved by Anivex.' };
+  }
+
+  // Check against permanent user accounts
   for (const user of Object.values(usersCache)) {
-    if (excludeUserId && user.id === excludeUserId) {
-      continue;
-    }
-    if (excludeEmail && user.email.toLowerCase() === excludeEmail.toLowerCase()) {
-      continue; // Allow same username for accounts registered under the same email address
-    }
-    if (normalizeUsername(user.username) === normalized) {
-      return { available: false, reason: 'Username already taken.' };
+    if (excludeUserId && user.id === excludeUserId) continue;
+    if (excludeEmail && user.email.toLowerCase() === excludeEmail.toLowerCase()) continue;
+
+    if (user.username.trim().toLowerCase() === clean.toLowerCase() || normalizeUsername(user.username) === norm) {
+      return { available: false, reason: 'This username is already taken. Please choose another.' };
     }
   }
 
-  return { available: true, reason: 'Username available' };
+  // Check against pending verifications
+  const now = Date.now();
+  for (const temp of Object.values(tempVerificationsCache)) {
+    if (temp.expiresAt > now) {
+      if (excludeEmail && temp.email.toLowerCase() === excludeEmail.toLowerCase()) continue;
+      if (temp.username.trim().toLowerCase() === clean.toLowerCase() || normalizeUsername(temp.username) === norm) {
+        return { available: false, reason: 'This username is currently pending verification. Try another.' };
+      }
+    }
+  }
+
+  return { available: true };
 }
 
-export function generateUniqueUsername(baseName: string): string {
-  let clean = (baseName || 'AniUser').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24);
-  if (clean.length < 2) clean = 'AniUser';
-  let candidate = clean;
+export function generateUniqueUsername(baseSeed: string = 'AnimeExplorer'): string {
+  let base = baseSeed.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+  if (base.length < 2) base = 'AnimeExplorer';
+  if (base.length > 20) base = base.slice(0, 20);
+
+  let candidate = base;
   let counter = 1;
+
   while (!isUsernameAvailable(candidate).available) {
-    candidate = `${clean.slice(0, 24)}_${counter}`;
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    candidate = `${base}_${randomSuffix}`;
     counter++;
+    if (counter > 50) {
+      candidate = `Explorer_${crypto.randomBytes(3).toString('hex')}`;
+      break;
+    }
   }
+
   return candidate;
 }
 
 function auditAndIndexUsernames() {
-  const seen = new Map<string, string>();
-  const conflicts: Array<{ normalized: string; userIds: string[]; usernames: string[] }> = [];
+  const seen: Map<string, string> = new Map();
+  const conflicts: Array<{ norm: string; userIds: string[]; usernames: (string | undefined)[] }> = [];
 
   for (const [id, user] of Object.entries(usersCache)) {
-    if (!user.username) {
-      user.username = (user.email.split('@')[0] || `user_${id.slice(-4)}`).slice(0, 30);
-    }
+    if (!user || !user.username) continue;
     const norm = normalizeUsername(user.username);
     if (seen.has(norm)) {
       const existingId = seen.get(norm)!;
       conflicts.push({
-        normalized: norm,
+        norm,
         userIds: [existingId, id],
         usernames: [usersCache[existingId]?.username, user.username]
       });
@@ -235,9 +213,6 @@ function loadUsersData() {
         }
       }
     }
-    if (fs.existsSync(OAUTH_STATES_PATH)) {
-      oauthStatesCache = JSON.parse(fs.readFileSync(OAUTH_STATES_PATH, 'utf-8'));
-    }
     auditAndIndexUsernames();
   } catch (err: any) {
     console.error('[UserAuth DB] Error loading state:', err.message);
@@ -269,17 +244,9 @@ function saveUserSessions() {
   }
 }
 
-function saveOAuthStates() {
-  try {
-    fs.writeFileSync(OAUTH_STATES_PATH, JSON.stringify(oauthStatesCache, null, 2), 'utf-8');
-  } catch (err: any) {
-    console.error('[UserAuth DB] Error saving oauth states:', err.message);
-  }
-}
-
 loadUsersData();
 
-// Clean up expired temp verifications and states periodically
+// Clean up expired temp verifications periodically
 setInterval(() => {
   const now = Date.now();
   let changedTemp = false;
@@ -290,15 +257,6 @@ setInterval(() => {
     }
   }
   if (changedTemp) saveTempVerifications();
-
-  let changedStates = false;
-  for (const [key, s] of Object.entries(oauthStatesCache)) {
-    if (s.expiresAt < now) {
-      delete oauthStatesCache[key];
-      changedStates = true;
-    }
-  }
-  if (changedStates) saveOAuthStates();
 }, 60000);
 
 // Password hashing
@@ -343,11 +301,10 @@ function setSessionCookie(res: Response, name: string, value: string, maxAgeSeco
   );
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'anivault_super_secure_session_secret_2026';
-
 export function generateSignedSessionToken(userId: string, email: string, username: string, role: string, provider: string, expiresAt: number): string {
   const payload = JSON.stringify({ userId, email, username, role, provider, expiresAt });
-  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+  const secret = getSessionSecret();
+  const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex');
   const base64url = Buffer.from(payload).toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -368,7 +325,8 @@ export function verifyAndDecodeSessionToken(token: string): { userId: string; em
     const payloadStr = Buffer.from(base64, 'base64').toString('utf8');
     const signature = parts[1];
     
-    const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payloadStr).digest('hex');
+    const secret = getSessionSecret();
+    const hmac = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
     if (signature !== hmac) {
       return null;
     }
@@ -410,45 +368,11 @@ function sanitizeUser(u: UserRecord) {
     username: u.username,
     name: u.name || u.username,
     avatar: u.avatar || undefined,
-    provider: u.provider,
+    provider: u.provider || 'email',
     isVerified: u.isVerified,
     role: u.role || 'user',
     createdAt: u.createdAt,
     lastLoginAt: u.lastLoginAt
-  };
-}
-
-export function getGoogleConfigStatus(): { configured: boolean; missing: string[] } {
-  const missing: string[] = [];
-  if (!process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID.trim() === '') {
-    missing.push('GOOGLE_CLIENT_ID');
-  }
-  if (!process.env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET.trim() === '') {
-    missing.push('GOOGLE_CLIENT_SECRET');
-  }
-  return {
-    configured: missing.length === 0,
-    missing
-  };
-}
-
-export function getAppleConfigStatus(): { configured: boolean; missing: string[] } {
-  const missing: string[] = [];
-  if (!process.env.APPLE_CLIENT_ID || process.env.APPLE_CLIENT_ID.trim() === '') {
-    missing.push('APPLE_CLIENT_ID');
-  }
-  if (!process.env.APPLE_TEAM_ID || process.env.APPLE_TEAM_ID.trim() === '') {
-    missing.push('APPLE_TEAM_ID');
-  }
-  if (!process.env.APPLE_KEY_ID || process.env.APPLE_KEY_ID.trim() === '') {
-    missing.push('APPLE_KEY_ID');
-  }
-  if (!process.env.APPLE_PRIVATE_KEY || process.env.APPLE_PRIVATE_KEY.trim() === '') {
-    missing.push('APPLE_PRIVATE_KEY');
-  }
-  return {
-    configured: missing.length === 0,
-    missing
   };
 }
 
@@ -479,21 +403,11 @@ export function createUserAuthRouter() {
   // 1. Authentication Provider Status Check
   router.get('/status', (req: Request, res: Response) => {
     const emailStatus = getEmailConfigStatus();
-    const googleStatus = getGoogleConfigStatus();
-    const appleStatus = getAppleConfigStatus();
 
     const statusObj = {
       email: {
         configured: emailStatus.configured,
         missing: emailStatus.missing
-      },
-      google: {
-        configured: googleStatus.configured,
-        missing: googleStatus.missing
-      },
-      apple: {
-        configured: appleStatus.configured,
-        missing: appleStatus.missing
       }
     };
 
@@ -527,7 +441,7 @@ export function createUserAuthRouter() {
         diagnostic: result
       });
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message || 'Diagnostic failed' });
     }
   });
 
@@ -654,10 +568,12 @@ export function createUserAuthRouter() {
 
       // Dispatch verification email
       try {
+        const origin = req.protocol + '://' + req.get('host');
         await sendVerificationEmail(
           normalizedEmail,
           code,
-          'Verify your AniVault account'
+          'Verify your Anivex account',
+          origin
         );
       } catch (mailErr: any) {
         console.error('[UserRegisterInit] Failed to send email:', mailErr.message);
@@ -741,7 +657,7 @@ export function createUserAuthRouter() {
         return;
       }
 
-      // Final check for username availability before committing (excluding this pending registration's own reservation)
+      // Final check for username availability before committing
       const finalAvailCheck = isUsernameAvailable(tempRec.username, undefined, normalizedEmail);
       if (!finalAvailCheck.available) {
         delete tempVerificationsCache[normalizedEmail];
@@ -799,7 +715,7 @@ export function createUserAuthRouter() {
 
       res.json({
         success: true,
-        message: 'Account successfully verified and created! Welcome to AniVault.',
+        message: 'Account successfully verified and created! Welcome to Anivex.',
         user: sanitizeUser(newUser),
         sessionToken: sessionId
       });
@@ -865,10 +781,12 @@ export function createUserAuthRouter() {
       console.log(`[EMAIL_DIAGNOSTIC] OTP stored: recipientDomain=${recipientDomain}, previous code invalidated, resendCount=${tempRec.resendCount}`);
 
       try {
+        const origin = req.protocol + '://' + req.get('host');
         await sendVerificationEmail(
           normalizedEmail,
           code,
-          'Verify your AniVault account'
+          'Verify your Anivex account',
+          origin
         );
       } catch (mailErr: any) {
         console.error('[UserResendCode] Failed to send email:', mailErr.message);
@@ -956,7 +874,7 @@ export function createUserAuthRouter() {
 
       if (!user.passwordHash || !user.salt) {
         res.status(400).json({
-          error: `This account was registered using ${user.provider}. Please use ${user.provider} to sign in.`
+          error: 'Invalid authentication credentials.'
         });
         return;
       }
@@ -1012,18 +930,44 @@ export function createUserAuthRouter() {
     const ownerSessionId = cookies.anivault_owner_session || ownerHeader || (bearerToken && bearerToken.startsWith('owner_') ? bearerToken : null);
     const userSessionId = cookies.anivault_user_session || userHeader || bearerToken;
 
-    console.log('[Auth Session Check] Received request:', {
-      hasCookies: Object.keys(cookies).length > 0,
-      hasAuthHeader: !!authHeader,
-      userSessionIdLength: userSessionId?.length || 0,
-      ownerSessionIdLength: ownerSessionId?.length || 0
-    });
+    // Prioritize user session if client explicitly provided user header
+    if (userHeader) {
+      reloadUserSessionsFromDisk();
+      let session = activeUserSessions.get(userHeader);
+      if (!session || session.revoked || session.expiresAt < Date.now()) {
+        const decoded = verifyAndDecodeSessionToken(userHeader);
+        if (decoded && decoded.role === 'user') {
+          session = {
+            sessionId: userHeader,
+            userId: decoded.userId,
+            email: decoded.email,
+            username: decoded.username,
+            provider: decoded.provider,
+            role: 'user',
+            createdAt: decoded.expiresAt - 30 * 24 * 60 * 60 * 1000,
+            expiresAt: decoded.expiresAt
+          };
+          activeUserSessions.set(userHeader, session);
+          saveUserSessions();
+        }
+      }
+      if (session && !session.revoked && session.expiresAt > Date.now()) {
+        const user = usersCache[session.userId];
+        if (user) {
+          res.json({
+            authenticated: true,
+            user: sanitizeUser(user),
+            sessionToken: session.sessionId
+          });
+          return;
+        }
+      }
+    }
 
-    // 1. Check Owner session first if owner session ID provided or present
+    // 1. Check Owner session if owner session ID provided or present
     if (ownerSessionId) {
       const ownerAcc = validateOwnerSession(ownerSessionId);
       if (ownerAcc) {
-        console.log(' - Authenticated successfully as Owner:', ownerAcc.username);
         res.json({
           authenticated: true,
           user: {
@@ -1038,15 +982,12 @@ export function createUserAuthRouter() {
           }
         });
         return;
-      } else {
-        console.log(' - Owner session validation failed for ID:', ownerSessionId.slice(0, 20) + '...');
       }
     }
 
     // 2. Check User session
     const sessionId = userSessionId || ownerSessionId;
     if (!sessionId) {
-      console.log(' - No sessionId provided or found in headers or cookies.');
       res.json({ authenticated: false });
       return;
     }
@@ -1056,11 +997,9 @@ export function createUserAuthRouter() {
 
     let session = activeUserSessions.get(sessionId);
     if (!session || session.revoked || session.expiresAt < Date.now()) {
-      console.log(' - Session not active in-memory, or expired. Attempting cryptographic decode fallback...');
       // Decode cryptographic token fallback
       const decoded = verifyAndDecodeSessionToken(sessionId);
       if (decoded && decoded.role === 'user') {
-        console.log(' - Cryptographic verification SUCCESS for User:', decoded.username);
         session = {
           sessionId,
           userId: decoded.userId,
@@ -1074,11 +1013,9 @@ export function createUserAuthRouter() {
         activeUserSessions.set(sessionId, session);
         saveUserSessions();
       } else {
-        console.log(' - Cryptographic verification FAILED for session token.');
         // Fallback check: could sessionId be an owner session ID?
         const ownerAcc = validateOwnerSession(sessionId);
         if (ownerAcc) {
-          console.log(' - Authenticated successfully as Owner (fallback check):', ownerAcc.username);
           res.json({
             authenticated: true,
             user: {
@@ -1099,26 +1036,22 @@ export function createUserAuthRouter() {
           activeUserSessions.delete(sessionId);
           saveUserSessions();
         }
-        console.log(' - Returning authenticated: false');
         res.json({ authenticated: false });
         return;
       }
-    } else {
-      console.log(' - Active user session retrieved from in-memory cache for user ID:', session.userId);
     }
 
     // Load account record from permanent account storage
     const cleanSessionEmail = session.email ? session.email.trim().toLowerCase() : '';
     let user = usersCache[session.userId] || Object.values(usersCache).find(u => u.email && u.email.trim().toLowerCase() === cleanSessionEmail);
     if (!user) {
-      console.log(' - User account record missing from usersCache. Triggering self-healing account recreation...');
       const isoNow = new Date().toISOString();
       user = {
         id: session.userId,
         email: session.email,
         username: session.username,
         name: session.username,
-        provider: (session.provider as any) || 'email',
+        provider: 'email',
         isVerified: true,
         role: 'user',
         createdAt: isoNow,
@@ -1129,7 +1062,6 @@ export function createUserAuthRouter() {
       saveUsers();
     }
 
-    console.log(' - Authenticated successfully as User:', user.username);
     res.json({
       authenticated: true,
       user: sanitizeUser(user)
@@ -1233,6 +1165,34 @@ export function createUserAuthRouter() {
     }
 
     const { avatar } = req.body;
+    if (avatar) {
+      if (typeof avatar !== 'string') {
+        res.status(400).json({ error: 'Invalid avatar data format.' });
+        return;
+      }
+      
+      const match = avatar.match(/^data:(image\/[a-zA-Z+]+);base64,/);
+      if (!match) {
+        res.status(400).json({ error: 'Invalid image format. Must be a base64-encoded image.' });
+        return;
+      }
+      
+      const mimeType = match[1].toLowerCase();
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedMimeTypes.includes(mimeType)) {
+        res.status(400).json({ error: 'Unsupported image format. Only JPEG, PNG, and WebP are allowed.' });
+        return;
+      }
+      
+      // Calculate approximate size in bytes
+      const approxSizeBytes = (avatar.length - avatar.indexOf(',') - 1) * 0.75;
+      const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+      if (approxSizeBytes > MAX_SIZE_BYTES) {
+        res.status(400).json({ error: 'Uploaded profile photo exceeds the 20MB limit.' });
+        return;
+      }
+    }
+
     user.avatar = typeof avatar === 'string' && avatar.trim() ? avatar : undefined;
     user.updatedAt = new Date().toISOString();
     saveUsers();
@@ -1244,19 +1204,49 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 10. Seamless Switch to Normal User Account
+  // 10. Switch to Normal User Account
   router.post('/switch', (req: Request, res: Response) => {
-    const { accountId } = req.body;
+    const { accountId, account } = req.body;
     if (!accountId) {
       res.status(400).json({ error: 'Account ID is required.' });
       return;
     }
 
-    const user = usersCache[accountId] || Object.values(usersCache).find(u => u.id === accountId);
+    loadUsersData();
+    let user = usersCache[accountId] || Object.values(usersCache).find(u => u.id === accountId);
+    if (!user && account && account.id === accountId) {
+      if (account.id !== 'usr_owner' && account.role !== 'owner') {
+        user = {
+          id: account.id,
+          email: (account.email || '').trim().toLowerCase(),
+          username: account.username || 'AnimeExplorer',
+          provider: account.provider || 'email',
+          isVerified: true,
+          role: 'user',
+          createdAt: account.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString()
+        };
+        usersCache[user.id] = user;
+        saveUsers();
+      }
+    }
+
     if (!user) {
       res.status(404).json({ error: 'Account not found.' });
       return;
     }
+
+    // End active Owner session/context immediately
+    const cookies = parseCookies(req);
+    const ownerHeader = req.headers['x-anivault-owner-session'] as string;
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const ownerSessionId = cookies.anivault_owner_session || ownerHeader || (bearerToken && bearerToken.startsWith('owner_') ? bearerToken : null);
+    if (ownerSessionId) {
+      revokeOwnerSession(ownerSessionId);
+    }
+    setSessionCookie(res, 'anivault_owner_session', '', 0, req);
 
     const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
     const sessionId = generateSignedSessionToken(user.id, user.email, user.username, 'user', user.provider || 'email', sessionExpires);
@@ -1284,7 +1274,7 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 8b. Delete Account - Step 1: Request Deletion OTP
+  // 11. Delete Account - Step 1: Request Deletion OTP
   router.post('/delete-account-init', async (req: Request, res: Response) => {
     try {
       const { accountId, email } = req.body;
@@ -1340,10 +1330,12 @@ export function createUserAuthRouter() {
       };
 
       try {
+        const origin = req.protocol + '://' + req.get('host');
         await sendVerificationEmail(
           user.email,
           code,
-          'Verify your AniVault account deletion'
+          'Verify your Anivex account deletion',
+          origin
         );
       } catch (mailErr: any) {
         delete deletionVerificationsCache[user.id];
@@ -1361,7 +1353,7 @@ export function createUserAuthRouter() {
     }
   });
 
-  // 8c. Delete Account - Step 2: Verify Deletion OTP
+  // 12. Delete Account - Step 2: Verify Deletion OTP
   router.post('/delete-account-verify', (req: Request, res: Response) => {
     try {
       const { accountId, code } = req.body;
@@ -1410,7 +1402,7 @@ export function createUserAuthRouter() {
     }
   });
 
-  // 8d. Delete Account - Step 3: Resend Deletion OTP
+  // 13. Delete Account - Step 3: Resend Deletion OTP
   router.post('/delete-account-resend', async (req: Request, res: Response) => {
     try {
       const { accountId } = req.body;
@@ -1441,10 +1433,12 @@ export function createUserAuthRouter() {
         lastResendAt: now
       };
 
+      const origin = req.protocol + '://' + req.get('host');
       await sendVerificationEmail(
         user.email,
         code,
-        'Verify your AniVault account deletion'
+        'Verify your Anivex account deletion',
+        origin
       );
 
       res.json({
@@ -1457,7 +1451,7 @@ export function createUserAuthRouter() {
     }
   });
 
-  // 8e. Delete Account - Step 4: Final Confirmation & Complete Removal
+  // 14. Delete Account - Step 4: Final Confirmation & Complete Removal
   router.post('/delete-account-confirm', (req: Request, res: Response) => {
     try {
       const { accountId, deletionToken } = req.body;
@@ -1512,492 +1506,6 @@ export function createUserAuthRouter() {
       res.status(500).json({ error: err.message || 'Failed to delete account.' });
     }
   });
-
-  // Helper to determine base URL for redirect callbacks
-  function getBaseAppUrl(req: Request, clientOrigin?: string): string {
-    if (clientOrigin && clientOrigin.startsWith('http')) {
-      return clientOrigin.replace(/\/+$/, '');
-    }
-    if (process.env.APP_URL) {
-      return process.env.APP_URL.replace(/\/+$/, '');
-    }
-    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
-    return `${proto}://${host}`;
-  }
-
-  // 9. Google OAuth - Generate Authorization URL
-  router.get('/google/url', (req: Request, res: Response) => {
-    const status = getGoogleConfigStatus();
-    if (!status.configured) {
-      res.status(400).json({
-        configured: false,
-        error: `Google Sign-In is not configured yet. Requires environment variables: ${status.missing.join(', ')}.`,
-        missing: status.missing
-      });
-      return;
-    }
-
-    const clientOrigin = typeof req.query.origin === 'string' ? req.query.origin : undefined;
-    const baseUrl = getBaseAppUrl(req, clientOrigin);
-    const redirectUri = `${baseUrl}/api/auth/google/callback`;
-
-    const state = crypto.randomBytes(24).toString('hex');
-    oauthStatesCache[state] = {
-      state,
-      provider: 'google',
-      origin: baseUrl,
-      expiresAt: Date.now() + 10 * 60 * 1000
-    };
-    saveOAuthStates();
-
-    const clientId = process.env.GOOGLE_CLIENT_ID!.trim();
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'openid email profile',
-      state,
-      access_type: 'offline',
-      prompt: 'select_account'
-    });
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-    res.json({
-      configured: true,
-      url: authUrl
-    });
-  });
-
-  // 10. Google OAuth Callback
-  router.get('/google/callback', async (req: Request, res: Response) => {
-    const { code, state, error } = req.query;
-
-    const renderHtmlResponse = (success: boolean, payload: any) => {
-      res.setHeader('Content-Type', 'text/html');
-      const isUnlinked = payload?.needsAccountSelection;
-      return res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>AniVault Google Authentication</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090d16; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-              .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 32px; max-width: 440px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-              h2 { margin-top: 0; color: ${success ? '#34d399' : (isUnlinked ? '#fbbf24' : '#f87171')}; font-size: 20px; }
-              p { color: #94a3b8; font-size: 14px; line-height: 1.5; }
-              .btn { margin-top: 20px; display: inline-block; padding: 10px 24px; background: #e11d48; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; cursor: pointer; border: none; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <h2>${success ? 'Sign-In Successful' : (isUnlinked ? 'No Account Found' : 'Google Authentication Notice')}</h2>
-              <p>${success ? 'Your AniVault account is verified. You can close this window.' : (isUnlinked ? `No account found for this Google account (${payload.googleEmail}). Please use existing account or create account in AniVault.` : (payload?.error || 'Authentication could not be completed.'))}</p>
-              <button class="btn" onclick="window.close()">Close Window</button>
-            </div>
-            <script>
-              try {
-                if (window.opener) {
-                  window.opener.postMessage({
-                    type: '${success ? 'ANIVAULT_OAUTH_SUCCESS' : (isUnlinked ? 'ANIVAULT_GOOGLE_UNLINKED' : 'ANIVAULT_OAUTH_ERROR')}',
-                    provider: 'google',
-                    ${success ? `user: ${JSON.stringify(payload.user)}, sessionToken: ${JSON.stringify(payload.sessionToken)}` : (isUnlinked ? `googleEmail: ${JSON.stringify(payload.googleEmail)}, googleSub: ${JSON.stringify(payload.googleSub)}, googleName: ${JSON.stringify(payload.googleName)}` : `error: ${JSON.stringify(payload.error)}`)}
-                  }, '*');
-                  setTimeout(() => { window.close(); }, ${isUnlinked ? '2500' : '1200'});
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            </script>
-          </body>
-        </html>
-      `);
-    };
-
-    if (error) {
-      return renderHtmlResponse(false, { error: `Google login was cancelled or denied: ${error}` });
-    }
-
-    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
-      return renderHtmlResponse(false, { error: 'Missing OAuth authorization code or state parameter.' });
-    }
-
-    const stateRec = oauthStatesCache[state];
-    if (!stateRec || stateRec.provider !== 'google' || stateRec.expiresAt < Date.now()) {
-      return renderHtmlResponse(false, { error: 'Invalid or expired OAuth state parameter (CSRF protection).' });
-    }
-
-    delete oauthStatesCache[state];
-    saveOAuthStates();
-
-    try {
-      const clientId = process.env.GOOGLE_CLIENT_ID!.trim();
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET!.trim();
-      const redirectUri = `${stateRec.origin}/api/auth/google/callback`;
-
-      // Exchange authorization code for tokens
-      const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          code,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code'
-        }).toString()
-      });
-
-      if (!tokenResp.ok) {
-        const errJson: any = await tokenResp.json().catch(() => ({}));
-        return renderHtmlResponse(false, {
-          error: `Google token exchange failed: ${errJson.error_description || errJson.error || tokenResp.statusText}`
-        });
-      }
-
-      const tokens: any = await tokenResp.json();
-      const accessToken = tokens.access_token;
-
-      // Query Google UserInfo
-      const userInfoResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-
-      if (!userInfoResp.ok) {
-        return renderHtmlResponse(false, { error: 'Failed to retrieve Google user profile.' });
-      }
-
-      const profile: any = await userInfoResp.json();
-      const googleSub = profile.sub;
-      const googleEmail = profile.email?.toLowerCase();
-      const googleName = profile.name || profile.given_name || 'Google User';
-
-      if (!googleEmail) {
-        return renderHtmlResponse(false, { error: 'Google did not provide a valid email address.' });
-      }
-
-      // Find existing user by googleId or verified email
-      let user = Object.values(usersCache).find(
-        u => (u.googleId && u.googleId === googleSub) || (u.email === googleEmail && u.isVerified)
-      );
-
-      const isoNow = new Date().toISOString();
-
-      if (user) {
-        // Link googleId if missing
-        if (!user.googleId) {
-          user.googleId = googleSub;
-        }
-        user.lastLoginAt = isoNow;
-        user.updatedAt = isoNow;
-        saveUsers();
-      } else {
-        return renderHtmlResponse(false, {
-          needsAccountSelection: true,
-          googleEmail,
-          googleSub,
-          googleName
-        });
-      }
-
-      // Create session
-      const now = Date.now();
-      const sessionExpires = now + 30 * 24 * 60 * 60 * 1000;
-      const sessionId = generateSignedSessionToken(user.id, user.email, user.username, 'user', 'google', sessionExpires);
-      const session: UserSession = {
-        sessionId,
-        userId: user.id,
-        email: user.email,
-        username: user.username,
-        provider: 'google',
-        role: 'user',
-        createdAt: now,
-        expiresAt: sessionExpires
-      };
-
-      activeUserSessions.set(sessionId, session);
-      saveUserSessions();
-
-      setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
-
-      return renderHtmlResponse(true, { user: sanitizeUser(user), sessionToken: sessionId });
-    } catch (err: any) {
-      console.error('[GoogleCallback Error]', err);
-      return renderHtmlResponse(false, { error: err.message || 'Internal error processing Google authentication.' });
-    }
-  });
-
-  // Google Force Create Account
-  router.post('/google/force-create', (req: Request, res: Response) => {
-    const { googleSub, googleEmail, googleName } = req.body;
-    if (!googleSub || !googleEmail) {
-      res.status(400).json({ error: 'Google identity required.' });
-      return;
-    }
-
-    let user = Object.values(usersCache).find(u => u.googleId === googleSub || u.email.toLowerCase() === googleEmail.toLowerCase());
-    const isoNow = new Date().toISOString();
-
-    if (user) {
-      if (!user.googleId) user.googleId = googleSub;
-    } else {
-      const newId = `usr_${crypto.randomBytes(8).toString('hex')}`;
-      const uniqueUsername = generateUniqueUsername(googleName || 'GoogleUser');
-      user = {
-        id: newId,
-        email: googleEmail,
-        username: uniqueUsername,
-        name: googleName || uniqueUsername,
-        provider: 'google',
-        googleId: googleSub,
-        isVerified: true,
-        role: 'user',
-        createdAt: isoNow,
-        updatedAt: isoNow,
-        lastLoginAt: isoNow
-      };
-      usersCache[newId] = user;
-      saveUsers();
-    }
-
-    const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const sessionId = generateSignedSessionToken(user.id, user.email, user.username, 'user', 'google', sessionExpires);
-    const sessionData: UserSession = {
-      sessionId,
-      userId: user.id,
-      email: user.email,
-      username: user.username,
-      provider: 'google',
-      role: 'user',
-      createdAt: Date.now(),
-      expiresAt: sessionExpires
-    };
-    activeUserSessions.set(sessionId, sessionData);
-    saveUserSessions();
-    setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
-
-    res.json({ success: true, user: sanitizeUser(user), sessionToken: sessionId });
-  });
-
-  // Google Link Existing Account
-  router.post('/google/link-existing', async (req: Request, res: Response) => {
-    const { googleSub, googleEmail, email, password } = req.body;
-    if (!googleSub || !googleEmail || !email || !password) {
-      res.status(400).json({ error: 'Google identity and existing account credentials required.' });
-      return;
-    }
-
-    const normEmail = email.trim().toLowerCase();
-    const existingUser = Object.values(usersCache).find(u => u.email.toLowerCase() === normEmail);
-    if (!existingUser) {
-      res.status(404).json({ error: 'Existing account not found with this email.' });
-      return;
-    }
-
-    if (existingUser.passwordHash && existingUser.salt) {
-      const isValid = verifyPassword(password, existingUser.passwordHash, existingUser.salt);
-      if (!isValid) {
-        res.status(401).json({ error: 'Invalid password for existing account.' });
-        return;
-      }
-    }
-
-    existingUser.googleId = googleSub;
-    existingUser.updatedAt = new Date().toISOString();
-    saveUsers();
-
-    const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const sessionId = generateSignedSessionToken(existingUser.id, existingUser.email, existingUser.username, 'user', existingUser.provider || 'google', sessionExpires);
-    const sessionData: UserSession = {
-      sessionId,
-      userId: existingUser.id,
-      email: existingUser.email,
-      username: existingUser.username,
-      provider: existingUser.provider || 'google',
-      role: 'user',
-      createdAt: Date.now(),
-      expiresAt: sessionExpires
-    };
-    activeUserSessions.set(sessionId, sessionData);
-    saveUserSessions();
-    setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
-
-    res.json({ success: true, user: sanitizeUser(existingUser), sessionToken: sessionId });
-  });
-
-  // 11. Apple Sign-In - Generate Authorization URL
-  router.get('/apple/url', (req: Request, res: Response) => {
-    const status = getAppleConfigStatus();
-    if (!status.configured) {
-      res.status(400).json({
-        configured: false,
-        error: `Apple Sign-In is not configured yet. Requires environment variables: ${status.missing.join(', ')}.`,
-        missing: status.missing
-      });
-      return;
-    }
-
-    const clientOrigin = typeof req.query.origin === 'string' ? req.query.origin : undefined;
-    const baseUrl = getBaseAppUrl(req, clientOrigin);
-    const redirectUri = `${baseUrl}/api/auth/apple/callback`;
-
-    const state = crypto.randomBytes(24).toString('hex');
-    oauthStatesCache[state] = {
-      state,
-      provider: 'apple',
-      origin: baseUrl,
-      expiresAt: Date.now() + 10 * 60 * 1000
-    };
-    saveOAuthStates();
-
-    const clientId = process.env.APPLE_CLIENT_ID!.trim();
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'name email',
-      response_mode: 'form_post',
-      state
-    });
-
-    const authUrl = `https://appleid.apple.com/auth/authorize?${params.toString()}`;
-    res.json({
-      configured: true,
-      url: authUrl
-    });
-  });
-
-  // 12. Apple Sign-In Callback (Handles both GET and POST)
-  const handleAppleCallback = async (req: Request, res: Response) => {
-    const code = req.body.code || req.query.code;
-    const state = req.body.state || req.query.state;
-    const error = req.body.error || req.query.error;
-
-    const renderHtmlResponse = (success: boolean, payload: any) => {
-      res.setHeader('Content-Type', 'text/html');
-      return res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>AniVault Apple Authentication</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090d16; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-              .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 32px; max-width: 440px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-              h2 { margin-top: 0; color: ${success ? '#34d399' : '#f87171'}; font-size: 20px; }
-              p { color: #94a3b8; font-size: 14px; line-height: 1.5; }
-              .btn { margin-top: 20px; display: inline-block; padding: 10px 24px; background: #e11d48; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; cursor: pointer; border: none; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <h2>${success ? 'Sign-In Successful' : 'Apple Authentication Notice'}</h2>
-              <p>${success ? 'Your AniVault account is verified. You can close this window.' : (payload?.error || 'Authentication could not be completed.')}</p>
-              <button class="btn" onclick="window.close()">Close Window</button>
-            </div>
-            <script>
-              try {
-                if (window.opener) {
-                  window.opener.postMessage({
-                    type: '${success ? 'ANIVAULT_OAUTH_SUCCESS' : 'ANIVAULT_OAUTH_ERROR'}',
-                    provider: 'apple',
-                    ${success ? `user: ${JSON.stringify(payload.user)}, sessionToken: ${JSON.stringify(payload.sessionToken)}` : `error: ${JSON.stringify(payload.error)}`}
-                  }, '*');
-                  setTimeout(() => { window.close(); }, 1200);
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            </script>
-          </body>
-        </html>
-      `);
-    };
-
-    if (error) {
-      return renderHtmlResponse(false, { error: `Apple login was cancelled or denied: ${error}` });
-    }
-
-    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
-      return renderHtmlResponse(false, { error: 'Missing Apple authorization code or state parameter.' });
-    }
-
-    const stateRec = oauthStatesCache[state];
-    if (!stateRec || stateRec.provider !== 'apple' || stateRec.expiresAt < Date.now()) {
-      return renderHtmlResponse(false, { error: 'Invalid or expired Apple OAuth state parameter.' });
-    }
-
-    delete oauthStatesCache[state];
-    saveOAuthStates();
-
-    try {
-      // Create mockup/self-resolved verified user for Apple mock flow if key/certificates not fully integrated
-      const appleSub = `apple_${crypto.createHash('md5').update(code).digest('hex').slice(0, 16)}`;
-      const appleEmail = req.body.user ? JSON.parse(req.body.user).email : `${appleSub}@privaterelay.appleid.com`;
-      const appleName = req.body.user ? `${JSON.parse(req.body.user).name?.firstName || ''} ${JSON.parse(req.body.user).name?.lastName || ''}`.trim() : 'Apple User';
-
-      let user = Object.values(usersCache).find(
-        u => (u.appleId && u.appleId === appleSub) || (u.email === appleEmail && u.isVerified)
-      );
-
-      const isoNow = new Date().toISOString();
-
-      if (user) {
-        if (!user.appleId) {
-          user.appleId = appleSub;
-        }
-        user.lastLoginAt = isoNow;
-        user.updatedAt = isoNow;
-      } else {
-        const newId = `usr_${crypto.randomBytes(8).toString('hex')}`;
-        const uniqueUsername = generateUniqueUsername(appleName || 'AppleUser');
-        user = {
-          id: newId,
-          email: appleEmail,
-          username: uniqueUsername,
-          name: appleName || uniqueUsername,
-          provider: 'apple',
-          appleId: appleSub,
-          isVerified: true,
-          role: 'user',
-          createdAt: isoNow,
-          updatedAt: isoNow,
-          lastLoginAt: isoNow
-        };
-        usersCache[newId] = user;
-      }
-
-      saveUsers();
-
-      const now = Date.now();
-      const sessionExpires = now + 30 * 24 * 60 * 60 * 1000;
-      const sessionId = generateSignedSessionToken(user.id, user.email, user.username, 'user', 'apple', sessionExpires);
-      const session: UserSession = {
-        sessionId,
-        userId: user.id,
-        email: user.email,
-        username: user.username,
-        provider: 'apple',
-        role: 'user',
-        createdAt: now,
-        expiresAt: sessionExpires
-      };
-
-      activeUserSessions.set(sessionId, session);
-      saveUserSessions();
-
-      setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
-
-      return renderHtmlResponse(true, { user: sanitizeUser(user), sessionToken: sessionId });
-    } catch (err: any) {
-      console.error('[AppleCallback Error]', err);
-      return renderHtmlResponse(false, { error: err.message || 'Internal error processing Apple sign-in.' });
-    }
-  };
-
-  router.post('/apple/callback', handleAppleCallback);
-  router.get('/apple/callback', handleAppleCallback);
 
   return router;
 }

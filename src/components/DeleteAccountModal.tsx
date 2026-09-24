@@ -309,7 +309,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                   <span>Owner Account Protected</span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  The permanent Owner account cannot be deleted from account settings. The Owner role is fixed and required to maintain AniVault system governance.
+                  The permanent Owner account cannot be deleted from account settings. The Owner role is fixed and required to maintain Anivex system governance.
                 </p>
                 <div className="pt-2">
                   <button

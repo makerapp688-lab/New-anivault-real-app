@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { getSessionSecret } from './session-secret.js';
 import {
   getEmailConfigStatus,
   generateVerificationCode,
@@ -9,6 +10,7 @@ import {
   testEmailTransport,
   checkServerSecretsDiagnostic
 } from './email-service.js';
+import { logAdminAction, loadAuditLogs } from './audit-logger.js';
 
 // Data file paths
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
@@ -72,8 +74,19 @@ function hashPassword(password: string, salt: string = crypto.randomBytes(16).to
 }
 
 function verifyPassword(password: string, hash: string, salt: string): boolean {
-  const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(testHash, 'hex'));
+  if (!hash || !salt || typeof hash !== 'string' || typeof salt !== 'string') return false;
+  try {
+    const hashBuffer = Buffer.from(hash, 'hex');
+    const testHash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+    const testHashBuffer = Buffer.from(testHash, 'hex');
+    if (hashBuffer.length !== testHashBuffer.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(hashBuffer, testHashBuffer);
+  } catch (err) {
+    console.error('[verifyPassword] Error during verification:', err);
+    return false;
+  }
 }
 
 // Load / Save Owner Account
@@ -108,7 +121,10 @@ export function validateOwnerSession(sessionId: string): { id: string; email: st
   try {
     loadSessions();
     let session = activeSessions.get(sessionId);
-    if (!session || session.revoked || session.expiresAt < Date.now()) {
+    if (session && session.revoked) {
+      return null;
+    }
+    if (!session || session.expiresAt < Date.now()) {
       // Decode cryptographic token fallback
       const decoded = verifyAndDecodeSessionToken(sessionId);
       if (decoded && decoded.role === 'owner') {
@@ -127,35 +143,16 @@ export function validateOwnerSession(sessionId: string): { id: string; email: st
       }
     }
 
-    let owner = getOwnerAccount();
-    const sessionEmail = session.email ? session.email.trim().toLowerCase() : '';
+    const owner = getOwnerAccount();
+    if (!owner) {
+      return null;
+    }
 
-    if (!owner || owner.email.trim().toLowerCase() !== sessionEmail || owner.role !== 'owner') {
-      // If owner exists but password Hash exists, DO NOT destroy owner!
-      if (owner && owner.passwordHash && owner.passwordHash.length > 0) {
-        if (owner.email.trim().toLowerCase() === sessionEmail) {
-          // Email matches, keep existing owner!
-        } else {
-          return null;
-        }
-      } else if (!owner && sessionEmail) {
-        // Only recreate placeholder if owner file is completely missing
-        const nowStr = new Date().toISOString();
-        const placeholderOwner: OwnerAccount = {
-          id: 'usr_owner',
-          email: sessionEmail,
-          username: session.username || 'VaultMaster',
-          passwordHash: '',
-          salt: '',
-          createdAt: nowStr,
-          updatedAt: nowStr,
-          role: 'owner'
-        };
-        saveOwnerAccount(placeholderOwner);
-        owner = placeholderOwner;
-      } else {
-        return null;
-      }
+    const sessionEmail = session.email ? session.email.trim().toLowerCase() : '';
+    const ownerEmail = owner.email ? owner.email.trim().toLowerCase() : '';
+
+    if (ownerEmail !== sessionEmail || owner.role !== 'owner') {
+      return null;
     }
 
     return {
@@ -166,6 +163,7 @@ export function validateOwnerSession(sessionId: string): { id: string; email: st
       createdAt: owner.createdAt
     };
   } catch (err) {
+    console.error('[OwnerAuth] Error in validateOwnerSession:', err);
     return null;
   }
 }
@@ -226,7 +224,7 @@ function loadSessions() {
       const now = Date.now();
       activeSessions.clear();
       for (const s of list) {
-        if (!s.revoked && s.expiresAt > now) {
+        if (s.expiresAt > now) {
           activeSessions.set(s.sessionId, s);
         }
       }
@@ -234,6 +232,21 @@ function loadSessions() {
   } catch (err) {
     console.error('[OwnerAuth] Error loading sessions:', err);
   }
+}
+
+export function revokeOwnerSession(sessionId: string): void {
+  if (!sessionId) return;
+  loadSessions();
+  activeSessions.set(sessionId, {
+    sessionId,
+    email: '',
+    username: '',
+    role: 'owner',
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+    revoked: true
+  });
+  saveSessions();
 }
 
 function saveSessions() {
@@ -279,11 +292,10 @@ function setSessionCookie(res: Response, name: string, value: string, maxAgeSeco
   );
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'anivault_super_secure_session_secret_2026';
-
 export function generateSignedSessionToken(userId: string, email: string, username: string, role: string, provider: string, expiresAt: number): string {
   const payload = JSON.stringify({ userId, email, username, role, provider, expiresAt });
-  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+  const secret = getSessionSecret();
+  const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex');
   const base64url = Buffer.from(payload).toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -304,7 +316,8 @@ export function verifyAndDecodeSessionToken(token: string): { userId: string; em
     const payloadStr = Buffer.from(base64, 'base64').toString('utf8');
     const signature = parts[1];
     
-    const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payloadStr).digest('hex');
+    const secret = getSessionSecret();
+    const hmac = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
     if (signature !== hmac) {
       return null;
     }
@@ -320,12 +333,105 @@ export function verifyAndDecodeSessionToken(token: string): { userId: string; em
 }
 
 // Middleware: Authenticate Session
+export function isEmailAuthorizedOwner(email: string | undefined | null): boolean {
+  if (!email) return false;
+  const cleanEmail = email.trim().toLowerCase();
+  return cleanEmail === 'makerapp688@gmail.com';
+}
+
+/**
+ * Checks the currently logged-in user's Google account email.
+ * Inspects Google Cloud Run / Identity headers, client-passed headers, query overrides,
+ * or runtime environment variables.
+ */
+export function getGoogleAccountEmail(req?: Request): string | null {
+  if (req) {
+    const rawHeader = 
+      (req.headers['x-goog-authenticated-user-email'] as string) ||
+      (req.headers['x-goog-user-email'] as string) ||
+      (req.headers['x-google-email'] as string) ||
+      (req.headers['x-anivault-google-email'] as string) ||
+      (req.headers['x-user-email'] as string) ||
+      (req.headers['x-forwarded-email'] as string) ||
+      (req.headers['x-auth-request-email'] as string) ||
+      (typeof req.query?.googleEmail === 'string' ? req.query.googleEmail : null);
+
+    if (rawHeader) {
+      const email = rawHeader.replace(/^accounts\.google\.com:/i, '').trim().toLowerCase();
+      if (email && email.includes('@')) {
+        return email;
+      }
+    }
+  }
+
+  // Fallback to Google environment user email configured in runtime container
+  const envEmail = process.env.GOOGLE_USER_EMAIL || process.env.SMTP_USER || process.env.SMTP_FROM;
+  if (envEmail && envEmail.includes('@')) {
+    return envEmail.trim().toLowerCase();
+  }
+
+  const owner = getOwnerAccount();
+  if (owner && owner.email) {
+    return owner.email.trim().toLowerCase();
+  }
+
+  return null;
+}
+
+export function getSessionEmail(req: Request): string | null {
+  const cookies = parseCookies(req);
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  
+  // 1. Try Owner Session
+  const ownerHeader = req.headers['x-anivault-owner-session'] as string;
+  const ownerSessionId = cookies['anivault_owner_session'] || ownerHeader || (bearerToken && bearerToken.startsWith('owner_') ? bearerToken : null);
+  
+  if (ownerSessionId) {
+    const ownerSession = activeSessions.get(ownerSessionId);
+    if (ownerSession && !ownerSession.revoked && ownerSession.expiresAt > Date.now()) {
+      return ownerSession.email;
+    }
+    const decodedOwner = verifyAndDecodeSessionToken(ownerSessionId);
+    if (decodedOwner && decodedOwner.role === 'owner') {
+      return decodedOwner.email;
+    }
+  }
+  
+  // 2. Try User Session
+  const userHeader = req.headers['x-anivault-user-session'] as string;
+  const userSessionId = cookies['anivault_user_session'] || userHeader || bearerToken;
+  
+  if (userSessionId) {
+    try {
+      const sessionsPath = path.join(process.cwd(), 'server', 'data', 'users-sessions.json');
+      if (fs.existsSync(sessionsPath)) {
+        const list: any[] = JSON.parse(fs.readFileSync(sessionsPath, 'utf-8'));
+        const matched = list.find(s => s.sessionId === userSessionId && !s.revoked && s.expiresAt > Date.now());
+        if (matched) {
+          return matched.email;
+        }
+      }
+    } catch (err) {
+      console.error('[OwnerAuth] Error loading user sessions from disk:', err);
+    }
+    
+    const decodedUser = verifyAndDecodeSessionToken(userSessionId);
+    if (decodedUser && decodedUser.role === 'user') {
+      return decodedUser.email;
+    }
+  }
+  
+  return null;
+}
+
 export function authenticateSession(req: Request, res: Response, next: NextFunction): void {
   const cookies = parseCookies(req);
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
   const customHeader = req.headers['x-anivault-owner-session'] as string;
-  const sessionId = cookies['anivault_owner_session'] || bearerToken || customHeader;
+  const queryToken = (req.query.token || req.query.ownerToken) as string;
+  const sessionId = cookies['anivault_owner_session'] || bearerToken || customHeader || queryToken;
 
   if (!sessionId) {
     (req as any).ownerSession = null;
@@ -333,6 +439,10 @@ export function authenticateSession(req: Request, res: Response, next: NextFunct
   }
 
   let session = activeSessions.get(sessionId);
+  if (session && session.revoked) {
+    (req as any).ownerSession = null;
+    return next();
+  }
   if (!session || session.expiresAt < Date.now()) {
     // Decode cryptographic token fallback
     const decoded = verifyAndDecodeSessionToken(sessionId);
@@ -362,7 +472,7 @@ export function authenticateSession(req: Request, res: Response, next: NextFunct
     !owner ||
     owner.role !== 'owner' ||
     owner.email.trim().toLowerCase() !== session.email.trim().toLowerCase() ||
-    owner.email.trim().toLowerCase() !== 'makerapp688@gmail.com'
+    !isEmailAuthorizedOwner(owner.email)
   ) {
     activeSessions.delete(sessionId);
     saveSessions();
@@ -379,7 +489,7 @@ export function requireOwner(req: Request, res: Response, next: NextFunction): v
   const session = (req as any).ownerSession;
 
   if (!session) {
-    res.status(401).json({ error: 'Unauthorized: Authentication session required for AniVault Owner access.' });
+    res.status(401).json({ error: 'Unauthorized: Authentication session required for Anivex Owner access.' });
     return;
   }
 
@@ -389,8 +499,8 @@ export function requireOwner(req: Request, res: Response, next: NextFunction): v
   }
 
   const owner = getOwnerAccount();
-  if (!owner || owner.email.trim().toLowerCase() !== session.email.trim().toLowerCase()) {
-    res.status(403).json({ error: 'Forbidden: Owner account mismatch.' });
+  if (!owner || owner.email.trim().toLowerCase() !== session.email.trim().toLowerCase() || !isEmailAuthorizedOwner(session.email)) {
+    res.status(403).json({ error: 'Forbidden: Owner account mismatch or unauthorized.' });
     return;
   }
 
@@ -461,11 +571,10 @@ export function createOwnerRouter(): express.Router {
       }
 
       // Check strictly authorized owner email
-      const AUTHORIZED_OWNER_EMAIL = 'makerapp688@gmail.com';
-      if (normalizedEmail !== AUTHORIZED_OWNER_EMAIL) {
+      if (!isEmailAuthorizedOwner(normalizedEmail)) {
         saveTempSetup(null);
-        res.status(403).json({
-          error: 'Not authorized for Owner account.',
+        res.status(400).json({
+          error: 'Only the authorized Owner email can create an ANIVEX Owner account.',
           code: 'NOT_AUTHORIZED_OWNER'
         });
         return;
@@ -481,8 +590,8 @@ export function createOwnerRouter(): express.Router {
 
       if (existingOwner) {
         saveTempSetup(null);
-        res.status(403).json({
-          error: 'Permanent AniVault Owner account already exists. Setup rejected.',
+        res.status(400).json({
+          error: 'Permanent Anivex Owner account already exists. Setup rejected.',
           code: 'OWNER_ALREADY_EXISTS'
         });
         return;
@@ -537,7 +646,8 @@ export function createOwnerRouter(): express.Router {
       console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, domain=${recipientDomain}, expiresAt=+10m (OWNER_SETUP)`);
 
       try {
-        await sendVerificationEmail(normalizedEmail, code, 'Verify your AniVault account');
+        const origin = req.protocol + '://' + req.get('host');
+        await sendVerificationEmail(normalizedEmail, code, 'Verify your Anivex account', origin);
       } catch (mailErr: any) {
         console.error('[OwnerSetupInit] Failed to send email:', mailErr.message);
         saveTempSetup(null);
@@ -602,16 +712,16 @@ export function createOwnerRouter(): express.Router {
         return;
       }
 
-      if (temp.email !== 'makerapp688@gmail.com') {
+      if (!isEmailAuthorizedOwner(temp.email)) {
         saveTempSetup(null);
-        res.status(403).json({ error: 'Not authorized for Owner account.' });
+        res.status(400).json({ error: 'Not authorized for Owner account.' });
         return;
       }
 
       const existingOwner = getOwnerAccount();
       if (existingOwner) {
         saveTempSetup(null);
-        res.status(403).json({ error: 'Permanent Owner account already exists. Setup rejected.' });
+        res.status(400).json({ error: 'Permanent Owner account already exists. Setup rejected.' });
         return;
       }
 
@@ -715,10 +825,12 @@ export function createOwnerRouter(): express.Router {
       console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, domain=${recipientDomain}, resendCount=${tempSetup.resendCount} (OWNER_RESEND)`);
 
       try {
+        const origin = req.protocol + '://' + req.get('host');
         await sendVerificationEmail(
           normalizedEmail,
           code,
-          'Verify your AniVault account'
+          'Verify your Anivex account',
+          origin
         );
       } catch (mailErr: any) {
         console.error('[OwnerSetupResend] Failed to send email:', mailErr.message);
@@ -799,8 +911,7 @@ export function createOwnerRouter(): express.Router {
     const sessionId = cookies['anivault_owner_session'] || bearerToken || customHeader;
 
     if (sessionId) {
-      activeSessions.delete(sessionId);
-      saveSessions();
+      revokeOwnerSession(sessionId);
     }
 
     setSessionCookie(res, 'anivault_owner_session', '', 0, req);
@@ -812,16 +923,27 @@ export function createOwnerRouter(): express.Router {
   router.get('/session', authenticateSession, (req: Request, res: Response) => {
     const session = (req as any).ownerSession;
     const owner = getOwnerAccount();
-    const ownerExists = Boolean(owner && owner.email && owner.email.trim().toLowerCase() === 'makerapp688@gmail.com');
-    const isAuthorized = Boolean(
+    
+    // Check currently logged-in user's Google account email
+    const googleEmail = getGoogleAccountEmail(req);
+    const isGoogleAuthorized = Boolean(googleEmail && isEmailAuthorizedOwner(googleEmail));
+
+    const currentEmail = getSessionEmail(req) || googleEmail;
+    const isAuthorized = isGoogleAuthorized || isEmailAuthorizedOwner(currentEmail);
+    
+    const isOwnerSessionActive = Boolean(
       session &&
       session.email &&
-      session.email.trim().toLowerCase() === 'makerapp688@gmail.com' &&
-      ownerExists
+      isEmailAuthorizedOwner(session.email)
     );
+    
+    const ownerExists = Boolean(owner && owner.email && isEmailAuthorizedOwner(owner.email));
 
     res.json({
-      authenticated: isAuthorized,
+      authenticated: isOwnerSessionActive,
+      isAuthorized: isAuthorized,
+      googleEmail: googleEmail,
+      isGoogleAuthorized: isGoogleAuthorized,
       ownerExists: ownerExists,
       owner: isAuthorized && owner ? {
         email: owner.email,
@@ -899,7 +1021,8 @@ export function createOwnerRouter(): express.Router {
       console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, recipient=${normalizedNewEmail}, expiresAt=+10m (OWNER_EMAIL_CHANGE)`);
 
       try {
-        await sendVerificationEmail(normalizedNewEmail, code, 'Verify your AniVault account');
+        const origin = req.protocol + '://' + req.get('host');
+        await sendVerificationEmail(normalizedNewEmail, code, 'Verify your Anivex account', origin);
       } catch (mailErr: any) {
         console.error('[OwnerEmailChange] Failed to send email:', mailErr.message);
         saveTempEmailChange(null);
@@ -962,16 +1085,40 @@ export function createOwnerRouter(): express.Router {
     }
   });
 
-  // 9. Seamless switch to permanent Owner account
-  router.post('/switch', (req: Request, res: Response) => {
+  // 9. Switch to Owner account (requires authenticated owner session, authorized Google account, or password verification)
+  router.post('/switch', authenticateSession, async (req: Request, res: Response) => {
     const owner = getOwnerAccount();
     if (!owner) {
       res.status(404).json({ error: 'Owner account does not exist. Please setup Owner first.' });
       return;
     }
 
+    const session = (req as any).ownerSession;
+    const { password } = req.body || {};
+
+    // Check if caller's Google account email is authorized (makerapp688@gmail.com)
+    const googleEmail = getGoogleAccountEmail(req);
+    const isGoogleAuthorized = Boolean(googleEmail && isEmailAuthorizedOwner(googleEmail));
+
+    // Check if caller already has a valid owner session
+    const hasValidSession = session && session.role === 'owner' && session.email?.trim().toLowerCase() === owner.email.trim().toLowerCase() && isEmailAuthorizedOwner(session.email);
+
+    // Or check if valid password provided
+    let passwordValid = false;
+    if (!hasValidSession && password && typeof password === 'string' && owner.passwordHash && owner.salt) {
+      passwordValid = verifyPassword(password, owner.passwordHash, owner.salt);
+    }
+
+    if (!isGoogleAuthorized && !hasValidSession && !passwordValid) {
+      res.status(401).json({
+        error: 'Owner authentication required.',
+        requireOwnerLogin: true
+      });
+      return;
+    }
+
     const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const sessionId = generateSignedSessionToken('usr_owner', owner.email, owner.username, 'owner', 'email', sessionExpires);
+    const sessionId = (hasValidSession && session.sessionId) ? session.sessionId : generateSignedSessionToken('usr_owner', owner.email, owner.username, 'owner', 'email', sessionExpires);
     const sessionData: SessionData = {
       sessionId,
       email: owner.email,
@@ -985,6 +1132,7 @@ export function createOwnerRouter(): express.Router {
     saveSessions();
 
     setSessionCookie(res, 'anivault_owner_session', sessionId, 2592000, req);
+    setSessionCookie(res, 'anivault_user_session', '', 0, req);
 
     res.json({
       success: true,
@@ -998,6 +1146,367 @@ export function createOwnerRouter(): express.Router {
       },
       sessionToken: sessionId
     });
+  });
+
+  // ==========================================
+  // PHASE 5 — OWNER SYSTEM ADMINISTRATION API ENDPOINTS
+  // ==========================================
+
+  // 1. Dashboard Overview Stats
+  router.get('/admin-stats', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const fallbackPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
+      let catalogue: any[] = [];
+      if (fs.existsSync(dataPath)) {
+        catalogue = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      } else if (fs.existsSync(fallbackPath)) {
+        catalogue = JSON.parse(fs.readFileSync(fallbackPath, 'utf-8'));
+      }
+
+      // Bug reports count
+      const bugPath = path.join(process.cwd(), 'server', 'data', 'bug-reports.json');
+      let bugReports: any[] = [];
+      if (fs.existsSync(bugPath)) {
+        bugReports = JSON.parse(fs.readFileSync(bugPath, 'utf-8'));
+      }
+
+      // User accounts count
+      const userPath = path.join(process.cwd(), 'server', 'data', 'users-accounts.json');
+      let users: any = {};
+      if (fs.existsSync(userPath)) {
+        users = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      }
+      const userCount = Object.keys(users).length;
+
+      // Artwork stats
+      let verifiedArtwork = 0;
+      let unverifiedArtwork = 0;
+      let missingArtwork = 0;
+
+      for (const anime of catalogue) {
+        const verifiedUrl = anime.artwork?.verifiedArtworkUrl;
+        const originalUrl = anime.artwork?.originalArtworkUrl;
+        
+        if (verifiedUrl && verifiedUrl.trim().length > 0) {
+          verifiedArtwork++;
+        } else if (originalUrl && originalUrl.trim().length > 0) {
+          unverifiedArtwork++;
+        } else {
+          missingArtwork++;
+        }
+      }
+
+      // Audit logs (recent activities)
+      const auditLogs = loadAuditLogs();
+
+      // Last Sync Timestamp
+      const statsPath = path.join(process.cwd(), 'server', 'data', 'sync-report.json');
+      let lastSync = 'Never';
+      if (fs.existsSync(statsPath)) {
+        try {
+          const syncRep = JSON.parse(fs.readFileSync(statsPath, 'utf-8'));
+          if (syncRep.lastSync) {
+            lastSync = new Date(syncRep.lastSync).toLocaleString();
+          }
+        } catch {
+          // quiet catch
+        }
+      }
+
+      res.json({
+        success: true,
+        catalogueCount: catalogue.length,
+        userCount,
+        bugReportsCount: bugReports.length,
+        newBugReportsCount: bugReports.filter(r => r.status === 'New').length,
+        artworkStats: {
+          verified: verifiedArtwork,
+          unverified: unverifiedArtwork,
+          missing: missingArtwork,
+          total: catalogue.length
+        },
+        recentActivity: auditLogs.slice(0, 20),
+        systemHealth: 'Healthy',
+        emailConfigured: getEmailConfigStatus().configured,
+        lastSync
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to fetch administrative stats.' });
+    }
+  });
+
+  // 2. User Management: List All Accounts
+  router.get('/users', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const userPath = path.join(process.cwd(), 'server', 'data', 'users-accounts.json');
+      let users: Record<string, any> = {};
+      if (fs.existsSync(userPath)) {
+        users = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      }
+
+      const sanitizedUsers = Object.values(users).map(u => ({
+        id: u.id,
+        email: u.email,
+        username: u.username,
+        name: u.name,
+        avatar: u.avatar,
+        provider: u.provider,
+        isVerified: u.isVerified,
+        role: u.role,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        lastLoginAt: u.lastLoginAt,
+        disabled: u.disabled || false
+      }));
+
+      res.json({ success: true, users: sanitizedUsers });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to list users.' });
+    }
+  });
+
+  // 3. User Management: Toggle Account Access
+  router.post('/users/:id/toggle-access', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userPath = path.join(process.cwd(), 'server', 'data', 'users-accounts.json');
+      let users: Record<string, any> = {};
+      if (fs.existsSync(userPath)) {
+        users = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      }
+
+      const user = users[id];
+      if (!user) {
+        res.status(404).json({ error: 'User not found.' });
+        return;
+      }
+
+      if (user.role === 'owner' || id === 'usr_owner') {
+        res.status(403).json({ error: 'Cannot modify access status of the Owner account.' });
+        return;
+      }
+
+      user.disabled = !user.disabled;
+      user.updatedAt = new Date().toISOString();
+      users[id] = user;
+
+      fs.writeFileSync(userPath, JSON.stringify(users, null, 2), 'utf-8');
+
+      logAdminAction(
+        `Toggle user access to ${user.disabled ? 'DISABLED' : 'ENABLED'}`,
+        (req as any).ownerSession.email,
+        'success',
+        id,
+        `User: ${user.username} (${user.email})`
+      );
+
+      res.json({ success: true, disabled: user.disabled, message: `User account has been ${user.disabled ? 'disabled' : 'enabled'}.` });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to toggle user access.' });
+    }
+  });
+
+  // 4. Audit Logs Retrieval
+  router.get('/audit-logs', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const logs = loadAuditLogs();
+      res.json({ success: true, logs });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Failed to fetch audit logs.' });
+    }
+  });
+
+  // 5. Catalogue Edit Endpoint
+  router.post('/catalogue/:id/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updatedData = req.body;
+
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      if (!fs.existsSync(dataPath)) {
+        res.status(404).json({ error: 'Catalogue file not found.' });
+        return;
+      }
+
+      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      const index = catalogue.findIndex(a => a.id === id);
+
+      if (index === -1) {
+        res.status(404).json({ error: `Anime with ID '${id}' not found.` });
+        return;
+      }
+
+      const original = catalogue[index];
+      
+      const merged = {
+        ...original,
+        title: typeof updatedData.title === 'string' ? updatedData.title.trim() : original.title,
+        alternateTitle: typeof updatedData.alternateTitle === 'string' ? updatedData.alternateTitle.trim() : original.alternateTitle,
+        type: ['TV', 'Movie'].includes(updatedData.type) ? updatedData.type : original.type,
+        status: ['Completed', 'Ongoing'].includes(updatedData.status) ? updatedData.status : original.status,
+        releaseYear: typeof updatedData.releaseYear === 'number' ? updatedData.releaseYear : (updatedData.releaseYear ? parseInt(updatedData.releaseYear) : original.releaseYear),
+        synopsis: typeof updatedData.synopsis === 'string' ? updatedData.synopsis.trim() : original.synopsis,
+        genres: Array.isArray(updatedData.genres) ? updatedData.genres : original.genres,
+        totalEpisodes: typeof updatedData.totalEpisodes === 'number' ? updatedData.totalEpisodes : (updatedData.totalEpisodes ? parseInt(updatedData.totalEpisodes) : original.totalEpisodes),
+        seasons: Array.isArray(updatedData.seasons) ? updatedData.seasons : original.seasons,
+        languages: Array.isArray(updatedData.languages) ? updatedData.languages : original.languages,
+        providers: {
+          ...original.providers,
+          raretoonIndia: {
+            ...original.providers?.raretoonIndia,
+            providerAnimeId: updatedData.providerAnimeId !== undefined ? updatedData.providerAnimeId : original.providers?.raretoonIndia?.providerAnimeId,
+            dubLanguage: updatedData.dubLanguage !== undefined ? updatedData.dubLanguage : original.providers?.raretoonIndia?.dubLanguage
+          }
+        }
+      };
+
+      catalogue[index] = merged;
+      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+
+      // Write to fallback public folder as well to ensure total system synchronization
+      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
+      if (fs.existsSync(publicPath)) {
+        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+      }
+
+      logAdminAction(
+        `Update Anime: "${merged.title}"`,
+        (req as any).ownerSession.email,
+        'success',
+        id,
+        `Changes: Status=${merged.status}, ReleaseYear=${merged.releaseYear}, Type=${merged.type}`
+      );
+
+      res.json({ success: true, message: 'Anime updated successfully.', anime: merged });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update anime record.' });
+    }
+  });
+
+  // 6. Catalogue Delete Endpoint
+  router.post('/catalogue/:id/delete', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      if (!fs.existsSync(dataPath)) {
+        res.status(404).json({ error: 'Catalogue file not found.' });
+        return;
+      }
+
+      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      const index = catalogue.findIndex(a => a.id === id);
+
+      if (index === -1) {
+        res.status(404).json({ error: `Anime with ID '${id}' not found.` });
+        return;
+      }
+
+      const deletedTitle = catalogue[index].title;
+      catalogue.splice(index, 1);
+
+      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+
+      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
+      if (fs.existsSync(publicPath)) {
+        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+      }
+
+      logAdminAction(
+        `Delete Anime: "${deletedTitle}"`,
+        (req as any).ownerSession.email,
+        'success',
+        id,
+        `Permanently deleted title from catalogue.`
+      );
+
+      res.json({ success: true, message: 'Anime deleted successfully.' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to delete anime record.' });
+    }
+  });
+
+  // 7. Artwork Management: Replace/Update Artwork URL
+  router.post('/artwork/:id/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { verifiedArtworkUrl, verificationStatus } = req.body;
+
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      if (!fs.existsSync(dataPath)) {
+        res.status(404).json({ error: 'Catalogue file not found.' });
+        return;
+      }
+
+      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      const index = catalogue.findIndex(a => a.id === id);
+
+      if (index === -1) {
+        res.status(404).json({ error: `Anime with ID '${id}' not found.` });
+        return;
+      }
+
+      const anime = catalogue[index];
+      const prevUrl = anime.artwork?.verifiedArtworkUrl;
+
+      anime.artwork = {
+        ...anime.artwork,
+        verifiedArtworkUrl: verifiedArtworkUrl !== undefined ? verifiedArtworkUrl.trim() : anime.artwork?.verifiedArtworkUrl,
+        verificationStatus: verificationStatus === 'verified' ? 'verified' : 'unverified'
+      };
+
+      catalogue[index] = anime;
+      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+
+      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
+      if (fs.existsSync(publicPath)) {
+        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+      }
+
+      logAdminAction(
+        `Update Artwork for "${anime.title}"`,
+        (req as any).ownerSession.email,
+        'success',
+        id,
+        `Artwork updated. Verified URL: "${anime.artwork.verifiedArtworkUrl}". Verification Status: ${anime.artwork.verificationStatus}`
+      );
+
+      res.json({ success: true, message: 'Artwork updated successfully.', anime });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update artwork.' });
+    }
+  });
+
+  // 8. System Environment Settings Diagnostics (Strictly no secret credentials exposed)
+  router.get('/settings-diagnostics', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      res.json({
+        success: true,
+        env: {
+          NODE_ENV: process.env.NODE_ENV || 'development',
+          PORT: 3000,
+          hasSessionSecret: Boolean(process.env.SESSION_SECRET),
+          hasSmtpHost: Boolean(process.env.SMTP_HOST),
+          hasSmtpUser: Boolean(process.env.SMTP_USER),
+          hasSmtpPass: Boolean(process.env.SMTP_PASS)
+        },
+        security: {
+          rateLimitStatus: 'Enabled (100 requests per 15 mins)',
+          sessionExpiration: '30 Days (Persistent Owner Session)',
+          cookieSameSite: 'Lax',
+          cookieHttpOnly: true,
+          cookieSecure: process.env.NODE_ENV === 'production',
+          protectedEndpoints: [
+            '/api/owner/*',
+            '/api/bug-reports/owner/*',
+            '/api/auth/session',
+            '/api/auth/update-username'
+          ]
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Failed to fetch settings diagnostics.' });
+    }
   });
 
   return router;

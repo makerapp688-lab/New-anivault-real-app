@@ -3,8 +3,8 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
-import { runIngestion } from './server/raretoon-ingest.js';
-import { createOwnerRouter, authenticateSession } from './server/owner-auth.js';
+import { runIngestion } from './server/raretoon-ingest.ts';
+import { createOwnerRouter, authenticateSession, isEmailAuthorizedOwner } from './server/owner-auth.js';
 import { createUserAuthRouter } from './server/user-auth.js';
 import { logEmailConfigDiagnostics } from './server/email-service.js';
 
@@ -43,10 +43,14 @@ function loadCatalogue() {
   try {
     const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
     const statsPath = path.join(process.cwd(), 'server', 'data', 'sync-report.json');
+    const fallbackPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
 
     if (fs.existsSync(dataPath)) {
       catalogueCache = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    } else if (fs.existsSync(fallbackPath)) {
+      catalogueCache = JSON.parse(fs.readFileSync(fallbackPath, 'utf-8'));
     }
+
     if (fs.existsSync(statsPath)) {
       statsCache = JSON.parse(fs.readFileSync(statsPath, 'utf-8'));
     }
@@ -63,7 +67,7 @@ loadCatalogue();
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    app: 'AniVault',
+    app: 'Anivex',
     totalAnime: catalogueCache.length,
     activeProvider: 'RareToon India (RareAnimes)',
     providerUrl: 'https://www.rareanimes.mov/home/'
@@ -72,18 +76,28 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/download-source', authenticateSession, (req, res) => {
   const session = (req as any).ownerSession;
-  if (!session || session.role !== 'owner' || session.email?.trim().toLowerCase() !== 'makerapp688@gmail.com') {
+  if (!session || session.role !== 'owner' || !isEmailAuthorizedOwner(session.email)) {
     res.status(403).json({ error: 'Access denied. The source code download feature is reserved strictly for the verified Owner account.' });
     return;
   }
 
-  const archivePath = path.join(process.cwd(), 'public', 'anivault-source.tar.gz');
+  let archivePath = path.join(process.cwd(), 'public', 'anivault-source.tar.gz');
+  if (!fs.existsSync(archivePath)) {
+    archivePath = path.join(process.cwd(), 'dist', 'anivault-source.tar.gz');
+  }
+
   if (!fs.existsSync(archivePath)) {
     res.status(404).json({ error: 'Project archive not found.' });
     return;
   }
+
+  if (req.query.check === 'true') {
+    res.json({ success: true });
+    return;
+  }
+
   res.setHeader('Content-Type', 'application/gzip');
-  res.setHeader('Content-Disposition', 'attachment; filename="anivault-source-code.tar.gz"');
+  res.setHeader('Content-Disposition', 'attachment; filename="anivex-source-code.tar.gz"');
   fs.createReadStream(archivePath).pipe(res);
 });
 
@@ -99,6 +113,7 @@ app.get('/api/stats', (req, res) => {
 });
 
 app.get('/api/genres', (req, res) => {
+  loadCatalogue();
   const counts: Record<string, number> = {};
   for (const item of catalogueCache) {
     if (Array.isArray(item.genres)) {
@@ -115,9 +130,10 @@ app.get('/api/genres', (req, res) => {
 });
 
 app.get('/api/anime', (req, res) => {
+  loadCatalogue();
   let results = [...catalogueCache];
 
-  const { search, genre, type, sort, page = '1', limit = '30' } = req.query;
+  const { search, genre, type, sort, audio, status, page, limit, all } = req.query;
 
   // Search filter
   if (typeof search === 'string' && search.trim().length > 0) {
@@ -127,7 +143,9 @@ app.get('/api/anime', (req, res) => {
       const matchAlt = item.alternateTitle?.toLowerCase().includes(query);
       const matchSynopsis = item.synopsis?.toLowerCase().includes(query);
       const matchGenres = item.genres?.some((g: string) => g.toLowerCase().includes(query));
-      return matchTitle || matchAlt || matchSynopsis || matchGenres;
+      const matchDub = item.providers?.raretoonIndia?.dubLanguage?.toLowerCase().includes(query);
+      const matchProviderId = item.providers?.raretoonIndia?.providerAnimeId?.toLowerCase().includes(query);
+      return matchTitle || matchAlt || matchSynopsis || matchGenres || matchDub || matchProviderId;
     });
   }
 
@@ -144,6 +162,26 @@ app.get('/api/anime', (req, res) => {
     results = results.filter(item => item.type === type);
   }
 
+  // Audio filter
+  if (typeof audio === 'string') {
+    if (audio === 'hindi') {
+      results = results.filter(item => {
+        const dub = (item.providers?.raretoonIndia?.dubLanguage || '').toLowerCase();
+        return dub.includes('hindi') || dub.includes('dual') || dub.includes('multi');
+      });
+    } else if (audio === 'dual') {
+      results = results.filter(item => {
+        const dub = (item.providers?.raretoonIndia?.dubLanguage || '').toLowerCase();
+        return dub.includes('dual') || (dub.includes('hindi') && dub.includes('english'));
+      });
+    }
+  }
+
+  // Status filter
+  if (typeof status === 'string' && status !== 'all') {
+    results = results.filter(item => item.status === status);
+  }
+
   // Sorting
   if (sort === 'title') {
     results.sort((a, b) => a.title.localeCompare(b.title));
@@ -152,18 +190,36 @@ app.get('/api/anime', (req, res) => {
   } else if (sort === 'seasons') {
     results.sort((a, b) => (b.seasons?.length || 0) - (a.seasons?.length || 0));
   } else {
-    // Default popularity: prioritized major anime first
+    // Default popularity: prioritized multi-season anime first
     results.sort((a, b) => {
       const aSeasons = a.seasons?.length || 0;
       const bSeasons = b.seasons?.length || 0;
-      return bSeasons - aSeasons;
+      if (bSeasons !== aSeasons) return bSeasons - aSeasons;
+      return (a.title || '').localeCompare(b.title || '');
     });
   }
 
+  const isFullRequested = limit === 'all' || limit === '-1' || all === 'true' || (!page && !limit);
+
+  if (isFullRequested) {
+    res.json({
+      anime: results,
+      pagination: {
+        page: 1,
+        limit: results.length,
+        total: results.length,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false
+      }
+    });
+    return;
+  }
+
   const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-  const limitNum = Math.max(1, parseInt(limit as string, 10) || 30);
+  const limitNum = Math.max(1, parseInt(limit as string, 10) || 24);
   const total = results.length;
-  const totalPages = Math.ceil(total / limitNum);
+  const totalPages = Math.ceil(total / limitNum) || 1;
   const startIndex = (pageNum - 1) * limitNum;
   const paginated = results.slice(startIndex, startIndex + limitNum);
 
@@ -181,10 +237,11 @@ app.get('/api/anime', (req, res) => {
 });
 
 app.get('/api/anime/:id', (req, res) => {
+  loadCatalogue();
   const { id } = req.params;
   const item = catalogueCache.find(a => a.id === id);
   if (!item) {
-    res.status(404).json({ error: `Anime with id '${id}' not found in AniVault catalogue.` });
+    res.status(404).json({ error: `Anime with id '${id}' not found in Anivex catalogue.` });
     return;
   }
   res.json(item);

@@ -1,5 +1,5 @@
 {
-  "name": "AniVault",
+  "name": "Anivex",
   "description": "Production-quality anime discovery and catalogue platform featuring verified anime metadata, artwork, and direct links to RareToon India.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

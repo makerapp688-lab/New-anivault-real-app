@@ -197,7 +197,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight">Report a Bug / Feedback</h3>
-              <p className="text-xs text-slate-400">Help us improve AniVault by sharing what went wrong</p>
+              <p className="text-xs text-slate-400">Help us improve Anivex by sharing what went wrong</p>
             </div>
           </div>
           <button

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "BUG-20260923-D404EB",
+    "createdAt": "2026-09-23T16:03:52.881Z",
+    "whatHappened": "Test Bug Event",
+    "whatWereYouTryingToDo": "Verify API Endpoints",
+    "additionalDetails": "",
+    "status": "New",
+    "reporterProfile": null,
+    "diagnostics": {
+      "appVersion": "2.4.0",
+      "devicePlatform": "Node",
+      "browserInfo": "Browser Environment",
+      "currentRoute": "/",
+      "relevantFeature": "General",
+      "accountId": null,
+      "userType": "guest",
+      "ip": "::ffff:127.0.0.1"
+    },
+    "attachment": null
+  },
+  {
+    "id": "BUG-20260923-410E63",
+    "createdAt": "2026-09-23T11:50:45.831Z",
+    "whatHappened": "It is good",
+    "whatWereYouTryingToDo": "I was good",
+    "additionalDetails": "",
+    "status": "New",
+    "diagnostics": {
+      "appVersion": "2.4.0",
+      "devicePlatform": "iPhone - Mozilla/5.0 (iPhone; CPU iPhone OS 26_5_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/438.6.976963367 Mobile/15E148 Safari/604.1",
+      "browserInfo": "Mozilla/5.0 (iPhone; CPU iPhone OS 26_5_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/438.6.976963367 Mobile/15E148 Safari/604.1",
+      "currentRoute": "/",
+      "relevantFeature": "Account & Settings",
+      "accountId": null,
+      "userType": "guest",
+      "ip": "2409:40d1:10b1:486b:8034:fda8:550e:601c"
+    },
+    "attachment": null
+  }
+]

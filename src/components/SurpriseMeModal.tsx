@@ -85,7 +85,7 @@ export const SurpriseMeModal: React.FC<SurpriseMeModalProps> = ({
                 <Sparkles className="w-6 h-6 text-amber-400 absolute -top-1 -right-1 animate-bounce" />
               </div>
               <p className="text-sm font-semibold text-slate-300 animate-pulse">
-                Rolling the AniVault catalogue dice...
+                Rolling the Anivex catalogue dice...
               </p>
             </div>
           ) : selectedAnime ? (

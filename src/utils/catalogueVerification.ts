@@ -78,14 +78,17 @@ export function verifyAnimeRecord(raw: Partial<Anime> & Record<string, unknown>)
 
   // Artwork verification
   const artworkStr = typeof raw.artwork === 'string' ? raw.artwork : (typeof raw.artwork === 'object' && raw.artwork !== null ? (raw.artwork as { verifiedArtworkUrl?: string }).verifiedArtworkUrl : undefined);
-  const artworkUrl = artworkStr && (artworkStr.startsWith('http://') || artworkStr.startsWith('https://') || artworkStr.startsWith('/'))
-    ? artworkStr.trim()
-    : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80';
+  const rawArtworkUrl = (artworkStr || '').trim();
+  const isFallback = !rawArtworkUrl || 
+                     rawArtworkUrl.includes('unsplash.com') || 
+                     rawArtworkUrl.includes('placeholder') || 
+                     rawArtworkUrl.includes('default') ||
+                     (!rawArtworkUrl.startsWith('http://') && !rawArtworkUrl.startsWith('https://') && !rawArtworkUrl.startsWith('/'));
 
   const artwork: Artwork = {
-    verifiedArtworkUrl: artworkUrl,
-    isVerified: true,
-    verificationSource: 'official_cdn',
+    verifiedArtworkUrl: isFallback ? '' : rawArtworkUrl,
+    isVerified: !isFallback,
+    verificationSource: isFallback ? 'unverified_fallback' : (rawArtworkUrl.includes('anilist.co') || rawArtworkUrl.includes('myanimelist.net') ? 'official_cdn' : 'provider_verified'),
     aspectRatio: '3:4'
   };
 

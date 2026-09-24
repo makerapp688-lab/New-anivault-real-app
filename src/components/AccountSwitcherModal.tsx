@@ -50,7 +50,21 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
     username?: string;
     email?: string;
     avatar?: string | null;
-  }>({ exists: false });
+  }>(() => {
+    try {
+      const db = getAccountsDb();
+      const o = db['usr_owner'];
+      if (o && o.email?.trim().toLowerCase() === 'makerapp688@gmail.com') {
+        return {
+          exists: true,
+          username: o.username || 'Death197',
+          email: o.email,
+          avatar: getAccountAvatar('usr_owner')
+        };
+      }
+    } catch {}
+    return { exists: false };
+  });
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -74,10 +88,14 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
   const fetchOwnerStatus = async () => {
     try {
       const ownerToken = localStorage.getItem('anivault_owner_session_token');
+      const userToken = localStorage.getItem('anivault_user_session_token');
       const headers: Record<string, string> = {};
       if (ownerToken) {
         headers['Authorization'] = `Bearer ${ownerToken}`;
         headers['x-anivault-owner-session'] = ownerToken;
+      }
+      if (userToken) {
+        headers['x-anivault-user-session'] = userToken;
       }
 
       const res = await fetch('/api/owner/session', {
@@ -88,7 +106,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
       if (res.ok) {
         const data = await res.json();
         const db = getAccountsDb();
-        if (data.authenticated && data.ownerExists && data.owner && data.owner.email === 'makerapp688@gmail.com') {
+        if (data.isAuthorized && data.ownerExists && data.owner) {
           db['usr_owner'] = {
             id: 'usr_owner',
             username: data.owner.username,
@@ -157,6 +175,9 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
         onAccountSwitched(result.account);
       }
       onClose();
+    } else if (result.requireOwnerLogin) {
+      onClose();
+      onOpenOwnerLogin();
     } else {
       setErrorMsg(result.error || 'Failed to switch to Owner account.');
     }
@@ -316,7 +337,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
 
                     {/* [Owner Email] */}
                     <p className="text-[11px] text-amber-200/70 font-mono truncate">
-                      {ownerInfo.email || 'makerapp688@gmail.com'}
+                      {ownerInfo.email || 'owner@example.com'}
                     </p>
                   </div>
                 </div>
@@ -412,7 +433,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
                             {acc.username || acc.name || 'AnimeExplorer'}
                           </span>
                           <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                            {acc.provider === 'google' ? 'Google' : acc.provider === 'apple' ? 'Apple' : 'Verified'}
+                            {acc.role === 'owner' ? 'Owner' : 'Verified'}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-500 font-mono truncate">

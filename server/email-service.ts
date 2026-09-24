@@ -154,7 +154,7 @@ export function generateVerificationCode(): { code: string; codeHash: string } {
 
 /**
  * Determines the authoritative From address.
- * Formats sender display name as "AniVault" with verified sender email.
+ * Formats sender display name as "Anivex" with verified sender email.
  */
 function resolveFromAddress(smtpUser: string): string {
   const envFrom = (process.env.SMTP_FROM || '').trim().replace(/^["']|["']$/g, '');
@@ -162,14 +162,14 @@ function resolveFromAddress(smtpUser: string): string {
   if (envFrom) {
     const match = envFrom.match(/<([^>]+)>/);
     if (match && match[1]) {
-      return `"AniVault" <${match[1].trim()}>`;
+      return `"Anivex" <${match[1].trim()}>`;
     }
     if (envFrom.includes('@')) {
-      return `"AniVault" <${envFrom}>`;
+      return `"Anivex" <${envFrom}>`;
     }
   }
 
-  return `"AniVault" <${smtpUser}>`;
+  return `"Anivex" <${smtpUser}>`;
 }
 
 export async function testEmailTransport(testRecipient?: string): Promise<{
@@ -215,9 +215,9 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
       const info = await transporter.sendMail({
         from,
         to: testRecipient,
-        subject: 'AniVault Email Transport Diagnostic Test',
-        text: 'This is an automated test message from AniVault to confirm SMTP transport connectivity.',
-        html: '<div style="font-family:sans-serif;padding:20px;background:#0b0f19;color:#fff;border-radius:8px;">AniVault email transport test successful.</div>'
+        subject: 'Anivex Email Transport Diagnostic Test',
+        text: 'This is an automated test message from Anivex to confirm SMTP transport connectivity.',
+        html: '<div style="font-family:sans-serif;padding:20px;background:#0b0f19;color:#fff;border-radius:8px;">Anivex email transport test successful.</div>'
       });
 
       if (info.rejected && info.rejected.length > 0) {
@@ -262,7 +262,8 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
 export async function sendVerificationEmail(
   toEmail: string,
   code: string,
-  subjectTitle: string = 'Verify your AniVault account'
+  subjectTitle: string = 'Verify your Anivex account',
+  origin?: string
 ): Promise<{ success: boolean; messageId?: string }> {
   const status = getEmailConfigStatus();
   if (!status.configured) {
@@ -287,13 +288,17 @@ export async function sendVerificationEmail(
   console.log(`[EMAIL_DIAGNOSTIC] SMTP connection: host=${host}, port=${port}`);
   console.log(`[EMAIL_DIAGNOSTIC] SMTP authentication: authenticated as userDomain=${userDomain}`);
 
+  const defaultOrigin = 'https://ais-dev-322j3l47s5gpvjmutvfsiy-349368822796.asia-east1.run.app';
+  const cleanOrigin = (origin || defaultOrigin).trim().replace(/\/+$/, '');
+  const logoUrl = `${cleanOrigin}/anivex-logo.jpg`;
+
   // Plain text fallback
   const plainTextContent = 
-`AniVault
+`Anivex
 
 Here’s your new account verification code
 
-Use the verification code below to verify your AniVault account:
+Use the verification code below to verify your Anivex account:
 
 ┌─────────────────┐
 │     ${code}      │
@@ -303,7 +308,7 @@ This code expires in 10 minutes.
 
 If you didn’t request this verification code, you can safely ignore this email.
 
-© AniVault
+© Anivex
 This is an automated message. Please do not reply to this email.`;
 
   // Production-grade responsive HTML email template matching AniVault branding.
@@ -321,25 +326,19 @@ This is an automated message. Please do not reply to this email.`;
         <td align="center">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 500px; background-color: #0b0f19; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
             
-            <!-- Header: AniVault Brand Header -->
+            <!-- Header: Anivex Brand Header -->
             <tr>
               <td align="center" style="padding: 36px 32px 20px; text-align: center;">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
                   <tr>
-                    <td align="center" style="padding-bottom: 12px;">
-                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
-                        <tr>
-                          <td align="center" style="width: 56px; height: 56px; background-color: #e11d48; border-radius: 14px; text-align: center; vertical-align: middle; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);">
-                            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 30px; font-weight: 900; color: #ffffff; line-height: 56px; display: block;">A</span>
-                          </td>
-                        </tr>
-                      </table>
+                    <td align="center" style="padding-bottom: 12px; text-align: center;">
+                      <img src="${logoUrl}" alt="ANIVEX" width="140" height="140" style="display: block; margin: 0 auto; width: 140px; height: 140px; border-radius: 16px; border: 1px solid #1e293b; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);" />
                     </td>
                   </tr>
                   <tr>
                     <td align="center">
-                      <div style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.2;">
-                        Ani<span style="color: #f43f5e;">Vault</span>
+                      <div style="font-size: 24px; font-weight: 900; letter-spacing: 1px; color: #ffffff; line-height: 1.2; text-transform: uppercase;">
+                        ANI<span style="color: #3b82f6;">VEX</span>
                       </div>
                     </td>
                   </tr>
@@ -355,7 +354,7 @@ This is an automated message. Please do not reply to this email.`;
                 </h1>
                 
                 <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
-                  Use the verification code below to verify your AniVault account.
+                  Use the verification code below to verify your Anivex account.
                 </p>
 
                 <!-- Dedicated OTP Box -->
@@ -385,7 +384,7 @@ This is an automated message. Please do not reply to this email.`;
             <tr>
               <td align="center" style="padding: 20px 32px; background-color: #060911; border-top: 1px solid #1e293b; text-align: center;">
                 <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0; font-weight: 600;">
-                  &copy; AniVault
+                  &copy; Anivex
                 </p>
                 <p style="font-size: 11px; color: #475569; margin: 0; line-height: 1.4;">
                   This is an automated message. Please do not reply to this email.

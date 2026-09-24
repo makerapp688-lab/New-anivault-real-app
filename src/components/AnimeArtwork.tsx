@@ -51,7 +51,7 @@ export const AnimeArtwork: React.FC<AnimeArtworkProps> = ({
           {displayTitle}
         </span>
         <span className="text-[10px] text-rose-400 mt-1 uppercase tracking-wider font-bold">
-          AniVault Key Visual
+          Anivex Key Visual
         </span>
       </div>
     );

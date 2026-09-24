@@ -826,7 +826,7 @@ export const CompareAnimeView: React.FC<CompareAnimeViewProps> = ({
                   <span>Select Anime for Slot {activeSelectingSlot}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Browse or search verified anime cards from the AniVault catalogue
+                  Browse or search verified anime cards from the Anivex catalogue
                 </p>
               </div>
               <button
