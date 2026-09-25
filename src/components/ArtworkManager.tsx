@@ -35,11 +35,66 @@ interface ArtworkManagerProps {
   onClose?: () => void;
 }
 
+interface WorkerCompletedTask {
+  taskId: string;
+  animeId?: string | null;
+  animeTitle: string;
+  operation: string;
+  completedAt: string;
+  status: 'completed' | 'failed';
+  details?: string | null;
+}
+
 interface WorkerInfo {
   workerId: number;
+  status: 'idle' | 'claiming' | 'working' | 'retrying' | 'waiting' | 'paused' | 'error' | 'stopped' | 'busy' | 'backing_off';
+  currentTaskId?: string | null;
   currentAnimeId?: string | null;
   currentAnimeTitle?: string | null;
-  status: 'idle' | 'busy' | 'backing_off';
+  seasonName?: string | null;
+  operation?: string | null;
+  currentSource?: string | null;
+  currentStep?: string | null;
+  taskStartedAt?: number | null;
+  lastHeartbeat: number;
+  retryCount?: number;
+  tasksCompleted?: number;
+  tasksFailed?: number;
+  health?: 'healthy' | 'stale' | 'error';
+  lastError?: string | null;
+  recentCompletedTasks?: WorkerCompletedTask[];
+}
+
+interface WorkerActivityEvent {
+  id: string;
+  timestamp: string;
+  timestampMs: number;
+  workerId: number;
+  taskId?: string | null;
+  animeId?: string | null;
+  animeTitle?: string | null;
+  operation?: string | null;
+  eventType: string;
+  source?: string | null;
+  step?: string | null;
+  details?: string | null;
+  result?: any;
+}
+
+function formatTimeAgo(timestampMs?: number | null): string {
+  if (!timestampMs) return 'N/A';
+  const diffSec = Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  return `${diffMin}m ${diffSec % 60}s ago`;
+}
+
+function formatElapsed(timestampMs?: number | null): string {
+  if (!timestampMs) return '0s';
+  const diffSec = Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+  if (diffSec < 60) return `${diffSec}s`;
+  const diffMin = Math.floor(diffSec / 60);
+  return `${diffMin}m ${diffSec % 60}s`;
 }
 
 interface ScanState {
@@ -54,8 +109,22 @@ interface ScanState {
   finishedAt?: string | null;
   mode?: 'all' | 'unverified' | 'inspect';
   workerCount?: number;
+  poolConfig?: {
+    minWorkers: number;
+    maxWorkers: number;
+    currentWorkers: number;
+    concurrencyLimit: number;
+  };
+  etaFormatted?: string;
+  systemHealth?: {
+    heapUsedMb: number;
+    heapTotalMb: number;
+    status: 'healthy' | 'high_load' | 'critical';
+  };
+  sourceGatewayMetrics?: Record<string, any>;
   estimatedRemainingSeconds?: number | null;
   activeWorkers?: WorkerInfo[];
+  activityEvents?: WorkerActivityEvent[];
   stats: {
     scanned: number;
     verified: number;
@@ -166,8 +235,8 @@ interface SourceConfig {
 }
 
 export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
-  // Main Sub-tabs: 'registry' | 'needs_review' | 'fake_issues' | 'history' | 'sources'
-  const [subTab, setSubTab] = useState<'registry' | 'needs_review' | 'fake_issues' | 'history' | 'sources'>('registry');
+  // Main Sub-tabs: 'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources'
+  const [subTab, setSubTab] = useState<'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources'>('registry');
 
   // Dashboard & Scan status
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -203,8 +272,14 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const [selectedBatchOption, setSelectedBatchOption] = useState<number | 'all'>(300);
   const [customBatchInput, setCustomBatchInput] = useState<string>('300');
 
+  // Worker Detail Modal & Activity Event Filters
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
+  const [eventFilter, setEventFilter] = useState<string>('all');
+  const [eventSearch, setEventSearch] = useState<string>('');
+
   // Needs Review Workspace State
   const [selectedReviewIds, setSelectedReviewIds] = useState<string[]>([]);
+  const [processingItemIds, setProcessingItemIds] = useState<string[]>([]);
   const [reviewSubFilter, setReviewSubFilter] = useState<string>('all');
   const [chosenReplacementModal, setChosenReplacementModal] = useState<{
     open: boolean;
@@ -221,6 +296,45 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
   const pollingRef = useRef<any>(null);
 
+  // Safe Monotonic ScanState Updater (Prevents progress numbers from jumping backward)
+  const updateScanStateSafely = (newState: ScanState | null) => {
+    if (!newState) return;
+    setScanState(prev => {
+      if (!prev) return newState;
+      // If same job run, enforce monotonic non-decreasing processed count
+      if (prev.status === 'running' && newState.status === 'running' && prev.startedAt === newState.startedAt) {
+        const safeProcessed = Math.max(prev.processedCount || 0, newState.processedCount || 0);
+        return {
+          ...newState,
+          processedCount: safeProcessed
+        };
+      }
+      return newState;
+    });
+  };
+
+  // Lock background body scroll when any overlay/modal is open
+  const isModalOpen = Boolean(
+    selectedWorkerId !== null ||
+    showInspectModal ||
+    batchModalConfig !== null ||
+    chosenReplacementModal !== null ||
+    inspectedAnime !== null
+  );
+
+  useEffect(() => {
+    if (isModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+      };
+    }
+  }, [isModalOpen]);
+
   // Fetch dashboard summary
   const fetchDashboard = async () => {
     try {
@@ -228,7 +342,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       if (res.ok) {
         const data = await res.json();
         setDashboardData(data);
-        setScanState(data.scanState);
+        updateScanStateSafely(data.scanState);
       }
     } catch (err) {
       console.error('Failed to load artwork manager dashboard:', err);
@@ -318,7 +432,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
           const res = await fetch('/api/owner/artwork-manager/status', { credentials: 'include' });
           if (res.ok) {
             const data = await res.json();
-            setScanState(data.state);
+            updateScanStateSafely(data.state);
             if (data.state.status !== 'running') {
               clearInterval(pollingRef.current);
               fetchDashboard();
@@ -440,6 +554,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const handleBulkAction = async (endpoint: string, animeIds: string[]) => {
     if (!animeIds.length) return;
     setActionLoading(true);
+    setProcessingItemIds(prev => Array.from(new Set([...prev, ...animeIds])));
     try {
       const res = await fetch(`/api/owner/artwork-manager/needs-review/${endpoint}`, {
         method: 'POST',
@@ -449,10 +564,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       });
       const data = await res.json();
       if (data.success) {
-        setSelectedReviewIds([]);
+        setSelectedReviewIds(prev => prev.filter(id => !animeIds.includes(id)));
         if (data.scanState) setScanState(data.scanState);
-        fetchDashboard();
-        fetchAnimeList();
+        await fetchDashboard();
+        await fetchAnimeList();
       } else {
         alert(data.error || 'Operation failed.');
       }
@@ -460,6 +575,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       alert(`Error executing workspace action: ${err.message}`);
     } finally {
       setActionLoading(false);
+      setProcessingItemIds(prev => prev.filter(id => !animeIds.includes(id)));
     }
   };
 
@@ -995,6 +1111,22 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
         <button
           type="button"
+          onClick={() => setSubTab('workers')}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer relative ${
+            subTab === 'workers'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5 text-amber-400" />
+          <span>Workers Monitor (5)</span>
+          {scanState?.activeWorkers?.some(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy') && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={() => {
             setSubTab('fake_issues');
             fetchFakeIssues();
@@ -1437,79 +1569,87 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
                       {/* Right: Individual Workspace Actions */}
                       <div className="flex flex-wrap md:flex-col gap-1.5 shrink-0 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleBulkAction('reverify', [anime.id])}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm"
-                        >
-                          <RefreshCw className="w-3 h-3" />
-                          <span>Re-verify</span>
-                        </button>
+                        {(() => {
+                          const isItemProcessing = processingItemIds.includes(anime.id) || (scanState?.status === 'running' && scanState?.activeWorkers?.some(w => w.currentAnimeId === anime.id));
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAction('reverify', [anime.id])}
+                                disabled={actionLoading || isItemProcessing}
+                                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                              >
+                                <RefreshCw className={`w-3 h-3 ${isItemProcessing ? 'animate-spin' : ''}`} />
+                                <span>{isItemProcessing ? 'Processing...' : 'Re-verify'}</span>
+                              </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleBulkAction('search-again', [anime.id])}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm"
-                        >
-                          <Search className="w-3 h-3" />
-                          <span>Search Again</span>
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAction('search-again', [anime.id])}
+                                disabled={actionLoading || isItemProcessing}
+                                className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                              >
+                                <Search className={`w-3 h-3 ${isItemProcessing ? 'animate-spin' : ''}`} />
+                                <span>{isItemProcessing ? 'Searching...' : 'Search Again'}</span>
+                              </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleBulkAction('fix-artwork', [anime.id])}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm"
-                        >
-                          <Sparkles className="w-3 h-3 fill-slate-950" />
-                          <span>Fix Artwork</span>
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAction('fix-artwork', [anime.id])}
+                                disabled={actionLoading || isItemProcessing}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                              >
+                                <Sparkles className="w-3 h-3 fill-slate-950" />
+                                <span>{isItemProcessing ? 'Fixing...' : 'Fix Artwork'}</span>
+                              </button>
 
-                        {anime.candidates && anime.candidates.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setChosenReplacementModal({
-                              open: true,
-                              animeId: anime.id,
-                              animeTitle: anime.title,
-                              candidates: anime.candidates
-                            })}
-                            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm"
-                          >
-                            <ImageIcon className="w-3 h-3" />
-                            <span>Choose Candidate</span>
-                          </button>
-                        )}
+                              {anime.candidates && anime.candidates.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setChosenReplacementModal({
+                                    open: true,
+                                    animeId: anime.id,
+                                    animeTitle: anime.title,
+                                    candidates: anime.candidates
+                                  })}
+                                  disabled={actionLoading || isItemProcessing}
+                                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                                >
+                                  <ImageIcon className="w-3 h-3" />
+                                  <span>Choose Candidate</span>
+                                </button>
+                              )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleBulkAction('approve-current', [anime.id])}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          <span>Approve Current</span>
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAction('approve-current', [anime.id])}
+                                disabled={actionLoading || isItemProcessing}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                <span>Approve Current</span>
+                              </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleBulkAction('mark-unable', [anime.id])}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold cursor-pointer"
-                        >
-                          Mark Unable
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAction('mark-unable', [anime.id])}
+                                disabled={actionLoading || isItemProcessing}
+                                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold cursor-pointer disabled:opacity-50"
+                              >
+                                Mark Unable
+                              </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setInspectedAnime(anime)}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold flex items-center gap-1 border border-slate-800 cursor-pointer"
-                        >
-                          <Eye className="w-3 h-3 text-amber-400" />
-                          <span>Inspect Details</span>
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => setInspectedAnime(anime)}
+                                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold flex items-center gap-1 border border-slate-800 cursor-pointer"
+                              >
+                                <Eye className="w-3 h-3 text-amber-400" />
+                                <span>Inspect Details</span>
+                              </button>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1525,6 +1665,563 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* --- TAB: WORKERS MONITOR (5 Workers Concurrency) --- */}
+      {subTab === 'workers' && (
+        <div className="space-y-5">
+          {/* Header Banner */}
+          <div className="p-4 bg-gradient-to-r from-amber-950/60 via-slate-950 to-slate-950 border border-amber-500/40 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-amber-400" />
+                <h3 className="font-black text-sm text-white uppercase tracking-wider">
+                  {scanState?.poolConfig?.currentWorkers || 10}-Worker Execution Pool Monitor
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Strict Parallel Execution Pool ({scanState?.poolConfig?.currentWorkers || 10} Workers)
+                </span>
+              </div>
+              <p className="text-xs text-slate-300">
+                Authoritative real-time telemetry directly from backend worker job engine. Displays task ownership, current step, source, heartbeats, and execution times across all {scanState?.poolConfig?.currentWorkers || 10} active workers.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={fetchDashboard}
+                className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                <span>Refresh Telemetry</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Real Global Summary Totals Bar */}
+          {(() => {
+            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || 5;
+            const workerIds = Array.from({ length: currentWorkersCount }, (_, i) => i + 1);
+
+            const workersList = workerIds.map(id => {
+              const real = scanState?.activeWorkers?.find(w => w.workerId === id);
+              return real || {
+                workerId: id,
+                status: 'idle' as const,
+                tasksCompleted: 0,
+                tasksFailed: 0,
+                lastHeartbeat: Date.now(),
+                health: 'healthy' as const
+              };
+            });
+
+            const workingCount = workersList.filter(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy').length;
+            const idleCount = workersList.filter(w => w.status === 'idle').length;
+            const retryingCount = workersList.filter(w => w.status === 'retrying').length;
+            const errorCount = workersList.filter(w => w.status === 'error').length;
+            const pendingTasks = scanState?.stats?.pending || 0;
+            const completedTasks = scanState?.processedCount || 0;
+            const failedTasks = scanState?.stats?.failed || 0;
+
+            return (
+              <div className="space-y-3">
+                {/* Infrastructure Telemetry Row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-950/90 border border-slate-800 rounded-xl text-xs">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Configured Worker Pool</span>
+                    <span className="font-mono text-white font-bold">
+                      {scanState?.poolConfig?.currentWorkers || 5} Active <span className="text-slate-500 text-[10px]">(Min: {scanState?.poolConfig?.minWorkers || 1}, Max: {scanState?.poolConfig?.maxWorkers || 10})</span>
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Real Calculated ETA</span>
+                    <span className="font-mono text-cyan-400 font-bold">
+                      {scanState?.etaFormatted || 'Calculating...'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Server Resource Protection</span>
+                    <span className="font-mono text-emerald-400 font-bold">
+                      {scanState?.systemHealth?.heapUsedMb || 0} MB <span className="text-slate-500 text-[10px]">({scanState?.systemHealth?.status || 'healthy'})</span>
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Central Gateway Semaphores</span>
+                    <span className="font-mono text-amber-300 font-bold">
+                      Active Rate Limiters & Breakers
+                    </span>
+                  </div>
+                </div>
+
+                {/* Worker Metrics Totals Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+                  <div className="p-3 bg-slate-950/80 border border-emerald-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-emerald-400 uppercase">Working</div>
+                    <div className="text-lg font-black text-emerald-400 font-mono">{workingCount}</div>
+                    <div className="text-[9px] text-slate-500">Active workers</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Idle</div>
+                    <div className="text-lg font-black text-slate-300 font-mono">{idleCount}</div>
+                    <div className="text-[9px] text-slate-500">Awaiting tasks</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-amber-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-amber-400 uppercase">Retrying</div>
+                    <div className="text-lg font-black text-amber-400 font-mono">{retryingCount}</div>
+                    <div className="text-[9px] text-slate-500">Source backoff</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-rose-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-rose-400 uppercase">Errors</div>
+                    <div className="text-lg font-black text-rose-400 font-mono">{errorCount}</div>
+                    <div className="text-[9px] text-slate-500">Worker errors</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-cyan-400 uppercase">Pending Tasks</div>
+                    <div className="text-lg font-black text-cyan-400 font-mono">{pendingTasks}</div>
+                    <div className="text-[9px] text-slate-500">In queue</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-blue-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-blue-400 uppercase">Completed</div>
+                    <div className="text-lg font-black text-blue-400 font-mono">{completedTasks}</div>
+                    <div className="text-[9px] text-slate-500">Processed</div>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Failed Tasks</div>
+                    <div className="text-lg font-black text-slate-400 font-mono">{failedTasks}</div>
+                    <div className="text-[9px] text-slate-500">Failed total</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Dynamic Worker Pool Individual Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: scanState?.poolConfig?.currentWorkers || 5 }, (_, i) => i + 1).map(id => {
+              const worker = scanState?.activeWorkers?.find(w => w.workerId === id) || {
+                workerId: id,
+                status: 'idle' as const,
+                tasksCompleted: 0,
+                tasksFailed: 0,
+                lastHeartbeat: Date.now(),
+                health: 'healthy' as const
+              };
+
+              const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
+              const isRetrying = worker.status === 'retrying';
+              const isError = worker.status === 'error';
+              const isPaused = worker.status === 'paused';
+
+              return (
+                <div
+                  key={id}
+                  onClick={() => setSelectedWorkerId(id)}
+                  className={`p-4 rounded-xl border transition-all space-y-3 relative overflow-hidden cursor-pointer group hover:scale-[1.01] ${
+                    isWorking
+                      ? 'bg-slate-950/90 border-emerald-500/50 hover:border-emerald-400 shadow-lg shadow-emerald-950/20'
+                      : isRetrying
+                      ? 'bg-slate-950/90 border-amber-500/50 hover:border-amber-400'
+                      : isError
+                      ? 'bg-slate-950/90 border-rose-500/50 hover:border-rose-400'
+                      : isPaused
+                      ? 'bg-slate-950/90 border-purple-500/40 hover:border-purple-300'
+                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  {/* Worker Card Top Header */}
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-lg text-xs font-black font-mono border ${
+                        isWorking
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : 'bg-slate-800 text-slate-300 border-slate-700'
+                      }`}>
+                        Worker #{id}
+                      </div>
+                      <span className="text-xs font-black text-white uppercase tracking-wider">
+                        Worker {id}
+                      </span>
+                    </div>
+
+                    {/* Status Badge */}
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border ${
+                        isWorking
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
+                          : isRetrying
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : isError
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : isPaused
+                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
+                      }`} />
+                      <span>{isWorking ? 'WORKING' : worker.status.toUpperCase()}</span>
+                    </span>
+                  </div>
+
+                  {/* Worker Card Body Details */}
+                  {isWorking || isRetrying || isError ? (
+                    <div className="space-y-2 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1.5">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Anime</div>
+                        <div className="font-bold text-white text-sm break-words">
+                          {worker.currentAnimeTitle || 'Anime Task In Progress'}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-mono">
+                          {worker.currentAnimeId && <span>ID: {worker.currentAnimeId}</span>}
+                          {worker.seasonName && <span className="text-amber-300">• {worker.seasonName}</span>}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Task ID</span>
+                          <span className="text-slate-200 truncate block">{worker.currentTaskId || `task-${id}`}</span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Operation</span>
+                          <span className="text-amber-300 font-bold block">{worker.operation || 'Verify Artwork'}</span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Source</span>
+                          <span className="text-cyan-300 block truncate">{worker.currentSource || 'AniList / Jikan'}</span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Started / Spent</span>
+                          <span className="text-emerald-400 block">{formatElapsed(worker.taskStartedAt)}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
+                        <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Processing Step</span>
+                        <span className="text-slate-200 text-[11px] block">{worker.currentStep || 'Executing task verification pipeline...'}</span>
+                      </div>
+
+                      {worker.lastError && (
+                        <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-[10px] text-rose-300">
+                          <strong>Error:</strong> {worker.lastError}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center text-slate-500 space-y-1 bg-slate-900/30 rounded-lg border border-slate-800/40">
+                      <Clock className="w-5 h-5 opacity-40 mx-auto text-slate-400" />
+                      <p className="text-xs font-bold text-slate-400">IDLE</p>
+                      <p className="text-[10px] text-slate-500">No task currently claimed</p>
+                    </div>
+                  )}
+
+                  {/* Card Footer Metrics & Action CTA */}
+                  <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                    <span>Heartbeat: {formatTimeAgo(worker.lastHeartbeat)}</span>
+                    <span className="text-amber-400 font-sans font-bold group-hover:underline">View Worker Details & History →</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Live Activity History Panel (Persisted Events) */}
+          <div className="p-4 bg-slate-950/90 border border-slate-800 rounded-2xl space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <h4 className="font-black text-sm text-white uppercase tracking-wider flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-amber-400" />
+                  <span>Live Activity History Log</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300 font-mono">
+                    {scanState?.activityEvents?.length || 0} Persisted Events
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400">
+                  Authoritative record of claims, searches, artwork checks, replacements, completions, failures, and recoveries.
+                </p>
+              </div>
+
+              {/* Event Search & Filter Bar */}
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter by anime title..."
+                  value={eventSearch}
+                  onChange={e => setEventSearch(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                />
+
+                <select
+                  value={eventFilter}
+                  onChange={e => setEventFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                >
+                  <option value="all">All Event Types</option>
+                  <option value="task_claimed">Task Claimed</option>
+                  <option value="verification_started">Verification Started</option>
+                  <option value="source_searched">Source Searched</option>
+                  <option value="artwork_checked">Artwork Checked</option>
+                  <option value="replacement_found">Replacement Found</option>
+                  <option value="artwork_saved">Artwork Saved</option>
+                  <option value="task_completed">Task Completed</option>
+                  <option value="task_failed">Task Failed</option>
+                  <option value="stale_task_recovered">Stale Recovered</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Event List */}
+            {(() => {
+              const allEvents = scanState?.activityEvents || [];
+              const filtered = allEvents.filter(evt => {
+                if (eventFilter !== 'all' && evt.eventType !== eventFilter) return false;
+                if (eventSearch.trim()) {
+                  const q = eventSearch.toLowerCase();
+                  const matchTitle = evt.animeTitle?.toLowerCase().includes(q);
+                  const matchOp = evt.operation?.toLowerCase().includes(q);
+                  const matchWorker = `worker ${evt.workerId}`.includes(q);
+                  if (!matchTitle && !matchOp && !matchWorker) return false;
+                }
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="py-8 text-center text-slate-500 text-xs font-medium">
+                    No activity events match the selected filters.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                  {filtered.map(evt => (
+                    <div
+                      key={evt.id}
+                      className="p-3 bg-slate-900/80 border border-slate-800/80 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs"
+                    >
+                      <div className="flex items-start md:items-center gap-2.5">
+                        <span className="px-2 py-1 rounded-md text-[10px] font-mono font-black bg-slate-800 text-slate-300 border border-slate-700">
+                          W#{evt.workerId}
+                        </span>
+
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase font-mono border ${
+                          evt.eventType === 'task_completed' || evt.eventType === 'artwork_saved'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : evt.eventType === 'task_failed'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : evt.eventType === 'replacement_found'
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                            : evt.eventType === 'stale_task_recovered'
+                            ? 'bg-amber-500/30 text-amber-200 border-amber-400/50'
+                            : 'bg-slate-800 text-slate-300 border-slate-700'
+                        }`}>
+                          {evt.eventType.replace(/_/g, ' ')}
+                        </span>
+
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-white flex items-center gap-2">
+                            <span>{evt.animeTitle || 'System Worker Event'}</span>
+                            {evt.operation && (
+                              <span className="text-[10px] font-normal text-amber-300 font-mono">
+                                ({evt.operation})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {evt.details || evt.step || 'Processing step executed'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono shrink-0">
+                        {evt.source && <span className="text-cyan-300">{evt.source}</span>}
+                        <span>{formatTimeAgo(evt.timestampMs)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* --- WORKER DETAIL MODAL / DRAWER --- */}
+      {selectedWorkerId !== null && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            {(() => {
+              const worker = scanState?.activeWorkers?.find(w => w.workerId === selectedWorkerId) || {
+                workerId: selectedWorkerId,
+                status: 'idle' as const,
+                tasksCompleted: 0,
+                tasksFailed: 0,
+                lastHeartbeat: Date.now(),
+                health: 'healthy' as const
+              };
+
+              const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
+              const isRetrying = worker.status === 'retrying';
+              const isError = worker.status === 'error';
+
+              const workerEvents = (scanState?.activityEvents || []).filter(e => e.workerId === selectedWorkerId);
+
+              return (
+                <>
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-black text-sm border border-amber-500/30">
+                        Worker #{worker.workerId}
+                      </div>
+                      <div>
+                        <h3 className="font-black text-base text-white">
+                          Worker {worker.workerId} Deep Diagnostic View
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          Authoritative worker task lease, telemetry, and activity history.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWorkerId(null)}
+                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Worker Status Banner */}
+                  <div className={`p-4 rounded-xl border space-y-2 ${
+                    isWorking
+                      ? 'bg-emerald-950/30 border-emerald-500/40'
+                      : isRetrying
+                      ? 'bg-amber-950/30 border-amber-500/40'
+                      : isError
+                      ? 'bg-rose-950/30 border-rose-500/40'
+                      : 'bg-slate-900 border-slate-800'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${
+                          isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
+                        }`} />
+                        <span className="font-black text-sm text-white uppercase tracking-wider">
+                          Status: {isWorking ? 'WORKING' : worker.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono text-slate-400">
+                        Heartbeat: {formatTimeAgo(worker.lastHeartbeat)}
+                      </span>
+                    </div>
+
+                    {isWorking ? (
+                      <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800">
+                        <div className="font-bold text-amber-300 text-sm">{worker.currentAnimeTitle}</div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-300">
+                          <div><span className="text-slate-500">Task ID:</span> {worker.currentTaskId}</div>
+                          <div><span className="text-slate-500">Operation:</span> {worker.operation}</div>
+                          <div><span className="text-slate-500">Source:</span> {worker.currentSource}</div>
+                          <div><span className="text-slate-500">Spent:</span> {formatElapsed(worker.taskStartedAt)}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-950 text-slate-300 text-xs">
+                          <strong>Step:</strong> {worker.currentStep}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">
+                        Worker is currently idle awaiting tasks from the priority queue.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Worker Metrics Summary */}
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Completed</div>
+                      <div className="text-lg font-black text-emerald-400 font-mono">{worker.tasksCompleted || 0}</div>
+                    </div>
+                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Failed</div>
+                      <div className="text-lg font-black text-rose-400 font-mono">{worker.tasksFailed || 0}</div>
+                    </div>
+                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase">Health</div>
+                      <div className="text-lg font-black text-cyan-400 font-mono uppercase">{worker.health || 'Healthy'}</div>
+                    </div>
+                  </div>
+
+                  {/* Worker Recent Completed Tasks */}
+                  {worker.recentCompletedTasks && worker.recentCompletedTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-xs text-slate-300 uppercase tracking-wider">
+                        Worker #{worker.workerId} Recent Completed Tasks
+                      </h4>
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                        {worker.recentCompletedTasks.map((t, idx) => (
+                          <div key={idx} className="p-2.5 bg-slate-900 rounded-lg border border-slate-800 text-xs flex items-center justify-between">
+                            <div>
+                              <div className="font-bold text-white">{t.animeTitle}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">{t.operation} • {t.details}</div>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              t.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                            }`}>
+                              {t.status.toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Worker Specific Activity Events Timeline */}
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-xs text-slate-300 uppercase tracking-wider">
+                      Worker #{worker.workerId} Activity Event History ({workerEvents.length})
+                    </h4>
+                    {workerEvents.length > 0 ? (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {workerEvents.map(evt => (
+                          <div key={evt.id} className="p-2.5 bg-slate-900/70 border border-slate-800 rounded-lg text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-amber-300 font-mono text-[10px] uppercase">
+                                {evt.eventType.replace(/_/g, ' ')}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono">{formatTimeAgo(evt.timestampMs)}</span>
+                            </div>
+                            <div className="text-slate-200">{evt.animeTitle || 'Worker Event'}</div>
+                            <div className="text-[11px] text-slate-400">{evt.details || evt.step}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-4 text-center text-slate-500 text-xs">
+                        No activity events recorded yet for Worker #{worker.workerId}.
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
         </div>
       )}
 

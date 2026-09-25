@@ -1768,8 +1768,8 @@ export function createOwnerRouter(): express.Router {
     }
   });
 
-  // Action 2: Search Again (Fresh query with alternate titles and ID fallback)
-  router.post('/artwork-manager/needs-review/search-again', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+  // Action 2: Search Again (Enqueue high-priority worker task)
+  router.post('/artwork-manager/needs-review/search-again', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
       const { animeIds } = req.body;
       if (!Array.isArray(animeIds) || animeIds.length === 0) {
@@ -1777,33 +1777,21 @@ export function createOwnerRouter(): express.Router {
         return;
       }
       const email = (req as any).ownerSession?.email || 'Owner';
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
-
-      let resolvedCount = 0;
-      for (const id of animeIds) {
-        const anime = catalogue.find(a => a.id === id);
-        if (!anime) continue;
-
-        const result = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator: `${email}_search_again` });
-        if (result.status === 'verified' || result.status === 'auto_fixed') {
-          resolvedCount++;
-        }
-      }
+      const scanState = artworkScanner.enqueueSearchAgain(animeIds, email);
 
       res.json({
         success: true,
-        message: `Searched again for ${animeIds.length} items. Resolved ${resolvedCount}.`,
+        message: `Queued ${animeIds.length} items for worker search again.`,
         stats: computeGlobalCatalogueStats(),
-        scanState: artworkScanner.getJobState()
+        scanState
       });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to perform search again.' });
     }
   });
 
-  // Action 3: Fix Artwork (Auto-apply candidate when confidence >= 0.55)
-  router.post('/artwork-manager/needs-review/fix-artwork', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+  // Action 3: Fix Artwork (Enqueue high-priority worker task)
+  router.post('/artwork-manager/needs-review/fix-artwork', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
       const { animeIds } = req.body;
       if (!Array.isArray(animeIds) || animeIds.length === 0) {
@@ -1811,49 +1799,13 @@ export function createOwnerRouter(): express.Router {
         return;
       }
       const email = (req as any).ownerSession?.email || 'Owner';
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
-      const records = loadVerificationRecords();
-
-      let fixedCount = 0;
-      for (const id of animeIds) {
-        const anime = catalogue.find(a => a.id === id);
-        if (!anime) continue;
-
-        const rec = records[id];
-        const bestCandidate = rec?.candidates?.find(c => c.confidence >= 0.50 && c.imageUrl);
-
-        if (bestCandidate?.imageUrl) {
-          applyArtworkUpdate(id, bestCandidate.imageUrl, 'verified', null, bestCandidate.source);
-          records[id] = {
-            ...records[id],
-            animeId: id,
-            animeTitle: anime.title,
-            status: 'auto_fixed',
-            confidence: bestCandidate.confidence,
-            currentArtworkUrl: bestCandidate.imageUrl,
-            replacedArtworkUrl: bestCandidate.imageUrl,
-            source: bestCandidate.source,
-            issue: null,
-            lastVerifiedAt: new Date().toISOString()
-          };
-          fixedCount++;
-        } else {
-          // Re-verify to discover candidate
-          const result = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator: `${email}_fix_artwork` });
-          if (result.status === 'auto_fixed' || result.status === 'verified') {
-            fixedCount++;
-          }
-        }
-      }
-
-      saveVerificationRecords(records);
+      const scanState = artworkScanner.enqueueFixArtwork(animeIds, email);
 
       res.json({
         success: true,
-        message: `Fixed artwork for ${fixedCount} of ${animeIds.length} items.`,
+        message: `Queued ${animeIds.length} items for worker artwork fix.`,
         stats: computeGlobalCatalogueStats(),
-        scanState: artworkScanner.getJobState()
+        scanState
       });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to fix artwork.' });

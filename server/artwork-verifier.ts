@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { getArtworkSourcesConfig } from './artwork-sources.ts';
+import { globalSourceGateway } from './source-gateway.ts';
 
 export type VerificationStatus =
   | 'verified'
@@ -120,6 +121,43 @@ const CATALOGUE_PATH = path.join(DATA_DIR, 'anivault-catalogue.json');
 // Memory LRU / Request cache to avoid redundant API queries
 const apiQueryCache = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour in-memory cache
+
+export function clearApiQueryCacheForTitle(title: string): void {
+  if (!title) return;
+  const t = title.toLowerCase().trim();
+  for (const key of apiQueryCache.keys()) {
+    if (key.toLowerCase().includes(t)) {
+      apiQueryCache.delete(key);
+    }
+  }
+}
+
+class SimpleLock {
+  private queue: Array<() => void> = [];
+  private locked = false;
+
+  async acquire(): Promise<() => void> {
+    return new Promise((resolve) => {
+      const release = () => {
+        if (this.queue.length > 0) {
+          const next = this.queue.shift();
+          if (next) next();
+        } else {
+          this.locked = false;
+        }
+      };
+
+      if (this.locked) {
+        this.queue.push(() => resolve(release));
+      } else {
+        this.locked = true;
+        resolve(release);
+      }
+    });
+  }
+}
+
+export const persistenceLock = new SimpleLock();
 
 function getCached<T>(key: string): T | null {
   const cached = apiQueryCache.get(key);
@@ -246,21 +284,25 @@ export function cleanAnimeTitle(rawTitle: string): {
   return { primary, cleaned, variants, detectedSeasonNumber };
 }
 
-// --- Thread-safe file write with retry self-recovery ---
+// --- Thread-safe atomic file write with retry self-recovery ---
 function safeWriteFileSync(filePath: string, content: string): void {
   let attempts = 0;
+  const tempPath = `${filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
   while (attempts < 3) {
     attempts++;
     try {
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(filePath, content, 'utf-8');
+      fs.writeFileSync(tempPath, content, 'utf-8');
+      fs.renameSync(tempPath, filePath);
       return;
     } catch (err: any) {
+      try {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      } catch {}
       if (attempts >= 3) {
         console.error(`[ArtworkVerifier] Failed to write file ${filePath} after 3 attempts:`, err.message);
       } else {
-        // Short pause for lock resolution
         const delay = 50 * attempts;
         const start = Date.now();
         while (Date.now() - start < delay) { /* sync pause */ }
@@ -315,7 +357,7 @@ export function saveArtworkHistory(history: ArtworkHistoryEntry[]): void {
   safeWriteFileSync(ARTWORK_HISTORY_PATH, JSON.stringify(history, null, 2));
 }
 
-// --- AniList Query Engine ---
+// --- AniList Query Engine with SourceGateway Protection ---
 export async function queryAniList(
   title: string,
   endpoint: string,
@@ -326,7 +368,8 @@ export async function queryAniList(
   error?: string;
   statusCode?: number;
 }> {
-  const cacheKey = `anilist:${title.toLowerCase().trim()}`;
+  const normalizedTitle = title.toLowerCase().trim();
+  const cacheKey = `anilist:${normalizedTitle}`;
   const cached = getCached<any[]>(cacheKey);
   if (cached) {
     return { success: true, matches: cached };
@@ -370,54 +413,50 @@ export async function queryAniList(
     }
   `;
 
-  // Safe retry loop with backoff
-  let attempt = 0;
-  while (attempt < 2) {
-    attempt++;
-    try {
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'anilist',
+    normalizedTitle,
+    async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': 'Anivex-Artwork-Verifier/1.0'
-        },
-        body: JSON.stringify({ query, variables: { search: title } }),
-        signal: controller.signal
-      });
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Anivex-Artwork-Verifier/1.0'
+          },
+          body: JSON.stringify({ query, variables: { search: title } }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-      clearTimeout(timeoutId);
+        if (!res.ok) {
+          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+        }
 
-      if (res.status === 429) {
-        // Rate limited - wait and retry once
-        const retryAfter = parseInt(res.headers.get('Retry-After') || '2', 10);
-        await new Promise(r => setTimeout(r, Math.min(retryAfter * 1000, 3000)));
-        continue;
-      }
-
-      if (!res.ok) {
-        return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
-      }
-
-      const data = await res.json();
-      const media = data?.data?.Page?.media || [];
-      setCached(cacheKey, media);
-      return { success: true, matches: media, statusCode: 200 };
-    } catch (err: any) {
-      if (attempt >= 2) {
+        const data = await res.json();
+        const media = data?.data?.Page?.media || [];
+        setCached(cacheKey, media);
+        return { success: true, matches: media, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
         return { success: false, matches: [], error: err.message };
       }
-      await new Promise(r => setTimeout(r, 600));
     }
-  }
+  );
 
-  return { success: false, matches: [], error: 'AniList request failed after retries' };
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode
+  };
 }
 
-// --- Jikan / MyAnimeList Query Engine with Safe Fallback Handling ---
+// --- Jikan / MyAnimeList Query Engine with SourceGateway Protection ---
 export async function queryJikan(
   title: string,
   endpoint: string,
@@ -429,63 +468,74 @@ export async function queryJikan(
   statusCode?: number;
   isTemporaryUnavailable?: boolean;
 }> {
-  const cacheKey = `jikan:${title.toLowerCase().trim()}`;
+  const normalizedTitle = title.toLowerCase().trim();
+  const cacheKey = `jikan:${normalizedTitle}`;
   const cached = getCached<any[]>(cacheKey);
   if (cached) {
     return { success: true, matches: cached };
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'jikan',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    const encoded = encodeURIComponent(title);
-    const res = await fetch(`${endpoint}/anime?q=${encoded}&limit=3`, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Anivex-Artwork-Verifier/1.0'
-      },
-      signal: controller.signal
-    });
+      try {
+        const encoded = encodeURIComponent(title);
+        const res = await fetch(`${endpoint}/anime?q=${encoded}&limit=3`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Anivex-Artwork-Verifier/1.0'
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-    clearTimeout(timeoutId);
+        if (res.status === 504 || res.status === 502 || res.status === 503 || res.status === 429) {
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}: Temporary gateway issue`,
+            statusCode: res.status
+          };
+        }
 
-    if (res.status === 504 || res.status === 502 || res.status === 503 || res.status === 429) {
-      // 504 BadResponseException: MyAnimeList is temporarily unavailable
-      return {
-        success: false,
-        matches: [],
-        error: `HTTP ${res.status}: Temporary gateway issue`,
-        statusCode: res.status,
-        isTemporaryUnavailable: true
-      };
+        if (!res.ok) {
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}`,
+            statusCode: res.status
+          };
+        }
+
+        const data = await res.json();
+        const list = data?.data || [];
+        setCached(cacheKey, list);
+        return { success: true, matches: list, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return {
+          success: false,
+          matches: [],
+          error: err.message
+        };
+      }
     }
+  );
 
-    if (!res.ok) {
-      return {
-        success: false,
-        matches: [],
-        error: `HTTP ${res.status}`,
-        statusCode: res.status,
-        isTemporaryUnavailable: false
-      };
-    }
-
-    const data = await res.json();
-    const list = data?.data || [];
-    setCached(cacheKey, list);
-    return { success: true, matches: list, statusCode: 200 };
-  } catch (err: any) {
-    return {
-      success: false,
-      matches: [],
-      error: err.message,
-      isTemporaryUnavailable: true
-    };
-  }
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode,
+    isTemporaryUnavailable: gatewayResult.isCircuitOpen || (gatewayResult.statusCode ? gatewayResult.statusCode >= 500 || gatewayResult.statusCode === 429 : false)
+  };
 }
 
-// --- AniDB Fallback Engine (Used only when Jikan is genuinely unavailable/unreliable) ---
+// --- AniDB Fallback Engine with SourceGateway Protection ---
 export async function queryAniDBFallback(
   title: string
 ): Promise<{
@@ -493,40 +543,50 @@ export async function queryAniDBFallback(
   matches: any[];
   error?: string;
 }> {
-  const cacheKey = `anidb:${title.toLowerCase().trim()}`;
+  const normalizedTitle = title.toLowerCase().trim();
+  const cacheKey = `anidb:${normalizedTitle}`;
   const cached = getCached<any[]>(cacheKey);
   if (cached) {
     return { success: true, matches: cached };
   }
 
-  try {
-    // AniDB client query with safety timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'anidb',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    // Query AniDB anime search via HTML/REST gateway
-    const res = await fetch(`https://anidb.net/anime/?adb.search=${encodeURIComponent(title)}&do.search=1`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      signal: controller.signal
-    });
+      try {
+        const res = await fetch(`https://anidb.net/anime/?adb.search=${encodeURIComponent(title)}&do.search=1`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-    clearTimeout(timeoutId);
+        if (res.ok) {
+          const html = await res.text();
+          const hasMatch = html.includes('anime_table') || html.includes('class="anime "') || html.toLowerCase().includes(title.toLowerCase());
+          const results = hasMatch ? [{ title, aid: 1, source: 'anidb' }] : [];
+          setCached(cacheKey, results);
+          return { success: true, matches: results };
+        }
 
-    if (res.ok) {
-      const html = await res.text();
-      // If we see anime titles in table or direct entry
-      const hasMatch = html.includes('anime_table') || html.includes('class="anime "') || html.toLowerCase().includes(title.toLowerCase());
-      const results = hasMatch ? [{ title, aid: 1, source: 'anidb' }] : [];
-      setCached(cacheKey, results);
-      return { success: true, matches: results };
+        return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return { success: false, matches: [], error: err.message };
+      }
     }
+  );
 
-    return { success: false, matches: [], error: `HTTP ${res.status}` };
-  } catch (err: any) {
-    return { success: false, matches: [], error: err.message };
-  }
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error
+  };
 }
 
 // --- Image Usability & Integrity Inspection ---
@@ -725,8 +785,14 @@ export async function verifyAnimeEntry(
   options: {
     autoFixEnabled?: boolean;
     operator?: string;
+    forceFreshSearch?: boolean;
   } = { autoFixEnabled: true, operator: 'auto_verifier' }
 ): Promise<ArtworkVerificationResult> {
+  if (options.forceFreshSearch) {
+    clearApiQueryCacheForTitle(anime.title);
+    if (anime.alternateTitle) clearApiQueryCacheForTitle(anime.alternateTitle);
+  }
+
   const sources = getArtworkSourcesConfig();
   const anilistConfig = sources.find(s => s.id === 'anilist' && s.enabled);
   const jikanConfig = sources.find(s => s.id === 'jikan' && s.enabled);
@@ -1065,10 +1131,15 @@ export async function verifyAnimeEntry(
     evidence: evidenceList
   };
 
-  // Persist record
-  const records = loadVerificationRecords();
-  records[anime.id] = result;
-  saveVerificationRecords(records);
+  // Persist record atomically
+  const release = await persistenceLock.acquire();
+  try {
+    const records = loadVerificationRecords();
+    records[anime.id] = result;
+    saveVerificationRecords(records);
+  } finally {
+    release();
+  }
 
   return result;
 }

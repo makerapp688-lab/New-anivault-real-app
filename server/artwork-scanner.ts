@@ -87,20 +87,23 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
   for (const item of catalogue) {
     const rec = records[item.id];
     const url = item.artwork?.verifiedArtworkUrl || item.artwork?.originalArtworkUrl;
-    const isMissing = !url || url.includes('placeholder') || url.includes('default-poster');
+    const cleanUrl = typeof url === 'string' ? url.trim().toLowerCase() : '';
+    const isMissing = !cleanUrl || cleanUrl.includes('placeholder') || cleanUrl.includes('default-poster') || cleanUrl.includes('default_poster') || cleanUrl.includes('no-image') || cleanUrl === 'null' || cleanUrl === 'undefined';
 
     if (isMissing) {
       missing++;
-    }
-
-    if (rec) {
-      if (rec.status === 'verified') verified++;
-      else if (rec.status === 'auto_fixed') autoFixed++;
-      else if (rec.status === 'needs_review') needsReview++;
-      else if (rec.status === 'unable_to_verify') unableToVerify++;
-      else if (rec.status === 'possible_fake') possibleFake++;
-    } else if (item.artwork?.verificationStatus === 'verified') {
-      verified++;
+      if (rec?.status === 'needs_review') needsReview++;
+      else if (rec?.status === 'unable_to_verify') unableToVerify++;
+    } else {
+      if (rec) {
+        if (rec.status === 'verified') verified++;
+        else if (rec.status === 'auto_fixed') autoFixed++;
+        else if (rec.status === 'needs_review') needsReview++;
+        else if (rec.status === 'unable_to_verify') unableToVerify++;
+        else if (rec.status === 'possible_fake') possibleFake++;
+      } else if (item.artwork?.verificationStatus === 'verified') {
+        verified++;
+      }
     }
   }
 
@@ -155,7 +158,13 @@ class ArtworkScannerEngine {
       progressPercent: snapshot.progressPercent,
       lastLog: snapshot.lastLog,
       workerCount: snapshot.workerCount,
+      poolConfig: snapshot.poolConfig,
+      etaFormatted: snapshot.etaFormatted,
+      avgTaskDurationMs: snapshot.avgTaskDurationMs,
+      systemHealth: snapshot.systemHealth,
+      sourceGatewayMetrics: snapshot.sourceGatewayMetrics,
       activeWorkers: snapshot.activeWorkers,
+      activityEvents: snapshot.activityEvents,
       startedAt: snapshot.startedAt,
       updatedAt: snapshot.updatedAt,
       globalStats,
@@ -232,10 +241,7 @@ class ArtworkScannerEngine {
 
     // Launch worker pool in background
     globalWorkerJobEngine.runJobPool(async (task, workerId) => {
-      const anime = task.payload || this.catalogueMap.get(task.taskId);
-      if (!anime) throw new Error(`Anime record ${task.taskId} not found`);
-
-      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator });
+      return await this.processTaskByWorker(task, workerId, operator);
     }).catch(err => {
       console.error('[ArtworkScanner] Fatal error in worker pool:', err.message);
     });
@@ -245,6 +251,186 @@ class ArtworkScannerEngine {
       message: `Artwork verification job started (${mode}, batch=${tasks.length}).`,
       job: this.getJobState()
     };
+  }
+
+  private async processTaskByWorker(task: any, workerId: number, operator: string) {
+    this.reloadCatalogueMap();
+    const anime = task.payload || this.catalogueMap.get(task.taskId);
+    if (!anime) throw new Error(`Anime record ${task.taskId} not found`);
+
+    const operation = globalWorkerJobEngine.mapTaskTypeToOperation(task.type);
+
+    globalWorkerJobEngine.updateWorkerProgress(workerId, {
+      status: 'working',
+      currentAnimeId: anime.id,
+      currentAnimeTitle: anime.title,
+      seasonName: anime.season ? `Season ${anime.season}` : null,
+      currentStep: 'Querying external metadata sources...',
+      currentSource: 'AniList / Jikan'
+    });
+
+    globalWorkerJobEngine.recordActivityEvent({
+      workerId,
+      taskId: task.taskId,
+      animeId: anime.id,
+      animeTitle: anime.title,
+      operation,
+      eventType: 'verification_started',
+      source: 'Local Catalogue',
+      step: 'Verification pipeline initialized',
+      details: `Worker #${workerId} initiated ${operation} for "${anime.title}"`
+    });
+
+    if (task.type === 'artwork_reverify' || task.type === 'artwork_search_again') {
+      globalWorkerJobEngine.updateWorkerProgress(workerId, {
+        currentStep: 'Running multi-pass search & candidate match...',
+        currentSource: 'AniList / Jikan'
+      });
+
+      globalWorkerJobEngine.recordActivityEvent({
+        workerId,
+        taskId: task.taskId,
+        animeId: anime.id,
+        animeTitle: anime.title,
+        operation,
+        eventType: 'source_searched',
+        source: 'AniList & Jikan',
+        step: 'Multi-pass search executed',
+        details: `Querying AniList and Jikan for "${anime.title}"`
+      });
+
+      const res = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true });
+
+      globalWorkerJobEngine.updateWorkerProgress(workerId, { currentStep: 'Saving verification record...' });
+
+      if (res.replacedArtworkUrl) {
+        globalWorkerJobEngine.recordActivityEvent({
+          workerId,
+          taskId: task.taskId,
+          animeId: anime.id,
+          animeTitle: anime.title,
+          operation,
+          eventType: 'artwork_saved',
+          source: res.source || 'AniList',
+          step: 'Verified artwork saved',
+          details: `Replaced artwork for "${anime.title}" with verified ${res.source || 'AniList'} poster`,
+          result: { url: res.replacedArtworkUrl }
+        });
+      }
+
+      return res;
+    } else if (task.type === 'artwork_fix') {
+      globalWorkerJobEngine.updateWorkerProgress(workerId, {
+        currentStep: 'Evaluating candidate artwork usability...',
+        currentSource: 'Verification Records'
+      });
+
+      globalWorkerJobEngine.recordActivityEvent({
+        workerId,
+        taskId: task.taskId,
+        animeId: anime.id,
+        animeTitle: anime.title,
+        operation,
+        eventType: 'artwork_checked',
+        source: 'Verification Records',
+        step: 'Inspecting existing poster candidates',
+        details: `Checking stored artwork candidates for "${anime.title}"`
+      });
+
+      const records = loadVerificationRecords();
+      const rec = records[anime.id];
+      const bestCandidate = rec?.candidates?.find((c: any) => c.confidence >= 0.50 && c.imageUrl);
+
+      if (bestCandidate?.imageUrl) {
+        const inspection = await inspectArtworkImage(bestCandidate.imageUrl);
+        if (inspection.usable && !inspection.isBlankOrPlaceholder) {
+          globalWorkerJobEngine.updateWorkerProgress(workerId, {
+            currentStep: 'Saving verified replacement artwork...',
+            currentSource: bestCandidate.source || 'AniList'
+          });
+
+          globalWorkerJobEngine.recordActivityEvent({
+            workerId,
+            taskId: task.taskId,
+            animeId: anime.id,
+            animeTitle: anime.title,
+            operation,
+            eventType: 'replacement_found',
+            source: bestCandidate.source || 'AniList',
+            step: 'Valid high-confidence candidate matched',
+            details: `Matched candidate (${Math.round(bestCandidate.confidence * 100)}% confidence) from ${bestCandidate.source || 'AniList'}`
+          });
+
+          applyArtworkUpdate(anime.id, bestCandidate.imageUrl, 'verified', null, bestCandidate.source);
+          records[anime.id] = {
+            ...records[anime.id],
+            animeId: anime.id,
+            animeTitle: anime.title,
+            status: 'auto_fixed',
+            confidence: bestCandidate.confidence,
+            currentArtworkUrl: bestCandidate.imageUrl,
+            replacedArtworkUrl: bestCandidate.imageUrl,
+            source: bestCandidate.source,
+            issue: null,
+            lastVerifiedAt: new Date().toISOString()
+          };
+          saveVerificationRecords(records);
+
+          globalWorkerJobEngine.recordActivityEvent({
+            workerId,
+            taskId: task.taskId,
+            animeId: anime.id,
+            animeTitle: anime.title,
+            operation,
+            eventType: 'artwork_saved',
+            source: bestCandidate.source || 'AniList',
+            step: 'Artwork update saved to database',
+            details: `Saved new poster for "${anime.title}"`,
+            result: { url: bestCandidate.imageUrl }
+          });
+
+          return { status: 'auto_fixed', currentArtworkUrl: bestCandidate.imageUrl };
+        }
+      }
+
+      globalWorkerJobEngine.updateWorkerProgress(workerId, {
+        currentStep: 'Searching replacement poster from sources...',
+        currentSource: 'AniList / Jikan'
+      });
+
+      globalWorkerJobEngine.recordActivityEvent({
+        workerId,
+        taskId: task.taskId,
+        animeId: anime.id,
+        animeTitle: anime.title,
+        operation,
+        eventType: 'source_searched',
+        source: 'AniList & Jikan',
+        step: 'Searching fresh replacement poster',
+        details: `Fresh source search for missing poster on "${anime.title}"`
+      });
+
+      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true });
+    } else {
+      globalWorkerJobEngine.updateWorkerProgress(workerId, {
+        currentStep: 'Checking artwork relevance & dimensions...',
+        currentSource: 'AniList'
+      });
+
+      globalWorkerJobEngine.recordActivityEvent({
+        workerId,
+        taskId: task.taskId,
+        animeId: anime.id,
+        animeTitle: anime.title,
+        operation,
+        eventType: 'artwork_checked',
+        source: 'AniList',
+        step: 'Checking poster dimensions & usability',
+        details: `Standard artwork check for "${anime.title}"`
+      });
+
+      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator });
+    }
   }
 
   // Enqueue High Priority Re-verification Tasks (for Needs Review Workspace)
@@ -264,12 +450,55 @@ class ArtworkScannerEngine {
 
     // Ensure worker pool is running
     globalWorkerJobEngine.runJobPool(async (task, workerId) => {
-      const anime = task.payload || this.catalogueMap.get(task.taskId);
-      if (!anime) throw new Error(`Anime record ${task.taskId} not found`);
-
-      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator });
+      return await this.processTaskByWorker(task, workerId, operator);
     }).catch(err => {
       console.error('[ArtworkScanner] Error processing reverification queue:', err.message);
+    });
+
+    return this.getJobState();
+  }
+
+  public enqueueSearchAgain(animeIds: string[], operator = 'Owner') {
+    this.reloadCatalogueMap();
+    const tasks = animeIds.map(id => {
+      const anime = this.catalogueMap.get(id);
+      return {
+        taskId: id,
+        title: anime?.title || id,
+        payload: anime || { id, title: id },
+        type: 'artwork_search_again'
+      };
+    });
+
+    globalWorkerJobEngine.enqueueHighPriorityTasks(tasks);
+
+    globalWorkerJobEngine.runJobPool(async (task, workerId) => {
+      return await this.processTaskByWorker(task, workerId, operator);
+    }).catch(err => {
+      console.error('[ArtworkScanner] Error processing search_again queue:', err.message);
+    });
+
+    return this.getJobState();
+  }
+
+  public enqueueFixArtwork(animeIds: string[], operator = 'Owner') {
+    this.reloadCatalogueMap();
+    const tasks = animeIds.map(id => {
+      const anime = this.catalogueMap.get(id);
+      return {
+        taskId: id,
+        title: anime?.title || id,
+        payload: anime || { id, title: id },
+        type: 'artwork_fix'
+      };
+    });
+
+    globalWorkerJobEngine.enqueueHighPriorityTasks(tasks);
+
+    globalWorkerJobEngine.runJobPool(async (task, workerId) => {
+      return await this.processTaskByWorker(task, workerId, operator);
+    }).catch(err => {
+      console.error('[ArtworkScanner] Error processing fix_artwork queue:', err.message);
     });
 
     return this.getJobState();
@@ -283,10 +512,7 @@ class ArtworkScannerEngine {
   public resumeScan(operator = 'Owner') {
     this.reloadCatalogueMap();
     globalWorkerJobEngine.runJobPool(async (task, workerId) => {
-      const anime = task.payload || this.catalogueMap.get(task.taskId);
-      if (!anime) throw new Error(`Anime record ${task.taskId} not found`);
-
-      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator });
+      return await this.processTaskByWorker(task, workerId, operator);
     }).catch(err => {
       console.error('[ArtworkScanner] Error resuming pool:', err.message);
     });
