@@ -1966,7 +1966,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
           {/* Dynamic Worker Pool Individual Cards Grid with Virtualized/Paginated Slice */}
           {(() => {
-            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || 10;
+            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || 50;
             const workerIds = Array.from({ length: currentWorkersCount }, (_, i) => i + 1);
 
             const allWorkerObjects = workerIds.map(id => {

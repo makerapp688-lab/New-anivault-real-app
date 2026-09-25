@@ -169,11 +169,11 @@ export class ReusableWorkerJobEngine {
   // Activity events (Persisted)
   private activityEvents: WorkerActivityEvent[] = [];
 
-  // Dynamic Worker Pool Configuration (50-Worker Capable Architecture)
+  // Active Production 50-Worker Engine Pool Configuration
   private poolConfig: WorkerPoolConfig = {
     minWorkers: 1,
     maxWorkers: 50,
-    currentWorkers: 10, // Production default kept conservative at 10, fully capable up to 50
+    currentWorkers: 50, // Production active 50 real server-side worker instances
     concurrencyLimit: 50
   };
 
@@ -329,6 +329,12 @@ export class ReusableWorkerJobEngine {
         if (Array.isArray(saved.failedTaskIds)) {
           this.failedTaskSet = new Set(saved.failedTaskIds);
         }
+        if (saved.poolConfig && typeof saved.poolConfig.currentWorkers === 'number') {
+          this.poolConfig.currentWorkers = Math.max(1, Math.min(50, saved.poolConfig.currentWorkers));
+          this.poolConfig.maxWorkers = 50;
+          this.poolConfig.concurrencyLimit = 50;
+        }
+        this.initWorkers();
       }
     } catch (err: any) {
       console.error('[WorkerEngine] Error loading state:', err.message);
