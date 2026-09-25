@@ -39,7 +39,7 @@ export interface WorkerCompletedTask {
 
 export interface WorkerInfo {
   workerId: number;
-  status: 'idle' | 'claiming' | 'working' | 'retrying' | 'waiting' | 'paused' | 'error' | 'stopped' | 'busy' | 'backing_off';
+  status: 'idle' | 'claiming' | 'working' | 'waiting' | 'retrying' | 'paused' | 'error' | 'stopped' | 'stalled' | 'busy' | 'backing_off';
   currentTaskId?: string | null;
   currentAnimeId?: string | null;
   currentAnimeTitle?: string | null;
@@ -169,12 +169,12 @@ export class ReusableWorkerJobEngine {
   // Activity events (Persisted)
   private activityEvents: WorkerActivityEvent[] = [];
 
-  // Dynamic Worker Pool Configuration
+  // Dynamic Worker Pool Configuration (50-Worker Capable Architecture)
   private poolConfig: WorkerPoolConfig = {
     minWorkers: 1,
-    maxWorkers: 10,
-    currentWorkers: 10, // UPGRADED TO 10 WORKERS
-    concurrencyLimit: 10
+    maxWorkers: 50,
+    currentWorkers: 10, // Production default kept conservative at 10, fully capable up to 50
+    concurrencyLimit: 50
   };
 
   private isProcessing = false;

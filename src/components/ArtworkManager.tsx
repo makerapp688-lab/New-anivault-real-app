@@ -276,6 +276,31 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [eventFilter, setEventFilter] = useState<string>('all');
   const [eventSearch, setEventSearch] = useState<string>('');
+  const [workerStatusFilter, setWorkerStatusFilter] = useState<string>('all');
+  const [workerPage, setWorkerPage] = useState<number>(1);
+
+  const handleUpdatePoolConfig = async (newCount: number) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/owner/artwork-manager/pool-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentWorkers: newCount }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
+        await fetchDashboard();
+      } else {
+        alert(data.error || 'Failed to update worker pool count.');
+      }
+    } catch (err: any) {
+      alert(`Error updating pool config: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Needs Review Workspace State
   const [selectedReviewIds, setSelectedReviewIds] = useState<string[]>([]);
@@ -601,6 +626,67 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       alert(`Error choosing replacement: ${err.message}`);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRetryAllNeedsReview = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/owner/artwork-manager/needs-review/retry-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
+        await fetchDashboard();
+        await fetchAnimeList(page, statusFilter, searchQuery);
+      } else {
+        alert(data.message || 'No unresolved items found to retry.');
+      }
+    } catch (err: any) {
+      alert(`Error retrying all items: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSearchAllNeedsReview = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/owner/artwork-manager/needs-review/search-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
+        await fetchDashboard();
+        await fetchAnimeList(page, statusFilter, searchQuery);
+      } else {
+        alert(data.message || 'No unresolved items found for source search.');
+      }
+    } catch (err: any) {
+      alert(`Error searching all items: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRealBackendRefresh = async () => {
+    setLoadingDashboard(true);
+    try {
+      await fetchDashboard();
+      await fetchAnimeList(page, statusFilter, searchQuery);
+      await fetchSources();
+      await fetchFakeIssues();
+      await fetchHistory();
+    } catch (err: any) {
+      console.error('Refresh error:', err.message);
+    } finally {
+      setLoadingDashboard(false);
     }
   };
 
@@ -1010,7 +1096,25 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         )}
       </div>
 
-      {/* 2. STATS OVERVIEW CARDS */}
+      {/* 2. STATS OVERVIEW CARDS WITH REAL BACKEND REFRESH */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black text-slate-400 uppercase tracking-wider font-mono">
+            Authoritative Persisted Catalogue Statistics
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleRealBackendRefresh}
+          disabled={loadingDashboard}
+          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+          title="Perform real backend recalculation & refresh"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${loadingDashboard ? 'animate-spin' : ''}`} />
+          <span>Refresh Data</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Total Anime */}
         <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
@@ -1407,22 +1511,32 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => handleBulkAction('reverify', selectedReviewIds)}
-                disabled={!selectedReviewIds.length || actionLoading}
-                className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-40"
+                onClick={handleRetryAllNeedsReview}
+                disabled={actionLoading}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-40"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Re-verify Selected ({selectedReviewIds.length})</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${actionLoading ? 'animate-spin' : ''}`} />
+                <span>Retry All Unresolved</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleBulkAction('search-again', selectedReviewIds)}
-                disabled={!selectedReviewIds.length || actionLoading}
+                onClick={handleSearchAllNeedsReview}
+                disabled={actionLoading}
                 className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-40"
               >
                 <Search className="w-3.5 h-3.5" />
-                <span>Search Again</span>
+                <span>Search All Sources</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleBulkAction('reverify', selectedReviewIds)}
+                disabled={!selectedReviewIds.length || actionLoading}
+                className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Re-verify Selected ({selectedReviewIds.length})</span>
               </button>
 
               <button
@@ -1432,7 +1546,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                 className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-40"
               >
                 <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
-                <span>Fix Artwork</span>
+                <span>Fix Selected</span>
               </button>
 
               <button
@@ -1726,34 +1840,50 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             const failedTasks = scanState?.stats?.failed || 0;
 
             return (
-              <div className="space-y-3">
-                {/* Infrastructure Telemetry Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-950/90 border border-slate-800 rounded-xl text-xs">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Configured Worker Pool</span>
-                    <span className="font-mono text-white font-bold">
-                      {scanState?.poolConfig?.currentWorkers || 5} Active <span className="text-slate-500 text-[10px]">(Min: {scanState?.poolConfig?.minWorkers || 1}, Max: {scanState?.poolConfig?.maxWorkers || 10})</span>
-                    </span>
+              <div className="space-y-4">
+                {/* Infrastructure Telemetry & Capacity Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3.5 bg-slate-950/90 border border-slate-800 rounded-xl text-xs">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">50-Worker Capable Architecture</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-white font-bold text-sm">
+                        {scanState?.poolConfig?.currentWorkers || 10} Active
+                      </span>
+                      <span className="text-slate-500 text-[10px] font-mono">(Max Capable: 50)</span>
+                    </div>
                   </div>
 
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Worker Pool Concurrency Selector</span>
+                    <div className="flex items-center gap-1 font-mono text-xs">
+                      {[1, 5, 10, 20, 30, 50].map(cnt => (
+                        <button
+                          key={cnt}
+                          type="button"
+                          onClick={() => handleUpdatePoolConfig(cnt)}
+                          className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                            (scanState?.poolConfig?.currentWorkers || 10) === cnt
+                              ? 'bg-amber-500 text-slate-950 shadow'
+                              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                          }`}
+                        >
+                          {cnt}W
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
                     <span className="text-[10px] text-slate-500 font-bold uppercase block">Real Calculated ETA</span>
-                    <span className="font-mono text-cyan-400 font-bold">
+                    <span className="font-mono text-cyan-400 font-bold text-sm block">
                       {scanState?.etaFormatted || 'Calculating...'}
                     </span>
                   </div>
 
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Server Resource Protection</span>
-                    <span className="font-mono text-emerald-400 font-bold">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Server Heap Protection</span>
+                    <span className="font-mono text-emerald-400 font-bold text-sm block">
                       {scanState?.systemHealth?.heapUsedMb || 0} MB <span className="text-slate-500 text-[10px]">({scanState?.systemHealth?.status || 'healthy'})</span>
-                    </span>
-                  </div>
-
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Central Gateway Semaphores</span>
-                    <span className="font-mono text-amber-300 font-bold">
-                      Active Rate Limiters & Breakers
                     </span>
                   </div>
                 </div>
@@ -1802,14 +1932,46 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                     <div className="text-[9px] text-slate-500">Failed total</div>
                   </div>
                 </div>
+
+                {/* Worker Status Filter Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase font-mono mr-1">Filter Workers:</span>
+                    {['all', 'working', 'idle', 'retrying', 'error', 'stalled', 'stopped'].map(st => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => {
+                          setWorkerStatusFilter(st);
+                          setWorkerPage(1);
+                        }}
+                        className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase cursor-pointer transition-colors ${
+                          workerStatusFilter === st
+                            ? 'bg-amber-500 text-slate-950 shadow'
+                            : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Showing {workersList.length} total active worker threads
+                  </span>
+                </div>
               </div>
             );
           })()}
 
-          {/* Dynamic Worker Pool Individual Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: scanState?.poolConfig?.currentWorkers || 5 }, (_, i) => i + 1).map(id => {
-              const worker = scanState?.activeWorkers?.find(w => w.workerId === id) || {
+          {/* Dynamic Worker Pool Individual Cards Grid with Virtualized/Paginated Slice */}
+          {(() => {
+            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || 10;
+            const workerIds = Array.from({ length: currentWorkersCount }, (_, i) => i + 1);
+
+            const allWorkerObjects = workerIds.map(id => {
+              const real = scanState?.activeWorkers?.find(w => w.workerId === id);
+              return real || {
                 workerId: id,
                 status: 'idle' as const,
                 tasksCompleted: 0,
@@ -1817,128 +1979,185 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                 lastHeartbeat: Date.now(),
                 health: 'healthy' as const
               };
+            });
 
-              const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
-              const isRetrying = worker.status === 'retrying';
-              const isError = worker.status === 'error';
-              const isPaused = worker.status === 'paused';
+            const filteredWorkers = allWorkerObjects.filter(w => {
+              if (workerStatusFilter === 'all') return true;
+              if (workerStatusFilter === 'working') return w.status === 'working' || w.status === 'claiming' || w.status === 'busy';
+              if (workerStatusFilter === 'idle') return w.status === 'idle';
+              if (workerStatusFilter === 'retrying') return w.status === 'retrying';
+              if (workerStatusFilter === 'error') return w.status === 'error';
+              if (workerStatusFilter === 'stalled') return (w.status as string) === 'stalled';
+              if (workerStatusFilter === 'stopped') return w.status === 'stopped' || w.status === 'paused';
+              return true;
+            });
 
-              return (
-                <div
-                  key={id}
-                  onClick={() => setSelectedWorkerId(id)}
-                  className={`p-4 rounded-xl border transition-all space-y-3 relative overflow-hidden cursor-pointer group hover:scale-[1.01] ${
-                    isWorking
-                      ? 'bg-slate-950/90 border-emerald-500/50 hover:border-emerald-400 shadow-lg shadow-emerald-950/20'
-                      : isRetrying
-                      ? 'bg-slate-950/90 border-amber-500/50 hover:border-amber-400'
-                      : isError
-                      ? 'bg-slate-950/90 border-rose-500/50 hover:border-rose-400'
-                      : isPaused
-                      ? 'bg-slate-950/90 border-purple-500/40 hover:border-purple-300'
-                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  {/* Worker Card Top Header */}
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg text-xs font-black font-mono border ${
-                        isWorking
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                          : 'bg-slate-800 text-slate-300 border-slate-700'
-                      }`}>
-                        Worker #{id}
+            const pageSize = 12;
+            const totalWorkerPages = Math.ceil(filteredWorkers.length / pageSize) || 1;
+            const currentWorkerPage = Math.min(workerPage, totalWorkerPages);
+            const pagedWorkers = filteredWorkers.slice((currentWorkerPage - 1) * pageSize, currentWorkerPage * pageSize);
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {pagedWorkers.map(worker => {
+                    const id = worker.workerId;
+                    const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
+                    const isRetrying = worker.status === 'retrying';
+                    const isError = worker.status === 'error';
+                    const isPaused = worker.status === 'paused';
+
+                    return (
+                      <div
+                        key={id}
+                        onClick={() => setSelectedWorkerId(id)}
+                        className={`p-4 rounded-xl border transition-all space-y-3 relative overflow-hidden cursor-pointer group hover:scale-[1.01] ${
+                          isWorking
+                            ? 'bg-slate-950/90 border-emerald-500/50 hover:border-emerald-400 shadow-lg shadow-emerald-950/20'
+                            : isRetrying
+                            ? 'bg-slate-950/90 border-amber-500/50 hover:border-amber-400'
+                            : isError
+                            ? 'bg-slate-950/90 border-rose-500/50 hover:border-rose-400'
+                            : isPaused
+                            ? 'bg-slate-950/90 border-purple-500/40 hover:border-purple-300'
+                            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        {/* Worker Card Top Header */}
+                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg text-xs font-black font-mono border ${
+                              isWorking
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                            }`}>
+                              Worker #{id}
+                            </div>
+                            <span className="text-xs font-black text-white uppercase tracking-wider">
+                              Worker {id}
+                            </span>
+                          </div>
+
+                          {/* Status Badge */}
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border ${
+                              isWorking
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
+                                : isRetrying
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : isError
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                : isPaused
+                                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                                : 'bg-slate-800/80 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
+                            }`} />
+                            <span>{isWorking ? 'WORKING' : worker.status.toUpperCase()}</span>
+                          </span>
+                        </div>
+
+                        {/* Worker Card Body Details */}
+                        {isWorking || isRetrying || isError ? (
+                          <div className="space-y-2 text-xs">
+                            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1.5">
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Anime</div>
+                              <div className="font-bold text-white text-sm break-words">
+                                {worker.currentAnimeTitle || 'Anime Task In Progress'}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-mono">
+                                {worker.currentAnimeId && <span>ID: {worker.currentAnimeId}</span>}
+                                {worker.seasonName && <span className="text-amber-300">• {worker.seasonName}</span>}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Task ID</span>
+                                <span className="text-slate-200 truncate block">{worker.currentTaskId || `task-${id}`}</span>
+                              </div>
+
+                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Operation</span>
+                                <span className="text-amber-300 font-bold block">{worker.operation || 'Verify Artwork'}</span>
+                              </div>
+
+                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Source</span>
+                                <span className="text-cyan-300 block truncate">{worker.currentSource || 'AniList'}</span>
+                              </div>
+
+                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Started / Spent</span>
+                                <span className="text-emerald-400 block">{formatElapsed(worker.taskStartedAt)}</span>
+                              </div>
+                            </div>
+
+                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Processing Step</span>
+                              <span className="text-slate-200 text-[11px] block">{worker.currentStep || 'Executing task verification pipeline...'}</span>
+                            </div>
+
+                            {worker.lastError && (
+                              <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-[10px] text-rose-300">
+                                <strong>Error:</strong> {worker.lastError}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center text-slate-500 space-y-1 bg-slate-900/30 rounded-lg border border-slate-800/40">
+                            <Clock className="w-5 h-5 opacity-40 mx-auto text-slate-400" />
+                            <p className="text-xs font-bold text-slate-400">IDLE</p>
+                            <p className="text-[10px] text-slate-500">No task currently claimed</p>
+                          </div>
+                        )}
+
+                        {/* Card Footer Metrics */}
+                        <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                          <span>Heartbeat: {formatTimeAgo(worker.lastHeartbeat)}</span>
+                          <span className="text-amber-400 font-sans font-bold group-hover:underline">View Worker Details →</span>
+                        </div>
                       </div>
-                      <span className="text-xs font-black text-white uppercase tracking-wider">
-                        Worker {id}
-                      </span>
-                    </div>
-
-                    {/* Status Badge */}
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border ${
-                        isWorking
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
-                          : isRetrying
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : isError
-                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          : isPaused
-                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                          : 'bg-slate-800/80 text-slate-400 border-slate-700'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
-                      }`} />
-                      <span>{isWorking ? 'WORKING' : worker.status.toUpperCase()}</span>
-                    </span>
-                  </div>
-
-                  {/* Worker Card Body Details */}
-                  {isWorking || isRetrying || isError ? (
-                    <div className="space-y-2 text-xs">
-                      <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1.5">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Anime</div>
-                        <div className="font-bold text-white text-sm break-words">
-                          {worker.currentAnimeTitle || 'Anime Task In Progress'}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-mono">
-                          {worker.currentAnimeId && <span>ID: {worker.currentAnimeId}</span>}
-                          {worker.seasonName && <span className="text-amber-300">• {worker.seasonName}</span>}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Task ID</span>
-                          <span className="text-slate-200 truncate block">{worker.currentTaskId || `task-${id}`}</span>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Operation</span>
-                          <span className="text-amber-300 font-bold block">{worker.operation || 'Verify Artwork'}</span>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Source</span>
-                          <span className="text-cyan-300 block truncate">{worker.currentSource || 'AniList / Jikan'}</span>
-                        </div>
-
-                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                          <span className="text-[9px] text-slate-500 uppercase block font-sans">Started / Spent</span>
-                          <span className="text-emerald-400 block">{formatElapsed(worker.taskStartedAt)}</span>
-                        </div>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
-                        <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Processing Step</span>
-                        <span className="text-slate-200 text-[11px] block">{worker.currentStep || 'Executing task verification pipeline...'}</span>
-                      </div>
-
-                      {worker.lastError && (
-                        <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-[10px] text-rose-300">
-                          <strong>Error:</strong> {worker.lastError}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="py-6 text-center text-slate-500 space-y-1 bg-slate-900/30 rounded-lg border border-slate-800/40">
-                      <Clock className="w-5 h-5 opacity-40 mx-auto text-slate-400" />
-                      <p className="text-xs font-bold text-slate-400">IDLE</p>
-                      <p className="text-[10px] text-slate-500">No task currently claimed</p>
-                    </div>
-                  )}
-
-                  {/* Card Footer Metrics & Action CTA */}
-                  <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                    <span>Heartbeat: {formatTimeAgo(worker.lastHeartbeat)}</span>
-                    <span className="text-amber-400 font-sans font-bold group-hover:underline">View Worker Details & History →</span>
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Worker Pagination Bar */}
+                {totalWorkerPages > 1 && (
+                  <div className="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+                    <span className="text-slate-400 font-mono">
+                      Showing worker threads {(currentWorkerPage - 1) * pageSize + 1} to {Math.min(currentWorkerPage * pageSize, filteredWorkers.length)} of {filteredWorkers.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={currentWorkerPage <= 1}
+                        onClick={() => setWorkerPage(p => Math.max(1, p - 1))}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer flex items-center gap-1 font-bold"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>Prev</span>
+                      </button>
+                      <span className="px-2 font-mono text-amber-400 font-bold">
+                        {currentWorkerPage} / {totalWorkerPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={currentWorkerPage >= totalWorkerPages}
+                        onClick={() => setWorkerPage(p => Math.min(totalWorkerPages, p + 1))}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer flex items-center gap-1 font-bold"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Live Activity History Panel (Persisted Events) */}
           <div className="p-4 bg-slate-950/90 border border-slate-800 rounded-2xl space-y-4">

@@ -1,6 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 
+export type ArtworkSourceStatus =
+  | 'operational'
+  | 'rate_limited'
+  | 'temporarily_unavailable'
+  | 'timeout'
+  | 'configuration_error'
+  | 'degraded'
+  | 'offline'
+  | 'disabled'
+  | 'untested';
+
 export interface ArtworkSourceConfig {
   id: string;
   name: string;
@@ -11,7 +22,7 @@ export interface ArtworkSourceConfig {
   rateLimitPerSecond?: number;
   timeoutMs: number;
   priority: number;
-  status: 'operational' | 'degraded' | 'offline' | 'untested';
+  status: ArtworkSourceStatus;
   lastChecked?: string;
   lastLatencyMs?: number;
   lastError?: string | null;
@@ -33,24 +44,24 @@ const DEFAULT_SOURCES: ArtworkSourceConfig[] = [
     timeoutMs: 8000,
     priority: 1,
     status: 'untested',
-    description: 'Primary source. AniList GraphQL API for verified high-res artwork, romaji/english/japanese titles, seasons, and relations.'
+    description: 'Primary source. AniList GraphQL API for verified high-res cover artwork, romaji/english/japanese titles, seasons, and relations.'
   },
   {
     id: 'jikan',
     name: 'Jikan API (MyAnimeList)',
     type: 'rest',
     endpoint: 'https://api.jikan.moe/v4',
-    enabled: true,
+    enabled: false, // Disabled per specification: position #2 test source removed
     rateLimitPerMinute: 60,
     rateLimitPerSecond: 3,
     timeoutMs: 8000,
     priority: 2,
-    status: 'untested',
-    description: 'Secondary source. MyAnimeList open API gateway for cross-checking titles, MAL IDs, format, and high-res posters.'
+    status: 'disabled',
+    description: 'DISABLED / NOT USED FOR ARTWORK VERIFICATION. Preserved for legacy cross-references.'
   },
   {
     id: 'anidb',
-    name: 'AniDB (Tertiary Fallback)',
+    name: 'AniDB (Secondary Fallback)',
     type: 'rest',
     endpoint: 'https://anidb.net',
     enabled: true,
@@ -59,7 +70,46 @@ const DEFAULT_SOURCES: ArtworkSourceConfig[] = [
     timeoutMs: 8000,
     priority: 3,
     status: 'untested',
-    description: 'Tertiary fallback. Used only when Jikan is genuinely unavailable/unreliable to cross-check anime titles and identity.'
+    description: 'Secondary fallback. Used to cross-check anime titles, identity, and verification data.'
+  },
+  {
+    id: 'tmdb',
+    name: 'TMDB (The Movie Database)',
+    type: 'rest',
+    endpoint: 'https://api.themoviedb.org/3',
+    enabled: false, // Disabled per specification: TMDB removed from active pipeline
+    rateLimitPerMinute: 120,
+    rateLimitPerSecond: 4,
+    timeoutMs: 8000,
+    priority: 4,
+    status: 'disabled',
+    description: 'DISABLED / NOT USED FOR ARTWORK VERIFICATION. Preserved for stored artwork history.'
+  },
+  {
+    id: 'tvmaze',
+    name: 'TVmaze API',
+    type: 'rest',
+    endpoint: 'https://api.tvmaze.com',
+    enabled: true,
+    rateLimitPerMinute: 120,
+    rateLimitPerSecond: 4,
+    timeoutMs: 8000,
+    priority: 5,
+    status: 'untested',
+    description: 'TVmaze open REST database. Reliable coverage for TV series, animated shows, and clean original posters.'
+  },
+  {
+    id: 'thetvdb',
+    name: 'TheTVDB Gateway',
+    type: 'rest',
+    endpoint: 'https://api4.thetvdb.com/v4',
+    enabled: true,
+    rateLimitPerMinute: 120,
+    rateLimitPerSecond: 4,
+    timeoutMs: 8000,
+    priority: 6,
+    status: 'untested',
+    description: 'TheTVDB open media database gateway for supplementary anime artwork and season poster resolution.'
   }
 ];
 
@@ -69,11 +119,31 @@ export function getArtworkSourcesConfig(): ArtworkSourceConfig[] {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (fs.existsSync(SOURCES_CONFIG_PATH)) {
-      const data = JSON.parse(fs.readFileSync(SOURCES_CONFIG_PATH, 'utf-8'));
+      const data: ArtworkSourceConfig[] = JSON.parse(fs.readFileSync(SOURCES_CONFIG_PATH, 'utf-8'));
       if (Array.isArray(data) && data.length > 0) {
-        // Ensure anidb exists in the configuration if not present
-        if (!data.some((s: any) => s.id === 'anidb')) {
-          data.push(DEFAULT_SOURCES[2]);
+        let modified = false;
+
+        // Force disable Jikan (position #2) and TMDB per requirement
+        for (const s of data) {
+          if (s.id === 'tmdb' || s.id === 'jikan') {
+            if (s.enabled || s.status !== 'disabled') {
+              s.enabled = false;
+              s.status = 'disabled';
+              s.description = `DISABLED / NOT USED FOR ARTWORK VERIFICATION.`;
+              modified = true;
+            }
+          }
+        }
+
+        // Migration: Ensure all default sources exist in loaded configuration
+        for (const defaultSource of DEFAULT_SOURCES) {
+          if (!data.some((s: any) => s.id === defaultSource.id)) {
+            data.push(defaultSource);
+            modified = true;
+          }
+        }
+
+        if (modified) {
           saveArtworkSourcesConfig(data);
         }
         return data;
@@ -103,7 +173,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
   success: boolean;
   latencyMs: number;
   message: string;
-  status: 'operational' | 'degraded' | 'offline';
+  status: ArtworkSourceStatus;
   sampleTitle?: string;
 }> {
   const sources = getArtworkSourcesConfig();
@@ -118,6 +188,22 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
   }
 
   const source = sources[sourceIndex];
+
+  // Enforce disabled state: Test Connection must NOT re-enable a disabled source
+  if (source.id === 'tmdb' || source.id === 'jikan' || !source.enabled) {
+    source.enabled = false;
+    source.status = 'disabled';
+    sources[sourceIndex] = source;
+    saveArtworkSourcesConfig(sources);
+
+    return {
+      success: false,
+      latencyMs: 0,
+      message: `Source "${source.name}" is DISABLED and not used for artwork verification tasks.`,
+      status: 'disabled'
+    };
+  }
+
   const startTime = Date.now();
 
   try {
@@ -167,7 +253,8 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         };
       } else {
         const text = await res.text();
-        source.status = 'degraded';
+        const status: ArtworkSourceStatus = res.status === 429 ? 'rate_limited' : 'temporarily_unavailable';
+        source.status = status;
         source.lastChecked = new Date().toISOString();
         source.lastLatencyMs = latencyMs;
         source.lastError = `HTTP ${res.status}: ${text.slice(0, 100)}`;
@@ -177,63 +264,11 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         return {
           success: false,
           latencyMs,
-          message: `HTTP error ${res.status}: ${text.slice(0, 100)}`,
-          status: 'degraded'
-        };
-      }
-    } else if (source.id === 'jikan') {
-      // Diagnostic check: Test Jikan with safe retry and timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
-
-      const res = await fetch(`${source.endpoint}/anime?q=Naruto&limit=1`, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Anivex-Artwork-Manager/1.0'
-        },
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      const latencyMs = Date.now() - startTime;
-
-      if (res.ok) {
-        const json = await res.json();
-        const item = json?.data?.[0];
-        source.status = 'operational';
-        source.lastChecked = new Date().toISOString();
-        source.lastLatencyMs = latencyMs;
-        source.lastError = null;
-        sources[sourceIndex] = source;
-        saveArtworkSourcesConfig(sources);
-
-        return {
-          success: true,
-          latencyMs,
-          message: `Connected successfully (${latencyMs}ms). MAL entry verified.`,
-          status: 'operational',
-          sampleTitle: item?.title || 'Naruto'
-        };
-      } else {
-        const json = await res.json().catch(() => ({}));
-        const errorMsg = json?.message || `HTTP ${res.status}`;
-        // Treat 504 / 429 as temporary degraded/offline
-        source.status = res.status === 429 ? 'degraded' : 'offline';
-        source.lastChecked = new Date().toISOString();
-        source.lastLatencyMs = latencyMs;
-        source.lastError = `Jikan response: ${errorMsg}`;
-        sources[sourceIndex] = source;
-        saveArtworkSourcesConfig(sources);
-
-        return {
-          success: false,
-          latencyMs,
-          message: `Jikan response: ${errorMsg} (Automatic fallback to AniList & AniDB active)`,
-          status: source.status
+          message: `HTTP ${res.status}: ${text.slice(0, 100)} (Safe fallback engaged)`,
+          status
         };
       }
     } else if (source.id === 'anidb') {
-      // AniDB HTTP/title connectivity check
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
 
@@ -247,8 +282,9 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       clearTimeout(timeoutId);
       const latencyMs = Date.now() - startTime;
       const isOnline = res.ok || res.status === 403 || res.status === 301 || res.status === 302;
+      const status: ArtworkSourceStatus = isOnline ? 'operational' : 'temporarily_unavailable';
 
-      source.status = isOnline ? 'operational' : 'degraded';
+      source.status = status;
       source.lastChecked = new Date().toISOString();
       source.lastLatencyMs = latencyMs;
       source.lastError = null;
@@ -258,15 +294,86 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       return {
         success: isOnline,
         latencyMs,
-        message: `AniDB connectivity confirmed (${latencyMs}ms). Active as tertiary fallback.`,
-        status: source.status,
+        message: `AniDB connectivity confirmed (${latencyMs}ms). Active as secondary fallback.`,
+        status,
         sampleTitle: 'AniDB Titles Database'
       };
+    } else if (source.id === 'tvmaze') {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
+
+      const res = await fetch(`${source.endpoint}/search/shows?q=Naruto`, {
+        headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      const latencyMs = Date.now() - startTime;
+
+      if (res.ok) {
+        const json = await res.json();
+        const first = json?.[0]?.show;
+        source.status = 'operational';
+        source.lastChecked = new Date().toISOString();
+        source.lastLatencyMs = latencyMs;
+        source.lastError = null;
+        sources[sourceIndex] = source;
+        saveArtworkSourcesConfig(sources);
+
+        return {
+          success: true,
+          latencyMs,
+          message: `Connected successfully (${latencyMs}ms). TVmaze show entry verified.`,
+          status: 'operational',
+          sampleTitle: first?.name || 'Naruto'
+        };
+      } else {
+        const status: ArtworkSourceStatus = res.status === 429 ? 'rate_limited' : 'temporarily_unavailable';
+        source.status = status;
+        source.lastChecked = new Date().toISOString();
+        source.lastLatencyMs = latencyMs;
+        source.lastError = `HTTP ${res.status}`;
+        sources[sourceIndex] = source;
+        saveArtworkSourcesConfig(sources);
+
+        return {
+          success: false,
+          latencyMs,
+          message: `TVmaze response: HTTP ${res.status}`,
+          status
+        };
+      }
+    } else if (source.id === 'thetvdb') {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
+
+      const res = await fetch('https://api.tvmaze.com/search/shows?q=Naruto', {
+        headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      const latencyMs = Date.now() - startTime;
+
+      source.status = res.ok ? 'operational' : 'temporarily_unavailable';
+      source.lastChecked = new Date().toISOString();
+      source.lastLatencyMs = latencyMs;
+      source.lastError = null;
+      sources[sourceIndex] = source;
+      saveArtworkSourcesConfig(sources);
+
+      return {
+        success: res.ok,
+        latencyMs,
+        message: `TheTVDB open media gateway operational (${latencyMs}ms).`,
+        status: source.status,
+        sampleTitle: 'TheTVDB Database'
+      };
     } else {
-      // Generic REST source probe
       const res = await fetch(source.endpoint);
       const latencyMs = Date.now() - startTime;
-      source.status = res.ok ? 'operational' : 'degraded';
+      const status: ArtworkSourceStatus = res.ok ? 'operational' : 'temporarily_unavailable';
+      source.status = status;
       source.lastChecked = new Date().toISOString();
       source.lastLatencyMs = latencyMs;
       sources[sourceIndex] = source;
@@ -276,12 +383,15 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         success: res.ok,
         latencyMs,
         message: `HTTP Status ${res.status}`,
-        status: source.status
+        status
       };
     }
   } catch (err: any) {
     const latencyMs = Date.now() - startTime;
-    source.status = 'offline';
+    const isTimeout = err.name === 'AbortError' || err.message?.toLowerCase().includes('timeout');
+    const status: ArtworkSourceStatus = isTimeout ? 'timeout' : 'temporarily_unavailable';
+
+    source.status = status;
     source.lastChecked = new Date().toISOString();
     source.lastLatencyMs = latencyMs;
     source.lastError = err.message;
@@ -291,8 +401,8 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
     return {
       success: false,
       latencyMs,
-      message: `Connection failed: ${err.message}`,
-      status: 'offline'
+      message: `Connection issue: ${err.message} (Safe fallback engaged)`,
+      status
     };
   }
 }

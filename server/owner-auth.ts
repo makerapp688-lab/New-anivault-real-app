@@ -29,6 +29,7 @@ import {
   markCatalogueAnimeVerified
 } from './artwork-verifier.js';
 import { artworkScanner, computeGlobalCatalogueStats } from './artwork-scanner.js';
+import { globalWorkerJobEngine } from './worker-job-engine.js';
 
 // Data file paths
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
@@ -1744,6 +1745,36 @@ export function createOwnerRouter(): express.Router {
     }
   });
 
+  // Configure worker pool capacity (1 to 50 workers)
+  router.post('/artwork-manager/pool-config', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { currentWorkers, concurrencyLimit } = req.body;
+      const email = (req as any).ownerSession?.email || 'Owner';
+
+      const updated = globalWorkerJobEngine.setWorkerPoolConfig({
+        currentWorkers: typeof currentWorkers === 'number' ? currentWorkers : undefined,
+        concurrencyLimit: typeof concurrencyLimit === 'number' ? concurrencyLimit : undefined
+      });
+
+      logAdminAction(
+        'Update Worker Pool Config',
+        email,
+        'success',
+        undefined,
+        `Set worker pool config to ${updated.currentWorkers} active workers.`
+      );
+
+      res.json({
+        success: true,
+        message: `Worker pool updated to ${updated.currentWorkers} active workers (max 50).`,
+        poolConfig: updated,
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update pool config.' });
+    }
+  });
+
   // --- NEEDS REVIEW WORKSPACE ENDPOINTS ---
 
   // Action 1: Re-verify (Queue high-priority worker task)
@@ -1809,6 +1840,42 @@ export function createOwnerRouter(): express.Router {
       });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to fix artwork.' });
+    }
+  });
+
+  // Action 3B: Retry All Needs Review
+  router.post('/artwork-manager/needs-review/retry-all', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.enqueueRetryAllNeedsReview(email);
+
+      res.json({
+        success: result.success,
+        message: result.message,
+        count: result.count,
+        stats: computeGlobalCatalogueStats(),
+        scanState: result.scanState || artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to retry all unresolved records.' });
+    }
+  });
+
+  // Action 3C: Search All Needs Review
+  router.post('/artwork-manager/needs-review/search-all', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.enqueueSearchAllNeedsReview(email);
+
+      res.json({
+        success: result.success,
+        message: result.message,
+        count: result.count,
+        stats: computeGlobalCatalogueStats(),
+        scanState: result.scanState || artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to search all unresolved records.' });
     }
   });
 

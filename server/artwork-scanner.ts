@@ -504,6 +504,58 @@ class ArtworkScannerEngine {
     return this.getJobState();
   }
 
+  public enqueueRetryAllNeedsReview(operator = 'Owner') {
+    this.reloadCatalogueMap();
+    const records = loadVerificationRecords();
+    const targetIds: string[] = [];
+
+    for (const anime of this.catalogueMap.values()) {
+      const rec = records[anime.id];
+      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || !anime.artwork?.verifiedArtworkUrl;
+      if (isUnresolved) {
+        targetIds.push(anime.id);
+      }
+    }
+
+    if (targetIds.length === 0) {
+      return { success: false, message: 'No unresolved or retryable artwork records found.', count: 0 };
+    }
+
+    const scanState = this.enqueueReverification(targetIds, operator);
+    return {
+      success: true,
+      message: `Enqueued ${targetIds.length} unresolved items for worker re-verification.`,
+      count: targetIds.length,
+      scanState
+    };
+  }
+
+  public enqueueSearchAllNeedsReview(operator = 'Owner') {
+    this.reloadCatalogueMap();
+    const records = loadVerificationRecords();
+    const targetIds: string[] = [];
+
+    for (const anime of this.catalogueMap.values()) {
+      const rec = records[anime.id];
+      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || !anime.artwork?.verifiedArtworkUrl;
+      if (isUnresolved) {
+        targetIds.push(anime.id);
+      }
+    }
+
+    if (targetIds.length === 0) {
+      return { success: false, message: 'No unresolved artwork records found for source search.', count: 0 };
+    }
+
+    const scanState = this.enqueueSearchAgain(targetIds, operator);
+    return {
+      success: true,
+      message: `Enqueued ${targetIds.length} unresolved items for fresh multi-source search.`,
+      count: targetIds.length,
+      scanState
+    };
+  }
+
   public pauseScan(operator = 'Owner') {
     globalWorkerJobEngine.pauseJob();
     return { success: true, message: 'Job paused.' };

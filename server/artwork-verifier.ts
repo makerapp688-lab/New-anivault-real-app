@@ -11,7 +11,7 @@ export type VerificationStatus =
   | 'possible_fake';
 
 export interface ArtworkCandidate {
-  source: 'anilist' | 'jikan' | 'anidb' | 'provider';
+  source: 'anilist' | 'jikan' | 'anidb' | 'tmdb' | 'tvmaze' | 'thetvdb' | 'provider' | string;
   sourceId: string | number;
   title: string;
   imageUrl: string;
@@ -589,6 +589,141 @@ export async function queryAniDBFallback(
   };
 }
 
+// --- TMDB Query Engine with SourceGateway Protection ---
+export async function queryTMDB(
+  title: string,
+  timeoutMs = 8000
+): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
+  const normalizedTitle = title.toLowerCase().trim();
+  const cacheKey = `tmdb:${normalizedTitle}`;
+  const cached = getCached<any[]>(cacheKey);
+  if (cached) return { success: true, matches: cached };
+
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'tmdb',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const apiKey = process.env.TMDB_API_KEY;
+        const encoded = encodeURIComponent(title);
+        const url = apiKey
+          ? `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encoded}`
+          : `https://api.tvmaze.com/search/shows?q=${encoded}`;
+
+        const res = await fetch(url, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Anivex-Artwork-Verifier/1.0' },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+        }
+
+        const data = await res.json();
+        const results = apiKey
+          ? (data?.results || []).map((item: any) => ({
+              id: item.id,
+              title: item.name || item.original_name,
+              posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+              year: item.first_air_date ? parseInt(item.first_air_date.slice(0, 4), 10) : undefined
+            })).filter((i: any) => i.posterUrl)
+          : (data || []).map((entry: any) => {
+              const show = entry.show || {};
+              return {
+                id: show.id,
+                title: show.name,
+                posterUrl: show.image?.original || show.image?.medium || null,
+                year: show.premiered ? parseInt(show.premiered.slice(0, 4), 10) : undefined
+              };
+            }).filter((i: any) => i.posterUrl);
+
+        setCached(cacheKey, results);
+        return { success: true, matches: results, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return { success: false, matches: [], error: err.message };
+      }
+    }
+  );
+
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode
+  };
+}
+
+// --- TVmaze Query Engine with SourceGateway Protection ---
+export async function queryTVmaze(
+  title: string,
+  timeoutMs = 8000
+): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
+  const normalizedTitle = title.toLowerCase().trim();
+  const cacheKey = `tvmaze:${normalizedTitle}`;
+  const cached = getCached<any[]>(cacheKey);
+  if (cached) return { success: true, matches: cached };
+
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'tvmaze',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const encoded = encodeURIComponent(title);
+        const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encoded}`, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Anivex-Artwork-Verifier/1.0' },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+        }
+
+        const data = await res.json();
+        const results = (data || []).map((entry: any) => {
+          const show = entry.show || {};
+          return {
+            id: show.id,
+            title: show.name,
+            posterUrl: show.image?.original || show.image?.medium || null,
+            year: show.premiered ? parseInt(show.premiered.slice(0, 4), 10) : undefined
+          };
+        }).filter((i: any) => i.posterUrl);
+
+        setCached(cacheKey, results);
+        return { success: true, matches: results, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return { success: false, matches: [], error: err.message };
+      }
+    }
+  );
+
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode
+  };
+}
+
+// --- TheTVDB Gateway Query Engine ---
+export async function queryTheTVDB(
+  title: string,
+  timeoutMs = 8000
+): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
+  // Uses TVmaze open media index fallback for clean series posters
+  return await queryTVmaze(title, timeoutMs);
+}
+
 // --- Image Usability & Integrity Inspection ---
 export async function inspectArtworkImage(url: string | undefined | null): Promise<{
   usable: boolean;
@@ -797,6 +932,9 @@ export async function verifyAnimeEntry(
   const anilistConfig = sources.find(s => s.id === 'anilist' && s.enabled);
   const jikanConfig = sources.find(s => s.id === 'jikan' && s.enabled);
   const anidbConfig = sources.find(s => s.id === 'anidb' && s.enabled);
+  const tmdbConfig = sources.find(s => s.id === 'tmdb' && s.enabled);
+  const tvmazeConfig = sources.find(s => s.id === 'tvmaze' && s.enabled);
+  const thetvdbConfig = sources.find(s => s.id === 'thetvdb' && s.enabled);
 
   const rawTitle = anime.title || 'Untitled';
   const alternateTitle = anime.alternateTitle || null;
@@ -851,7 +989,7 @@ export async function verifyAnimeEntry(
           const score = Math.max(scoreRomaji, scoreEnglish, bestSynonymScore);
           const coverUrl = item.coverImage?.extraLarge || item.coverImage?.large || item.coverImage?.medium;
 
-          if (coverUrl && score > 0.45) {
+          if (coverUrl && score > 0.40) {
             candidates.push({
               source: 'anilist',
               sourceId: item.id,
@@ -887,8 +1025,7 @@ export async function verifyAnimeEntry(
   if (jikanConfig) {
     jikanQueried = true;
     try {
-      // Throttle delay to respect Jikan rate limits
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
 
       for (const titleVariant of titlesToCheck) {
         const res = await queryJikan(titleVariant, jikanConfig.endpoint, jikanConfig.timeoutMs);
@@ -914,7 +1051,7 @@ export async function verifyAnimeEntry(
               item.images?.webp?.image_url ||
               item.images?.jpg?.image_url;
 
-            if (coverUrl && score > 0.45) {
+            if (coverUrl && score > 0.40) {
               candidates.push({
                 source: 'jikan',
                 sourceId: item.mal_id,
@@ -949,8 +1086,8 @@ export async function verifyAnimeEntry(
     }
   }
 
-  // 4. Tertiary Fallback Source: AniDB (Used ONLY when Jikan is failing/unavailable and AniList is inconclusive)
-  if (jikanIsOfflineOrFailing && (!aniListMatch || aniListMatch.score < 0.80) && anidbConfig) {
+  // 4. Tertiary Fallback Source: AniDB
+  if ((!aniListMatch || aniListMatch.score < 0.75) && anidbConfig) {
     anidbQueried = true;
     try {
       const anidbRes = await queryAniDBFallback(cleaned);
@@ -968,15 +1105,66 @@ export async function verifyAnimeEntry(
     }
   }
 
+  // 5. TMDB Fallback
+  if ((candidates.length === 0 || Math.max(...candidates.map(c => c.confidence)) < 0.70) && tmdbConfig) {
+    try {
+      for (const titleVariant of titlesToCheck) {
+        const res = await queryTMDB(titleVariant, tmdbConfig.timeoutMs);
+        if (res.success && res.matches.length > 0) {
+          for (const item of res.matches) {
+            const score = calculateStringSimilarity(cleaned, item.title || '');
+            if (item.posterUrl && score >= 0.40) {
+              candidates.push({
+                source: 'tmdb',
+                sourceId: String(item.id),
+                title: item.title,
+                imageUrl: item.posterUrl,
+                aspectRatio: '3:4',
+                confidence: score,
+                year: item.year
+              });
+            }
+          }
+          if (candidates.some(c => c.source === 'tmdb' && c.confidence >= 0.75)) break;
+        }
+      }
+    } catch {}
+  }
+
+  // 6. TVmaze / TheTVDB Fallback
+  if ((candidates.length === 0 || Math.max(...candidates.map(c => c.confidence)) < 0.60) && (tvmazeConfig || thetvdbConfig)) {
+    try {
+      for (const titleVariant of titlesToCheck) {
+        const res = await queryTVmaze(titleVariant, 8000);
+        if (res.success && res.matches.length > 0) {
+          for (const item of res.matches) {
+            const score = calculateStringSimilarity(cleaned, item.title || '');
+            if (item.posterUrl && score >= 0.40) {
+              candidates.push({
+                source: 'tvmaze',
+                sourceId: String(item.id),
+                title: item.title,
+                imageUrl: item.posterUrl,
+                aspectRatio: '3:4',
+                confidence: score,
+                year: item.year
+              });
+            }
+          }
+          if (candidates.some(c => c.source === 'tvmaze' && c.confidence >= 0.75)) break;
+        }
+      }
+    } catch {}
+  }
+
   // Sort candidates by confidence descending
   candidates.sort((a, b) => b.confidence - a.confidence);
-  const bestCandidate = candidates[0] || null;
 
   // Composite scores
   const bestAniScore = aniListMatch?.score || 0;
   const bestJikanScore = jikanMatch?.score || 0;
   const bestAniDBScore = anidbMatch?.score || 0;
-  const topConfidence = Math.max(bestAniScore, bestJikanScore, bestAniDBScore);
+  const topConfidence = candidates.length > 0 ? Math.max(candidates[0].confidence, bestAniScore, bestJikanScore) : 0;
 
   let finalStatus: VerificationStatus = 'needs_review';
   let issueDescription: string | null = null;
@@ -995,121 +1183,50 @@ export async function verifyAnimeEntry(
     !currentArtInspection.usable ||
     currentArtInspection.isBlankOrPlaceholder;
 
-  // Both trusted sources agree
-  const sourcesStronglyAgree =
-    bestAniScore >= 0.75 &&
-    bestJikanScore >= 0.75 &&
-    calculateStringSimilarity(aniListMatch?.title || '', jikanMatch?.title || '') >= 0.70;
-
-  // AniList primary source has high confidence (> 0.75)
-  // Per requirement: DO NOT send to Needs Review just because Jikan is temporarily down/unavailable
-  const primarySourceHighConfidence = bestAniScore >= 0.75;
-  const secondarySourceHighConfidence = bestJikanScore >= 0.85;
-
-  if (sourcesStronglyAgree || primarySourceHighConfidence || secondarySourceHighConfidence) {
-    const verifiedSource = bestAniScore >= 0.75 ? 'AniList' : 'Jikan';
-    const verifiedScore = bestAniScore >= 0.75 ? bestAniScore : bestJikanScore;
-
-    if (sourcesStronglyAgree) {
-      evidenceList.push(`AniList and Jikan both verify identity (${Math.round(bestAniScore * 100)}% / ${Math.round(bestJikanScore * 100)}%).`);
-    } else {
-      evidenceList.push(`High confidence verified via ${verifiedSource} (${Math.round(verifiedScore * 100)}%).`);
-      if (jikanIsOfflineOrFailing) {
-        evidenceList.push('Jikan temporarily offline or returned 504; AniList primary source safely maintained verification.');
+  // Progressive Candidate Selection: Check top candidates for usable poster
+  let selectedCandidate: ArtworkCandidate | null = null;
+  for (const cand of candidates) {
+    if (cand.confidence >= 0.40 && cand.imageUrl) {
+      const insp = await inspectArtworkImage(cand.imageUrl);
+      if (insp.usable && !insp.isBlankOrPlaceholder) {
+        selectedCandidate = cand;
+        break;
       }
     }
+  }
 
-    if (currentArtworkMissingOrBroken) {
-      // Auto-fix scenario: Missing or broken poster replaced with verified asset
-      if (bestCandidate && bestCandidate.imageUrl) {
-        finalStatus = 'auto_fixed';
-        replacedUrl = bestCandidate.imageUrl;
-        issueDescription = `Artwork automatically fixed with verified high-resolution asset from ${bestCandidate.source}.`;
-        evidenceList.push(`Previous artwork was missing or unverified. Replaced with verified ${bestCandidate.source} poster.`);
-
-        if (options.autoFixEnabled) {
-          applyArtworkUpdate(anime.id, bestCandidate.imageUrl, 'verified', currentArtworkUrl, bestCandidate.source);
-        }
-      } else {
-        // High confidence identity, but image URL failed inspection
-        finalStatus = 'verified';
-        issueDescription = 'Anime identity verified, but poster imagery retained from provider.';
-        markCatalogueAnimeVerified(anime.id, 'verified');
-      }
-    } else {
-      // Current artwork exists and is verified usable
-      finalStatus = 'verified';
-      issueDescription = 'Artwork and anime identity successfully verified against trusted databases.';
-      evidenceList.push('Current artwork verified usable and matches verified database entry.');
-      markCatalogueAnimeVerified(anime.id, 'verified');
-    }
-  } else if (
-    // Possible fake evaluation: Only flag when trusted sources are HEALTHY and returned ZERO matches
-    aniListQueried &&
-    !aniListError &&
-    bestAniScore < 0.30 &&
-    (!jikanQueried || (!jikanIsOfflineOrFailing && !jikanError && bestJikanScore < 0.30)) &&
-    (!anidbQueried || !anidbMatch)
-  ) {
-    evidenceList.push(`Queried titles: "${titlesToCheck.join('", "')}". Zero database matches found on AniList.`);
-    const providerUrl = anime.providers?.raretoonIndia?.canonicalUrl || '';
-    evidenceList.push(`Source provider: ${anime.provider || 'RareToon India'} (${providerUrl || 'No provider canonical URL'})`);
-
-    finalStatus = 'possible_fake';
-    issueDescription = 'Zero matching records found in anime databases after exhaustive title variations search.';
-
-    recordFakeAnimeIssue({
-      id: `FAKE-${Date.now()}-${anime.id}`,
-      catalogueId: anime.id,
-      animeTitle: rawTitle,
-      source: anime.provider || 'RareToon India',
-      sourceUrl: providerUrl,
-      titlesChecked: titlesToCheck,
-      aniListResult: {
-        queried: aniListQueried,
-        found: aniListMatch ? 1 : 0,
-        error: aniListError
-      },
-      jikanResult: {
-        queried: jikanQueried,
-        found: jikanMatch ? 1 : 0,
-        error: jikanError
-      },
-      anidbResult: anidbQueried ? {
-        queried: true,
-        found: anidbMatch ? 1 : 0,
-        error: anidbError
-      } : undefined,
-      verificationResults: `Zero matches found across ${titlesToCheck.length} title variations.`,
-      reason: 'No matching records in AniList or MyAnimeList databases after exhaustive search.',
-      timestamp: new Date().toISOString(),
-      evidence: evidenceList,
-      status: 'active'
-    });
-  } else if (aniListError && (jikanIsOfflineOrFailing || jikanError)) {
-    // Both external APIs experienced network or 504 errors
-    finalStatus = 'unable_to_verify';
-    issueDescription = `External APIs temporarily degraded: AniList (${aniListError || 'degraded'}), Jikan (${jikanError || 'offline'}).`;
-    evidenceList.push('Temporary API failure detected. Safe fallback engaged; anime was not falsely flagged as fake.');
-  } else if (bestCandidate && bestCandidate.confidence >= 0.60) {
-    // Moderate confidence match: Auto-accept if artwork is usable to minimize Owner review
-    if (currentArtworkMissingOrBroken && bestCandidate.imageUrl) {
+  if (currentArtworkMissingOrBroken) {
+    if (selectedCandidate && selectedCandidate.imageUrl) {
       finalStatus = 'auto_fixed';
-      replacedUrl = bestCandidate.imageUrl;
-      issueDescription = `Artwork automatically fixed from candidate (${Math.round(bestCandidate.confidence * 100)}% match).`;
+      replacedUrl = selectedCandidate.imageUrl;
+      issueDescription = `Artwork automatically fixed with verified poster from ${selectedCandidate.source} (${Math.round(selectedCandidate.confidence * 100)}% match).`;
+      evidenceList.push(`Previous poster was missing or broken. Replaced with ${selectedCandidate.source} poster.`);
+
       if (options.autoFixEnabled) {
-        applyArtworkUpdate(anime.id, bestCandidate.imageUrl, 'verified', currentArtworkUrl, bestCandidate.source);
+        applyArtworkUpdate(anime.id, selectedCandidate.imageUrl, 'verified', currentArtworkUrl, selectedCandidate.source);
       }
     } else {
-      finalStatus = 'verified';
-      issueDescription = `Anime identity and artwork matched with ${Math.round(bestCandidate.confidence * 100)}% confidence.`;
-      markCatalogueAnimeVerified(anime.id, 'verified');
+      // Genuine Unable To Verify
+      finalStatus = 'unable_to_verify';
+      issueDescription = 'No usable artwork matched across configured external databases.';
+      evidenceList.push(`Queried title variations: "${titlesToCheck.join('", "')}". Exhausted configured sources (${sources.map(s => s.name).join(', ')}).`);
     }
   } else {
-    // Genuine unresolved case -> Needs Review
-    finalStatus = 'needs_review';
-    issueDescription = `Unresolved artwork match (Confidence: ${Math.round(topConfidence * 100)}%). Sent to review queue.`;
-    evidenceList.push(`AniList score: ${Math.round(bestAniScore * 100)}%. Jikan score: ${Math.round(bestJikanScore * 100)}%.`);
+    // Current artwork exists and is usable
+    if (selectedCandidate && selectedCandidate.confidence >= 0.85 && selectedCandidate.imageUrl && selectedCandidate.imageUrl !== currentArtworkUrl) {
+      // Optional higher quality replacement if current artwork was unverified
+      finalStatus = 'auto_fixed';
+      replacedUrl = selectedCandidate.imageUrl;
+      issueDescription = `Poster upgraded to verified high-resolution asset from ${selectedCandidate.source}.`;
+      if (options.autoFixEnabled) {
+        applyArtworkUpdate(anime.id, selectedCandidate.imageUrl, 'verified', currentArtworkUrl, selectedCandidate.source);
+      }
+    } else {
+      finalStatus = 'verified';
+      issueDescription = 'Artwork verified usable and matches verified database entry.';
+      evidenceList.push('Current artwork verified usable and active.');
+      markCatalogueAnimeVerified(anime.id, 'verified');
+    }
   }
 
   const result: ArtworkVerificationResult = {
@@ -1119,7 +1236,7 @@ export async function verifyAnimeEntry(
     confidence: topConfidence,
     currentArtworkUrl: replacedUrl || currentArtworkUrl,
     replacedArtworkUrl: replacedUrl,
-    source: bestCandidate?.source || (currentArtworkUrl ? 'provider' : 'none'),
+    source: selectedCandidate?.source || (currentArtworkUrl ? 'provider' : 'none'),
     dimensions: currentArtInspection.dimensions || 'HD (3:4)',
     lastVerifiedAt: new Date().toISOString(),
     aniListMatch,
