@@ -10,6 +10,33 @@ interface AnimeCardProps {
   onSelect: (anime: Anime) => void;
 }
 
+// Subtle background color styling for stylized genre badges
+const getGenreBadgeStyle = (genre: string): string => {
+  const g = genre.toLowerCase();
+  if (g.includes('action') || g.includes('shounen') || g.includes('martial')) {
+    return 'bg-rose-950/75 text-rose-200 border-rose-800/40';
+  }
+  if (g.includes('adventure') || g.includes('fantasy') || g.includes('isekai')) {
+    return 'bg-amber-950/75 text-amber-200 border-amber-800/40';
+  }
+  if (g.includes('comedy') || g.includes('slice of life') || g.includes('school')) {
+    return 'bg-emerald-950/75 text-emerald-200 border-emerald-800/40';
+  }
+  if (g.includes('sci-fi') || g.includes('mecha') || g.includes('space')) {
+    return 'bg-cyan-950/75 text-cyan-200 border-cyan-800/40';
+  }
+  if (g.includes('romance') || g.includes('drama') || g.includes('shoujo')) {
+    return 'bg-pink-950/75 text-pink-200 border-pink-800/40';
+  }
+  if (g.includes('mystery') || g.includes('supernatural') || g.includes('horror') || g.includes('psychological')) {
+    return 'bg-purple-950/75 text-purple-200 border-purple-800/40';
+  }
+  if (g.includes('sports')) {
+    return 'bg-blue-950/75 text-blue-200 border-blue-800/40';
+  }
+  return 'bg-slate-900/75 text-slate-200 border-slate-700/50';
+};
+
 export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, onSelect }) => {
   const { isFavorite, isWatchlist, isCompleted, toggleFavorite, toggleWatchlist } = useUserData();
 
@@ -108,30 +135,48 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, onSelect }) => {
           </div>
         )}
 
-        {/* Bottom Poster Overlay: Season and Episode counts matching screenshot */}
-        <div className="absolute bottom-2.5 inset-x-2.5 z-20 flex items-center gap-1.5 flex-wrap pointer-events-none">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-950/85 backdrop-blur-md text-white border border-slate-700/60">
-            {anime.type === 'Movie' ? (
-              <>
-                <Film className="w-3 h-3 text-amber-400" />
-                <span>Movie</span>
-              </>
-            ) : (
-              <>
-                <Layers className="w-3 h-3 text-cyan-400" />
-                <span>
-                  {totalSeasons} {totalSeasons === 1 ? 'Season' : 'Seasons'}
+        {/* Bottom Poster Overlay: Genres & Season/Episode badges */}
+        <div className="absolute bottom-2 inset-x-2 z-20 flex flex-col gap-1.5 pointer-events-none">
+          {/* Stylized Genre Badges at bottom of thumbnail */}
+          {Array.isArray(anime.genres) && anime.genres.length > 0 && (
+            <div className="flex items-center gap-1 w-full overflow-hidden flex-nowrap">
+              {anime.genres.map((genre) => (
+                <span
+                  key={genre}
+                  title={genre}
+                  className={`inline-block max-w-[85px] truncate shrink-0 px-1.5 py-0.5 rounded text-[9px] font-medium tracking-wide backdrop-blur-xs border shadow-xs ${getGenreBadgeStyle(genre)}`}
+                >
+                  {genre}
                 </span>
-              </>
-            )}
-          </span>
+              ))}
+            </div>
+          )}
 
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-950/85 backdrop-blur-md text-white border border-slate-700/60">
-            <Tv className="w-3 h-3 text-rose-400" />
-            <span>
-              {totalEpisodes !== null ? `${totalEpisodes} Eps` : 'Not available'}
+          {/* Season and Episode counts */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-950/85 backdrop-blur-md text-white border border-slate-700/60">
+              {anime.type === 'Movie' ? (
+                <>
+                  <Film className="w-3 h-3 text-amber-400" />
+                  <span>Movie</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="w-3 h-3 text-cyan-400" />
+                  <span>
+                    {totalSeasons} {totalSeasons === 1 ? 'Season' : 'Seasons'}
+                  </span>
+                </>
+              )}
             </span>
-          </span>
+
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-950/85 backdrop-blur-md text-white border border-slate-700/60">
+              <Tv className="w-3 h-3 text-rose-400" />
+              <span>
+                {totalEpisodes !== null ? `${totalEpisodes} Eps` : 'Not available'}
+              </span>
+            </span>
+          </div>
         </div>
       </div>
 

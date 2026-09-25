@@ -1,0 +1,3952 @@
+[
+  {
+    "id": "evt_1790346394487_l4hbp",
+    "timestamp": "2026-09-25T14:26:34.487Z",
+    "timestampMs": 1790346394487,
+    "workerId": 49,
+    "taskId": "VERIFY_ARTWORK:bench-anime-149",
+    "animeId": "bench-anime-149",
+    "animeTitle": "Benchmark Anime 149",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394485_wwld3",
+    "timestamp": "2026-09-25T14:26:34.485Z",
+    "timestampMs": 1790346394485,
+    "workerId": 50,
+    "taskId": "VERIFY_ARTWORK:bench-anime-147",
+    "animeId": "bench-anime-147",
+    "animeTitle": "Benchmark Anime 147",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394483_b8i57",
+    "timestamp": "2026-09-25T14:26:34.483Z",
+    "timestampMs": 1790346394483,
+    "workerId": 30,
+    "taskId": "VERIFY_ARTWORK:bench-anime-141",
+    "animeId": "bench-anime-141",
+    "animeTitle": "Benchmark Anime 141",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394480_p4xlg",
+    "timestamp": "2026-09-25T14:26:34.480Z",
+    "timestampMs": 1790346394480,
+    "workerId": 47,
+    "taskId": "VERIFY_ARTWORK:bench-anime-143",
+    "animeId": "bench-anime-143",
+    "animeTitle": "Benchmark Anime 143",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394478_1esz9",
+    "timestamp": "2026-09-25T14:26:34.478Z",
+    "timestampMs": 1790346394478,
+    "workerId": 48,
+    "taskId": "VERIFY_ARTWORK:bench-anime-139",
+    "animeId": "bench-anime-139",
+    "animeTitle": "Benchmark Anime 139",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394476_qegua",
+    "timestamp": "2026-09-25T14:26:34.476Z",
+    "timestampMs": 1790346394476,
+    "workerId": 36,
+    "taskId": "VERIFY_ARTWORK:bench-anime-133",
+    "animeId": "bench-anime-133",
+    "animeTitle": "Benchmark Anime 133",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394474_x222g",
+    "timestamp": "2026-09-25T14:26:34.474Z",
+    "timestampMs": 1790346394474,
+    "workerId": 41,
+    "taskId": "VERIFY_ARTWORK:bench-anime-127",
+    "animeId": "bench-anime-127",
+    "animeTitle": "Benchmark Anime 127",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394472_wkvji",
+    "timestamp": "2026-09-25T14:26:34.472Z",
+    "timestampMs": 1790346394472,
+    "workerId": 7,
+    "taskId": "VERIFY_ARTWORK:bench-anime-123",
+    "animeId": "bench-anime-123",
+    "animeTitle": "Benchmark Anime 123",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394470_r0sh9",
+    "timestamp": "2026-09-25T14:26:34.470Z",
+    "timestampMs": 1790346394470,
+    "workerId": 35,
+    "taskId": "VERIFY_ARTWORK:bench-anime-137",
+    "animeId": "bench-anime-137",
+    "animeTitle": "Benchmark Anime 137",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394467_dnxi3",
+    "timestamp": "2026-09-25T14:26:34.467Z",
+    "timestampMs": 1790346394467,
+    "workerId": 31,
+    "taskId": "VERIFY_ARTWORK:bench-anime-131",
+    "animeId": "bench-anime-131",
+    "animeTitle": "Benchmark Anime 131",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394463_a35z0",
+    "timestamp": "2026-09-25T14:26:34.463Z",
+    "timestampMs": 1790346394463,
+    "workerId": 22,
+    "taskId": "VERIFY_ARTWORK:bench-anime-129",
+    "animeId": "bench-anime-129",
+    "animeTitle": "Benchmark Anime 129",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394460_3kj2s",
+    "timestamp": "2026-09-25T14:26:34.460Z",
+    "timestampMs": 1790346394460,
+    "workerId": 4,
+    "taskId": "VERIFY_ARTWORK:bench-anime-121",
+    "animeId": "bench-anime-121",
+    "animeTitle": "Benchmark Anime 121",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394457_u1p4x",
+    "timestamp": "2026-09-25T14:26:34.457Z",
+    "timestampMs": 1790346394457,
+    "workerId": 49,
+    "taskId": "VERIFY_ARTWORK:bench-anime-149",
+    "animeId": "bench-anime-149",
+    "animeTitle": "Benchmark Anime 149",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #49 claimed exclusive lock on \"Benchmark Anime 149\" (Anime: bench-anime-149)"
+  },
+  {
+    "id": "evt_1790346394455_25c03",
+    "timestamp": "2026-09-25T14:26:34.455Z",
+    "timestampMs": 1790346394455,
+    "workerId": 50,
+    "taskId": "VERIFY_ARTWORK:bench-anime-147",
+    "animeId": "bench-anime-147",
+    "animeTitle": "Benchmark Anime 147",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #50 claimed exclusive lock on \"Benchmark Anime 147\" (Anime: bench-anime-147)"
+  },
+  {
+    "id": "evt_1790346394453_uutxa",
+    "timestamp": "2026-09-25T14:26:34.453Z",
+    "timestampMs": 1790346394453,
+    "workerId": 47,
+    "taskId": "VERIFY_ARTWORK:bench-anime-143",
+    "animeId": "bench-anime-143",
+    "animeTitle": "Benchmark Anime 143",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #47 claimed exclusive lock on \"Benchmark Anime 143\" (Anime: bench-anime-143)"
+  },
+  {
+    "id": "evt_1790346394450_f97a3",
+    "timestamp": "2026-09-25T14:26:34.450Z",
+    "timestampMs": 1790346394450,
+    "workerId": 30,
+    "taskId": "VERIFY_ARTWORK:bench-anime-141",
+    "animeId": "bench-anime-141",
+    "animeTitle": "Benchmark Anime 141",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #30 claimed exclusive lock on \"Benchmark Anime 141\" (Anime: bench-anime-141)"
+  },
+  {
+    "id": "evt_1790346394448_0fmbh",
+    "timestamp": "2026-09-25T14:26:34.448Z",
+    "timestampMs": 1790346394448,
+    "workerId": 14,
+    "taskId": "VERIFY_ARTWORK:bench-anime-119",
+    "animeId": "bench-anime-119",
+    "animeTitle": "Benchmark Anime 119",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394446_l5gzr",
+    "timestamp": "2026-09-25T14:26:34.446Z",
+    "timestampMs": 1790346394446,
+    "workerId": 24,
+    "taskId": "VERIFY_ARTWORK:bench-anime-109",
+    "animeId": "bench-anime-109",
+    "animeTitle": "Benchmark Anime 109",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394443_6ahfd",
+    "timestamp": "2026-09-25T14:26:34.443Z",
+    "timestampMs": 1790346394443,
+    "workerId": 21,
+    "taskId": "VERIFY_ARTWORK:bench-anime-87",
+    "animeId": "bench-anime-87",
+    "animeTitle": "Benchmark Anime 87",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394441_jvhnf",
+    "timestamp": "2026-09-25T14:26:34.441Z",
+    "timestampMs": 1790346394441,
+    "workerId": 45,
+    "taskId": "VERIFY_ARTWORK:bench-anime-81",
+    "animeId": "bench-anime-81",
+    "animeTitle": "Benchmark Anime 81",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394439_ddalf",
+    "timestamp": "2026-09-25T14:26:34.439Z",
+    "timestampMs": 1790346394439,
+    "workerId": 38,
+    "taskId": "VERIFY_ARTWORK:bench-anime-67",
+    "animeId": "bench-anime-67",
+    "animeTitle": "Benchmark Anime 67",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394436_p3rbz",
+    "timestamp": "2026-09-25T14:26:34.436Z",
+    "timestampMs": 1790346394436,
+    "workerId": 2,
+    "taskId": "VERIFY_ARTWORK:bench-anime-103",
+    "animeId": "bench-anime-103",
+    "animeTitle": "Benchmark Anime 103",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394434_4rw0q",
+    "timestamp": "2026-09-25T14:26:34.434Z",
+    "timestampMs": 1790346394434,
+    "workerId": 6,
+    "taskId": "VERIFY_ARTWORK:bench-anime-63",
+    "animeId": "bench-anime-63",
+    "animeTitle": "Benchmark Anime 63",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394432_bgqeu",
+    "timestamp": "2026-09-25T14:26:34.432Z",
+    "timestampMs": 1790346394432,
+    "workerId": 19,
+    "taskId": "VERIFY_ARTWORK:bench-anime-59",
+    "animeId": "bench-anime-59",
+    "animeTitle": "Benchmark Anime 59",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394429_057np",
+    "timestamp": "2026-09-25T14:26:34.429Z",
+    "timestampMs": 1790346394429,
+    "workerId": 27,
+    "taskId": "VERIFY_ARTWORK:bench-anime-51",
+    "animeId": "bench-anime-51",
+    "animeTitle": "Benchmark Anime 51",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394426_o7shp",
+    "timestamp": "2026-09-25T14:26:34.426Z",
+    "timestampMs": 1790346394426,
+    "workerId": 37,
+    "taskId": "VERIFY_ARTWORK:bench-anime-113",
+    "animeId": "bench-anime-113",
+    "animeTitle": "Benchmark Anime 113",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394420_ss1i9",
+    "timestamp": "2026-09-25T14:26:34.420Z",
+    "timestampMs": 1790346394420,
+    "workerId": 46,
+    "taskId": "VERIFY_ARTWORK:bench-anime-47",
+    "animeId": "bench-anime-47",
+    "animeTitle": "Benchmark Anime 47",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394418_pkg8x",
+    "timestamp": "2026-09-25T14:26:34.418Z",
+    "timestampMs": 1790346394418,
+    "workerId": 43,
+    "taskId": "VERIFY_ARTWORK:bench-anime-107",
+    "animeId": "bench-anime-107",
+    "animeTitle": "Benchmark Anime 107",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394415_ebkbt",
+    "timestamp": "2026-09-25T14:26:34.415Z",
+    "timestampMs": 1790346394415,
+    "workerId": 8,
+    "taskId": "VERIFY_ARTWORK:bench-anime-99",
+    "animeId": "bench-anime-99",
+    "animeTitle": "Benchmark Anime 99",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394412_2p4pj",
+    "timestamp": "2026-09-25T14:26:34.412Z",
+    "timestampMs": 1790346394412,
+    "workerId": 16,
+    "taskId": "VERIFY_ARTWORK:bench-anime-61",
+    "animeId": "bench-anime-61",
+    "animeTitle": "Benchmark Anime 61",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394409_5ir9j",
+    "timestamp": "2026-09-25T14:26:34.409Z",
+    "timestampMs": 1790346394409,
+    "workerId": 44,
+    "taskId": "VERIFY_ARTWORK:bench-anime-53",
+    "animeId": "bench-anime-53",
+    "animeTitle": "Benchmark Anime 53",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394407_srkct",
+    "timestamp": "2026-09-25T14:26:34.407Z",
+    "timestampMs": 1790346394407,
+    "workerId": 34,
+    "taskId": "VERIFY_ARTWORK:bench-anime-41",
+    "animeId": "bench-anime-41",
+    "animeTitle": "Benchmark Anime 41",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394404_ve8f5",
+    "timestamp": "2026-09-25T14:26:34.404Z",
+    "timestampMs": 1790346394404,
+    "workerId": 25,
+    "taskId": "VERIFY_ARTWORK:bench-anime-91",
+    "animeId": "bench-anime-91",
+    "animeTitle": "Benchmark Anime 91",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394402_ahrq6",
+    "timestamp": "2026-09-25T14:26:34.402Z",
+    "timestampMs": 1790346394402,
+    "workerId": 9,
+    "taskId": "VERIFY_ARTWORK:bench-anime-79",
+    "animeId": "bench-anime-79",
+    "animeTitle": "Benchmark Anime 79",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394400_mnwkg",
+    "timestamp": "2026-09-25T14:26:34.400Z",
+    "timestampMs": 1790346394400,
+    "workerId": 13,
+    "taskId": "VERIFY_ARTWORK:bench-anime-57",
+    "animeId": "bench-anime-57",
+    "animeTitle": "Benchmark Anime 57",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394397_fttge",
+    "timestamp": "2026-09-25T14:26:34.397Z",
+    "timestampMs": 1790346394397,
+    "workerId": 10,
+    "taskId": "VERIFY_ARTWORK:bench-anime-43",
+    "animeId": "bench-anime-43",
+    "animeTitle": "Benchmark Anime 43",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394395_r30be",
+    "timestamp": "2026-09-25T14:26:34.395Z",
+    "timestampMs": 1790346394395,
+    "workerId": 17,
+    "taskId": "VERIFY_ARTWORK:bench-anime-73",
+    "animeId": "bench-anime-73",
+    "animeTitle": "Benchmark Anime 73",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394392_p5y2g",
+    "timestamp": "2026-09-25T14:26:34.392Z",
+    "timestampMs": 1790346394392,
+    "workerId": 15,
+    "taskId": "VERIFY_ARTWORK:bench-anime-49",
+    "animeId": "bench-anime-49",
+    "animeTitle": "Benchmark Anime 49",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394390_xy7vf",
+    "timestamp": "2026-09-25T14:26:34.390Z",
+    "timestampMs": 1790346394390,
+    "workerId": 26,
+    "taskId": "VERIFY_ARTWORK:bench-anime-37",
+    "animeId": "bench-anime-37",
+    "animeTitle": "Benchmark Anime 37",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394388_tgs37",
+    "timestamp": "2026-09-25T14:26:34.388Z",
+    "timestampMs": 1790346394388,
+    "workerId": 18,
+    "taskId": "VERIFY_ARTWORK:bench-anime-29",
+    "animeId": "bench-anime-29",
+    "animeTitle": "Benchmark Anime 29",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394385_ho5v0",
+    "timestamp": "2026-09-25T14:26:34.385Z",
+    "timestampMs": 1790346394385,
+    "workerId": 28,
+    "taskId": "VERIFY_ARTWORK:bench-anime-101",
+    "animeId": "bench-anime-101",
+    "animeTitle": "Benchmark Anime 101",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394383_55jrk",
+    "timestamp": "2026-09-25T14:26:34.383Z",
+    "timestampMs": 1790346394383,
+    "workerId": 20,
+    "taskId": "VERIFY_ARTWORK:bench-anime-31",
+    "animeId": "bench-anime-31",
+    "animeTitle": "Benchmark Anime 31",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394380_6n5jj",
+    "timestamp": "2026-09-25T14:26:34.380Z",
+    "timestampMs": 1790346394380,
+    "workerId": 11,
+    "taskId": "VERIFY_ARTWORK:bench-anime-117",
+    "animeId": "bench-anime-117",
+    "animeTitle": "Benchmark Anime 117",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394378_uwhto",
+    "timestamp": "2026-09-25T14:26:34.378Z",
+    "timestampMs": 1790346394378,
+    "workerId": 5,
+    "taskId": "VERIFY_ARTWORK:bench-anime-111",
+    "animeId": "bench-anime-111",
+    "animeTitle": "Benchmark Anime 111",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394376_arunm",
+    "timestamp": "2026-09-25T14:26:34.376Z",
+    "timestampMs": 1790346394376,
+    "workerId": 23,
+    "taskId": "VERIFY_ARTWORK:bench-anime-97",
+    "animeId": "bench-anime-97",
+    "animeTitle": "Benchmark Anime 97",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394373_n60gs",
+    "timestamp": "2026-09-25T14:26:34.373Z",
+    "timestampMs": 1790346394373,
+    "workerId": 40,
+    "taskId": "VERIFY_ARTWORK:bench-anime-89",
+    "animeId": "bench-anime-89",
+    "animeTitle": "Benchmark Anime 89",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394371_m1sj6",
+    "timestamp": "2026-09-25T14:26:34.371Z",
+    "timestampMs": 1790346394371,
+    "workerId": 32,
+    "taskId": "VERIFY_ARTWORK:bench-anime-83",
+    "animeId": "bench-anime-83",
+    "animeTitle": "Benchmark Anime 83",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394368_9a7ns",
+    "timestamp": "2026-09-25T14:26:34.368Z",
+    "timestampMs": 1790346394368,
+    "workerId": 1,
+    "taskId": "VERIFY_ARTWORK:bench-anime-33",
+    "animeId": "bench-anime-33",
+    "animeTitle": "Benchmark Anime 33",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394366_50pk2",
+    "timestamp": "2026-09-25T14:26:34.366Z",
+    "timestampMs": 1790346394366,
+    "workerId": 3,
+    "taskId": "VERIFY_ARTWORK:bench-anime-93",
+    "animeId": "bench-anime-93",
+    "animeTitle": "Benchmark Anime 93",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394363_pp02m",
+    "timestamp": "2026-09-25T14:26:34.363Z",
+    "timestampMs": 1790346394363,
+    "workerId": 33,
+    "taskId": "VERIFY_ARTWORK:bench-anime-71",
+    "animeId": "bench-anime-71",
+    "animeTitle": "Benchmark Anime 71",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394361_pasjz",
+    "timestamp": "2026-09-25T14:26:34.361Z",
+    "timestampMs": 1790346394361,
+    "workerId": 39,
+    "taskId": "VERIFY_ARTWORK:bench-anime-69",
+    "animeId": "bench-anime-69",
+    "animeTitle": "Benchmark Anime 69",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394358_y18q7",
+    "timestamp": "2026-09-25T14:26:34.358Z",
+    "timestampMs": 1790346394358,
+    "workerId": 42,
+    "taskId": "VERIFY_ARTWORK:bench-anime-39",
+    "animeId": "bench-anime-39",
+    "animeTitle": "Benchmark Anime 39",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394355_5qupk",
+    "timestamp": "2026-09-25T14:26:34.355Z",
+    "timestampMs": 1790346394355,
+    "workerId": 12,
+    "taskId": "VERIFY_ARTWORK:bench-anime-27",
+    "animeId": "bench-anime-27",
+    "animeTitle": "Benchmark Anime 27",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394352_hmldv",
+    "timestamp": "2026-09-25T14:26:34.352Z",
+    "timestampMs": 1790346394352,
+    "workerId": 29,
+    "taskId": "VERIFY_ARTWORK:bench-anime-77",
+    "animeId": "bench-anime-77",
+    "animeTitle": "Benchmark Anime 77",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394350_0vbsv",
+    "timestamp": "2026-09-25T14:26:34.350Z",
+    "timestampMs": 1790346394350,
+    "workerId": 49,
+    "taskId": "VERIFY_ARTWORK:bench-anime-23",
+    "animeId": "bench-anime-23",
+    "animeTitle": "Benchmark Anime 23",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394347_hjjgh",
+    "timestamp": "2026-09-25T14:26:34.347Z",
+    "timestampMs": 1790346394347,
+    "workerId": 50,
+    "taskId": "VERIFY_ARTWORK:bench-anime-21",
+    "animeId": "bench-anime-21",
+    "animeTitle": "Benchmark Anime 21",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394343_v7qi7",
+    "timestamp": "2026-09-25T14:26:34.343Z",
+    "timestampMs": 1790346394343,
+    "workerId": 48,
+    "taskId": "VERIFY_ARTWORK:bench-anime-139",
+    "animeId": "bench-anime-139",
+    "animeTitle": "Benchmark Anime 139",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #48 claimed exclusive lock on \"Benchmark Anime 139\" (Anime: bench-anime-139)"
+  },
+  {
+    "id": "evt_1790346394339_37bz6",
+    "timestamp": "2026-09-25T14:26:34.339Z",
+    "timestampMs": 1790346394339,
+    "workerId": 35,
+    "taskId": "VERIFY_ARTWORK:bench-anime-137",
+    "animeId": "bench-anime-137",
+    "animeTitle": "Benchmark Anime 137",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #35 claimed exclusive lock on \"Benchmark Anime 137\" (Anime: bench-anime-137)"
+  },
+  {
+    "id": "evt_1790346394337_wtluz",
+    "timestamp": "2026-09-25T14:26:34.337Z",
+    "timestampMs": 1790346394337,
+    "workerId": 36,
+    "taskId": "VERIFY_ARTWORK:bench-anime-133",
+    "animeId": "bench-anime-133",
+    "animeTitle": "Benchmark Anime 133",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #36 claimed exclusive lock on \"Benchmark Anime 133\" (Anime: bench-anime-133)"
+  },
+  {
+    "id": "evt_1790346394334_hy95p",
+    "timestamp": "2026-09-25T14:26:34.334Z",
+    "timestampMs": 1790346394334,
+    "workerId": 31,
+    "taskId": "VERIFY_ARTWORK:bench-anime-131",
+    "animeId": "bench-anime-131",
+    "animeTitle": "Benchmark Anime 131",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #31 claimed exclusive lock on \"Benchmark Anime 131\" (Anime: bench-anime-131)"
+  },
+  {
+    "id": "evt_1790346394331_xxh4a",
+    "timestamp": "2026-09-25T14:26:34.331Z",
+    "timestampMs": 1790346394331,
+    "workerId": 22,
+    "taskId": "VERIFY_ARTWORK:bench-anime-129",
+    "animeId": "bench-anime-129",
+    "animeTitle": "Benchmark Anime 129",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #22 claimed exclusive lock on \"Benchmark Anime 129\" (Anime: bench-anime-129)"
+  },
+  {
+    "id": "evt_1790346394329_x6xny",
+    "timestamp": "2026-09-25T14:26:34.329Z",
+    "timestampMs": 1790346394329,
+    "workerId": 41,
+    "taskId": "VERIFY_ARTWORK:bench-anime-127",
+    "animeId": "bench-anime-127",
+    "animeTitle": "Benchmark Anime 127",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #41 claimed exclusive lock on \"Benchmark Anime 127\" (Anime: bench-anime-127)"
+  },
+  {
+    "id": "evt_1790346394326_q2q6x",
+    "timestamp": "2026-09-25T14:26:34.326Z",
+    "timestampMs": 1790346394326,
+    "workerId": 7,
+    "taskId": "VERIFY_ARTWORK:bench-anime-123",
+    "animeId": "bench-anime-123",
+    "animeTitle": "Benchmark Anime 123",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #7 claimed exclusive lock on \"Benchmark Anime 123\" (Anime: bench-anime-123)"
+  },
+  {
+    "id": "evt_1790346394323_fc9sr",
+    "timestamp": "2026-09-25T14:26:34.323Z",
+    "timestampMs": 1790346394323,
+    "workerId": 4,
+    "taskId": "VERIFY_ARTWORK:bench-anime-121",
+    "animeId": "bench-anime-121",
+    "animeTitle": "Benchmark Anime 121",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #4 claimed exclusive lock on \"Benchmark Anime 121\" (Anime: bench-anime-121)"
+  },
+  {
+    "id": "evt_1790346394321_oxmvm",
+    "timestamp": "2026-09-25T14:26:34.321Z",
+    "timestampMs": 1790346394321,
+    "workerId": 47,
+    "taskId": "VERIFY_ARTWORK:bench-anime-17",
+    "animeId": "bench-anime-17",
+    "animeTitle": "Benchmark Anime 17",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394318_j7sw7",
+    "timestamp": "2026-09-25T14:26:34.318Z",
+    "timestampMs": 1790346394318,
+    "workerId": 30,
+    "taskId": "VERIFY_ARTWORK:bench-anime-11",
+    "animeId": "bench-anime-11",
+    "animeTitle": "Benchmark Anime 11",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394316_51ddr",
+    "timestamp": "2026-09-25T14:26:34.316Z",
+    "timestampMs": 1790346394316,
+    "workerId": 48,
+    "taskId": "VERIFY_ARTWORK:bench-anime-19",
+    "animeId": "bench-anime-19",
+    "animeTitle": "Benchmark Anime 19",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394313_skw1c",
+    "timestamp": "2026-09-25T14:26:34.313Z",
+    "timestampMs": 1790346394313,
+    "workerId": 35,
+    "taskId": "VERIFY_ARTWORK:bench-anime-13",
+    "animeId": "bench-anime-13",
+    "animeTitle": "Benchmark Anime 13",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394311_x5tty",
+    "timestamp": "2026-09-25T14:26:34.311Z",
+    "timestampMs": 1790346394311,
+    "workerId": 36,
+    "taskId": "VERIFY_ARTWORK:bench-anime-9",
+    "animeId": "bench-anime-9",
+    "animeTitle": "Benchmark Anime 9",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394308_9p7jv",
+    "timestamp": "2026-09-25T14:26:34.308Z",
+    "timestampMs": 1790346394308,
+    "workerId": 31,
+    "taskId": "VERIFY_ARTWORK:bench-anime-7",
+    "animeId": "bench-anime-7",
+    "animeTitle": "Benchmark Anime 7",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394306_cuypq",
+    "timestamp": "2026-09-25T14:26:34.306Z",
+    "timestampMs": 1790346394306,
+    "workerId": 22,
+    "taskId": "VERIFY_ARTWORK:bench-anime-3",
+    "animeId": "bench-anime-3",
+    "animeTitle": "Benchmark Anime 3",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394303_2n52d",
+    "timestamp": "2026-09-25T14:26:34.303Z",
+    "timestampMs": 1790346394303,
+    "workerId": 41,
+    "taskId": "VERIFY_ARTWORK:bench-anime-1",
+    "animeId": "bench-anime-1",
+    "animeTitle": "Benchmark Anime 1",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394301_ujwck",
+    "timestamp": "2026-09-25T14:26:34.301Z",
+    "timestampMs": 1790346394301,
+    "workerId": 14,
+    "taskId": "VERIFY_ARTWORK:bench-anime-119",
+    "animeId": "bench-anime-119",
+    "animeTitle": "Benchmark Anime 119",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #14 claimed exclusive lock on \"Benchmark Anime 119\" (Anime: bench-anime-119)"
+  },
+  {
+    "id": "evt_1790346394298_qkor4",
+    "timestamp": "2026-09-25T14:26:34.298Z",
+    "timestampMs": 1790346394298,
+    "workerId": 11,
+    "taskId": "VERIFY_ARTWORK:bench-anime-117",
+    "animeId": "bench-anime-117",
+    "animeTitle": "Benchmark Anime 117",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #11 claimed exclusive lock on \"Benchmark Anime 117\" (Anime: bench-anime-117)"
+  },
+  {
+    "id": "evt_1790346394295_e6l8s",
+    "timestamp": "2026-09-25T14:26:34.295Z",
+    "timestampMs": 1790346394295,
+    "workerId": 37,
+    "taskId": "VERIFY_ARTWORK:bench-anime-113",
+    "animeId": "bench-anime-113",
+    "animeTitle": "Benchmark Anime 113",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #37 claimed exclusive lock on \"Benchmark Anime 113\" (Anime: bench-anime-113)"
+  },
+  {
+    "id": "evt_1790346394293_uhy4e",
+    "timestamp": "2026-09-25T14:26:34.293Z",
+    "timestampMs": 1790346394293,
+    "workerId": 5,
+    "taskId": "VERIFY_ARTWORK:bench-anime-111",
+    "animeId": "bench-anime-111",
+    "animeTitle": "Benchmark Anime 111",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #5 claimed exclusive lock on \"Benchmark Anime 111\" (Anime: bench-anime-111)"
+  },
+  {
+    "id": "evt_1790346394291_zl5nu",
+    "timestamp": "2026-09-25T14:26:34.291Z",
+    "timestampMs": 1790346394291,
+    "workerId": 24,
+    "taskId": "VERIFY_ARTWORK:bench-anime-109",
+    "animeId": "bench-anime-109",
+    "animeTitle": "Benchmark Anime 109",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #24 claimed exclusive lock on \"Benchmark Anime 109\" (Anime: bench-anime-109)"
+  },
+  {
+    "id": "evt_1790346394288_818fj",
+    "timestamp": "2026-09-25T14:26:34.288Z",
+    "timestampMs": 1790346394288,
+    "workerId": 43,
+    "taskId": "VERIFY_ARTWORK:bench-anime-107",
+    "animeId": "bench-anime-107",
+    "animeTitle": "Benchmark Anime 107",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #43 claimed exclusive lock on \"Benchmark Anime 107\" (Anime: bench-anime-107)"
+  },
+  {
+    "id": "evt_1790346394286_csx69",
+    "timestamp": "2026-09-25T14:26:34.286Z",
+    "timestampMs": 1790346394286,
+    "workerId": 2,
+    "taskId": "VERIFY_ARTWORK:bench-anime-103",
+    "animeId": "bench-anime-103",
+    "animeTitle": "Benchmark Anime 103",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #2 claimed exclusive lock on \"Benchmark Anime 103\" (Anime: bench-anime-103)"
+  },
+  {
+    "id": "evt_1790346394283_j7nz4",
+    "timestamp": "2026-09-25T14:26:34.283Z",
+    "timestampMs": 1790346394283,
+    "workerId": 28,
+    "taskId": "VERIFY_ARTWORK:bench-anime-101",
+    "animeId": "bench-anime-101",
+    "animeTitle": "Benchmark Anime 101",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #28 claimed exclusive lock on \"Benchmark Anime 101\" (Anime: bench-anime-101)"
+  },
+  {
+    "id": "evt_1790346394281_g7cu1",
+    "timestamp": "2026-09-25T14:26:34.281Z",
+    "timestampMs": 1790346394281,
+    "workerId": 8,
+    "taskId": "VERIFY_ARTWORK:bench-anime-99",
+    "animeId": "bench-anime-99",
+    "animeTitle": "Benchmark Anime 99",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #8 claimed exclusive lock on \"Benchmark Anime 99\" (Anime: bench-anime-99)"
+  },
+  {
+    "id": "evt_1790346394278_3ew9j",
+    "timestamp": "2026-09-25T14:26:34.278Z",
+    "timestampMs": 1790346394278,
+    "workerId": 23,
+    "taskId": "VERIFY_ARTWORK:bench-anime-97",
+    "animeId": "bench-anime-97",
+    "animeTitle": "Benchmark Anime 97",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #23 claimed exclusive lock on \"Benchmark Anime 97\" (Anime: bench-anime-97)"
+  },
+  {
+    "id": "evt_1790346394276_j29xh",
+    "timestamp": "2026-09-25T14:26:34.276Z",
+    "timestampMs": 1790346394276,
+    "workerId": 3,
+    "taskId": "VERIFY_ARTWORK:bench-anime-93",
+    "animeId": "bench-anime-93",
+    "animeTitle": "Benchmark Anime 93",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #3 claimed exclusive lock on \"Benchmark Anime 93\" (Anime: bench-anime-93)"
+  },
+  {
+    "id": "evt_1790346394273_g04b2",
+    "timestamp": "2026-09-25T14:26:34.273Z",
+    "timestampMs": 1790346394273,
+    "workerId": 25,
+    "taskId": "VERIFY_ARTWORK:bench-anime-91",
+    "animeId": "bench-anime-91",
+    "animeTitle": "Benchmark Anime 91",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #25 claimed exclusive lock on \"Benchmark Anime 91\" (Anime: bench-anime-91)"
+  },
+  {
+    "id": "evt_1790346394271_xvkwc",
+    "timestamp": "2026-09-25T14:26:34.271Z",
+    "timestampMs": 1790346394271,
+    "workerId": 40,
+    "taskId": "VERIFY_ARTWORK:bench-anime-89",
+    "animeId": "bench-anime-89",
+    "animeTitle": "Benchmark Anime 89",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #40 claimed exclusive lock on \"Benchmark Anime 89\" (Anime: bench-anime-89)"
+  },
+  {
+    "id": "evt_1790346394268_vj2e4",
+    "timestamp": "2026-09-25T14:26:34.268Z",
+    "timestampMs": 1790346394268,
+    "workerId": 21,
+    "taskId": "VERIFY_ARTWORK:bench-anime-87",
+    "animeId": "bench-anime-87",
+    "animeTitle": "Benchmark Anime 87",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #21 claimed exclusive lock on \"Benchmark Anime 87\" (Anime: bench-anime-87)"
+  },
+  {
+    "id": "evt_1790346394266_5kuxf",
+    "timestamp": "2026-09-25T14:26:34.266Z",
+    "timestampMs": 1790346394266,
+    "workerId": 32,
+    "taskId": "VERIFY_ARTWORK:bench-anime-83",
+    "animeId": "bench-anime-83",
+    "animeTitle": "Benchmark Anime 83",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #32 claimed exclusive lock on \"Benchmark Anime 83\" (Anime: bench-anime-83)"
+  },
+  {
+    "id": "evt_1790346394264_5fvf0",
+    "timestamp": "2026-09-25T14:26:34.264Z",
+    "timestampMs": 1790346394264,
+    "workerId": 45,
+    "taskId": "VERIFY_ARTWORK:bench-anime-81",
+    "animeId": "bench-anime-81",
+    "animeTitle": "Benchmark Anime 81",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #45 claimed exclusive lock on \"Benchmark Anime 81\" (Anime: bench-anime-81)"
+  },
+  {
+    "id": "evt_1790346394261_qetvw",
+    "timestamp": "2026-09-25T14:26:34.261Z",
+    "timestampMs": 1790346394261,
+    "workerId": 9,
+    "taskId": "VERIFY_ARTWORK:bench-anime-79",
+    "animeId": "bench-anime-79",
+    "animeTitle": "Benchmark Anime 79",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #9 claimed exclusive lock on \"Benchmark Anime 79\" (Anime: bench-anime-79)"
+  },
+  {
+    "id": "evt_1790346394259_5s1v6",
+    "timestamp": "2026-09-25T14:26:34.259Z",
+    "timestampMs": 1790346394259,
+    "workerId": 29,
+    "taskId": "VERIFY_ARTWORK:bench-anime-77",
+    "animeId": "bench-anime-77",
+    "animeTitle": "Benchmark Anime 77",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #29 claimed exclusive lock on \"Benchmark Anime 77\" (Anime: bench-anime-77)"
+  },
+  {
+    "id": "evt_1790346394256_8ueyz",
+    "timestamp": "2026-09-25T14:26:34.256Z",
+    "timestampMs": 1790346394256,
+    "workerId": 17,
+    "taskId": "VERIFY_ARTWORK:bench-anime-73",
+    "animeId": "bench-anime-73",
+    "animeTitle": "Benchmark Anime 73",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #17 claimed exclusive lock on \"Benchmark Anime 73\" (Anime: bench-anime-73)"
+  },
+  {
+    "id": "evt_1790346394249_d9ngk",
+    "timestamp": "2026-09-25T14:26:34.249Z",
+    "timestampMs": 1790346394249,
+    "workerId": 33,
+    "taskId": "VERIFY_ARTWORK:bench-anime-71",
+    "animeId": "bench-anime-71",
+    "animeTitle": "Benchmark Anime 71",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #33 claimed exclusive lock on \"Benchmark Anime 71\" (Anime: bench-anime-71)"
+  },
+  {
+    "id": "evt_1790346394247_l039q",
+    "timestamp": "2026-09-25T14:26:34.247Z",
+    "timestampMs": 1790346394247,
+    "workerId": 39,
+    "taskId": "VERIFY_ARTWORK:bench-anime-69",
+    "animeId": "bench-anime-69",
+    "animeTitle": "Benchmark Anime 69",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #39 claimed exclusive lock on \"Benchmark Anime 69\" (Anime: bench-anime-69)"
+  },
+  {
+    "id": "evt_1790346394245_qgves",
+    "timestamp": "2026-09-25T14:26:34.245Z",
+    "timestampMs": 1790346394245,
+    "workerId": 38,
+    "taskId": "VERIFY_ARTWORK:bench-anime-67",
+    "animeId": "bench-anime-67",
+    "animeTitle": "Benchmark Anime 67",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #38 claimed exclusive lock on \"Benchmark Anime 67\" (Anime: bench-anime-67)"
+  },
+  {
+    "id": "evt_1790346394242_fslyo",
+    "timestamp": "2026-09-25T14:26:34.242Z",
+    "timestampMs": 1790346394242,
+    "workerId": 6,
+    "taskId": "VERIFY_ARTWORK:bench-anime-63",
+    "animeId": "bench-anime-63",
+    "animeTitle": "Benchmark Anime 63",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #6 claimed exclusive lock on \"Benchmark Anime 63\" (Anime: bench-anime-63)"
+  },
+  {
+    "id": "evt_1790346394240_tm0g0",
+    "timestamp": "2026-09-25T14:26:34.240Z",
+    "timestampMs": 1790346394240,
+    "workerId": 16,
+    "taskId": "VERIFY_ARTWORK:bench-anime-61",
+    "animeId": "bench-anime-61",
+    "animeTitle": "Benchmark Anime 61",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #16 claimed exclusive lock on \"Benchmark Anime 61\" (Anime: bench-anime-61)"
+  },
+  {
+    "id": "evt_1790346394237_y3kjs",
+    "timestamp": "2026-09-25T14:26:34.237Z",
+    "timestampMs": 1790346394237,
+    "workerId": 19,
+    "taskId": "VERIFY_ARTWORK:bench-anime-59",
+    "animeId": "bench-anime-59",
+    "animeTitle": "Benchmark Anime 59",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #19 claimed exclusive lock on \"Benchmark Anime 59\" (Anime: bench-anime-59)"
+  },
+  {
+    "id": "evt_1790346394235_wvf43",
+    "timestamp": "2026-09-25T14:26:34.235Z",
+    "timestampMs": 1790346394235,
+    "workerId": 13,
+    "taskId": "VERIFY_ARTWORK:bench-anime-57",
+    "animeId": "bench-anime-57",
+    "animeTitle": "Benchmark Anime 57",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #13 claimed exclusive lock on \"Benchmark Anime 57\" (Anime: bench-anime-57)"
+  },
+  {
+    "id": "evt_1790346394232_yfggf",
+    "timestamp": "2026-09-25T14:26:34.232Z",
+    "timestampMs": 1790346394232,
+    "workerId": 44,
+    "taskId": "VERIFY_ARTWORK:bench-anime-53",
+    "animeId": "bench-anime-53",
+    "animeTitle": "Benchmark Anime 53",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #44 claimed exclusive lock on \"Benchmark Anime 53\" (Anime: bench-anime-53)"
+  },
+  {
+    "id": "evt_1790346394230_6ao88",
+    "timestamp": "2026-09-25T14:26:34.230Z",
+    "timestampMs": 1790346394230,
+    "workerId": 27,
+    "taskId": "VERIFY_ARTWORK:bench-anime-51",
+    "animeId": "bench-anime-51",
+    "animeTitle": "Benchmark Anime 51",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #27 claimed exclusive lock on \"Benchmark Anime 51\" (Anime: bench-anime-51)"
+  },
+  {
+    "id": "evt_1790346394228_zzvho",
+    "timestamp": "2026-09-25T14:26:34.228Z",
+    "timestampMs": 1790346394228,
+    "workerId": 15,
+    "taskId": "VERIFY_ARTWORK:bench-anime-49",
+    "animeId": "bench-anime-49",
+    "animeTitle": "Benchmark Anime 49",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #15 claimed exclusive lock on \"Benchmark Anime 49\" (Anime: bench-anime-49)"
+  },
+  {
+    "id": "evt_1790346394225_t8iwt",
+    "timestamp": "2026-09-25T14:26:34.225Z",
+    "timestampMs": 1790346394225,
+    "workerId": 46,
+    "taskId": "VERIFY_ARTWORK:bench-anime-47",
+    "animeId": "bench-anime-47",
+    "animeTitle": "Benchmark Anime 47",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #46 claimed exclusive lock on \"Benchmark Anime 47\" (Anime: bench-anime-47)"
+  },
+  {
+    "id": "evt_1790346394222_uwisi",
+    "timestamp": "2026-09-25T14:26:34.222Z",
+    "timestampMs": 1790346394222,
+    "workerId": 10,
+    "taskId": "VERIFY_ARTWORK:bench-anime-43",
+    "animeId": "bench-anime-43",
+    "animeTitle": "Benchmark Anime 43",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #10 claimed exclusive lock on \"Benchmark Anime 43\" (Anime: bench-anime-43)"
+  },
+  {
+    "id": "evt_1790346394219_79la0",
+    "timestamp": "2026-09-25T14:26:34.219Z",
+    "timestampMs": 1790346394219,
+    "workerId": 34,
+    "taskId": "VERIFY_ARTWORK:bench-anime-41",
+    "animeId": "bench-anime-41",
+    "animeTitle": "Benchmark Anime 41",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #34 claimed exclusive lock on \"Benchmark Anime 41\" (Anime: bench-anime-41)"
+  },
+  {
+    "id": "evt_1790346394217_6blub",
+    "timestamp": "2026-09-25T14:26:34.217Z",
+    "timestampMs": 1790346394217,
+    "workerId": 42,
+    "taskId": "VERIFY_ARTWORK:bench-anime-39",
+    "animeId": "bench-anime-39",
+    "animeTitle": "Benchmark Anime 39",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #42 claimed exclusive lock on \"Benchmark Anime 39\" (Anime: bench-anime-39)"
+  },
+  {
+    "id": "evt_1790346394215_aygwn",
+    "timestamp": "2026-09-25T14:26:34.215Z",
+    "timestampMs": 1790346394215,
+    "workerId": 26,
+    "taskId": "VERIFY_ARTWORK:bench-anime-37",
+    "animeId": "bench-anime-37",
+    "animeTitle": "Benchmark Anime 37",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #26 claimed exclusive lock on \"Benchmark Anime 37\" (Anime: bench-anime-37)"
+  },
+  {
+    "id": "evt_1790346394213_6dxfp",
+    "timestamp": "2026-09-25T14:26:34.213Z",
+    "timestampMs": 1790346394213,
+    "workerId": 1,
+    "taskId": "VERIFY_ARTWORK:bench-anime-33",
+    "animeId": "bench-anime-33",
+    "animeTitle": "Benchmark Anime 33",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #1 claimed exclusive lock on \"Benchmark Anime 33\" (Anime: bench-anime-33)"
+  },
+  {
+    "id": "evt_1790346394211_0we79",
+    "timestamp": "2026-09-25T14:26:34.211Z",
+    "timestampMs": 1790346394211,
+    "workerId": 20,
+    "taskId": "VERIFY_ARTWORK:bench-anime-31",
+    "animeId": "bench-anime-31",
+    "animeTitle": "Benchmark Anime 31",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #20 claimed exclusive lock on \"Benchmark Anime 31\" (Anime: bench-anime-31)"
+  },
+  {
+    "id": "evt_1790346394209_veuxw",
+    "timestamp": "2026-09-25T14:26:34.209Z",
+    "timestampMs": 1790346394209,
+    "workerId": 18,
+    "taskId": "VERIFY_ARTWORK:bench-anime-29",
+    "animeId": "bench-anime-29",
+    "animeTitle": "Benchmark Anime 29",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #18 claimed exclusive lock on \"Benchmark Anime 29\" (Anime: bench-anime-29)"
+  },
+  {
+    "id": "evt_1790346394207_d8ngh",
+    "timestamp": "2026-09-25T14:26:34.207Z",
+    "timestampMs": 1790346394207,
+    "workerId": 12,
+    "taskId": "VERIFY_ARTWORK:bench-anime-27",
+    "animeId": "bench-anime-27",
+    "animeTitle": "Benchmark Anime 27",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #12 claimed exclusive lock on \"Benchmark Anime 27\" (Anime: bench-anime-27)"
+  },
+  {
+    "id": "evt_1790346394204_556if",
+    "timestamp": "2026-09-25T14:26:34.204Z",
+    "timestampMs": 1790346394204,
+    "workerId": 49,
+    "taskId": "VERIFY_ARTWORK:bench-anime-23",
+    "animeId": "bench-anime-23",
+    "animeTitle": "Benchmark Anime 23",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #49 claimed exclusive lock on \"Benchmark Anime 23\" (Anime: bench-anime-23)"
+  },
+  {
+    "id": "evt_1790346394202_vvsdf",
+    "timestamp": "2026-09-25T14:26:34.202Z",
+    "timestampMs": 1790346394202,
+    "workerId": 50,
+    "taskId": "VERIFY_ARTWORK:bench-anime-21",
+    "animeId": "bench-anime-21",
+    "animeTitle": "Benchmark Anime 21",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #50 claimed exclusive lock on \"Benchmark Anime 21\" (Anime: bench-anime-21)"
+  },
+  {
+    "id": "evt_1790346394199_7a0up",
+    "timestamp": "2026-09-25T14:26:34.199Z",
+    "timestampMs": 1790346394199,
+    "workerId": 7,
+    "taskId": "VERIFY_ARTWORK:bench-anime-122",
+    "animeId": "bench-anime-122",
+    "animeTitle": "Benchmark Anime 122",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394196_90ouu",
+    "timestamp": "2026-09-25T14:26:34.196Z",
+    "timestampMs": 1790346394196,
+    "workerId": 4,
+    "taskId": "VERIFY_ARTWORK:bench-anime-118",
+    "animeId": "bench-anime-118",
+    "animeTitle": "Benchmark Anime 118",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394194_i68p3",
+    "timestamp": "2026-09-25T14:26:34.194Z",
+    "timestampMs": 1790346394194,
+    "workerId": 14,
+    "taskId": "VERIFY_ARTWORK:bench-anime-112",
+    "animeId": "bench-anime-112",
+    "animeTitle": "Benchmark Anime 112",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394187_j9ie9",
+    "timestamp": "2026-09-25T14:26:34.187Z",
+    "timestampMs": 1790346394187,
+    "workerId": 11,
+    "taskId": "VERIFY_ARTWORK:bench-anime-108",
+    "animeId": "bench-anime-108",
+    "animeTitle": "Benchmark Anime 108",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394185_quduq",
+    "timestamp": "2026-09-25T14:26:34.185Z",
+    "timestampMs": 1790346394185,
+    "workerId": 37,
+    "taskId": "VERIFY_ARTWORK:bench-anime-96",
+    "animeId": "bench-anime-96",
+    "animeTitle": "Benchmark Anime 96",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394184_gbf1l",
+    "timestamp": "2026-09-25T14:26:34.184Z",
+    "timestampMs": 1790346394184,
+    "workerId": 5,
+    "taskId": "VERIFY_ARTWORK:bench-anime-86",
+    "animeId": "bench-anime-86",
+    "animeTitle": "Benchmark Anime 86",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394182_gjc7y",
+    "timestamp": "2026-09-25T14:26:34.182Z",
+    "timestampMs": 1790346394182,
+    "workerId": 24,
+    "taskId": "VERIFY_ARTWORK:bench-anime-114",
+    "animeId": "bench-anime-114",
+    "animeTitle": "Benchmark Anime 114",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394176_7zdnw",
+    "timestamp": "2026-09-25T14:26:34.176Z",
+    "timestampMs": 1790346394176,
+    "workerId": 43,
+    "taskId": "VERIFY_ARTWORK:bench-anime-98",
+    "animeId": "bench-anime-98",
+    "animeTitle": "Benchmark Anime 98",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394174_2x2ss",
+    "timestamp": "2026-09-25T14:26:34.174Z",
+    "timestampMs": 1790346394174,
+    "workerId": 2,
+    "taskId": "VERIFY_ARTWORK:bench-anime-84",
+    "animeId": "bench-anime-84",
+    "animeTitle": "Benchmark Anime 84",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394172_p3gof",
+    "timestamp": "2026-09-25T14:26:34.172Z",
+    "timestampMs": 1790346394172,
+    "workerId": 28,
+    "taskId": "VERIFY_ARTWORK:bench-anime-142",
+    "animeId": "bench-anime-142",
+    "animeTitle": "Benchmark Anime 142",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394170_q5t34",
+    "timestamp": "2026-09-25T14:26:34.170Z",
+    "timestampMs": 1790346394170,
+    "workerId": 8,
+    "taskId": "VERIFY_ARTWORK:bench-anime-104",
+    "animeId": "bench-anime-104",
+    "animeTitle": "Benchmark Anime 104",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394168_9qnd3",
+    "timestamp": "2026-09-25T14:26:34.168Z",
+    "timestampMs": 1790346394168,
+    "workerId": 23,
+    "taskId": "VERIFY_ARTWORK:bench-anime-92",
+    "animeId": "bench-anime-92",
+    "animeTitle": "Benchmark Anime 92",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394166_5380c",
+    "timestamp": "2026-09-25T14:26:34.166Z",
+    "timestampMs": 1790346394166,
+    "workerId": 3,
+    "taskId": "VERIFY_ARTWORK:bench-anime-72",
+    "animeId": "bench-anime-72",
+    "animeTitle": "Benchmark Anime 72",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394164_tojgg",
+    "timestamp": "2026-09-25T14:26:34.164Z",
+    "timestampMs": 1790346394164,
+    "workerId": 25,
+    "taskId": "VERIFY_ARTWORK:bench-anime-148",
+    "animeId": "bench-anime-148",
+    "animeTitle": "Benchmark Anime 148",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394161_4xquf",
+    "timestamp": "2026-09-25T14:26:34.161Z",
+    "timestampMs": 1790346394161,
+    "workerId": 40,
+    "taskId": "VERIFY_ARTWORK:bench-anime-146",
+    "animeId": "bench-anime-146",
+    "animeTitle": "Benchmark Anime 146",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394159_1xug2",
+    "timestamp": "2026-09-25T14:26:34.159Z",
+    "timestampMs": 1790346394159,
+    "workerId": 21,
+    "taskId": "VERIFY_ARTWORK:bench-anime-132",
+    "animeId": "bench-anime-132",
+    "animeTitle": "Benchmark Anime 132",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394157_siumw",
+    "timestamp": "2026-09-25T14:26:34.157Z",
+    "timestampMs": 1790346394157,
+    "workerId": 32,
+    "taskId": "VERIFY_ARTWORK:bench-anime-128",
+    "animeId": "bench-anime-128",
+    "animeTitle": "Benchmark Anime 128",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394155_lrtvm",
+    "timestamp": "2026-09-25T14:26:34.155Z",
+    "timestampMs": 1790346394155,
+    "workerId": 45,
+    "taskId": "VERIFY_ARTWORK:bench-anime-116",
+    "animeId": "bench-anime-116",
+    "animeTitle": "Benchmark Anime 116",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394153_t9v0w",
+    "timestamp": "2026-09-25T14:26:34.153Z",
+    "timestampMs": 1790346394153,
+    "workerId": 9,
+    "taskId": "VERIFY_ARTWORK:bench-anime-106",
+    "animeId": "bench-anime-106",
+    "animeTitle": "Benchmark Anime 106",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394150_1g17d",
+    "timestamp": "2026-09-25T14:26:34.150Z",
+    "timestampMs": 1790346394150,
+    "workerId": 29,
+    "taskId": "VERIFY_ARTWORK:bench-anime-78",
+    "animeId": "bench-anime-78",
+    "animeTitle": "Benchmark Anime 78",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394148_o2tnn",
+    "timestamp": "2026-09-25T14:26:34.148Z",
+    "timestampMs": 1790346394148,
+    "workerId": 17,
+    "taskId": "VERIFY_ARTWORK:bench-anime-124",
+    "animeId": "bench-anime-124",
+    "animeTitle": "Benchmark Anime 124",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394146_epgxq",
+    "timestamp": "2026-09-25T14:26:34.146Z",
+    "timestampMs": 1790346394146,
+    "workerId": 33,
+    "taskId": "VERIFY_ARTWORK:bench-anime-94",
+    "animeId": "bench-anime-94",
+    "animeTitle": "Benchmark Anime 94",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394143_h35g3",
+    "timestamp": "2026-09-25T14:26:34.143Z",
+    "timestampMs": 1790346394143,
+    "workerId": 39,
+    "taskId": "VERIFY_ARTWORK:bench-anime-64",
+    "animeId": "bench-anime-64",
+    "animeTitle": "Benchmark Anime 64",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394141_j69lo",
+    "timestamp": "2026-09-25T14:26:34.141Z",
+    "timestampMs": 1790346394141,
+    "workerId": 38,
+    "taskId": "VERIFY_ARTWORK:bench-anime-144",
+    "animeId": "bench-anime-144",
+    "animeTitle": "Benchmark Anime 144",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394139_en2q9",
+    "timestamp": "2026-09-25T14:26:34.139Z",
+    "timestampMs": 1790346394139,
+    "workerId": 6,
+    "taskId": "VERIFY_ARTWORK:bench-anime-102",
+    "animeId": "bench-anime-102",
+    "animeTitle": "Benchmark Anime 102",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394136_ecar7",
+    "timestamp": "2026-09-25T14:26:34.136Z",
+    "timestampMs": 1790346394136,
+    "workerId": 16,
+    "taskId": "VERIFY_ARTWORK:bench-anime-74",
+    "animeId": "bench-anime-74",
+    "animeTitle": "Benchmark Anime 74",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394134_bkw10",
+    "timestamp": "2026-09-25T14:26:34.134Z",
+    "timestampMs": 1790346394134,
+    "workerId": 19,
+    "taskId": "VERIFY_ARTWORK:bench-anime-62",
+    "animeId": "bench-anime-62",
+    "animeTitle": "Benchmark Anime 62",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394132_3se87",
+    "timestamp": "2026-09-25T14:26:34.132Z",
+    "timestampMs": 1790346394132,
+    "workerId": 13,
+    "taskId": "VERIFY_ARTWORK:bench-anime-88",
+    "animeId": "bench-anime-88",
+    "animeTitle": "Benchmark Anime 88",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394129_q6lgq",
+    "timestamp": "2026-09-25T14:26:34.129Z",
+    "timestampMs": 1790346394129,
+    "workerId": 44,
+    "taskId": "VERIFY_ARTWORK:bench-anime-66",
+    "animeId": "bench-anime-66",
+    "animeTitle": "Benchmark Anime 66",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394126_e9bvi",
+    "timestamp": "2026-09-25T14:26:34.126Z",
+    "timestampMs": 1790346394126,
+    "workerId": 27,
+    "taskId": "VERIFY_ARTWORK:bench-anime-134",
+    "animeId": "bench-anime-134",
+    "animeTitle": "Benchmark Anime 134",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394124_z7bwm",
+    "timestamp": "2026-09-25T14:26:34.124Z",
+    "timestampMs": 1790346394124,
+    "workerId": 15,
+    "taskId": "VERIFY_ARTWORK:bench-anime-126",
+    "animeId": "bench-anime-126",
+    "animeTitle": "Benchmark Anime 126",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394122_bl4t0",
+    "timestamp": "2026-09-25T14:26:34.122Z",
+    "timestampMs": 1790346394122,
+    "workerId": 46,
+    "taskId": "VERIFY_ARTWORK:bench-anime-68",
+    "animeId": "bench-anime-68",
+    "animeTitle": "Benchmark Anime 68",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394119_63wq4",
+    "timestamp": "2026-09-25T14:26:34.119Z",
+    "timestampMs": 1790346394119,
+    "workerId": 10,
+    "taskId": "VERIFY_ARTWORK:bench-anime-54",
+    "animeId": "bench-anime-54",
+    "animeTitle": "Benchmark Anime 54",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394117_mt91i",
+    "timestamp": "2026-09-25T14:26:34.117Z",
+    "timestampMs": 1790346394117,
+    "workerId": 34,
+    "taskId": "VERIFY_ARTWORK:bench-anime-136",
+    "animeId": "bench-anime-136",
+    "animeTitle": "Benchmark Anime 136",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394115_nju5c",
+    "timestamp": "2026-09-25T14:26:34.115Z",
+    "timestampMs": 1790346394115,
+    "workerId": 42,
+    "taskId": "VERIFY_ARTWORK:bench-anime-82",
+    "animeId": "bench-anime-82",
+    "animeTitle": "Benchmark Anime 82",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394112_272i8",
+    "timestamp": "2026-09-25T14:26:34.112Z",
+    "timestampMs": 1790346394112,
+    "workerId": 26,
+    "taskId": "VERIFY_ARTWORK:bench-anime-76",
+    "animeId": "bench-anime-76",
+    "animeTitle": "Benchmark Anime 76",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394110_1ewxs",
+    "timestamp": "2026-09-25T14:26:34.110Z",
+    "timestampMs": 1790346394110,
+    "workerId": 1,
+    "taskId": "VERIFY_ARTWORK:bench-anime-52",
+    "animeId": "bench-anime-52",
+    "animeTitle": "Benchmark Anime 52",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394107_yi5s5",
+    "timestamp": "2026-09-25T14:26:34.107Z",
+    "timestampMs": 1790346394107,
+    "workerId": 20,
+    "taskId": "VERIFY_ARTWORK:bench-anime-138",
+    "animeId": "bench-anime-138",
+    "animeTitle": "Benchmark Anime 138",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394103_p9o1e",
+    "timestamp": "2026-09-25T14:26:34.103Z",
+    "timestampMs": 1790346394103,
+    "workerId": 18,
+    "taskId": "VERIFY_ARTWORK:bench-anime-58",
+    "animeId": "bench-anime-58",
+    "animeTitle": "Benchmark Anime 58",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394101_5uo9n",
+    "timestamp": "2026-09-25T14:26:34.101Z",
+    "timestampMs": 1790346394101,
+    "workerId": 12,
+    "taskId": "VERIFY_ARTWORK:bench-anime-56",
+    "animeId": "bench-anime-56",
+    "animeTitle": "Benchmark Anime 56",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394099_9gmkl",
+    "timestamp": "2026-09-25T14:26:34.099Z",
+    "timestampMs": 1790346394099,
+    "workerId": 48,
+    "taskId": "VERIFY_ARTWORK:bench-anime-19",
+    "animeId": "bench-anime-19",
+    "animeTitle": "Benchmark Anime 19",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #48 claimed exclusive lock on \"Benchmark Anime 19\" (Anime: bench-anime-19)"
+  },
+  {
+    "id": "evt_1790346394096_xz8vi",
+    "timestamp": "2026-09-25T14:26:34.096Z",
+    "timestampMs": 1790346394096,
+    "workerId": 47,
+    "taskId": "VERIFY_ARTWORK:bench-anime-17",
+    "animeId": "bench-anime-17",
+    "animeTitle": "Benchmark Anime 17",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #47 claimed exclusive lock on \"Benchmark Anime 17\" (Anime: bench-anime-17)"
+  },
+  {
+    "id": "evt_1790346394094_mu1nj",
+    "timestamp": "2026-09-25T14:26:34.094Z",
+    "timestampMs": 1790346394094,
+    "workerId": 35,
+    "taskId": "VERIFY_ARTWORK:bench-anime-13",
+    "animeId": "bench-anime-13",
+    "animeTitle": "Benchmark Anime 13",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #35 claimed exclusive lock on \"Benchmark Anime 13\" (Anime: bench-anime-13)"
+  },
+  {
+    "id": "evt_1790346394092_7k3ck",
+    "timestamp": "2026-09-25T14:26:34.092Z",
+    "timestampMs": 1790346394092,
+    "workerId": 30,
+    "taskId": "VERIFY_ARTWORK:bench-anime-11",
+    "animeId": "bench-anime-11",
+    "animeTitle": "Benchmark Anime 11",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #30 claimed exclusive lock on \"Benchmark Anime 11\" (Anime: bench-anime-11)"
+  },
+  {
+    "id": "evt_1790346394089_pfdxd",
+    "timestamp": "2026-09-25T14:26:34.089Z",
+    "timestampMs": 1790346394089,
+    "workerId": 49,
+    "taskId": "VERIFY_ARTWORK:bench-anime-46",
+    "animeId": "bench-anime-46",
+    "animeTitle": "Benchmark Anime 46",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394087_b94r5",
+    "timestamp": "2026-09-25T14:26:34.087Z",
+    "timestampMs": 1790346394087,
+    "workerId": 50,
+    "taskId": "VERIFY_ARTWORK:bench-anime-48",
+    "animeId": "bench-anime-48",
+    "animeTitle": "Benchmark Anime 48",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346394085_se9s3",
+    "timestamp": "2026-09-25T14:26:34.085Z",
+    "timestampMs": 1790346394085,
+    "workerId": 36,
+    "taskId": "VERIFY_ARTWORK:bench-anime-9",
+    "animeId": "bench-anime-9",
+    "animeTitle": "Benchmark Anime 9",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #36 claimed exclusive lock on \"Benchmark Anime 9\" (Anime: bench-anime-9)"
+  },
+  {
+    "id": "evt_1790346394082_xde8v",
+    "timestamp": "2026-09-25T14:26:34.082Z",
+    "timestampMs": 1790346394082,
+    "workerId": 31,
+    "taskId": "VERIFY_ARTWORK:bench-anime-7",
+    "animeId": "bench-anime-7",
+    "animeTitle": "Benchmark Anime 7",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #31 claimed exclusive lock on \"Benchmark Anime 7\" (Anime: bench-anime-7)"
+  },
+  {
+    "id": "evt_1790346394080_3pdcm",
+    "timestamp": "2026-09-25T14:26:34.080Z",
+    "timestampMs": 1790346394080,
+    "workerId": 22,
+    "taskId": "VERIFY_ARTWORK:bench-anime-3",
+    "animeId": "bench-anime-3",
+    "animeTitle": "Benchmark Anime 3",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #22 claimed exclusive lock on \"Benchmark Anime 3\" (Anime: bench-anime-3)"
+  },
+  {
+    "id": "evt_1790346394077_mx8mz",
+    "timestamp": "2026-09-25T14:26:34.077Z",
+    "timestampMs": 1790346394077,
+    "workerId": 41,
+    "taskId": "VERIFY_ARTWORK:bench-anime-1",
+    "animeId": "bench-anime-1",
+    "animeTitle": "Benchmark Anime 1",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #41 claimed exclusive lock on \"Benchmark Anime 1\" (Anime: bench-anime-1)"
+  },
+  {
+    "id": "evt_1790346394075_bxebw",
+    "timestamp": "2026-09-25T14:26:34.075Z",
+    "timestampMs": 1790346394075,
+    "workerId": 25,
+    "taskId": "VERIFY_ARTWORK:bench-anime-148",
+    "animeId": "bench-anime-148",
+    "animeTitle": "Benchmark Anime 148",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #25 claimed exclusive lock on \"Benchmark Anime 148\" (Anime: bench-anime-148)"
+  },
+  {
+    "id": "evt_1790346394072_pcucr",
+    "timestamp": "2026-09-25T14:26:34.072Z",
+    "timestampMs": 1790346394072,
+    "workerId": 40,
+    "taskId": "VERIFY_ARTWORK:bench-anime-146",
+    "animeId": "bench-anime-146",
+    "animeTitle": "Benchmark Anime 146",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #40 claimed exclusive lock on \"Benchmark Anime 146\" (Anime: bench-anime-146)"
+  },
+  {
+    "id": "evt_1790346394070_npmaw",
+    "timestamp": "2026-09-25T14:26:34.070Z",
+    "timestampMs": 1790346394070,
+    "workerId": 38,
+    "taskId": "VERIFY_ARTWORK:bench-anime-144",
+    "animeId": "bench-anime-144",
+    "animeTitle": "Benchmark Anime 144",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #38 claimed exclusive lock on \"Benchmark Anime 144\" (Anime: bench-anime-144)"
+  },
+  {
+    "id": "evt_1790346394068_o2dyw",
+    "timestamp": "2026-09-25T14:26:34.068Z",
+    "timestampMs": 1790346394068,
+    "workerId": 28,
+    "taskId": "VERIFY_ARTWORK:bench-anime-142",
+    "animeId": "bench-anime-142",
+    "animeTitle": "Benchmark Anime 142",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #28 claimed exclusive lock on \"Benchmark Anime 142\" (Anime: bench-anime-142)"
+  },
+  {
+    "id": "evt_1790346394065_vgjy2",
+    "timestamp": "2026-09-25T14:26:34.065Z",
+    "timestampMs": 1790346394065,
+    "workerId": 20,
+    "taskId": "VERIFY_ARTWORK:bench-anime-138",
+    "animeId": "bench-anime-138",
+    "animeTitle": "Benchmark Anime 138",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #20 claimed exclusive lock on \"Benchmark Anime 138\" (Anime: bench-anime-138)"
+  },
+  {
+    "id": "evt_1790346394062_8xump",
+    "timestamp": "2026-09-25T14:26:34.062Z",
+    "timestampMs": 1790346394062,
+    "workerId": 34,
+    "taskId": "VERIFY_ARTWORK:bench-anime-136",
+    "animeId": "bench-anime-136",
+    "animeTitle": "Benchmark Anime 136",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #34 claimed exclusive lock on \"Benchmark Anime 136\" (Anime: bench-anime-136)"
+  },
+  {
+    "id": "evt_1790346394060_ldqdo",
+    "timestamp": "2026-09-25T14:26:34.060Z",
+    "timestampMs": 1790346394060,
+    "workerId": 27,
+    "taskId": "VERIFY_ARTWORK:bench-anime-134",
+    "animeId": "bench-anime-134",
+    "animeTitle": "Benchmark Anime 134",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #27 claimed exclusive lock on \"Benchmark Anime 134\" (Anime: bench-anime-134)"
+  },
+  {
+    "id": "evt_1790346394057_xi4c1",
+    "timestamp": "2026-09-25T14:26:34.057Z",
+    "timestampMs": 1790346394057,
+    "workerId": 21,
+    "taskId": "VERIFY_ARTWORK:bench-anime-132",
+    "animeId": "bench-anime-132",
+    "animeTitle": "Benchmark Anime 132",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #21 claimed exclusive lock on \"Benchmark Anime 132\" (Anime: bench-anime-132)"
+  },
+  {
+    "id": "evt_1790346394055_hop6h",
+    "timestamp": "2026-09-25T14:26:34.055Z",
+    "timestampMs": 1790346394055,
+    "workerId": 32,
+    "taskId": "VERIFY_ARTWORK:bench-anime-128",
+    "animeId": "bench-anime-128",
+    "animeTitle": "Benchmark Anime 128",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #32 claimed exclusive lock on \"Benchmark Anime 128\" (Anime: bench-anime-128)"
+  },
+  {
+    "id": "evt_1790346394053_49e1j",
+    "timestamp": "2026-09-25T14:26:34.053Z",
+    "timestampMs": 1790346394053,
+    "workerId": 15,
+    "taskId": "VERIFY_ARTWORK:bench-anime-126",
+    "animeId": "bench-anime-126",
+    "animeTitle": "Benchmark Anime 126",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #15 claimed exclusive lock on \"Benchmark Anime 126\" (Anime: bench-anime-126)"
+  },
+  {
+    "id": "evt_1790346394050_n1iut",
+    "timestamp": "2026-09-25T14:26:34.050Z",
+    "timestampMs": 1790346394051,
+    "workerId": 17,
+    "taskId": "VERIFY_ARTWORK:bench-anime-124",
+    "animeId": "bench-anime-124",
+    "animeTitle": "Benchmark Anime 124",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #17 claimed exclusive lock on \"Benchmark Anime 124\" (Anime: bench-anime-124)"
+  },
+  {
+    "id": "evt_1790346394048_imyuz",
+    "timestamp": "2026-09-25T14:26:34.048Z",
+    "timestampMs": 1790346394048,
+    "workerId": 7,
+    "taskId": "VERIFY_ARTWORK:bench-anime-122",
+    "animeId": "bench-anime-122",
+    "animeTitle": "Benchmark Anime 122",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #7 claimed exclusive lock on \"Benchmark Anime 122\" (Anime: bench-anime-122)"
+  },
+  {
+    "id": "evt_1790346394046_vlb18",
+    "timestamp": "2026-09-25T14:26:34.046Z",
+    "timestampMs": 1790346394046,
+    "workerId": 4,
+    "taskId": "VERIFY_ARTWORK:bench-anime-118",
+    "animeId": "bench-anime-118",
+    "animeTitle": "Benchmark Anime 118",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #4 claimed exclusive lock on \"Benchmark Anime 118\" (Anime: bench-anime-118)"
+  },
+  {
+    "id": "evt_1790346394044_1m6zd",
+    "timestamp": "2026-09-25T14:26:34.044Z",
+    "timestampMs": 1790346394044,
+    "workerId": 45,
+    "taskId": "VERIFY_ARTWORK:bench-anime-116",
+    "animeId": "bench-anime-116",
+    "animeTitle": "Benchmark Anime 116",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #45 claimed exclusive lock on \"Benchmark Anime 116\" (Anime: bench-anime-116)"
+  },
+  {
+    "id": "evt_1790346394042_5uupj",
+    "timestamp": "2026-09-25T14:26:34.042Z",
+    "timestampMs": 1790346394042,
+    "workerId": 24,
+    "taskId": "VERIFY_ARTWORK:bench-anime-114",
+    "animeId": "bench-anime-114",
+    "animeTitle": "Benchmark Anime 114",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #24 claimed exclusive lock on \"Benchmark Anime 114\" (Anime: bench-anime-114)"
+  },
+  {
+    "id": "evt_1790346394039_8x0rj",
+    "timestamp": "2026-09-25T14:26:34.039Z",
+    "timestampMs": 1790346394039,
+    "workerId": 14,
+    "taskId": "VERIFY_ARTWORK:bench-anime-112",
+    "animeId": "bench-anime-112",
+    "animeTitle": "Benchmark Anime 112",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #14 claimed exclusive lock on \"Benchmark Anime 112\" (Anime: bench-anime-112)"
+  },
+  {
+    "id": "evt_1790346394037_9cyvb",
+    "timestamp": "2026-09-25T14:26:34.037Z",
+    "timestampMs": 1790346394037,
+    "workerId": 11,
+    "taskId": "VERIFY_ARTWORK:bench-anime-108",
+    "animeId": "bench-anime-108",
+    "animeTitle": "Benchmark Anime 108",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #11 claimed exclusive lock on \"Benchmark Anime 108\" (Anime: bench-anime-108)"
+  },
+  {
+    "id": "evt_1790346394035_pghfs",
+    "timestamp": "2026-09-25T14:26:34.035Z",
+    "timestampMs": 1790346394035,
+    "workerId": 9,
+    "taskId": "VERIFY_ARTWORK:bench-anime-106",
+    "animeId": "bench-anime-106",
+    "animeTitle": "Benchmark Anime 106",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #9 claimed exclusive lock on \"Benchmark Anime 106\" (Anime: bench-anime-106)"
+  },
+  {
+    "id": "evt_1790346394033_bqwxc",
+    "timestamp": "2026-09-25T14:26:34.033Z",
+    "timestampMs": 1790346394033,
+    "workerId": 8,
+    "taskId": "VERIFY_ARTWORK:bench-anime-104",
+    "animeId": "bench-anime-104",
+    "animeTitle": "Benchmark Anime 104",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #8 claimed exclusive lock on \"Benchmark Anime 104\" (Anime: bench-anime-104)"
+  },
+  {
+    "id": "evt_1790346394029_hiab5",
+    "timestamp": "2026-09-25T14:26:34.029Z",
+    "timestampMs": 1790346394029,
+    "workerId": 6,
+    "taskId": "VERIFY_ARTWORK:bench-anime-102",
+    "animeId": "bench-anime-102",
+    "animeTitle": "Benchmark Anime 102",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #6 claimed exclusive lock on \"Benchmark Anime 102\" (Anime: bench-anime-102)"
+  },
+  {
+    "id": "evt_1790346394027_k4cwv",
+    "timestamp": "2026-09-25T14:26:34.027Z",
+    "timestampMs": 1790346394027,
+    "workerId": 43,
+    "taskId": "VERIFY_ARTWORK:bench-anime-98",
+    "animeId": "bench-anime-98",
+    "animeTitle": "Benchmark Anime 98",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #43 claimed exclusive lock on \"Benchmark Anime 98\" (Anime: bench-anime-98)"
+  },
+  {
+    "id": "evt_1790346394025_mvig4",
+    "timestamp": "2026-09-25T14:26:34.025Z",
+    "timestampMs": 1790346394025,
+    "workerId": 37,
+    "taskId": "VERIFY_ARTWORK:bench-anime-96",
+    "animeId": "bench-anime-96",
+    "animeTitle": "Benchmark Anime 96",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #37 claimed exclusive lock on \"Benchmark Anime 96\" (Anime: bench-anime-96)"
+  },
+  {
+    "id": "evt_1790346394023_lhobh",
+    "timestamp": "2026-09-25T14:26:34.023Z",
+    "timestampMs": 1790346394023,
+    "workerId": 33,
+    "taskId": "VERIFY_ARTWORK:bench-anime-94",
+    "animeId": "bench-anime-94",
+    "animeTitle": "Benchmark Anime 94",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #33 claimed exclusive lock on \"Benchmark Anime 94\" (Anime: bench-anime-94)"
+  },
+  {
+    "id": "evt_1790346394021_3bf5p",
+    "timestamp": "2026-09-25T14:26:34.021Z",
+    "timestampMs": 1790346394021,
+    "workerId": 23,
+    "taskId": "VERIFY_ARTWORK:bench-anime-92",
+    "animeId": "bench-anime-92",
+    "animeTitle": "Benchmark Anime 92",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #23 claimed exclusive lock on \"Benchmark Anime 92\" (Anime: bench-anime-92)"
+  },
+  {
+    "id": "evt_1790346394019_jn30z",
+    "timestamp": "2026-09-25T14:26:34.019Z",
+    "timestampMs": 1790346394019,
+    "workerId": 13,
+    "taskId": "VERIFY_ARTWORK:bench-anime-88",
+    "animeId": "bench-anime-88",
+    "animeTitle": "Benchmark Anime 88",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #13 claimed exclusive lock on \"Benchmark Anime 88\" (Anime: bench-anime-88)"
+  },
+  {
+    "id": "evt_1790346394016_0vai3",
+    "timestamp": "2026-09-25T14:26:34.016Z",
+    "timestampMs": 1790346394016,
+    "workerId": 5,
+    "taskId": "VERIFY_ARTWORK:bench-anime-86",
+    "animeId": "bench-anime-86",
+    "animeTitle": "Benchmark Anime 86",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #5 claimed exclusive lock on \"Benchmark Anime 86\" (Anime: bench-anime-86)"
+  },
+  {
+    "id": "evt_1790346394014_befwy",
+    "timestamp": "2026-09-25T14:26:34.014Z",
+    "timestampMs": 1790346394014,
+    "workerId": 2,
+    "taskId": "VERIFY_ARTWORK:bench-anime-84",
+    "animeId": "bench-anime-84",
+    "animeTitle": "Benchmark Anime 84",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #2 claimed exclusive lock on \"Benchmark Anime 84\" (Anime: bench-anime-84)"
+  },
+  {
+    "id": "evt_1790346394012_b6ulf",
+    "timestamp": "2026-09-25T14:26:34.012Z",
+    "timestampMs": 1790346394012,
+    "workerId": 42,
+    "taskId": "VERIFY_ARTWORK:bench-anime-82",
+    "animeId": "bench-anime-82",
+    "animeTitle": "Benchmark Anime 82",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #42 claimed exclusive lock on \"Benchmark Anime 82\" (Anime: bench-anime-82)"
+  },
+  {
+    "id": "evt_1790346394010_ozzy1",
+    "timestamp": "2026-09-25T14:26:34.010Z",
+    "timestampMs": 1790346394010,
+    "workerId": 29,
+    "taskId": "VERIFY_ARTWORK:bench-anime-78",
+    "animeId": "bench-anime-78",
+    "animeTitle": "Benchmark Anime 78",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #29 claimed exclusive lock on \"Benchmark Anime 78\" (Anime: bench-anime-78)"
+  },
+  {
+    "id": "evt_1790346394008_up1xi",
+    "timestamp": "2026-09-25T14:26:34.008Z",
+    "timestampMs": 1790346394008,
+    "workerId": 26,
+    "taskId": "VERIFY_ARTWORK:bench-anime-76",
+    "animeId": "bench-anime-76",
+    "animeTitle": "Benchmark Anime 76",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #26 claimed exclusive lock on \"Benchmark Anime 76\" (Anime: bench-anime-76)"
+  },
+  {
+    "id": "evt_1790346394006_xnow2",
+    "timestamp": "2026-09-25T14:26:34.006Z",
+    "timestampMs": 1790346394006,
+    "workerId": 16,
+    "taskId": "VERIFY_ARTWORK:bench-anime-74",
+    "animeId": "bench-anime-74",
+    "animeTitle": "Benchmark Anime 74",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #16 claimed exclusive lock on \"Benchmark Anime 74\" (Anime: bench-anime-74)"
+  },
+  {
+    "id": "evt_1790346394004_15jzw",
+    "timestamp": "2026-09-25T14:26:34.004Z",
+    "timestampMs": 1790346394004,
+    "workerId": 3,
+    "taskId": "VERIFY_ARTWORK:bench-anime-72",
+    "animeId": "bench-anime-72",
+    "animeTitle": "Benchmark Anime 72",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #3 claimed exclusive lock on \"Benchmark Anime 72\" (Anime: bench-anime-72)"
+  },
+  {
+    "id": "evt_1790346394002_rl1w3",
+    "timestamp": "2026-09-25T14:26:34.002Z",
+    "timestampMs": 1790346394002,
+    "workerId": 46,
+    "taskId": "VERIFY_ARTWORK:bench-anime-68",
+    "animeId": "bench-anime-68",
+    "animeTitle": "Benchmark Anime 68",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #46 claimed exclusive lock on \"Benchmark Anime 68\" (Anime: bench-anime-68)"
+  },
+  {
+    "id": "evt_1790346394000_9vdmy",
+    "timestamp": "2026-09-25T14:26:34.000Z",
+    "timestampMs": 1790346394000,
+    "workerId": 44,
+    "taskId": "VERIFY_ARTWORK:bench-anime-66",
+    "animeId": "bench-anime-66",
+    "animeTitle": "Benchmark Anime 66",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #44 claimed exclusive lock on \"Benchmark Anime 66\" (Anime: bench-anime-66)"
+  },
+  {
+    "id": "evt_1790346393998_9lqfs",
+    "timestamp": "2026-09-25T14:26:33.998Z",
+    "timestampMs": 1790346393998,
+    "workerId": 39,
+    "taskId": "VERIFY_ARTWORK:bench-anime-64",
+    "animeId": "bench-anime-64",
+    "animeTitle": "Benchmark Anime 64",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #39 claimed exclusive lock on \"Benchmark Anime 64\" (Anime: bench-anime-64)"
+  },
+  {
+    "id": "evt_1790346393996_blb6g",
+    "timestamp": "2026-09-25T14:26:33.996Z",
+    "timestampMs": 1790346393996,
+    "workerId": 19,
+    "taskId": "VERIFY_ARTWORK:bench-anime-62",
+    "animeId": "bench-anime-62",
+    "animeTitle": "Benchmark Anime 62",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #19 claimed exclusive lock on \"Benchmark Anime 62\" (Anime: bench-anime-62)"
+  },
+  {
+    "id": "evt_1790346393994_sv32m",
+    "timestamp": "2026-09-25T14:26:33.994Z",
+    "timestampMs": 1790346393994,
+    "workerId": 18,
+    "taskId": "VERIFY_ARTWORK:bench-anime-58",
+    "animeId": "bench-anime-58",
+    "animeTitle": "Benchmark Anime 58",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #18 claimed exclusive lock on \"Benchmark Anime 58\" (Anime: bench-anime-58)"
+  },
+  {
+    "id": "evt_1790346393992_j97qt",
+    "timestamp": "2026-09-25T14:26:33.992Z",
+    "timestampMs": 1790346393992,
+    "workerId": 12,
+    "taskId": "VERIFY_ARTWORK:bench-anime-56",
+    "animeId": "bench-anime-56",
+    "animeTitle": "Benchmark Anime 56",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #12 claimed exclusive lock on \"Benchmark Anime 56\" (Anime: bench-anime-56)"
+  },
+  {
+    "id": "evt_1790346393990_gzrzn",
+    "timestamp": "2026-09-25T14:26:33.990Z",
+    "timestampMs": 1790346393991,
+    "workerId": 10,
+    "taskId": "VERIFY_ARTWORK:bench-anime-54",
+    "animeId": "bench-anime-54",
+    "animeTitle": "Benchmark Anime 54",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #10 claimed exclusive lock on \"Benchmark Anime 54\" (Anime: bench-anime-54)"
+  },
+  {
+    "id": "evt_1790346393988_6ibid",
+    "timestamp": "2026-09-25T14:26:33.988Z",
+    "timestampMs": 1790346393988,
+    "workerId": 1,
+    "taskId": "VERIFY_ARTWORK:bench-anime-52",
+    "animeId": "bench-anime-52",
+    "animeTitle": "Benchmark Anime 52",
+    "operation": "Verify Artwork",
+    "eventType": "task_claimed",
+    "source": "Queue",
+    "step": "Task claimed from shared coordinator",
+    "details": "Worker #1 claimed exclusive lock on \"Benchmark Anime 52\" (Anime: bench-anime-52)"
+  },
+  {
+    "id": "evt_1790346393987_p108r",
+    "timestamp": "2026-09-25T14:26:33.987Z",
+    "timestampMs": 1790346393987,
+    "workerId": 48,
+    "taskId": "VERIFY_ARTWORK:bench-anime-44",
+    "animeId": "bench-anime-44",
+    "animeTitle": "Benchmark Anime 44",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393985_qmjpv",
+    "timestamp": "2026-09-25T14:26:33.985Z",
+    "timestampMs": 1790346393985,
+    "workerId": 47,
+    "taskId": "VERIFY_ARTWORK:bench-anime-42",
+    "animeId": "bench-anime-42",
+    "animeTitle": "Benchmark Anime 42",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393983_1fvtc",
+    "timestamp": "2026-09-25T14:26:33.983Z",
+    "timestampMs": 1790346393983,
+    "workerId": 35,
+    "taskId": "VERIFY_ARTWORK:bench-anime-12",
+    "animeId": "bench-anime-12",
+    "animeTitle": "Benchmark Anime 12",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393981_l63wf",
+    "timestamp": "2026-09-25T14:26:33.981Z",
+    "timestampMs": 1790346393981,
+    "workerId": 30,
+    "taskId": "VERIFY_ARTWORK:bench-anime-145",
+    "animeId": "bench-anime-145",
+    "animeTitle": "Benchmark Anime 145",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393979_bx1dy",
+    "timestamp": "2026-09-25T14:26:33.979Z",
+    "timestampMs": 1790346393979,
+    "workerId": 36,
+    "taskId": "VERIFY_ARTWORK:bench-anime-14",
+    "animeId": "bench-anime-14",
+    "animeTitle": "Benchmark Anime 14",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393977_oa27o",
+    "timestamp": "2026-09-25T14:26:33.977Z",
+    "timestampMs": 1790346393977,
+    "workerId": 31,
+    "taskId": "VERIFY_ARTWORK:bench-anime-2",
+    "animeId": "bench-anime-2",
+    "animeTitle": "Benchmark Anime 2",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393976_id1zf",
+    "timestamp": "2026-09-25T14:26:33.976Z",
+    "timestampMs": 1790346393976,
+    "workerId": 22,
+    "taskId": "VERIFY_ARTWORK:bench-anime-105",
+    "animeId": "bench-anime-105",
+    "animeTitle": "Benchmark Anime 105",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393974_4g1z7",
+    "timestamp": "2026-09-25T14:26:33.974Z",
+    "timestampMs": 1790346393974,
+    "workerId": 41,
+    "taskId": "VERIFY_ARTWORK:bench-anime-26",
+    "animeId": "bench-anime-26",
+    "animeTitle": "Benchmark Anime 26",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393972_7nahx",
+    "timestamp": "2026-09-25T14:26:33.972Z",
+    "timestampMs": 1790346393972,
+    "workerId": 25,
+    "taskId": "VERIFY_ARTWORK:bench-anime-120",
+    "animeId": "bench-anime-120",
+    "animeTitle": "Benchmark Anime 120",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393970_38gqg",
+    "timestamp": "2026-09-25T14:26:33.970Z",
+    "timestampMs": 1790346393970,
+    "workerId": 40,
+    "taskId": "VERIFY_ARTWORK:bench-anime-24",
+    "animeId": "bench-anime-24",
+    "animeTitle": "Benchmark Anime 24",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393968_1gubw",
+    "timestamp": "2026-09-25T14:26:33.968Z",
+    "timestampMs": 1790346393968,
+    "workerId": 38,
+    "taskId": "VERIFY_ARTWORK:bench-anime-18",
+    "animeId": "bench-anime-18",
+    "animeTitle": "Benchmark Anime 18",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393965_fw8w8",
+    "timestamp": "2026-09-25T14:26:33.965Z",
+    "timestampMs": 1790346393965,
+    "workerId": 28,
+    "taskId": "VERIFY_ARTWORK:bench-anime-135",
+    "animeId": "bench-anime-135",
+    "animeTitle": "Benchmark Anime 135",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393962_pl05z",
+    "timestamp": "2026-09-25T14:26:33.962Z",
+    "timestampMs": 1790346393962,
+    "workerId": 20,
+    "taskId": "VERIFY_ARTWORK:bench-anime-95",
+    "animeId": "bench-anime-95",
+    "animeTitle": "Benchmark Anime 95",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393960_otqkt",
+    "timestamp": "2026-09-25T14:26:33.960Z",
+    "timestampMs": 1790346393960,
+    "workerId": 34,
+    "taskId": "VERIFY_ARTWORK:bench-anime-8",
+    "animeId": "bench-anime-8",
+    "animeTitle": "Benchmark Anime 8",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393958_wnepz",
+    "timestamp": "2026-09-25T14:26:33.958Z",
+    "timestampMs": 1790346393958,
+    "workerId": 27,
+    "taskId": "VERIFY_ARTWORK:bench-anime-130",
+    "animeId": "bench-anime-130",
+    "animeTitle": "Benchmark Anime 130",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393956_3ed7n",
+    "timestamp": "2026-09-25T14:26:33.956Z",
+    "timestampMs": 1790346393956,
+    "workerId": 21,
+    "taskId": "VERIFY_ARTWORK:bench-anime-100",
+    "animeId": "bench-anime-100",
+    "animeTitle": "Benchmark Anime 100",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393954_50upg",
+    "timestamp": "2026-09-25T14:26:33.954Z",
+    "timestampMs": 1790346393954,
+    "workerId": 32,
+    "taskId": "VERIFY_ARTWORK:bench-anime-4",
+    "animeId": "bench-anime-4",
+    "animeTitle": "Benchmark Anime 4",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393952_8z3tm",
+    "timestamp": "2026-09-25T14:26:33.952Z",
+    "timestampMs": 1790346393952,
+    "workerId": 15,
+    "taskId": "VERIFY_ARTWORK:bench-anime-70",
+    "animeId": "bench-anime-70",
+    "animeTitle": "Benchmark Anime 70",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393950_seu9y",
+    "timestamp": "2026-09-25T14:26:33.950Z",
+    "timestampMs": 1790346393950,
+    "workerId": 17,
+    "taskId": "VERIFY_ARTWORK:bench-anime-80",
+    "animeId": "bench-anime-80",
+    "animeTitle": "Benchmark Anime 80",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393948_5y44g",
+    "timestamp": "2026-09-25T14:26:33.948Z",
+    "timestampMs": 1790346393948,
+    "workerId": 7,
+    "taskId": "VERIFY_ARTWORK:bench-anime-30",
+    "animeId": "bench-anime-30",
+    "animeTitle": "Benchmark Anime 30",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393945_kohsz",
+    "timestamp": "2026-09-25T14:26:33.945Z",
+    "timestampMs": 1790346393945,
+    "workerId": 4,
+    "taskId": "VERIFY_ARTWORK:bench-anime-15",
+    "animeId": "bench-anime-15",
+    "animeTitle": "Benchmark Anime 15",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393943_riljw",
+    "timestamp": "2026-09-25T14:26:33.943Z",
+    "timestampMs": 1790346393943,
+    "workerId": 45,
+    "taskId": "VERIFY_ARTWORK:bench-anime-36",
+    "animeId": "bench-anime-36",
+    "animeTitle": "Benchmark Anime 36",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393941_xkfta",
+    "timestamp": "2026-09-25T14:26:33.941Z",
+    "timestampMs": 1790346393941,
+    "workerId": 24,
+    "taskId": "VERIFY_ARTWORK:bench-anime-115",
+    "animeId": "bench-anime-115",
+    "animeTitle": "Benchmark Anime 115",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393939_yi7gm",
+    "timestamp": "2026-09-25T14:26:33.939Z",
+    "timestampMs": 1790346393939,
+    "workerId": 14,
+    "taskId": "VERIFY_ARTWORK:bench-anime-65",
+    "animeId": "bench-anime-65",
+    "animeTitle": "Benchmark Anime 65",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393937_pt9qc",
+    "timestamp": "2026-09-25T14:26:33.937Z",
+    "timestampMs": 1790346393937,
+    "workerId": 11,
+    "taskId": "VERIFY_ARTWORK:bench-anime-50",
+    "animeId": "bench-anime-50",
+    "animeTitle": "Benchmark Anime 50",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393935_2zh6d",
+    "timestamp": "2026-09-25T14:26:33.935Z",
+    "timestampMs": 1790346393935,
+    "workerId": 9,
+    "taskId": "VERIFY_ARTWORK:bench-anime-40",
+    "animeId": "bench-anime-40",
+    "animeTitle": "Benchmark Anime 40",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393933_rmndd",
+    "timestamp": "2026-09-25T14:26:33.933Z",
+    "timestampMs": 1790346393933,
+    "workerId": 8,
+    "taskId": "VERIFY_ARTWORK:bench-anime-35",
+    "animeId": "bench-anime-35",
+    "animeTitle": "Benchmark Anime 35",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393931_eso33",
+    "timestamp": "2026-09-25T14:26:33.931Z",
+    "timestampMs": 1790346393931,
+    "workerId": 6,
+    "taskId": "VERIFY_ARTWORK:bench-anime-25",
+    "animeId": "bench-anime-25",
+    "animeTitle": "Benchmark Anime 25",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393929_8wera",
+    "timestamp": "2026-09-25T14:26:33.929Z",
+    "timestampMs": 1790346393929,
+    "workerId": 43,
+    "taskId": "VERIFY_ARTWORK:bench-anime-32",
+    "animeId": "bench-anime-32",
+    "animeTitle": "Benchmark Anime 32",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393927_h73c2",
+    "timestamp": "2026-09-25T14:26:33.927Z",
+    "timestampMs": 1790346393927,
+    "workerId": 37,
+    "taskId": "VERIFY_ARTWORK:bench-anime-16",
+    "animeId": "bench-anime-16",
+    "animeTitle": "Benchmark Anime 16",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393925_oodma",
+    "timestamp": "2026-09-25T14:26:33.925Z",
+    "timestampMs": 1790346393925,
+    "workerId": 33,
+    "taskId": "VERIFY_ARTWORK:bench-anime-6",
+    "animeId": "bench-anime-6",
+    "animeTitle": "Benchmark Anime 6",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393922_w5qu8",
+    "timestamp": "2026-09-25T14:26:33.922Z",
+    "timestampMs": 1790346393922,
+    "workerId": 23,
+    "taskId": "VERIFY_ARTWORK:bench-anime-110",
+    "animeId": "bench-anime-110",
+    "animeTitle": "Benchmark Anime 110",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393920_ibix2",
+    "timestamp": "2026-09-25T14:26:33.920Z",
+    "timestampMs": 1790346393920,
+    "workerId": 13,
+    "taskId": "VERIFY_ARTWORK:bench-anime-60",
+    "animeId": "bench-anime-60",
+    "animeTitle": "Benchmark Anime 60",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393918_xwd1f",
+    "timestamp": "2026-09-25T14:26:33.918Z",
+    "timestampMs": 1790346393918,
+    "workerId": 5,
+    "taskId": "VERIFY_ARTWORK:bench-anime-20",
+    "animeId": "bench-anime-20",
+    "animeTitle": "Benchmark Anime 20",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393916_ett8c",
+    "timestamp": "2026-09-25T14:26:33.916Z",
+    "timestampMs": 1790346393916,
+    "workerId": 2,
+    "taskId": "VERIFY_ARTWORK:bench-anime-5",
+    "animeId": "bench-anime-5",
+    "animeTitle": "Benchmark Anime 5",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393914_zzx9r",
+    "timestamp": "2026-09-25T14:26:33.914Z",
+    "timestampMs": 1790346393914,
+    "workerId": 42,
+    "taskId": "VERIFY_ARTWORK:bench-anime-28",
+    "animeId": "bench-anime-28",
+    "animeTitle": "Benchmark Anime 28",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393912_dy053",
+    "timestamp": "2026-09-25T14:26:33.912Z",
+    "timestampMs": 1790346393912,
+    "workerId": 29,
+    "taskId": "VERIFY_ARTWORK:bench-anime-140",
+    "animeId": "bench-anime-140",
+    "animeTitle": "Benchmark Anime 140",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393910_o5v5y",
+    "timestamp": "2026-09-25T14:26:33.910Z",
+    "timestampMs": 1790346393910,
+    "workerId": 26,
+    "taskId": "VERIFY_ARTWORK:bench-anime-125",
+    "animeId": "bench-anime-125",
+    "animeTitle": "Benchmark Anime 125",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393908_6nro7",
+    "timestamp": "2026-09-25T14:26:33.908Z",
+    "timestampMs": 1790346393908,
+    "workerId": 16,
+    "taskId": "VERIFY_ARTWORK:bench-anime-75",
+    "animeId": "bench-anime-75",
+    "animeTitle": "Benchmark Anime 75",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393905_dz01z",
+    "timestamp": "2026-09-25T14:26:33.905Z",
+    "timestampMs": 1790346393905,
+    "workerId": 3,
+    "taskId": "VERIFY_ARTWORK:bench-anime-10",
+    "animeId": "bench-anime-10",
+    "animeTitle": "Benchmark Anime 10",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393903_gw3qc",
+    "timestamp": "2026-09-25T14:26:33.903Z",
+    "timestampMs": 1790346393903,
+    "workerId": 46,
+    "taskId": "VERIFY_ARTWORK:bench-anime-38",
+    "animeId": "bench-anime-38",
+    "animeTitle": "Benchmark Anime 38",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393901_o0zj2",
+    "timestamp": "2026-09-25T14:26:33.901Z",
+    "timestampMs": 1790346393901,
+    "workerId": 44,
+    "taskId": "VERIFY_ARTWORK:bench-anime-34",
+    "animeId": "bench-anime-34",
+    "animeTitle": "Benchmark Anime 34",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393896_15yb4",
+    "timestamp": "2026-09-25T14:26:33.896Z",
+    "timestampMs": 1790346393896,
+    "workerId": 39,
+    "taskId": "VERIFY_ARTWORK:bench-anime-22",
+    "animeId": "bench-anime-22",
+    "animeTitle": "Benchmark Anime 22",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393894_aod0k",
+    "timestamp": "2026-09-25T14:26:33.894Z",
+    "timestampMs": 1790346393894,
+    "workerId": 19,
+    "taskId": "VERIFY_ARTWORK:bench-anime-90",
+    "animeId": "bench-anime-90",
+    "animeTitle": "Benchmark Anime 90",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393891_26slj",
+    "timestamp": "2026-09-25T14:26:33.891Z",
+    "timestampMs": 1790346393891,
+    "workerId": 18,
+    "taskId": "VERIFY_ARTWORK:bench-anime-85",
+    "animeId": "bench-anime-85",
+    "animeTitle": "Benchmark Anime 85",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393889_ccn7p",
+    "timestamp": "2026-09-25T14:26:33.889Z",
+    "timestampMs": 1790346393889,
+    "workerId": 12,
+    "taskId": "VERIFY_ARTWORK:bench-anime-55",
+    "animeId": "bench-anime-55",
+    "animeTitle": "Benchmark Anime 55",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393887_uwmag",
+    "timestamp": "2026-09-25T14:26:33.887Z",
+    "timestampMs": 1790346393887,
+    "workerId": 10,
+    "taskId": "VERIFY_ARTWORK:bench-anime-45",
+    "animeId": "bench-anime-45",
+    "animeTitle": "Benchmark Anime 45",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  },
+  {
+    "id": "evt_1790346393884_j5eaa",
+    "timestamp": "2026-09-25T14:26:33.884Z",
+    "timestampMs": 1790346393884,
+    "workerId": 1,
+    "taskId": "VERIFY_ARTWORK:bench-anime-0",
+    "animeId": "bench-anime-0",
+    "animeTitle": "Benchmark Anime 0",
+    "operation": "Verify Artwork",
+    "eventType": "task_completed",
+    "step": "Task processing completed",
+    "details": "Completed successfully",
+    "result": {
+      "success": true,
+      "verified": true
+    }
+  }
+]

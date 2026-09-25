@@ -11,7 +11,8 @@ import {
   markCatalogueAnimeVerified
 } from './artwork-verifier.ts';
 import { logAdminAction } from './audit-logger.ts';
-import { globalWorkerJobEngine, TaskPriority } from './worker-job-engine.ts';
+import { globalWorkerJobEngine, TaskPriority, createDeterministicTaskId } from './worker-job-engine.ts';
+import { globalDataStore } from './data-store.ts';
 
 export interface WorkerStatusInfo {
   workerId: number;
@@ -59,29 +60,16 @@ const CATALOGUE_PATH = path.join(DATA_DIR, 'anivault-catalogue.json');
 
 // --- Single Authoritative Global Stats Calculator ---
 export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
-  let catalogue: any[] = [];
-  try {
-    if (fs.existsSync(CATALOGUE_PATH)) {
-      catalogue = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
-    }
-  } catch {}
-
-  const records = loadVerificationRecords();
-  const fakeIssues = loadFakeAnimeIssues();
-  let historyCount = 0;
-  try {
-    const historyPath = path.join(DATA_DIR, 'artwork-history.json');
-    if (fs.existsSync(historyPath)) {
-      const history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
-      historyCount = Array.isArray(history) ? history.length : 0;
-    }
-  } catch {}
+  const catalogue = globalDataStore.getAllCatalogueAnime();
+  const records = globalDataStore.getAllVerificationRecords();
+  const fakeIssues = globalDataStore.getAllFakeIssues();
+  const historyCount = globalDataStore.getAllHistory().length;
 
   let verified = 0;
   let autoFixed = 0;
   let needsReview = 0;
   let unableToVerify = 0;
-  let possibleFake = fakeIssues.filter(f => f.status === 'active').length;
+  let possibleFake = fakeIssues.filter(f => f.status === 'active' || (f as any).verdict !== 'verified_real').length;
   let missing = 0;
 
   for (const item of catalogue) {
@@ -130,15 +118,10 @@ class ArtworkScannerEngine {
   }
 
   private reloadCatalogueMap() {
-    try {
-      if (fs.existsSync(CATALOGUE_PATH)) {
-        const cat: any[] = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
-        this.catalogueMap.clear();
-        for (const a of cat) {
-          this.catalogueMap.set(a.id, a);
-        }
-      }
-    } catch {}
+    this.catalogueMap.clear();
+    for (const a of globalDataStore.getAllCatalogueAnime()) {
+      this.catalogueMap.set(a.id, a);
+    }
   }
 
   public getJobState(): any {
@@ -164,6 +147,8 @@ class ArtworkScannerEngine {
       systemHealth: snapshot.systemHealth,
       sourceGatewayMetrics: snapshot.sourceGatewayMetrics,
       activeWorkers: snapshot.activeWorkers,
+      liveAnimeRegistry: snapshot.liveAnimeRegistry,
+      activeAnimeLocks: snapshot.activeAnimeLocks,
       activityEvents: snapshot.activityEvents,
       startedAt: snapshot.startedAt,
       updatedAt: snapshot.updatedAt,
@@ -221,13 +206,18 @@ class ArtworkScannerEngine {
       candidates = candidates.slice(0, limit);
     }
 
-    const tasks = candidates.map(a => ({
-      taskId: a.id,
-      title: a.title,
-      payload: a,
-      priority: 'MEDIUM' as TaskPriority,
-      type: 'artwork_verification'
-    }));
+    const tasks = candidates.map(a => {
+      const type = mode === 'fix_missing' ? 'fix_missing' : 'artwork_verification';
+      const taskId = createDeterministicTaskId(type, a.id);
+      return {
+        taskId,
+        animeId: a.id,
+        title: a.title,
+        payload: a,
+        priority: 'MEDIUM' as TaskPriority,
+        type
+      };
+    });
 
     globalWorkerJobEngine.submitTasks(tasks, mode, limit);
 
@@ -254,9 +244,9 @@ class ArtworkScannerEngine {
   }
 
   private async processTaskByWorker(task: any, workerId: number, operator: string) {
-    this.reloadCatalogueMap();
-    const anime = task.payload || this.catalogueMap.get(task.taskId);
-    if (!anime) throw new Error(`Anime record ${task.taskId} not found`);
+    const animeId = task.animeId || task.payload?.id || task.taskId;
+    const anime = globalDataStore.getCatalogueAnime(animeId) || task.payload || this.catalogueMap.get(animeId);
+    if (!anime) throw new Error(`Anime record ${animeId} not found`);
 
     const operation = globalWorkerJobEngine.mapTaskTypeToOperation(task.type);
 
@@ -266,7 +256,7 @@ class ArtworkScannerEngine {
       currentAnimeTitle: anime.title,
       seasonName: anime.season ? `Season ${anime.season}` : null,
       currentStep: 'Querying external metadata sources...',
-      currentSource: 'AniList / Jikan'
+      currentSource: 'AniList / TVmaze / AniDB'
     });
 
     globalWorkerJobEngine.recordActivityEvent({
@@ -284,7 +274,7 @@ class ArtworkScannerEngine {
     if (task.type === 'artwork_reverify' || task.type === 'artwork_search_again') {
       globalWorkerJobEngine.updateWorkerProgress(workerId, {
         currentStep: 'Running multi-pass search & candidate match...',
-        currentSource: 'AniList / Jikan'
+        currentSource: 'AniList / TVmaze / AniDB'
       });
 
       globalWorkerJobEngine.recordActivityEvent({
@@ -294,9 +284,9 @@ class ArtworkScannerEngine {
         animeTitle: anime.title,
         operation,
         eventType: 'source_searched',
-        source: 'AniList & Jikan',
+        source: 'AniList & TVmaze',
         step: 'Multi-pass search executed',
-        details: `Querying AniList and Jikan for "${anime.title}"`
+        details: `Querying active sources (AniList, TVmaze, AniDB) for "${anime.title}"`
       });
 
       const res = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true });
@@ -439,7 +429,8 @@ class ArtworkScannerEngine {
     const tasks = animeIds.map(id => {
       const anime = this.catalogueMap.get(id);
       return {
-        taskId: id,
+        taskId: createDeterministicTaskId('RETRY_VERIFICATION', id),
+        animeId: id,
         title: anime?.title || id,
         payload: anime || { id, title: id },
         type: 'artwork_reverify'
@@ -463,7 +454,8 @@ class ArtworkScannerEngine {
     const tasks = animeIds.map(id => {
       const anime = this.catalogueMap.get(id);
       return {
-        taskId: id,
+        taskId: createDeterministicTaskId('SEARCH_ARTWORK', id),
+        animeId: id,
         title: anime?.title || id,
         payload: anime || { id, title: id },
         type: 'artwork_search_again'
@@ -486,7 +478,8 @@ class ArtworkScannerEngine {
     const tasks = animeIds.map(id => {
       const anime = this.catalogueMap.get(id);
       return {
-        taskId: id,
+        taskId: createDeterministicTaskId('FIX_ARTWORK', id),
+        animeId: id,
         title: anime?.title || id,
         payload: anime || { id, title: id },
         type: 'artwork_fix'
@@ -563,6 +556,7 @@ class ArtworkScannerEngine {
 
   public resumeScan(operator = 'Owner') {
     this.reloadCatalogueMap();
+    globalWorkerJobEngine.resumeJob();
     globalWorkerJobEngine.runJobPool(async (task, workerId) => {
       return await this.processTaskByWorker(task, workerId, operator);
     }).catch(err => {

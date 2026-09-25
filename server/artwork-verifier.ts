@@ -2,132 +2,52 @@ import fs from 'fs';
 import path from 'path';
 import { getArtworkSourcesConfig } from './artwork-sources.ts';
 import { globalSourceGateway } from './source-gateway.ts';
+import {
+  VerificationStatus,
+  ArtworkCandidate,
+  SeasonArtworkResult,
+  ArtworkVerificationResult,
+  FakeAnimeIssue,
+  ArtworkHistoryEntry
+} from './artwork-verifier-types.ts';
+import { globalDataStore } from './data-store.ts';
 
-export type VerificationStatus =
-  | 'verified'
-  | 'auto_fixed'
-  | 'needs_review'
-  | 'unable_to_verify'
-  | 'possible_fake';
+export type {
+  VerificationStatus,
+  ArtworkCandidate,
+  SeasonArtworkResult,
+  ArtworkVerificationResult,
+  FakeAnimeIssue,
+  ArtworkHistoryEntry
+};
 
-export interface ArtworkCandidate {
-  source: 'anilist' | 'jikan' | 'anidb' | 'tmdb' | 'tvmaze' | 'thetvdb' | 'provider' | string;
-  sourceId: string | number;
-  title: string;
-  imageUrl: string;
-  aspectRatio: string;
-  confidence: number;
-  dimensions?: string;
-  format?: string;
-  year?: number;
-  seasonNumber?: number;
-}
+// Image Inspection Memory Cache to avoid duplicate network HEAD requests
+const imageInspectionCache = new Map<
+  string,
+  {
+    usable: boolean;
+    dimensions?: string;
+    aspectRatio: string;
+    isBlankOrPlaceholder: boolean;
+    layoutPresentationStatus: 'fit_optimal' | 'adapt_contain';
+    error?: string;
+  }
+>();
 
-export interface SeasonArtworkResult {
-  seasonNumber: number;
-  seasonTitle: string;
-  artworkUrl?: string | null;
-  status: 'verified' | 'auto_fixed' | 'needs_review' | 'not_found';
-  source?: string;
-  confidence?: number;
-}
-
-export interface ArtworkVerificationResult {
-  animeId: string;
-  animeTitle: string;
-  status: VerificationStatus;
-  confidence: number;
-  currentArtworkUrl: string | null;
-  replacedArtworkUrl?: string | null;
-  source: string;
-  dimensions?: string;
-  lastVerifiedAt: string;
-  aniListMatch?: {
-    id: number;
-    title: string;
-    englishTitle?: string;
-    romajiTitle?: string;
-    year?: number;
-    coverUrl?: string;
-    score: number;
-  } | null;
-  jikanMatch?: {
-    malId: number;
-    title: string;
-    englishTitle?: string;
-    year?: number;
-    coverUrl?: string;
-    score: number;
-  } | null;
-  anidbMatch?: {
-    aid: number;
-    title: string;
-    score: number;
-  } | null;
-  seasonResults?: SeasonArtworkResult[];
-  candidates: ArtworkCandidate[];
-  issue?: string | null;
-  evidence?: string[];
-}
-
-export interface FakeAnimeIssue {
-  id: string;
-  catalogueId: string;
-  animeTitle: string;
-  source: string;
-  sourceUrl?: string;
-  titlesChecked: string[];
-  aniListResult: {
-    queried: boolean;
-    found: number;
-    error?: string | null;
-  };
-  jikanResult: {
-    queried: boolean;
-    found: number;
-    error?: string | null;
-  };
-  anidbResult?: {
-    queried: boolean;
-    found: number;
-    error?: string | null;
-  };
-  verificationResults: string;
-  reason: string;
-  timestamp: string;
-  evidence: string[];
-  status: 'active' | 'dismissed' | 'manual_verified';
-}
-
-export interface ArtworkHistoryEntry {
-  id: string;
-  animeId: string;
-  animeTitle: string;
-  previousArtworkUrl: string;
-  newArtworkUrl: string;
-  replacedAt: string;
-  replacedBy: 'auto_verifier' | 'owner';
-  source: string;
-  reason: string;
-  seasonNumber?: number;
-}
-
-const DATA_DIR = path.join(process.cwd(), 'server', 'data');
-const VERIFICATION_RECORDS_PATH = path.join(DATA_DIR, 'artwork-verification-records.json');
-const FAKE_ISSUES_PATH = path.join(DATA_DIR, 'fake-anime-issues.json');
-const ARTWORK_HISTORY_PATH = path.join(DATA_DIR, 'artwork-history.json');
-const CATALOGUE_PATH = path.join(DATA_DIR, 'anivault-catalogue.json');
-
-// Memory LRU / Request cache to avoid redundant API queries
-const apiQueryCache = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour in-memory cache
+// Fast-Path Verification Cache
+const fastPathConfidenceCache = new Map<string, { verifiedAt: number; result: ArtworkVerificationResult }>();
 
 export function clearApiQueryCacheForTitle(title: string): void {
   if (!title) return;
   const t = title.toLowerCase().trim();
-  for (const key of apiQueryCache.keys()) {
+  for (const key of imageInspectionCache.keys()) {
     if (key.toLowerCase().includes(t)) {
-      apiQueryCache.delete(key);
+      imageInspectionCache.delete(key);
+    }
+  }
+  for (const key of fastPathConfidenceCache.keys()) {
+    if (key.toLowerCase().includes(t)) {
+      fastPathConfidenceCache.delete(key);
     }
   }
 }
@@ -158,25 +78,6 @@ class SimpleLock {
 }
 
 export const persistenceLock = new SimpleLock();
-
-function getCached<T>(key: string): T | null {
-  const cached = apiQueryCache.get(key);
-  if (!cached) return null;
-  if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
-    apiQueryCache.delete(key);
-    return null;
-  }
-  return cached.data as T;
-}
-
-function setCached(key: string, data: any): void {
-  // Prevent unbounded cache growth
-  if (apiQueryCache.size > 2500) {
-    const firstKey = apiQueryCache.keys().next().value;
-    if (firstKey) apiQueryCache.delete(firstKey);
-  }
-  apiQueryCache.set(key, { timestamp: Date.now(), data });
-}
 
 // --- String Similarity using Token matching, Substring, and Bigram Dice Coefficient ---
 export function calculateStringSimilarity(s1: string, s2: string): number {
@@ -232,7 +133,6 @@ export function cleanAnimeTitle(rawTitle: string): {
 } {
   const primary = rawTitle.trim();
 
-  // Detect explicit season from title (e.g. "BAKI Season 1", "Naruto Shippuden Season 2", "Attack on Titan Season 3 Part 2")
   let detectedSeasonNumber: number | undefined;
   const seasonMatch = primary.match(/(?:Season|S)\s*(\d+)/i);
   if (seasonMatch) {
@@ -242,12 +142,9 @@ export function cleanAnimeTitle(rawTitle: string): {
   let cleaned = primary
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
-    // Remove (Hindi Dubbed), (English Dubbed), [Hindi], etc.
     .replace(/\s*\([^)]*(?:Dubbed|Subbed|Hindi|English|Tamil|Telugu|Dual\s*Audio|Multi\s*Audio|All\s*Episodes)[^)]*\)/gi, '')
     .replace(/\s*\[[^\]]*(?:Dubbed|Subbed|Hindi|English|Tamil|Telugu|1080p|720p|Dual|Multi)[^\]]*\]/gi, '')
-    // Remove (TV Series), (Movie), (Remake) etc.
     .replace(/\s*\((?:TV\s*Series|TV|Movie|Remake|\d{4}\s*Remake|Full\s*Movie)\)/gi, '')
-    // Remove trailing season patterns for base title queries
     .replace(/\s*-\s*Season\s*\d+/gi, '')
     .replace(/\s*Season\s*\d+/gi, '')
     .replace(/\s*All\s*Seasons\s*Hindi/gi, '')
@@ -264,13 +161,11 @@ export function cleanAnimeTitle(rawTitle: string): {
     variants.push(primary);
   }
 
-  // Without punctuation variant
   const noPunct = cleaned.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
   if (noPunct && !variants.includes(noPunct)) {
     variants.push(noPunct);
   }
 
-  // Common franchise normalizations
   if (/doraemon/i.test(cleaned) && !variants.includes('Doraemon')) {
     variants.push('Doraemon');
   }
@@ -284,80 +179,38 @@ export function cleanAnimeTitle(rawTitle: string): {
   return { primary, cleaned, variants, detectedSeasonNumber };
 }
 
-// --- Thread-safe atomic file write with retry self-recovery ---
-function safeWriteFileSync(filePath: string, content: string): void {
-  let attempts = 0;
-  const tempPath = `${filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
-  while (attempts < 3) {
-    attempts++;
-    try {
-      const dir = path.dirname(filePath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(tempPath, content, 'utf-8');
-      fs.renameSync(tempPath, filePath);
-      return;
-    } catch (err: any) {
-      try {
-        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-      } catch {}
-      if (attempts >= 3) {
-        console.error(`[ArtworkVerifier] Failed to write file ${filePath} after 3 attempts:`, err.message);
-      } else {
-        const delay = 50 * attempts;
-        const start = Date.now();
-        while (Date.now() - start < delay) { /* sync pause */ }
-      }
-    }
-  }
-}
-
-// --- Storage Handlers ---
+// --- Data Access Handlers (Powered by In-Memory Authoritative DataStore) ---
 export function loadVerificationRecords(): Record<string, ArtworkVerificationResult> {
-  try {
-    if (fs.existsSync(VERIFICATION_RECORDS_PATH)) {
-      return JSON.parse(fs.readFileSync(VERIFICATION_RECORDS_PATH, 'utf-8'));
-    }
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error loading records:', err.message);
-  }
-  return {};
+  return globalDataStore.getAllVerificationRecords();
 }
 
 export function saveVerificationRecords(records: Record<string, ArtworkVerificationResult>): void {
-  safeWriteFileSync(VERIFICATION_RECORDS_PATH, JSON.stringify(records, null, 2));
+  for (const [id, rec] of Object.entries(records)) {
+    globalDataStore.saveVerificationRecord(id, rec);
+  }
 }
 
 export function loadFakeAnimeIssues(): FakeAnimeIssue[] {
-  try {
-    if (fs.existsSync(FAKE_ISSUES_PATH)) {
-      return JSON.parse(fs.readFileSync(FAKE_ISSUES_PATH, 'utf-8'));
-    }
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error loading fake issues:', err.message);
-  }
-  return [];
+  return globalDataStore.getAllFakeIssues();
 }
 
 export function saveFakeAnimeIssues(issues: FakeAnimeIssue[]): void {
-  safeWriteFileSync(FAKE_ISSUES_PATH, JSON.stringify(issues, null, 2));
+  for (const iss of issues) {
+    globalDataStore.addFakeIssue(iss);
+  }
 }
 
 export function loadArtworkHistory(): ArtworkHistoryEntry[] {
-  try {
-    if (fs.existsSync(ARTWORK_HISTORY_PATH)) {
-      return JSON.parse(fs.readFileSync(ARTWORK_HISTORY_PATH, 'utf-8'));
-    }
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error loading history:', err.message);
-  }
-  return [];
+  return globalDataStore.getAllHistory();
 }
 
 export function saveArtworkHistory(history: ArtworkHistoryEntry[]): void {
-  safeWriteFileSync(ARTWORK_HISTORY_PATH, JSON.stringify(history, null, 2));
+  for (const h of history) {
+    globalDataStore.addHistoryEntry(h);
+  }
 }
 
-// --- AniList Query Engine with SourceGateway Protection ---
+// --- AniList Query Engine with Shared Cache & Singleflight ---
 export async function queryAniList(
   title: string,
   endpoint: string,
@@ -369,11 +222,6 @@ export async function queryAniList(
   statusCode?: number;
 }> {
   const normalizedTitle = title.toLowerCase().trim();
-  const cacheKey = `anilist:${normalizedTitle}`;
-  const cached = getCached<any[]>(cacheKey);
-  if (cached) {
-    return { success: true, matches: cached };
-  }
 
   const query = `
     query ($search: String) {
@@ -397,17 +245,6 @@ export async function queryAniList(
             color
           }
           bannerImage
-          relations {
-            edges {
-              relationType
-              node {
-                id
-                title { romaji english }
-                seasonYear
-                coverImage { large }
-              }
-            }
-          }
         }
       }
     }
@@ -426,7 +263,8 @@ export async function queryAniList(
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'User-Agent': 'Anivex-Artwork-Verifier/1.0'
+            'User-Agent': 'Anivex-Artwork-Verifier/2.0',
+            'Connection': 'keep-alive'
           },
           body: JSON.stringify({ query, variables: { search: title } }),
           signal: controller.signal
@@ -434,12 +272,17 @@ export async function queryAniList(
         clearTimeout(timeoutId);
 
         if (!res.ok) {
-          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}`,
+            statusCode: res.status,
+            headers: res.headers
+          };
         }
 
         const data = await res.json();
         const media = data?.data?.Page?.media || [];
-        setCached(cacheKey, media);
         return { success: true, matches: media, statusCode: 200 };
       } catch (err: any) {
         clearTimeout(timeoutId);
@@ -456,7 +299,7 @@ export async function queryAniList(
   };
 }
 
-// --- Jikan / MyAnimeList Query Engine with SourceGateway Protection ---
+// --- Jikan Query Engine (PERMANENTLY DISABLED PER PART 2 REQUIREMENT) ---
 export async function queryJikan(
   title: string,
   endpoint: string,
@@ -468,70 +311,12 @@ export async function queryJikan(
   statusCode?: number;
   isTemporaryUnavailable?: boolean;
 }> {
-  const normalizedTitle = title.toLowerCase().trim();
-  const cacheKey = `jikan:${normalizedTitle}`;
-  const cached = getCached<any[]>(cacheKey);
-  if (cached) {
-    return { success: true, matches: cached };
-  }
-
-  const gatewayResult = await globalSourceGateway.executeRequest<any>(
-    'jikan',
-    normalizedTitle,
-    async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-      try {
-        const encoded = encodeURIComponent(title);
-        const res = await fetch(`${endpoint}/anime?q=${encoded}&limit=3`, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Anivex-Artwork-Verifier/1.0'
-          },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (res.status === 504 || res.status === 502 || res.status === 503 || res.status === 429) {
-          return {
-            success: false,
-            matches: [],
-            error: `HTTP ${res.status}: Temporary gateway issue`,
-            statusCode: res.status
-          };
-        }
-
-        if (!res.ok) {
-          return {
-            success: false,
-            matches: [],
-            error: `HTTP ${res.status}`,
-            statusCode: res.status
-          };
-        }
-
-        const data = await res.json();
-        const list = data?.data || [];
-        setCached(cacheKey, list);
-        return { success: true, matches: list, statusCode: 200 };
-      } catch (err: any) {
-        clearTimeout(timeoutId);
-        return {
-          success: false,
-          matches: [],
-          error: err.message
-        };
-      }
-    }
-  );
-
+  // Requirement 12: Jikan (test source 2) is disabled
   return {
-    success: gatewayResult.success,
-    matches: gatewayResult.matches || [],
-    error: gatewayResult.error,
-    statusCode: gatewayResult.statusCode,
-    isTemporaryUnavailable: gatewayResult.isCircuitOpen || (gatewayResult.statusCode ? gatewayResult.statusCode >= 500 || gatewayResult.statusCode === 429 : false)
+    success: false,
+    matches: [],
+    error: 'Jikan API is disabled per system specification',
+    isTemporaryUnavailable: false
   };
 }
 
@@ -544,11 +329,6 @@ export async function queryAniDBFallback(
   error?: string;
 }> {
   const normalizedTitle = title.toLowerCase().trim();
-  const cacheKey = `anidb:${normalizedTitle}`;
-  const cached = getCached<any[]>(cacheKey);
-  if (cached) {
-    return { success: true, matches: cached };
-  }
 
   const gatewayResult = await globalSourceGateway.executeRequest<any>(
     'anidb',
@@ -560,7 +340,8 @@ export async function queryAniDBFallback(
       try {
         const res = await fetch(`https://anidb.net/anime/?adb.search=${encodeURIComponent(title)}&do.search=1`, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Connection': 'keep-alive'
           },
           signal: controller.signal
         });
@@ -570,11 +351,16 @@ export async function queryAniDBFallback(
           const html = await res.text();
           const hasMatch = html.includes('anime_table') || html.includes('class="anime "') || html.toLowerCase().includes(title.toLowerCase());
           const results = hasMatch ? [{ title, aid: 1, source: 'anidb' }] : [];
-          setCached(cacheKey, results);
           return { success: true, matches: results };
         }
 
-        return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+        return {
+          success: false,
+          matches: [],
+          error: `HTTP ${res.status}`,
+          statusCode: res.status,
+          headers: res.headers
+        };
       } catch (err: any) {
         clearTimeout(timeoutId);
         return { success: false, matches: [], error: err.message };
@@ -589,72 +375,16 @@ export async function queryAniDBFallback(
   };
 }
 
-// --- TMDB Query Engine with SourceGateway Protection ---
+// --- TMDB Query Engine (PERMANENTLY DISABLED PER SPECIFICATION) ---
 export async function queryTMDB(
   title: string,
   timeoutMs = 8000
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
-  const normalizedTitle = title.toLowerCase().trim();
-  const cacheKey = `tmdb:${normalizedTitle}`;
-  const cached = getCached<any[]>(cacheKey);
-  if (cached) return { success: true, matches: cached };
-
-  const gatewayResult = await globalSourceGateway.executeRequest<any>(
-    'tmdb',
-    normalizedTitle,
-    async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-      try {
-        const apiKey = process.env.TMDB_API_KEY;
-        const encoded = encodeURIComponent(title);
-        const url = apiKey
-          ? `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encoded}`
-          : `https://api.tvmaze.com/search/shows?q=${encoded}`;
-
-        const res = await fetch(url, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'Anivex-Artwork-Verifier/1.0' },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!res.ok) {
-          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
-        }
-
-        const data = await res.json();
-        const results = apiKey
-          ? (data?.results || []).map((item: any) => ({
-              id: item.id,
-              title: item.name || item.original_name,
-              posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-              year: item.first_air_date ? parseInt(item.first_air_date.slice(0, 4), 10) : undefined
-            })).filter((i: any) => i.posterUrl)
-          : (data || []).map((entry: any) => {
-              const show = entry.show || {};
-              return {
-                id: show.id,
-                title: show.name,
-                posterUrl: show.image?.original || show.image?.medium || null,
-                year: show.premiered ? parseInt(show.premiered.slice(0, 4), 10) : undefined
-              };
-            }).filter((i: any) => i.posterUrl);
-
-        setCached(cacheKey, results);
-        return { success: true, matches: results, statusCode: 200 };
-      } catch (err: any) {
-        clearTimeout(timeoutId);
-        return { success: false, matches: [], error: err.message };
-      }
-    }
-  );
-
+  // Requirement 12: TMDB remains disabled
   return {
-    success: gatewayResult.success,
-    matches: gatewayResult.matches || [],
-    error: gatewayResult.error,
-    statusCode: gatewayResult.statusCode
+    success: false,
+    matches: [],
+    error: 'TMDB is disabled per system specification'
   };
 }
 
@@ -664,9 +394,6 @@ export async function queryTVmaze(
   timeoutMs = 8000
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
   const normalizedTitle = title.toLowerCase().trim();
-  const cacheKey = `tvmaze:${normalizedTitle}`;
-  const cached = getCached<any[]>(cacheKey);
-  if (cached) return { success: true, matches: cached };
 
   const gatewayResult = await globalSourceGateway.executeRequest<any>(
     'tvmaze',
@@ -678,13 +405,23 @@ export async function queryTVmaze(
       try {
         const encoded = encodeURIComponent(title);
         const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encoded}`, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'Anivex-Artwork-Verifier/1.0' },
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Anivex-Artwork-Verifier/2.0',
+            'Connection': 'keep-alive'
+          },
           signal: controller.signal
         });
         clearTimeout(timeoutId);
 
         if (!res.ok) {
-          return { success: false, matches: [], error: `HTTP ${res.status}`, statusCode: res.status };
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}`,
+            statusCode: res.status,
+            headers: res.headers
+          };
         }
 
         const data = await res.json();
@@ -698,7 +435,6 @@ export async function queryTVmaze(
           };
         }).filter((i: any) => i.posterUrl);
 
-        setCached(cacheKey, results);
         return { success: true, matches: results, statusCode: 200 };
       } catch (err: any) {
         clearTimeout(timeoutId);
@@ -720,11 +456,10 @@ export async function queryTheTVDB(
   title: string,
   timeoutMs = 8000
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
-  // Uses TVmaze open media index fallback for clean series posters
   return await queryTVmaze(title, timeoutMs);
 }
 
-// --- Image Usability & Integrity Inspection ---
+// --- Image Usability & Integrity Inspection with Cache ---
 export async function inspectArtworkImage(url: string | undefined | null): Promise<{
   usable: boolean;
   dimensions?: string;
@@ -743,6 +478,10 @@ export async function inspectArtworkImage(url: string | undefined | null): Promi
     };
   }
 
+  // 1. Check Inspection Cache
+  const cached = imageInspectionCache.get(url);
+  if (cached) return { ...cached };
+
   // Detect explicit placeholder patterns
   const lowerUrl = url.toLowerCase();
   if (
@@ -753,77 +492,90 @@ export async function inspectArtworkImage(url: string | undefined | null): Promi
     lowerUrl.includes('null') ||
     lowerUrl.includes('undefined')
   ) {
-    return {
+    const res = {
       usable: false,
       aspectRatio: '3:4',
       isBlankOrPlaceholder: true,
-      layoutPresentationStatus: 'adapt_contain',
+      layoutPresentationStatus: 'adapt_contain' as const,
       error: 'Placeholder detected'
     };
+    imageInspectionCache.set(url, res);
+    return res;
   }
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
     const res = await fetch(url, {
       method: 'HEAD',
-      headers: { 'User-Agent': 'Anivex-Artwork-Verifier/1.0' },
+      headers: {
+        'User-Agent': 'Anivex-Artwork-Verifier/2.0',
+        'Connection': 'keep-alive'
+      },
       signal: controller.signal
     });
     clearTimeout(timeoutId);
 
     if (!res.ok && res.status !== 405 && res.status !== 403) {
-      return {
+      const failedRes = {
         usable: false,
         aspectRatio: '3:4',
         isBlankOrPlaceholder: true,
-        layoutPresentationStatus: 'adapt_contain',
+        layoutPresentationStatus: 'adapt_contain' as const,
         error: `HTTP ${res.status}`
       };
+      imageInspectionCache.set(url, failedRes);
+      return failedRes;
     }
 
     const contentType = res.headers.get('content-type') || '';
     if (contentType && !contentType.startsWith('image/') && !contentType.includes('octet-stream')) {
-      return {
+      const nonImageRes = {
         usable: false,
         aspectRatio: '3:4',
         isBlankOrPlaceholder: true,
-        layoutPresentationStatus: 'adapt_contain',
+        layoutPresentationStatus: 'adapt_contain' as const,
         error: 'Not an image content type'
       };
+      imageInspectionCache.set(url, nonImageRes);
+      return nonImageRes;
     }
 
     const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
-    // If image file is suspiciously small (< 1KB), it is likely an empty 1x1 GIF or broken pixel
     if (contentLength > 0 && contentLength < 1000) {
-      return {
+      const emptyRes = {
         usable: false,
         aspectRatio: '3:4',
         isBlankOrPlaceholder: true,
-        layoutPresentationStatus: 'adapt_contain',
+        layoutPresentationStatus: 'adapt_contain' as const,
         error: 'Image file too small (<1KB, empty pixel)'
       };
+      imageInspectionCache.set(url, emptyRes);
+      return emptyRes;
     }
 
-    return {
+    const successRes = {
       usable: true,
       aspectRatio: '3:4',
       dimensions: 'HD (Aspect 3:4)',
       isBlankOrPlaceholder: false,
-      layoutPresentationStatus: 'fit_optimal'
+      layoutPresentationStatus: 'fit_optimal' as const
     };
+    imageInspectionCache.set(url, successRes);
+    return successRes;
   } catch (err: any) {
-    // If HEAD is blocked or fails, treat with grace if URL looks like a valid image extension
     const hasImageExt = /\.(jpg|jpeg|png|webp|avif)($|\?)/i.test(url);
-    return {
+    const fallbackRes = {
       usable: hasImageExt,
       aspectRatio: '3:4',
       dimensions: 'Standard',
       isBlankOrPlaceholder: !hasImageExt,
-      layoutPresentationStatus: 'adapt_contain',
+      layoutPresentationStatus: 'adapt_contain' as const,
       error: err.message
     };
+    imageInspectionCache.set(url, fallbackRes);
+    return fallbackRes;
   }
 }
 
@@ -851,25 +603,24 @@ export async function verifyMultiSeasons(
     try {
       const res = await queryAniList(seasonSearch, anilistConfig.endpoint, 6000);
       if (res.success && res.matches.length > 0) {
-        // Find best match matching seasonYear or season title
-        let bestSeasonMatch: any = null;
+        let bestMatch: any = null;
         let bestScore = 0;
 
         for (const item of res.matches) {
-          const eng = item.title?.english || '';
-          const rom = item.title?.romaji || '';
+          const itemRomaji = item.title?.romaji || '';
+          const itemEnglish = item.title?.english || '';
           const score = Math.max(
-            calculateStringSimilarity(seasonSearch, eng),
-            calculateStringSimilarity(seasonSearch, rom)
+            calculateStringSimilarity(seasonSearch, itemRomaji),
+            itemEnglish ? calculateStringSimilarity(seasonSearch, itemEnglish) : 0
           );
           if (score > bestScore) {
             bestScore = score;
-            bestSeasonMatch = item;
+            bestMatch = item;
           }
         }
 
-        const cover = bestSeasonMatch?.coverImage?.extraLarge || bestSeasonMatch?.coverImage?.large;
-        if (bestSeasonMatch && bestScore >= 0.70 && cover) {
+        const cover = bestMatch?.coverImage?.extraLarge || bestMatch?.coverImage?.large;
+        if (cover && bestScore >= 0.70) {
           results.push({
             seasonNumber: seasonNum,
             seasonTitle,
@@ -879,9 +630,15 @@ export async function verifyMultiSeasons(
             confidence: bestScore
           });
 
-          // Apply to season object if autoFix is enabled
-          if (autoFixEnabled && !season.artworkUrl) {
-            season.artworkUrl = cover;
+          if (autoFixEnabled && season.artworkUrl !== cover) {
+            globalDataStore.applyCatalogueArtworkUpdate(
+              anime.id,
+              cover,
+              'verified',
+              season.artworkUrl || null,
+              'anilist',
+              seasonNum
+            );
           }
         } else {
           results.push({
@@ -914,7 +671,7 @@ export async function verifyMultiSeasons(
   return results;
 }
 
-// --- Core Single Anime Verification Engine ---
+// --- FAST-PATH & SMART-DEPTH VERIFIER (REQUIREMENTS 7 & 8) ---
 export async function verifyAnimeEntry(
   anime: any,
   options: {
@@ -923,22 +680,62 @@ export async function verifyAnimeEntry(
     forceFreshSearch?: boolean;
   } = { autoFixEnabled: true, operator: 'auto_verifier' }
 ): Promise<ArtworkVerificationResult> {
+  const animeId = anime.id;
+  const rawTitle = anime.title || 'Untitled';
+  const currentArtworkUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
+
+  // REQUIREMENT 7: FAST PATH FOR ALREADY-VERIFIED, HIGH-CONFIDENCE ANIME
+  if (!options.forceFreshSearch) {
+    const existingRecord = globalDataStore.getVerificationRecord(animeId);
+    const isAlreadyVerified = anime.artwork?.isVerified === true || existingRecord?.status === 'verified' || existingRecord?.status === 'auto_fixed';
+
+    if (isAlreadyVerified && currentArtworkUrl && !currentArtworkUrl.includes('placeholder')) {
+      const titleMatches = existingRecord ? calculateStringSimilarity(rawTitle, existingRecord.animeTitle) >= 0.90 : true;
+
+      if (titleMatches) {
+        const cachedInspection = imageInspectionCache.get(currentArtworkUrl);
+        const isImageUsable = cachedInspection ? cachedInspection.usable : true;
+
+        if (isImageUsable) {
+          // Fast-Path verification completes in <1ms without any external network calls!
+          const fastPathResult: ArtworkVerificationResult = existingRecord ? {
+            ...existingRecord,
+            isFastPath: true,
+            lastVerifiedAt: new Date().toISOString()
+          } : {
+            animeId,
+            animeTitle: rawTitle,
+            status: 'verified',
+            confidence: 0.95,
+            currentArtworkUrl,
+            source: anime.artwork?.verificationSource || 'provider',
+            dimensions: 'HD (Aspect 3:4)',
+            lastVerifiedAt: new Date().toISOString(),
+            isFastPath: true,
+            candidates: [],
+            evidence: ['Verified instantly via Fast-Path using trusted existing artwork and verified record.']
+          };
+
+          globalDataStore.saveVerificationRecord(animeId, fastPathResult);
+          return fastPathResult;
+        }
+      }
+    }
+  }
+
+  // Clear caches if forceFreshSearch is requested
   if (options.forceFreshSearch) {
-    clearApiQueryCacheForTitle(anime.title);
+    clearApiQueryCacheForTitle(rawTitle);
     if (anime.alternateTitle) clearApiQueryCacheForTitle(anime.alternateTitle);
   }
 
   const sources = getArtworkSourcesConfig();
   const anilistConfig = sources.find(s => s.id === 'anilist' && s.enabled);
-  const jikanConfig = sources.find(s => s.id === 'jikan' && s.enabled);
   const anidbConfig = sources.find(s => s.id === 'anidb' && s.enabled);
-  const tmdbConfig = sources.find(s => s.id === 'tmdb' && s.enabled);
   const tvmazeConfig = sources.find(s => s.id === 'tvmaze' && s.enabled);
   const thetvdbConfig = sources.find(s => s.id === 'thetvdb' && s.enabled);
 
-  const rawTitle = anime.title || 'Untitled';
   const alternateTitle = anime.alternateTitle || null;
-  const currentArtworkUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
   const { cleaned, variants, detectedSeasonNumber } = cleanAnimeTitle(rawTitle);
 
   const titlesToCheck = [...variants];
@@ -948,28 +745,16 @@ export async function verifyAnimeEntry(
 
   const candidates: ArtworkCandidate[] = [];
   let aniListMatch: any = null;
-  let jikanMatch: any = null;
   let anidbMatch: any = null;
 
-  let aniListQueried = false;
-  let jikanQueried = false;
-  let anidbQueried = false;
-
-  let aniListError: string | null = null;
-  let jikanError: string | null = null;
-  let jikanIsOfflineOrFailing = false;
-  let anidbError: string | null = null;
-
-  // 1. Inspect current artwork usability and quality
+  // 1. Inspect current artwork
   const currentArtInspection = await inspectArtworkImage(currentArtworkUrl);
 
   // 2. Query Primary Source: AniList
-  if (anilistConfig) {
-    aniListQueried = true;
+  if (anilistConfig && globalSourceGateway.isSourceAvailable('anilist')) {
     for (const titleVariant of titlesToCheck) {
       const res = await queryAniList(titleVariant, anilistConfig.endpoint, anilistConfig.timeoutMs);
       if (!res.success) {
-        aniListError = res.error || 'Network error';
         break;
       }
       if (res.matches.length > 0) {
@@ -1014,157 +799,64 @@ export async function verifyAnimeEntry(
             };
           }
         }
+
+        // REQUIREMENT 8: HIGH CONFIDENCE -> STOP EARLY!
         if (aniListMatch && aniListMatch.score >= 0.85) {
-          break; // Strong match found
+          break; // Unambiguous match found, no need for redundant queries
         }
       }
     }
   }
 
-  // 3. Query Secondary Source: Jikan (MyAnimeList) with safe backoff
-  if (jikanConfig) {
-    jikanQueried = true;
-    try {
-      await new Promise(r => setTimeout(r, 150));
-
-      for (const titleVariant of titlesToCheck) {
-        const res = await queryJikan(titleVariant, jikanConfig.endpoint, jikanConfig.timeoutMs);
-        if (!res.success) {
-          jikanError = res.error || 'Gateway error';
-          if (res.isTemporaryUnavailable || res.statusCode === 504 || res.statusCode === 429) {
-            jikanIsOfflineOrFailing = true;
-          }
-          break;
-        }
-        if (res.matches.length > 0) {
-          for (const item of res.matches) {
-            const itemTitle = item.title || '';
-            const itemEnglish = item.title_english || '';
-
-            const scoreMain = calculateStringSimilarity(cleaned, itemTitle);
-            const scoreEng = itemEnglish ? calculateStringSimilarity(cleaned, itemEnglish) : 0;
-            const score = Math.max(scoreMain, scoreEng);
-
-            const coverUrl =
-              item.images?.webp?.large_image_url ||
-              item.images?.jpg?.large_image_url ||
-              item.images?.webp?.image_url ||
-              item.images?.jpg?.image_url;
-
-            if (coverUrl && score > 0.40) {
-              candidates.push({
-                source: 'jikan',
-                sourceId: item.mal_id,
-                title: itemEnglish || itemTitle,
-                imageUrl: coverUrl,
-                aspectRatio: '3:4',
-                confidence: score,
-                format: item.type,
-                year: item.year
-              });
+  // 3. Fallback Active Source: TVmaze / TheTVDB (if AniList match was medium/low or missing)
+  if ((candidates.length === 0 || (aniListMatch?.score || 0) < 0.80) && (tvmazeConfig || thetvdbConfig)) {
+    if (globalSourceGateway.isSourceAvailable('tvmaze')) {
+      try {
+        for (const titleVariant of titlesToCheck) {
+          const res = await queryTVmaze(titleVariant, 6000);
+          if (res.success && res.matches.length > 0) {
+            for (const item of res.matches) {
+              const score = calculateStringSimilarity(cleaned, item.title || '');
+              if (item.posterUrl && score >= 0.40) {
+                candidates.push({
+                  source: 'tvmaze',
+                  sourceId: String(item.id),
+                  title: item.title,
+                  imageUrl: item.posterUrl,
+                  aspectRatio: '3:4',
+                  confidence: score,
+                  year: item.year
+                });
+              }
             }
-
-            if (!jikanMatch || score > jikanMatch.score) {
-              jikanMatch = {
-                malId: item.mal_id,
-                title: itemEnglish || itemTitle,
-                englishTitle: itemEnglish,
-                year: item.year,
-                coverUrl,
-                score
-              };
-            }
-          }
-          if (jikanMatch && jikanMatch.score >= 0.85) {
-            break;
+            if (candidates.some(c => c.source === 'tvmaze' && c.confidence >= 0.75)) break;
           }
         }
-      }
-    } catch (err: any) {
-      jikanError = err.message;
-      jikanIsOfflineOrFailing = true;
+      } catch {}
     }
   }
 
-  // 4. Tertiary Fallback Source: AniDB
-  if ((!aniListMatch || aniListMatch.score < 0.75) && anidbConfig) {
-    anidbQueried = true;
-    try {
-      const anidbRes = await queryAniDBFallback(cleaned);
-      if (anidbRes.success && anidbRes.matches.length > 0) {
-        anidbMatch = {
-          aid: anidbRes.matches[0].aid,
-          title: anidbRes.matches[0].title,
-          score: 0.80
-        };
-      } else {
-        anidbError = anidbRes.error || 'AniDB query returned no matches';
-      }
-    } catch (err: any) {
-      anidbError = err.message;
+  // 4. Secondary Fallback Source: AniDB (only if needed)
+  if ((!aniListMatch || aniListMatch.score < 0.65) && candidates.length === 0 && anidbConfig) {
+    if (globalSourceGateway.isSourceAvailable('anidb')) {
+      try {
+        const anidbRes = await queryAniDBFallback(cleaned);
+        if (anidbRes.success && anidbRes.matches.length > 0) {
+          anidbMatch = {
+            aid: anidbRes.matches[0].aid,
+            title: anidbRes.matches[0].title,
+            score: 0.80
+          };
+        }
+      } catch {}
     }
-  }
-
-  // 5. TMDB Fallback
-  if ((candidates.length === 0 || Math.max(...candidates.map(c => c.confidence)) < 0.70) && tmdbConfig) {
-    try {
-      for (const titleVariant of titlesToCheck) {
-        const res = await queryTMDB(titleVariant, tmdbConfig.timeoutMs);
-        if (res.success && res.matches.length > 0) {
-          for (const item of res.matches) {
-            const score = calculateStringSimilarity(cleaned, item.title || '');
-            if (item.posterUrl && score >= 0.40) {
-              candidates.push({
-                source: 'tmdb',
-                sourceId: String(item.id),
-                title: item.title,
-                imageUrl: item.posterUrl,
-                aspectRatio: '3:4',
-                confidence: score,
-                year: item.year
-              });
-            }
-          }
-          if (candidates.some(c => c.source === 'tmdb' && c.confidence >= 0.75)) break;
-        }
-      }
-    } catch {}
-  }
-
-  // 6. TVmaze / TheTVDB Fallback
-  if ((candidates.length === 0 || Math.max(...candidates.map(c => c.confidence)) < 0.60) && (tvmazeConfig || thetvdbConfig)) {
-    try {
-      for (const titleVariant of titlesToCheck) {
-        const res = await queryTVmaze(titleVariant, 8000);
-        if (res.success && res.matches.length > 0) {
-          for (const item of res.matches) {
-            const score = calculateStringSimilarity(cleaned, item.title || '');
-            if (item.posterUrl && score >= 0.40) {
-              candidates.push({
-                source: 'tvmaze',
-                sourceId: String(item.id),
-                title: item.title,
-                imageUrl: item.posterUrl,
-                aspectRatio: '3:4',
-                confidence: score,
-                year: item.year
-              });
-            }
-          }
-          if (candidates.some(c => c.source === 'tvmaze' && c.confidence >= 0.75)) break;
-        }
-      }
-    } catch {}
   }
 
   // Sort candidates by confidence descending
   candidates.sort((a, b) => b.confidence - a.confidence);
 
-  // Composite scores
   const bestAniScore = aniListMatch?.score || 0;
-  const bestJikanScore = jikanMatch?.score || 0;
-  const bestAniDBScore = anidbMatch?.score || 0;
-  const topConfidence = candidates.length > 0 ? Math.max(candidates[0].confidence, bestAniScore, bestJikanScore) : 0;
+  const topConfidence = candidates.length > 0 ? Math.max(candidates[0].confidence, bestAniScore) : 0;
 
   let finalStatus: VerificationStatus = 'needs_review';
   let issueDescription: string | null = null;
@@ -1177,13 +869,11 @@ export async function verifyAnimeEntry(
     seasonResults = await verifyMultiSeasons(anime, cleaned, options.autoFixEnabled ?? true);
   }
 
-  // Evaluation criteria
   const currentArtworkMissingOrBroken =
     !currentArtworkUrl ||
     !currentArtInspection.usable ||
     currentArtInspection.isBlankOrPlaceholder;
 
-  // Progressive Candidate Selection: Check top candidates for usable poster
   let selectedCandidate: ArtworkCandidate | null = null;
   for (const cand of candidates) {
     if (cand.confidence >= 0.40 && cand.imageUrl) {
@@ -1203,29 +893,39 @@ export async function verifyAnimeEntry(
       evidenceList.push(`Previous poster was missing or broken. Replaced with ${selectedCandidate.source} poster.`);
 
       if (options.autoFixEnabled) {
-        applyArtworkUpdate(anime.id, selectedCandidate.imageUrl, 'verified', currentArtworkUrl, selectedCandidate.source);
+        globalDataStore.applyCatalogueArtworkUpdate(
+          anime.id,
+          selectedCandidate.imageUrl,
+          'verified',
+          currentArtworkUrl,
+          selectedCandidate.source
+        );
       }
     } else {
-      // Genuine Unable To Verify
       finalStatus = 'unable_to_verify';
-      issueDescription = 'No usable artwork matched across configured external databases.';
-      evidenceList.push(`Queried title variations: "${titlesToCheck.join('", "')}". Exhausted configured sources (${sources.map(s => s.name).join(', ')}).`);
+      issueDescription = 'No usable artwork matched across configured active external databases.';
+      evidenceList.push(`Queried title variations: "${titlesToCheck.join('", "')}". Exhausted configured active sources.`);
     }
   } else {
     // Current artwork exists and is usable
     if (selectedCandidate && selectedCandidate.confidence >= 0.85 && selectedCandidate.imageUrl && selectedCandidate.imageUrl !== currentArtworkUrl) {
-      // Optional higher quality replacement if current artwork was unverified
       finalStatus = 'auto_fixed';
       replacedUrl = selectedCandidate.imageUrl;
       issueDescription = `Poster upgraded to verified high-resolution asset from ${selectedCandidate.source}.`;
       if (options.autoFixEnabled) {
-        applyArtworkUpdate(anime.id, selectedCandidate.imageUrl, 'verified', currentArtworkUrl, selectedCandidate.source);
+        globalDataStore.applyCatalogueArtworkUpdate(
+          anime.id,
+          selectedCandidate.imageUrl,
+          'verified',
+          currentArtworkUrl,
+          selectedCandidate.source
+        );
       }
     } else {
       finalStatus = 'verified';
       issueDescription = 'Artwork verified usable and matches verified database entry.';
       evidenceList.push('Current artwork verified usable and active.');
-      markCatalogueAnimeVerified(anime.id, 'verified');
+      globalDataStore.markCatalogueVerified(anime.id, 'verified');
     }
   }
 
@@ -1240,7 +940,6 @@ export async function verifyAnimeEntry(
     dimensions: currentArtInspection.dimensions || 'HD (3:4)',
     lastVerifiedAt: new Date().toISOString(),
     aniListMatch,
-    jikanMatch,
     anidbMatch,
     seasonResults: seasonResults.length > 0 ? seasonResults : undefined,
     candidates,
@@ -1248,15 +947,8 @@ export async function verifyAnimeEntry(
     evidence: evidenceList
   };
 
-  // Persist record atomically
-  const release = await persistenceLock.acquire();
-  try {
-    const records = loadVerificationRecords();
-    records[anime.id] = result;
-    saveVerificationRecords(records);
-  } finally {
-    release();
-  }
+  // Save to in-memory store with debounced asynchronous background flush (0 lock contention!)
+  globalDataStore.saveVerificationRecord(anime.id, result);
 
   return result;
 }
@@ -1270,147 +962,33 @@ export function applyArtworkUpdate(
   source: string,
   seasonNumber?: number
 ): boolean {
-  try {
-    if (!fs.existsSync(CATALOGUE_PATH)) return false;
-    const catalogue: any[] = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
-    const index = catalogue.findIndex(a => a.id === animeId);
-    if (index === -1) return false;
-
-    const anime = catalogue[index];
-    const prev = anime.artwork?.verifiedArtworkUrl || previousUrl || null;
-
-    anime.artwork = {
-      ...anime.artwork,
-      verifiedArtworkUrl: newUrl,
-      isVerified: newStatus === 'verified',
-      verificationStatus: newStatus,
-      verificationSource: source,
-      aspectRatio: '3:4',
-      originalArtworkUrl: prev || anime.artwork?.originalArtworkUrl
-    };
-
-    // If season number is provided, also set season artwork
-    if (seasonNumber && Array.isArray(anime.seasons)) {
-      const s = anime.seasons.find((sn: any) => sn.seasonNumber === seasonNumber);
-      if (s) {
-        s.artworkUrl = newUrl;
-      }
-    }
-
-    catalogue[index] = anime;
-    safeWriteFileSync(CATALOGUE_PATH, JSON.stringify(catalogue, null, 2));
-
-    // Also sync to src/data/ if exists
-    const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
-    if (fs.existsSync(publicPath)) {
-      safeWriteFileSync(publicPath, JSON.stringify(catalogue, null, 2));
-    }
-
-    // Save history entry for recovery
-    if (prev && prev !== newUrl) {
-      const history = loadArtworkHistory();
-      history.unshift({
-        id: `HIST-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
-        animeId,
-        animeTitle: anime.title,
-        previousArtworkUrl: prev,
-        newArtworkUrl: newUrl,
-        replacedAt: new Date().toISOString(),
-        replacedBy: 'auto_verifier',
-        source,
-        reason: `Artwork auto-fixed with verified high-resolution asset from ${source}`,
-        seasonNumber
-      });
-      // Keep up to 3000 history entries
-      saveArtworkHistory(history.slice(0, 3000));
-    }
-
-    return true;
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error updating catalogue artwork:', err.message);
-    return false;
-  }
-}
-
-export function revertArtwork(animeId: string): { success: boolean; message: string; previousUrl?: string } {
-  try {
-    const history = loadArtworkHistory();
-    const entryIndex = history.findIndex(h => h.animeId === animeId);
-    if (entryIndex === -1) {
-      return { success: false, message: 'No previous artwork history found for this anime.' };
-    }
-
-    const entry = history[entryIndex];
-    const restoredUrl = entry.previousArtworkUrl;
-
-    if (!fs.existsSync(CATALOGUE_PATH)) {
-      return { success: false, message: 'Catalogue not found.' };
-    }
-
-    const catalogue: any[] = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
-    const index = catalogue.findIndex(a => a.id === animeId);
-    if (index === -1) {
-      return { success: false, message: 'Anime not found in catalogue.' };
-    }
-
-    catalogue[index].artwork = {
-      ...catalogue[index].artwork,
-      verifiedArtworkUrl: restoredUrl,
-      verificationStatus: 'unverified',
-      isVerified: false,
-      verificationSource: 'reverted_backup'
-    };
-
-    fs.writeFileSync(CATALOGUE_PATH, JSON.stringify(catalogue, null, 2), 'utf-8');
-
-    // Remove from history or mark reverted
-    history.splice(entryIndex, 1);
-    saveArtworkHistory(history);
-
-    // Update records
-    const records = loadVerificationRecords();
-    if (records[animeId]) {
-      records[animeId].status = 'needs_review';
-      records[animeId].currentArtworkUrl = restoredUrl;
-      records[animeId].issue = 'Artwork manually reverted to previous backup.';
-      saveVerificationRecords(records);
-    }
-
-    return { success: true, message: 'Artwork successfully reverted to previous backup.', previousUrl: restoredUrl };
-  } catch (err: any) {
-    return { success: false, message: err.message };
-  }
+  return globalDataStore.applyCatalogueArtworkUpdate(animeId, newUrl, newStatus, previousUrl, source, seasonNumber);
 }
 
 export function markCatalogueAnimeVerified(animeId: string, status: string): void {
-  try {
-    if (!fs.existsSync(CATALOGUE_PATH)) return;
-    const catalogue: any[] = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
-    const index = catalogue.findIndex(a => a.id === animeId);
-    if (index === -1) return;
+  globalDataStore.markCatalogueVerified(animeId, status);
+}
 
-    catalogue[index].artwork = {
-      ...catalogue[index].artwork,
-      isVerified: status === 'verified',
-      verificationStatus: status
-    };
-    fs.writeFileSync(CATALOGUE_PATH, JSON.stringify(catalogue, null, 2), 'utf-8');
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error marking verified:', err.message);
+export function revertArtwork(animeId: string): { success: boolean; message: string; previousUrl?: string } {
+  const history = globalDataStore.getAllHistory();
+  const entry = history.find(h => h.animeId === animeId);
+  if (!entry || !entry.previousArtworkUrl) {
+    return { success: false, message: 'No previous artwork history found to revert to.' };
   }
+  const reverted = globalDataStore.applyCatalogueArtworkUpdate(
+    animeId,
+    entry.previousArtworkUrl,
+    'verified',
+    entry.newArtworkUrl,
+    'revert_history',
+    entry.seasonNumber
+  );
+  if (!reverted) {
+    return { success: false, message: `Anime ${animeId} not found in catalogue.` };
+  }
+  return { success: true, message: `Successfully reverted artwork to previous image.`, previousUrl: entry.previousArtworkUrl };
 }
 
 export function recordFakeAnimeIssue(issue: FakeAnimeIssue): void {
-  try {
-    const issues = loadFakeAnimeIssues();
-    const existingIndex = issues.findIndex(i => i.catalogueId === issue.catalogueId);
-    if (existingIndex !== -1) {
-      issues[existingIndex] = issue;
-    } else {
-      issues.unshift(issue);
-    }
-    saveFakeAnimeIssues(issues);
-  } catch (err: any) {
-    console.error('[ArtworkVerifier] Error recording fake issue:', err.message);
-  }
+  globalDataStore.addFakeIssue(issue);
 }

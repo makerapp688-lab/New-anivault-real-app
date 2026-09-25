@@ -1,0 +1,156 @@
+[
+  {
+    "jobId": "job_1790346393763",
+    "jobType": "artwork_verification",
+    "mode": "benchmark",
+    "startedAt": "2026-09-25T14:26:33.763Z",
+    "finishedAt": "2026-09-25T14:26:34.511Z",
+    "requestedBatchSize": null,
+    "completedCount": 150,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346389487",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:26:29.487Z",
+    "finishedAt": "2026-09-25T14:26:29.523Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346389008",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:26:29.009Z",
+    "finishedAt": "2026-09-25T14:26:29.484Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346373259",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:26:13.259Z",
+    "finishedAt": "2026-09-25T14:26:13.294Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346372788",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:26:12.788Z",
+    "finishedAt": "2026-09-25T14:26:13.256Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346320639",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:25:20.639Z",
+    "finishedAt": "2026-09-25T14:25:20.674Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346320174",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:25:20.174Z",
+    "finishedAt": "2026-09-25T14:25:20.636Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346311408",
+    "jobType": "artwork_verification",
+    "mode": "benchmark",
+    "startedAt": "2026-09-25T14:25:11.408Z",
+    "finishedAt": "2026-09-25T14:25:12.127Z",
+    "requestedBatchSize": null,
+    "completedCount": 150,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346215643",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:23:35.643Z",
+    "finishedAt": "2026-09-25T14:23:35.685Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790346215172",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:23:35.172Z",
+    "finishedAt": "2026-09-25T14:23:35.641Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790345621533",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:13:41.533Z",
+    "finishedAt": "2026-09-25T14:13:41.659Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790345621059",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:13:41.059Z",
+    "finishedAt": "2026-09-25T14:13:41.531Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790345583654",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:13:03.654Z",
+    "finishedAt": "2026-09-25T14:13:03.782Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790345583275",
+    "jobType": "artwork_verification",
+    "mode": "all",
+    "startedAt": "2026-09-25T14:13:03.275Z",
+    "finishedAt": "2026-09-25T14:13:03.652Z",
+    "requestedBatchSize": null,
+    "completedCount": 100,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  }
+]

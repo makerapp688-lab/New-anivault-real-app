@@ -122,8 +122,29 @@ interface ScanState {
     status: 'healthy' | 'high_load' | 'critical';
   };
   sourceGatewayMetrics?: Record<string, any>;
+  tasksPerMinute?: number;
+  workerUtilization?: {
+    active: number;
+    idle: number;
+    waiting: number;
+    retrying: number;
+    utilizationPercent: number;
+  };
+  databasePerformance?: {
+    totalReads: number;
+    totalWrites: number;
+    latencyMs: number;
+  };
   estimatedRemainingSeconds?: number | null;
   activeWorkers?: WorkerInfo[];
+  liveAnimeRegistry?: Record<string, any>;
+  activeAnimeLocks?: Array<{
+    animeId: string;
+    workerId: number;
+    taskId: string;
+    acquiredAt: number;
+    leaseExpiresAt: number;
+  }>;
   activityEvents?: WorkerActivityEvent[];
   stats: {
     scanned: number;
@@ -1997,8 +2018,85 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             const currentWorkerPage = Math.min(workerPage, totalWorkerPages);
             const pagedWorkers = filteredWorkers.slice((currentWorkerPage - 1) * pageSize, currentWorkerPage * pageSize);
 
+            const activeLocks = scanState?.activeAnimeLocks || [];
+
             return (
               <div className="space-y-4">
+                {/* 50-Worker Fleet Throughput & Smart Performance Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Real Throughput</span>
+                    <p className="text-base font-black text-emerald-400 font-mono flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>{scanState?.tasksPerMinute || 0}</span>
+                      <span className="text-[10px] font-normal text-slate-400">tasks/min</span>
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Fleet Utilization</span>
+                    <p className="text-base font-black text-cyan-400 font-mono flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-cyan-400" />
+                      <span>{scanState?.workerUtilization?.utilizationPercent || 0}%</span>
+                      <span className="text-[10px] font-normal text-slate-400">({scanState?.workerUtilization?.active || 0}/50 active)</span>
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Storage Engine</span>
+                    <p className="text-base font-black text-purple-400 font-mono flex items-center gap-1.5">
+                      <Database className="w-4 h-4 text-purple-400" />
+                      <span>{scanState?.databasePerformance?.latencyMs || '< 1'}ms</span>
+                      <span className="text-[10px] font-normal text-slate-400">(In-Memory Store)</span>
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Singleflight Cache</span>
+                    <p className="text-base font-black text-amber-400 font-mono flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                      <span>{scanState?.sourceGatewayMetrics?.anilist?.cacheHits || 0} Hits</span>
+                      <span className="text-[10px] font-normal text-slate-400">({scanState?.sourceGatewayMetrics?.anilist?.deduplicatedRequests || 0} deduped)</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Authoritative Live Anime Claims & Locks Registry Banner */}
+                {activeLocks.length > 0 && (
+                  <div className="p-3 bg-slate-950/90 border border-emerald-500/40 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="font-bold text-emerald-300 uppercase tracking-wider font-mono">
+                          Authoritative Live Anime Claims ({activeLocks.length} Active Leases)
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Zero Duplication Enforced • Atomic Leases Active
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                      {activeLocks.map(lock => {
+                        const reg = scanState?.liveAnimeRegistry?.[lock.animeId];
+                        return (
+                          <div
+                            key={lock.animeId}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900 border border-emerald-500/30 text-[11px] font-mono text-slate-300"
+                          >
+                            <span className="px-1 py-0.5 rounded bg-emerald-950 text-emerald-400 font-black text-[9px]">
+                              W#{lock.workerId}
+                            </span>
+                            <span className="font-bold text-white truncate max-w-[140px]">
+                              {reg?.animeTitle || lock.animeId}
+                            </span>
+                            <span className="text-slate-500 text-[9px]">
+                              ({formatTimeAgo(lock.acquiredAt)})
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedWorkers.map(worker => {
                     const id = worker.workerId;
