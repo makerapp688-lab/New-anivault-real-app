@@ -11,6 +11,24 @@ import {
   checkServerSecretsDiagnostic
 } from './email-service.js';
 import { logAdminAction, loadAuditLogs } from './audit-logger.js';
+import {
+  getArtworkSourcesConfig,
+  saveArtworkSourcesConfig,
+  testSourceConnectivity
+} from './artwork-sources.js';
+import {
+  loadVerificationRecords,
+  saveVerificationRecords,
+  loadFakeAnimeIssues,
+  saveFakeAnimeIssues,
+  loadArtworkHistory,
+  saveArtworkHistory,
+  verifyAnimeEntry,
+  applyArtworkUpdate,
+  revertArtwork,
+  markCatalogueAnimeVerified
+} from './artwork-verifier.js';
+import { artworkScanner, computeGlobalCatalogueStats } from './artwork-scanner.js';
 
 // Data file paths
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
@@ -1474,6 +1492,674 @@ export function createOwnerRouter(): express.Router {
       res.json({ success: true, message: 'Artwork updated successfully.', anime });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to update artwork.' });
+    }
+  });
+
+  // ==========================================
+  // ARTWORK MANAGER (Owner-Only Automated Catalogue Verification Engine)
+  // ==========================================
+
+  // 1. Dashboard summary stats & current state
+  router.get('/artwork-manager/dashboard', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const stats = computeGlobalCatalogueStats();
+      const scanState = artworkScanner.getJobState();
+      const sources = getArtworkSourcesConfig();
+
+      res.json({
+        success: true,
+        totalAnime: stats.total,
+        scanState,
+        sources,
+        stats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load Artwork Manager dashboard.' });
+    }
+  });
+
+  // 2. Paginated catalogue anime list with verification metadata
+  router.get('/artwork-manager/anime', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+      const records = loadVerificationRecords();
+      const fakeIssues = loadFakeAnimeIssues();
+      const fakeMap = new Map(fakeIssues.map(f => [f.catalogueId, f]));
+
+      const { search, status, page = '1', limit = '40' } = req.query;
+      const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+      const limitNum = Math.min(200, Math.max(1, parseInt(limit as string, 10) || 40));
+
+      let list = catalogue.map(anime => {
+        const rec = records[anime.id];
+        const fakeIssue = fakeMap.get(anime.id);
+        const hasUrl = Boolean(anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl);
+
+        let computedStatus = 'unverified';
+        if (fakeIssue && fakeIssue.status === 'active') {
+          computedStatus = 'possible_fake';
+        } else if (rec) {
+          computedStatus = rec.status;
+        } else if (anime.artwork?.verificationStatus === 'verified') {
+          computedStatus = 'verified';
+        } else if (!hasUrl) {
+          computedStatus = 'missing';
+        }
+
+        return {
+          id: anime.id,
+          title: anime.title,
+          alternateTitle: anime.alternateTitle || null,
+          releaseYear: anime.releaseYear || null,
+          type: anime.type || 'TV',
+          currentArtworkUrl: anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null,
+          source: rec?.source || anime.artwork?.verificationSource || anime.provider || 'RareToon India',
+          verificationStatus: computedStatus,
+          confidence: rec?.confidence ? Math.round(rec.confidence * 100) : (computedStatus === 'verified' ? 95 : 0),
+          dimensions: rec?.dimensions || 'HD (3:4)',
+          lastVerifiedAt: rec?.lastVerifiedAt || null,
+          issue: rec?.issue || (fakeIssue ? fakeIssue.reason : null),
+          candidates: rec?.candidates || [],
+          evidence: rec?.evidence || fakeIssue?.evidence || [],
+          aniListMatch: rec?.aniListMatch || null,
+          jikanMatch: rec?.jikanMatch || null,
+          providerUrl: anime.providers?.raretoonIndia?.canonicalUrl || null
+        };
+      });
+
+      // Filter by search query
+      if (typeof search === 'string' && search.trim()) {
+        const q = search.trim().toLowerCase();
+        list = list.filter(a => a.title.toLowerCase().includes(q) || (a.alternateTitle && a.alternateTitle.toLowerCase().includes(q)));
+      }
+
+      // Filter by status
+      if (typeof status === 'string' && status !== 'all') {
+        list = list.filter(a => a.verificationStatus === status);
+      }
+
+      const total = list.length;
+      const totalPages = Math.ceil(total / limitNum) || 1;
+      const offset = (pageNum - 1) * limitNum;
+      const paginated = list.slice(offset, offset + limitNum);
+
+      res.json({
+        success: true,
+        anime: paginated,
+        total,
+        page: pageNum,
+        totalPages,
+        limit: limitNum
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to list anime for Artwork Manager.' });
+    }
+  });
+
+  // 3. Start full catalogue verification (Verify All, Verify Unverified, or Fix Missing)
+  router.post('/artwork-manager/start', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const mode = (req.body?.mode === 'unverified' ? 'unverified' : req.body?.mode === 'fix_missing' ? 'fix_missing' : 'all') as 'all' | 'unverified' | 'fix_missing';
+      const limit = req.body?.limit ? parseInt(String(req.body.limit), 10) : undefined;
+      const result = artworkScanner.startScan(email, mode, limit);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to start artwork verification.' });
+    }
+  });
+
+  // 3b. Inspect All catalogue (Non-destructive inspection)
+  router.post('/artwork-manager/inspect-all', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const report = await artworkScanner.inspectAll();
+      res.json({ success: true, report });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to inspect catalogue.' });
+    }
+  });
+
+  // 4. Pause active verification scan
+  router.post('/artwork-manager/pause', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.pauseScan(email);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to pause verification.' });
+    }
+  });
+
+  // 5. Resume paused scan
+  router.post('/artwork-manager/resume', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.resumeScan(email);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to resume verification.' });
+    }
+  });
+
+  // 6. Stop active scan
+  router.post('/artwork-manager/stop', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.stopScan(email);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to stop verification.' });
+    }
+  });
+
+  // 7. Reset scan progress to 0
+  router.post('/artwork-manager/reset', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = artworkScanner.resetScan(email);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to reset verification state.' });
+    }
+  });
+
+  // 8. Get live scanner status and metrics
+  router.get('/artwork-manager/status', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      res.json({ success: true, state: artworkScanner.getJobState() });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to get scanner status.' });
+    }
+  });
+
+  // 9. Instant single-anime verification test
+  router.post('/artwork-manager/verify-single/:id', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+      const anime = catalogue.find(a => a.id === id);
+
+      if (!anime) {
+        res.status(404).json({ error: `Anime '${id}' not found.` });
+        return;
+      }
+
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator: email });
+
+      res.json({ success: true, result });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to verify single anime entry.' });
+    }
+  });
+
+  // 10. Apply candidate artwork from Needs Review queue
+  router.post('/artwork-manager/anime/:id/apply-candidate', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { candidateUrl, source = 'manual_review' } = req.body;
+
+      if (!candidateUrl || typeof candidateUrl !== 'string') {
+        res.status(400).json({ error: 'candidateUrl is required.' });
+        return;
+      }
+
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const success = applyArtworkUpdate(id, candidateUrl.trim(), 'verified', null, source);
+
+      if (!success) {
+        res.status(500).json({ error: 'Failed to apply replacement artwork.' });
+        return;
+      }
+
+      // Update record
+      const records = loadVerificationRecords();
+      if (records[id]) {
+        records[id].status = 'verified';
+        records[id].currentArtworkUrl = candidateUrl.trim();
+        records[id].source = source;
+        records[id].issue = null;
+        records[id].lastVerifiedAt = new Date().toISOString();
+        saveVerificationRecords(records);
+      }
+
+      logAdminAction(
+        `Apply Candidate Artwork for ${id}`,
+        email,
+        'success',
+        id,
+        `Applied replacement artwork from ${source}: ${candidateUrl.trim()}`
+      );
+
+      res.json({
+        success: true,
+        message: 'Candidate artwork applied and marked verified.',
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to apply candidate artwork.' });
+    }
+  });
+
+  // --- NEEDS REVIEW WORKSPACE ENDPOINTS ---
+
+  // Action 1: Re-verify (Queue high-priority worker task)
+  router.post('/artwork-manager/needs-review/reverify', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { animeIds } = req.body;
+      if (!Array.isArray(animeIds) || animeIds.length === 0) {
+        res.status(400).json({ error: 'animeIds array is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const scanState = artworkScanner.enqueueReverification(animeIds, email);
+
+      res.json({
+        success: true,
+        message: `Queued ${animeIds.length} items for high-priority worker re-verification.`,
+        stats: computeGlobalCatalogueStats(),
+        scanState
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to enqueue re-verification.' });
+    }
+  });
+
+  // Action 2: Search Again (Fresh query with alternate titles and ID fallback)
+  router.post('/artwork-manager/needs-review/search-again', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { animeIds } = req.body;
+      if (!Array.isArray(animeIds) || animeIds.length === 0) {
+        res.status(400).json({ error: 'animeIds array is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+
+      let resolvedCount = 0;
+      for (const id of animeIds) {
+        const anime = catalogue.find(a => a.id === id);
+        if (!anime) continue;
+
+        const result = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator: `${email}_search_again` });
+        if (result.status === 'verified' || result.status === 'auto_fixed') {
+          resolvedCount++;
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Searched again for ${animeIds.length} items. Resolved ${resolvedCount}.`,
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to perform search again.' });
+    }
+  });
+
+  // Action 3: Fix Artwork (Auto-apply candidate when confidence >= 0.55)
+  router.post('/artwork-manager/needs-review/fix-artwork', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { animeIds } = req.body;
+      if (!Array.isArray(animeIds) || animeIds.length === 0) {
+        res.status(400).json({ error: 'animeIds array is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+      const records = loadVerificationRecords();
+
+      let fixedCount = 0;
+      for (const id of animeIds) {
+        const anime = catalogue.find(a => a.id === id);
+        if (!anime) continue;
+
+        const rec = records[id];
+        const bestCandidate = rec?.candidates?.find(c => c.confidence >= 0.50 && c.imageUrl);
+
+        if (bestCandidate?.imageUrl) {
+          applyArtworkUpdate(id, bestCandidate.imageUrl, 'verified', null, bestCandidate.source);
+          records[id] = {
+            ...records[id],
+            animeId: id,
+            animeTitle: anime.title,
+            status: 'auto_fixed',
+            confidence: bestCandidate.confidence,
+            currentArtworkUrl: bestCandidate.imageUrl,
+            replacedArtworkUrl: bestCandidate.imageUrl,
+            source: bestCandidate.source,
+            issue: null,
+            lastVerifiedAt: new Date().toISOString()
+          };
+          fixedCount++;
+        } else {
+          // Re-verify to discover candidate
+          const result = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator: `${email}_fix_artwork` });
+          if (result.status === 'auto_fixed' || result.status === 'verified') {
+            fixedCount++;
+          }
+        }
+      }
+
+      saveVerificationRecords(records);
+
+      res.json({
+        success: true,
+        message: `Fixed artwork for ${fixedCount} of ${animeIds.length} items.`,
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to fix artwork.' });
+    }
+  });
+
+  // Action 4: Approve Current Artwork
+  router.post('/artwork-manager/needs-review/approve-current', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { animeIds } = req.body;
+      if (!Array.isArray(animeIds) || animeIds.length === 0) {
+        res.status(400).json({ error: 'animeIds array is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
+      const catalogue: any[] = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+      const records = loadVerificationRecords();
+
+      for (const id of animeIds) {
+        const anime = catalogue.find(a => a.id === id);
+        const artUrl = anime?.artwork?.verifiedArtworkUrl || anime?.artwork?.originalArtworkUrl || null;
+
+        markCatalogueAnimeVerified(id, 'verified');
+
+        records[id] = {
+          animeId: id,
+          animeTitle: anime?.title || id,
+          status: 'verified',
+          confidence: 1.0,
+          currentArtworkUrl: artUrl,
+          source: 'owner_approval',
+          issue: null,
+          lastVerifiedAt: new Date().toISOString(),
+          candidates: records[id]?.candidates || [],
+          evidence: [...(records[id]?.evidence || []), `Approved by Owner (${email}) on ${new Date().toLocaleDateString()}`]
+        };
+      }
+
+      saveVerificationRecords(records);
+
+      logAdminAction(
+        'Approve Current Artwork',
+        email,
+        'success',
+        undefined,
+        `Approved current artwork for ${animeIds.length} items.`
+      );
+
+      res.json({
+        success: true,
+        message: `Approved current artwork for ${animeIds.length} items.`,
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to approve current artwork.' });
+    }
+  });
+
+  // Action 5: Choose Replacement Candidate
+  router.post('/artwork-manager/needs-review/choose-replacement', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { animeId, selectedCandidateUrl, source = 'owner_choice' } = req.body;
+      if (!animeId || !selectedCandidateUrl) {
+        res.status(400).json({ error: 'animeId and selectedCandidateUrl are required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+
+      applyArtworkUpdate(animeId, selectedCandidateUrl.trim(), 'verified', null, source);
+
+      const records = loadVerificationRecords();
+      const current = records[animeId] || {};
+      records[animeId] = {
+        ...current,
+        animeId,
+        animeTitle: current.animeTitle || animeId,
+        status: 'verified',
+        confidence: 1.0,
+        currentArtworkUrl: selectedCandidateUrl.trim(),
+        replacedArtworkUrl: selectedCandidateUrl.trim(),
+        source,
+        issue: null,
+        lastVerifiedAt: new Date().toISOString(),
+        evidence: [...(current.evidence || []), `Manually chosen replacement artwork from ${source} by Owner (${email})`]
+      };
+
+      saveVerificationRecords(records);
+
+      res.json({
+        success: true,
+        message: 'Replacement artwork applied and marked verified.',
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to choose replacement artwork.' });
+    }
+  });
+
+  // Action 6: Mark Unable to Verify (Preserves issue history without endless retries)
+  router.post('/artwork-manager/needs-review/mark-unable', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { animeIds } = req.body;
+      if (!Array.isArray(animeIds) || animeIds.length === 0) {
+        res.status(400).json({ error: 'animeIds array is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const records = loadVerificationRecords();
+
+      for (const id of animeIds) {
+        const current = records[id] || {};
+        records[id] = {
+          ...current,
+          animeId: id,
+          animeTitle: current.animeTitle || id,
+          status: 'unable_to_verify',
+          confidence: 0,
+          currentArtworkUrl: current.currentArtworkUrl || null,
+          source: current.source || 'none',
+          issue: 'Marked unable to verify by Owner',
+          lastVerifiedAt: new Date().toISOString(),
+          evidence: [...(current.evidence || []), `Marked unable to verify by Owner (${email})`]
+        };
+      }
+
+      saveVerificationRecords(records);
+
+      res.json({
+        success: true,
+        message: `Marked ${animeIds.length} items as Unable to Verify.`,
+        stats: computeGlobalCatalogueStats(),
+        scanState: artworkScanner.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to mark items as unable to verify.' });
+    }
+  });
+
+  // 11. Revert auto-fixed artwork to previous backup
+  router.post('/artwork-manager/anime/:id/revert', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = revertArtwork(id);
+
+      if (result.success) {
+        logAdminAction(
+          `Revert Artwork for ${id}`,
+          email,
+          'success',
+          id,
+          result.message
+        );
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to revert artwork.' });
+    }
+  });
+
+  // 12. Manually mark anime verification status
+  router.post('/artwork-manager/anime/:id/mark-status', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const email = (req as any).ownerSession?.email || 'Owner';
+
+      if (!['verified', 'needs_review', 'unverified'].includes(status)) {
+        res.status(400).json({ error: 'Invalid status.' });
+        return;
+      }
+
+      markCatalogueAnimeVerified(id, status);
+
+      const records = loadVerificationRecords();
+      if (records[id]) {
+        records[id].status = status as any;
+        records[id].issue = status === 'verified' ? null : records[id].issue;
+        records[id].lastVerifiedAt = new Date().toISOString();
+        saveVerificationRecords(records);
+      }
+
+      logAdminAction(
+        `Mark Status ${status} for ${id}`,
+        email,
+        'success',
+        id,
+        `Manually updated verification status to '${status}'.`
+      );
+
+      res.json({ success: true, message: `Status updated to ${status}.` });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update status.' });
+    }
+  });
+
+  // 13. Possible Fake Anime Issues list
+  router.get('/artwork-manager/fake-issues', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const issues = loadFakeAnimeIssues();
+      res.json({ success: true, issues });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load fake anime issues.' });
+    }
+  });
+
+  // 14. Resolve/Dismiss Possible Fake Anime Issue
+  router.post('/artwork-manager/fake-issues/:id/resolve', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { action } = req.body; // 'dismiss' | 'manual_verified'
+      const email = (req as any).ownerSession?.email || 'Owner';
+
+      const issues = loadFakeAnimeIssues();
+      const issue = issues.find(i => i.id === id || i.catalogueId === id);
+
+      if (!issue) {
+        res.status(404).json({ error: 'Fake anime issue not found.' });
+        return;
+      }
+
+      issue.status = action === 'manual_verified' ? 'manual_verified' : 'dismissed';
+      saveFakeAnimeIssues(issues);
+
+      if (action === 'manual_verified') {
+        markCatalogueAnimeVerified(issue.catalogueId, 'verified');
+        const records = loadVerificationRecords();
+        if (records[issue.catalogueId]) {
+          records[issue.catalogueId].status = 'verified';
+          records[issue.catalogueId].issue = 'Manually verified by Owner.';
+          saveVerificationRecords(records);
+        }
+      }
+
+      logAdminAction(
+        `Resolve Fake Anime Issue (${action})`,
+        email,
+        'success',
+        issue.catalogueId,
+        `Resolved fake anime issue '${id}' with action: ${action}.`
+      );
+
+      res.json({ success: true, message: `Issue resolved as ${action}.` });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to resolve fake anime issue.' });
+    }
+  });
+
+  // 15. Artwork History & Backup Audit Log
+  router.get('/artwork-manager/history', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const history = loadArtworkHistory();
+      res.json({ success: true, history });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load artwork history.' });
+    }
+  });
+
+  // 16. Artwork Source Configuration (Owner-only)
+  router.get('/artwork-manager/sources', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const sources = getArtworkSourcesConfig();
+      res.json({ success: true, sources });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to get artwork sources.' });
+    }
+  });
+
+  // 17. Update Artwork Sources Configuration
+  router.post('/artwork-manager/sources', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { sources } = req.body;
+      if (!Array.isArray(sources)) {
+        res.status(400).json({ error: 'sources must be an array.' });
+        return;
+      }
+
+      saveArtworkSourcesConfig(sources);
+      const email = (req as any).ownerSession?.email || 'Owner';
+      logAdminAction(
+        'Update Artwork Sources Configuration',
+        email,
+        'success',
+        undefined,
+        `Updated configuration for ${sources.length} artwork sources.`
+      );
+
+      res.json({ success: true, message: 'Artwork sources configuration updated successfully.', sources });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update artwork sources.' });
+    }
+  });
+
+  // 18. Test Source Connectivity
+  router.post('/artwork-manager/sources/:id/test', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await testSourceConnectivity(id);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to test source connectivity.' });
     }
   });
 

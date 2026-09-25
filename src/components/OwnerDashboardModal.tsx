@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { getAccountAvatar } from '../utils/userStorage.ts';
 import { Anime } from '../types.ts';
+import { ArtworkManager } from './ArtworkManager.tsx';
 
 interface OwnerDashboardModalProps {
   isOpen: boolean;
@@ -124,6 +125,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
   // Load overview metrics, diagnostics, etc.
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
       if (initialTab) {
         setActiveTab(initialTab as AdminTab);
       } else {
@@ -137,7 +141,15 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       fetchUsers();
       fetchAuditLogs();
       setTestResult(null);
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [isOpen, initialTab]);
 
   const fetchAdminStats = async () => {
@@ -555,10 +567,15 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in overscroll-contain overflow-hidden touch-none"
       id="owner-dashboard-modal"
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
     >
-      <div className="relative w-full max-w-6xl bg-slate-950 border-2 border-amber-500/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] text-slate-100">
+      <div className="relative w-full max-w-6xl bg-slate-950 border-2 border-amber-500/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[95vh] sm:h-[90vh] text-slate-100 touch-auto">
         {/* Header (BLACK & GOLD) */}
         <div className="flex items-center justify-between border-b border-amber-500/30 p-5 shrink-0 bg-black">
           <div className="flex items-center gap-3">
@@ -635,7 +652,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
               }`}
             >
               <ImageIcon className="w-4 h-4" />
-              <span>Artwork Management</span>
+              <span>Artwork Manager</span>
             </button>
 
             <button
@@ -1384,161 +1401,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
             </div>
           )}
 
-          {/* 4. ARTWORK MANAGEMENT TAB */}
+          {/* 4. ARTWORK MANAGER (AUTOMATED INTEGRITY ENGINE) */}
           {activeTab === 'artwork' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-              {/* Left Panel: Filter & List (5 cols) */}
-              <div className="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col h-[55vh]">
-                <div className="space-y-3 shrink-0 mb-4">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      value={catSearchQuery}
-                      onChange={e => setCatSearchQuery(e.target.value)}
-                      placeholder="Search title for artwork..."
-                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div className="flex gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
-                    {(['all', 'verified', 'unverified', 'missing'] as const).map(f => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => setArtFilter(f)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black capitalize whitespace-nowrap flex-1 ${
-                          artFilter === f ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {filteredArtCatalogue.length > 0 ? (
-                    filteredArtCatalogue.map(anime => (
-                      <div
-                        key={anime.id}
-                        onClick={() => handleSelectArtEdit(anime)}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer text-xs flex justify-between items-center ${
-                          selectedArtAnime?.id === anime.id
-                            ? 'bg-amber-500/10 border-amber-500/60'
-                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="truncate pr-2">
-                          <p className="font-bold text-slate-200 truncate">{anime.title}</p>
-                          <p className="text-[10px] text-slate-400 truncate">{anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || 'No URL Poster'}</p>
-                        </div>
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 ${
-                          anime.artwork?.verifiedArtworkUrl && anime.artwork?.verificationStatus === 'verified'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : (anime.artwork?.originalArtworkUrl || anime.artwork?.verifiedArtworkUrl)
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        }`}>
-                          {anime.artwork?.verifiedArtworkUrl && anime.artwork?.verificationStatus === 'verified' ? 'Verified' : (anime.artwork?.originalArtworkUrl || anime.artwork?.verifiedArtworkUrl) ? 'Fallback' : 'Missing'}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-20 text-center text-slate-500 text-xs">No matching titles found.</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Panel: Artwork Editor (7 cols) */}
-              <div className="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col h-[55vh] overflow-y-auto">
-                {selectedArtAnime ? (
-                  <form onSubmit={handleSaveArtwork} className="space-y-4">
-                    <div className="border-b border-slate-800 pb-3">
-                      <span className="text-[10px] font-bold font-mono text-amber-400 uppercase">Artwork Configurer</span>
-                      <h4 className="text-sm font-black text-white mt-0.5">{selectedArtAnime.title}</h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Form Details */}
-                      <div className="space-y-3.5">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Verified Artwork Poster URL</label>
-                          <textarea
-                            value={artUrlInput}
-                            onChange={e => setArtUrlInput(e.target.value)}
-                            placeholder="Insert verified high-quality poster image URL..."
-                            className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg text-xs p-2 text-white focus:border-amber-500 h-24 resize-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Verification Status</label>
-                          <select
-                            value={artStatusInput}
-                            onChange={e => setArtStatusInput(e.target.value as 'verified' | 'unverified')}
-                            className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg text-xs p-2 text-white focus:border-amber-500"
-                          >
-                            <option value="verified">Verified Poster (Perfect Match)</option>
-                            <option value="unverified">Unverified/Fallback (Random/Provider)</option>
-                          </select>
-                        </div>
-
-                        <div className="text-[11px] text-slate-400 space-y-1">
-                          <p>⚠️ <strong className="text-slate-300">Rules for Artwork Integrity:</strong></p>
-                          <p>1. Only mark verified if you've physically checked the image.</p>
-                          <p>2. If trustworthy artwork cannot be found, clear the URL to fallback to safe missing state.</p>
-                          <p>3. Avoid generic, broken, or AI-generated image URLs.</p>
-                        </div>
-                      </div>
-
-                      {/* Poster Preview Frame */}
-                      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2 relative min-h-[220px]">
-                        <span className="text-[10px] font-bold font-mono text-slate-500 uppercase absolute top-2 left-2">Live Preview</span>
-                        {artUrlInput.trim() ? (
-                          <div className="w-32 aspect-[3/4] border border-slate-800 rounded-lg overflow-hidden shadow bg-slate-900 flex items-center justify-center">
-                            <img
-                              src={artUrlInput.trim()}
-                              alt="Poster Preview"
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLElement).style.display = 'none';
-                                alert('Failed to render poster image URL. Verify file link.');
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-32 aspect-[3/4] border border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-600 bg-slate-900/40">
-                            <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
-                            <span className="text-[10px] text-center px-2">Safe Missing Poster State</span>
-                          </div>
-                        )}
-                        <span className="text-[9px] text-slate-500 text-center max-w-[150px] truncate">{artUrlInput || 'No Poster Image Assigned'}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-800">
-                      <button
-                        type="submit"
-                        disabled={savingArtwork}
-                        className="w-full py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-amber-400"
-                      >
-                        {savingArtwork ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5" />
-                        )}
-                        <span>Save Artwork Configuration</span>
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-slate-500 text-center py-10">
-                    <ImageIcon className="w-8 h-8 opacity-40 mb-2" />
-                    <p className="text-xs">Select an anime from the list to view, assign, replace, or verify its artwork poster url.</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ArtworkManager />
           )}
 
           {/* 5. USER MANAGEMENT TAB */}

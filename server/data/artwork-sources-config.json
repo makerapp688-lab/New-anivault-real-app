@@ -1,0 +1,34 @@
+[
+  {
+    "id": "anilist",
+    "name": "AniList API",
+    "type": "graphql",
+    "endpoint": "https://graphql.anilist.co",
+    "enabled": true,
+    "rateLimitPerMinute": 90,
+    "rateLimitPerSecond": 2,
+    "timeoutMs": 8000,
+    "priority": 1,
+    "status": "operational",
+    "description": "AniList GraphQL API for verified cover artwork, romaji/english titles, synonyms, and metadata.",
+    "lastChecked": "2026-09-24T11:42:08.514Z",
+    "lastLatencyMs": 328,
+    "lastError": null
+  },
+  {
+    "id": "jikan",
+    "name": "Jikan API (MyAnimeList)",
+    "type": "rest",
+    "endpoint": "https://api.jikan.moe/v4",
+    "enabled": true,
+    "rateLimitPerMinute": 60,
+    "rateLimitPerSecond": 3,
+    "timeoutMs": 8000,
+    "priority": 2,
+    "status": "offline",
+    "description": "MyAnimeList open API gateway for cross-checking titles, MAL IDs, format, and high-res posters.",
+    "lastChecked": "2026-09-24T11:42:13.657Z",
+    "lastLatencyMs": 1222,
+    "lastError": "Jikan failed to connect to MyAnimeList. MyAnimeList may be down/unavailable or refuses to connect"
+  }
+]

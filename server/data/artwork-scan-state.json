@@ -1,0 +1,21 @@
+{
+  "status": "idle",
+  "totalCount": 856,
+  "processedCount": 0,
+  "currentIndex": 0,
+  "currentAnimeId": null,
+  "currentAnimeTitle": null,
+  "startedAt": null,
+  "updatedAt": "2026-09-24T11:43:16.314Z",
+  "finishedAt": null,
+  "stats": {
+    "scanned": 0,
+    "verified": 0,
+    "autoFixed": 0,
+    "needsReview": 0,
+    "unableToVerify": 0,
+    "possibleFake": 0,
+    "failed": 0
+  },
+  "lastLog": "Ready to start verification."
+}

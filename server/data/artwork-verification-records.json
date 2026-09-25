@@ -1,0 +1,145 @@
+{
+  "test-naruto": {
+    "animeId": "test-naruto",
+    "animeTitle": "Naruto",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-24T11:39:09.005Z",
+    "aniListMatch": {
+      "id": 20,
+      "title": "Naruto",
+      "englishTitle": "Naruto",
+      "romajiTitle": "NARUTO",
+      "year": 2002,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+      "score": 1
+    },
+    "jikanMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 20,
+        "title": "Naruto",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV",
+        "year": 2002
+      },
+      {
+        "source": "anilist",
+        "sourceId": 10075,
+        "title": "NARUTO×UT",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/10075.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.75,
+        "format": "OVA",
+        "year": 2011
+      },
+      {
+        "source": "anilist",
+        "sourceId": 162561,
+        "title": "NARUTO (2026)",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx162561-Uk4eZAwcmcWk.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.75,
+        "format": "TV",
+        "year": null
+      }
+    ],
+    "issue": "Artwork automatically fixed using verified high-resolution asset from anilist.",
+    "evidence": [
+      "High confidence match established via AniList (100%).",
+      "Previous artwork was missing or unverified. Replaced with anilist verified poster."
+    ]
+  },
+  "fake-test-01": {
+    "animeId": "fake-test-01",
+    "animeTitle": "Xyzzqwk Nonexistent Mystery Movie 99999",
+    "status": "needs_review",
+    "confidence": 0,
+    "currentArtworkUrl": "https://example.com/broken.jpg",
+    "replacedArtworkUrl": null,
+    "source": "provider",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-24T11:39:14.481Z",
+    "aniListMatch": null,
+    "jikanMatch": null,
+    "candidates": [],
+    "issue": "Uncertain or conflicting match (Confidence: 0%). Manual review recommended.",
+    "evidence": [
+      "AniList score: 0%. Jikan score: 0%."
+    ]
+  },
+  "fake-test-02": {
+    "animeId": "fake-test-02",
+    "animeTitle": "Zzzzzqqq Unknown Nonexistent Phantom Series 987654",
+    "status": "possible_fake",
+    "confidence": 0,
+    "currentArtworkUrl": "https://example.com/broken.jpg",
+    "replacedArtworkUrl": null,
+    "source": "provider",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-24T11:39:23.524Z",
+    "aniListMatch": null,
+    "jikanMatch": null,
+    "candidates": [],
+    "issue": "Strong evidence of missing or unverifiable anime identity across all trusted sources.",
+    "evidence": [
+      "Queried titles: \"Zzzzzqqq Unknown Nonexistent Phantom Series 987654\". Zero database matches found on AniList and Jikan.",
+      "Source provider: RareToon India (https://raretoonsindia.rtx/fake-dead-link)"
+    ]
+  },
+  "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake": {
+    "animeId": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
+    "animeTitle": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
+    "status": "verified",
+    "confidence": 0.9552238805970149,
+    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Doraemon-Nobitas-Little-Star-Wars-hindi.webp",
+    "replacedArtworkUrl": null,
+    "source": "anilist",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-24T11:42:42.617Z",
+    "aniListMatch": {
+      "id": 2669,
+      "title": "Doraemon: Nobita's Little Star Wars",
+      "englishTitle": "Doraemon: Nobita's Little Star Wars",
+      "romajiTitle": "Doraemon: Nobita no Little Star Wars",
+      "year": 1985,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
+      "score": 0.9552238805970149
+    },
+    "jikanMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 2669,
+        "title": "Doraemon: Nobita's Little Star Wars",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.9552238805970149,
+        "format": "MOVIE",
+        "year": 1985
+      },
+      {
+        "source": "anilist",
+        "sourceId": 126783,
+        "title": "Doraemon: Nobita no Little Star Wars 2021",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx126783-sgkzDqBL7Gb0.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8888888888888888,
+        "format": "MOVIE",
+        "year": 2022
+      }
+    ],
+    "issue": "Artwork and anime identity successfully verified against trusted databases.",
+    "evidence": [
+      "High confidence match established via AniList (96%).",
+      "Current artwork verified usable and matches verified database entry."
+    ]
+  }
+}

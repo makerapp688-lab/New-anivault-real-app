@@ -293,7 +293,7 @@ export async function runIngestion(): Promise<IngestionReport> {
   
   console.log(`[RareToon Ingest] ${rawItems.length} candidate URLs found. ${itemsNeedingEnrichment.length} need metadata enrichment.`);
 
-  const CONCURRENCY = 15;
+  const CONCURRENCY = 5;
   let cursor = 0;
 
   async function enrichWorker() {

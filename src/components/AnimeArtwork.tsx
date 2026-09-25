@@ -58,12 +58,24 @@ export const AnimeArtwork: React.FC<AnimeArtworkProps> = ({
   }
 
   return (
-    <div className={`relative w-full ${normalizedAspect} overflow-hidden rounded-xl bg-slate-950 border border-slate-800/80 ${className}`}>
+    <div className={`relative w-full ${normalizedAspect} overflow-hidden rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-center ${className}`}>
+      {/* Ambient Blurred Background matching poster palette */}
+      <img
+        src={effectiveUrl}
+        alt=""
+        aria-hidden="true"
+        referrerPolicy="no-referrer"
+        className="absolute inset-0 w-full h-full object-cover opacity-25 blur-md scale-110 pointer-events-none select-none"
+      />
+
+      {/* Loading Spinner */}
       {isLoading && (
         <div className="absolute inset-0 bg-slate-900/80 animate-pulse flex items-center justify-center z-10">
           <Film className="w-6 h-6 text-rose-500/50 animate-spin" />
         </div>
       )}
+
+      {/* Complete Uncropped Foreground Artwork */}
       <img
         src={effectiveUrl}
         alt={displayTitle}
@@ -74,7 +86,7 @@ export const AnimeArtwork: React.FC<AnimeArtworkProps> = ({
           setIsLoading(false);
           setHasError(true);
         }}
-        className={`w-full h-full object-cover transition-all duration-300 ${
+        className={`relative z-10 max-w-full max-h-full object-contain drop-shadow-md transition-all duration-300 ${
           isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}
       />

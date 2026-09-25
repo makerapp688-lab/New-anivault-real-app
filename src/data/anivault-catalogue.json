@@ -76109,5 +76109,17 @@
       "Hindi",
       "Japanese"
     ]
+  },
+  {
+    "id": "anime-doraemon-test",
+    "title": "Doraemon Test",
+    "artwork": {
+      "verifiedArtworkUrl": "https://new-verified-artwork.com/img.jpg",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "originalArtworkUrl": "https://old-artwork.com/img.jpg"
+    }
   }
 ]

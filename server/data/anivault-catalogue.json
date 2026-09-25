@@ -17,7 +17,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Doraemon-Nobitas-Little-Star-Wars-hindi.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
