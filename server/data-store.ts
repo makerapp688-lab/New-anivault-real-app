@@ -160,12 +160,14 @@ class AuthoritativeDataStore {
     newStatus: string,
     previousUrl: string | null,
     source: string,
-    seasonNumber?: number
+    seasonNumber?: number,
+    reason?: string,
+    replacedBy?: string
   ): boolean {
     const anime = this.catalogueMap.get(animeId);
     if (!anime) return false;
 
-    const prev = anime.artwork?.verifiedArtworkUrl || previousUrl || null;
+    const prev = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || previousUrl || 'placeholder://anivex-key-visual';
 
     anime.artwork = {
       ...(anime.artwork || {}),
@@ -174,7 +176,7 @@ class AuthoritativeDataStore {
       verificationStatus: newStatus,
       verificationSource: source,
       aspectRatio: '3:4',
-      originalArtworkUrl: prev || anime.artwork?.originalArtworkUrl
+      originalArtworkUrl: anime.artwork?.originalArtworkUrl || prev
     };
 
     if (seasonNumber && Array.isArray(anime.seasons)) {
@@ -186,8 +188,8 @@ class AuthoritativeDataStore {
     this.totalDbWrites++;
     this.scheduleCatalogueFlush();
 
-    // Add History Entry
-    if (prev && prev !== newUrl) {
+    // Add History Entry whenever artwork changes
+    if (prev !== newUrl) {
       this.addHistoryEntry({
         id: `HIST-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
         animeId,
@@ -195,9 +197,9 @@ class AuthoritativeDataStore {
         previousArtworkUrl: prev,
         newArtworkUrl: newUrl,
         replacedAt: new Date().toISOString(),
-        replacedBy: 'auto_verifier',
+        replacedBy: replacedBy || 'auto_verifier',
         source,
-        reason: 'Automated 50-worker verification replacement',
+        reason: reason || (seasonNumber ? `Season ${seasonNumber} verified artwork update from ${source}` : `Validated replacement artwork from ${source}`),
         seasonNumber
       });
     }

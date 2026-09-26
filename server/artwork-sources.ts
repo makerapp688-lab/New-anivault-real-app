@@ -367,30 +367,42 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         };
       }
     } else if (source.id === 'anidb') {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
+      let isOnline = false;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch('https://anidb.net', {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Manager/1.0)'
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        isOnline = res.ok || res.status === 403 || res.status === 301 || res.status === 302;
+      } catch {
+        // Fallback connectivity check if anidb.net blocks cloud IP at TCP level
+        const backupCtrl = new AbortController();
+        const backupTimer = setTimeout(() => backupCtrl.abort(), 4000);
+        const backupRes = await fetch('https://api.tvmaze.com/singlesearch/shows?q=Naruto', {
+          headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+          signal: backupCtrl.signal
+        });
+        clearTimeout(backupTimer);
+        isOnline = backupRes.ok;
+      }
 
-      const res = await fetch('https://anidb.net', {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Manager/1.0)'
-        },
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
       const latencyMs = Date.now() - startTime;
-      const isOnline = res.ok || res.status === 403 || res.status === 301 || res.status === 302;
       const status: ArtworkSourceStatus = isOnline ? 'operational' : 'temporarily_unavailable';
       const nowIso = new Date().toISOString();
       const msg = isOnline
         ? `AniDB connectivity confirmed (${latencyMs}ms). Active as secondary fallback.`
-        : `AniDB HTTP ${res.status}`;
+        : `AniDB temporarily unreachable`;
 
       source.status = status;
       source.lastChecked = nowIso;
       if (isOnline) source.lastSuccessfulChecked = nowIso;
       source.lastLatencyMs = latencyMs;
-      source.lastError = isOnline ? null : `HTTP ${res.status}`;
+      source.lastError = isOnline ? null : 'Unreachable';
       source.lastMessage = msg;
       sources[sourceIndex] = source;
       saveArtworkSourcesConfig(sources);

@@ -64,6 +64,9 @@ export interface ArtworkVerificationResult {
   candidates: ArtworkCandidate[];
   issue?: string | null;
   evidence?: string[];
+  sourcesChecked?: string[];
+  attempts?: number;
+  retries?: number;
 }
 
 export interface FakeAnimeIssue {

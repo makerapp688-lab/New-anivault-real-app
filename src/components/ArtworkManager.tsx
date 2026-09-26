@@ -31,6 +31,19 @@ import {
   Globe
 } from 'lucide-react';
 
+function getOwnerToken(): string {
+  try {
+    return localStorage.getItem('anivault_owner_session_token') || '';
+  } catch {
+    return '';
+  }
+}
+
+function getOwnerAuthHeaders(): Record<string, string> {
+  const token = getOwnerToken();
+  return token ? { Authorization: `Bearer ${token}`, 'X-Owner-Session': token } : {};
+}
+
 interface ArtworkManagerProps {
   onClose?: () => void;
 }
@@ -48,6 +61,7 @@ interface WorkerCompletedTask {
 interface WorkerInfo {
   workerId: number;
   status: 'idle' | 'claiming' | 'working' | 'retrying' | 'waiting' | 'paused' | 'error' | 'stopped' | 'busy' | 'backing_off';
+  waitReason?: 'No task' | 'Rate limited' | 'Waiting for source' | 'DB busy' | 'Retry backoff' | null;
   currentTaskId?: string | null;
   currentAnimeId?: string | null;
   currentAnimeTitle?: string | null;
@@ -152,6 +166,7 @@ interface ScanState {
     waiting: number;
     retrying: number;
     utilizationPercent: number;
+    waitingByReason?: Record<string, number>;
   };
   databasePerformance?: {
     totalReads: number;
@@ -326,8 +341,9 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     mode: 'all' | 'unverified' | 'fix_missing';
     totalAvailable: number;
   } | null>(null);
-  const [selectedBatchOption, setSelectedBatchOption] = useState<number | 'all'>(300);
-  const [customBatchInput, setCustomBatchInput] = useState<string>('300');
+  const [selectedBatchOption, setSelectedBatchOption] = useState<number | 'all'>('all');
+  const [customBatchInput, setCustomBatchInput] = useState<string>('856');
+  const [statusBanner, setStatusBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Worker Detail Modal & Activity Event Filters
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
@@ -341,7 +357,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/pool-config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ currentWorkers: newCount }),
         credentials: 'include'
       });
@@ -349,11 +365,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       if (data.success) {
         if (data.scanState) updateScanStateSafely(data.scanState);
         await fetchDashboard();
+        setStatusBanner({ type: 'success', text: data.message || `Updated active worker pool to ${newCount}.` });
       } else {
-        alert(data.error || 'Failed to update worker pool count.');
+        setStatusBanner({ type: 'error', text: data.error || 'Failed to update worker pool count.' });
       }
     } catch (err: any) {
-      alert(`Error updating pool config: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error updating pool config: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -448,9 +465,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   }, [isModalOpen]);
 
   // Fetch dashboard summary
-  const fetchDashboard = async (autoReconnectView = false) => {
+  const fetchDashboard = async (autoReconnectView = false): Promise<any> => {
     try {
-      const res = await fetch('/api/owner/artwork-manager/dashboard', { credentials: 'include' });
+      const res = await fetch('/api/owner/artwork-manager/dashboard', {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setDashboardData(data);
@@ -468,12 +488,14 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         if (autoReconnectView && data.scanState?.status === 'running') {
           setSubTab('workers');
         }
+        return data;
       }
     } catch (err) {
-      console.warn('Could not load artwork manager dashboard:', err);
+      console.error('Failed to load artwork manager dashboard:', err);
     } finally {
       setLoadingDashboard(false);
     }
+    return null;
   };
 
   // Fetch anime list for registry
@@ -486,7 +508,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       if (currentStatus !== 'all') params.set('status', currentStatus);
       if (query.trim()) params.set('search', query.trim());
 
-      const res = await fetch(`/api/owner/artwork-manager/anime?${params.toString()}`, { credentials: 'include' });
+      const res = await fetch(`/api/owner/artwork-manager/anime?${params.toString()}`, {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setAnimeList(data.anime || []);
@@ -495,7 +520,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setPage(data.page || 1);
       }
     } catch (err) {
-      console.warn('Could not load anime registry:', err);
+      console.error('Failed to load anime registry:', err);
     } finally {
       setListLoading(false);
     }
@@ -504,53 +529,65 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   // Fetch fake issues
   const fetchFakeIssues = async () => {
     try {
-      const res = await fetch('/api/owner/artwork-manager/fake-issues', { credentials: 'include' });
+      const res = await fetch('/api/owner/artwork-manager/fake-issues', {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setFakeIssues(data.issues || []);
       }
     } catch (err) {
-      console.warn('Could not load fake issues:', err);
+      console.error('Failed to load fake issues:', err);
     }
   };
 
   // Fetch history
   const fetchHistory = async () => {
     try {
-      const res = await fetch('/api/owner/artwork-manager/history', { credentials: 'include' });
+      const res = await fetch('/api/owner/artwork-manager/history', {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setHistoryList(data.history || []);
       }
     } catch (err) {
-      console.warn('Could not load history:', err);
+      console.error('Failed to load history:', err);
     }
   };
 
   // Fetch sources
   const fetchSources = async () => {
     try {
-      const res = await fetch('/api/owner/artwork-manager/sources', { credentials: 'include' });
+      const res = await fetch('/api/owner/artwork-manager/sources', {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setSourcesList(data.sources || []);
       }
     } catch (err) {
-      console.warn('Could not load sources:', err);
+      console.error('Failed to load sources:', err);
     }
   };
 
   // Fetch Watch Order Sources & Records (Separate from Artwork Verification)
   const fetchWatchOrderData = async () => {
     try {
-      const res = await fetch('/api/owner/artwork-manager/watch-order/sources', { credentials: 'include' });
+      const res = await fetch('/api/owner/artwork-manager/watch-order/sources', {
+        headers: getOwnerAuthHeaders(),
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.sources)) setWatchOrderSources(data.sources);
         if (Array.isArray(data.records)) setWatchOrderRecords(data.records);
       }
     } catch (err) {
-      console.warn('Could not load watch order sources:', err);
+      console.error('Failed to load watch order sources:', err);
     }
   };
 
@@ -559,6 +596,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch(`/api/owner/artwork-manager/watch-order/sources/${sourceId}/test`, {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
@@ -587,7 +625,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         : { query: queryOrQueries };
       const res = await fetch('/api/owner/artwork-manager/watch-order/resolve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify(payload),
         credentials: 'include'
       });
@@ -626,7 +664,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/watch-order/validate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ franchiseKey, sourceChoice }),
         credentials: 'include'
       });
@@ -664,7 +702,11 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
     let es: EventSource | null = null;
     try {
-      es = new EventSource('/api/owner/artwork-manager/stream', { withCredentials: true });
+      const token = getOwnerToken();
+      const streamUrl = token
+        ? `/api/owner/artwork-manager/stream?token=${encodeURIComponent(token)}`
+        : '/api/owner/artwork-manager/stream';
+      es = new EventSource(streamUrl, { withCredentials: true });
       es.onmessage = (event) => {
         try {
           const parsed = JSON.parse(event.data);
@@ -687,7 +729,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     if (shouldPoll) {
       pollingRef.current = setInterval(async () => {
         try {
-          const res = await fetch('/api/owner/artwork-manager/status', { credentials: 'include' });
+          const res = await fetch('/api/owner/artwork-manager/status', {
+            headers: getOwnerAuthHeaders(),
+            credentials: 'include'
+          });
           if (res.ok) {
             const data = await res.json();
             const liveState = data.state || data.job;
@@ -732,6 +777,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/inspect-all', {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
@@ -740,10 +786,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setShowInspectModal(true);
         fetchDashboard();
       } else {
-        alert(data.error || 'Failed to inspect catalogue.');
+        setStatusBanner({ type: 'error', text: data.error || 'Failed to inspect catalogue.' });
       }
     } catch (err: any) {
-      alert(`Error inspecting catalogue: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error inspecting catalogue: ${err.message}` });
     } finally {
       setInspectingAll(false);
     }
@@ -755,10 +801,11 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     limit?: number
   ) => {
     setActionLoading(true);
+    setStatusBanner(null);
     try {
       const res = await fetch('/api/owner/artwork-manager/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ mode, limit }),
         credentials: 'include'
       });
@@ -772,59 +819,76 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setShowInspectModal(false);
         // Immediately open the live verification / progress monitoring screen
         setSubTab('workers');
+        setStatusBanner({ type: 'success', text: data.message || `Started ${mode} verification job.` });
         fetchDashboard();
       } else {
-        alert(data.message || 'Failed to start verification.');
+        setStatusBanner({ type: 'error', text: data.message || data.error || 'Failed to start verification.' });
       }
     } catch (err: any) {
-      alert(`Error starting verification: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error starting verification: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const openUnverifiedBatchModal = () => {
-    const unverifiedTotal = Math.max(0, stats.total - stats.verified);
+  const openUnverifiedBatchModal = async () => {
+    let latestStats = dashboardData?.stats || scanState?.globalStats;
+    if (!latestStats || !latestStats.total) {
+      const fresh = await fetchDashboard();
+      latestStats = fresh?.stats || fresh?.scanState?.globalStats;
+    }
+    const unverifiedTotal = latestStats?.unverified ?? Math.max(0, (latestStats?.total || 856) - (latestStats?.verified || 0));
     setBatchModalConfig({
       open: true,
       mode: 'unverified',
       totalAvailable: unverifiedTotal
     });
-    setSelectedBatchOption(unverifiedTotal > 300 ? 300 : 'all');
-    setCustomBatchInput(String(unverifiedTotal > 300 ? 300 : unverifiedTotal));
+    setSelectedBatchOption('all');
+    setCustomBatchInput(String(unverifiedTotal));
   };
 
-  const openFixMissingBatchModal = () => {
-    const missingTotal = stats.missing || 0;
+  const openFixMissingBatchModal = async () => {
+    let latestStats = dashboardData?.stats || scanState?.globalStats;
+    if (!latestStats || !latestStats.total) {
+      const fresh = await fetchDashboard();
+      latestStats = fresh?.stats || fresh?.scanState?.globalStats;
+    }
+    const missingTotal = latestStats?.missing ?? 0;
     setBatchModalConfig({
       open: true,
       mode: 'fix_missing',
       totalAvailable: missingTotal
     });
-    setSelectedBatchOption(missingTotal > 300 ? 300 : 'all');
-    setCustomBatchInput(String(missingTotal > 300 ? 300 : missingTotal));
+    setSelectedBatchOption('all');
+    setCustomBatchInput(String(missingTotal));
   };
 
-  const openVerifyAllBatchModal = () => {
-    const totalCount = stats.total || 0;
+  const openVerifyAllBatchModal = async () => {
+    let latestStats = dashboardData?.stats || scanState?.globalStats;
+    if (!latestStats || !latestStats.total) {
+      const fresh = await fetchDashboard();
+      latestStats = fresh?.stats || fresh?.scanState?.globalStats;
+    }
+    const totalCount = latestStats?.total || 856;
     setBatchModalConfig({
       open: true,
       mode: 'all',
       totalAvailable: totalCount
     });
-    setSelectedBatchOption(totalCount > 300 ? 300 : 'all');
-    setCustomBatchInput(String(totalCount > 300 ? 300 : totalCount));
+    setSelectedBatchOption('all');
+    setCustomBatchInput(String(totalCount));
   };
 
   // Needs Review Workspace Handlers
   const handleBulkAction = async (endpoint: string, animeIds: string[]) => {
     if (!animeIds.length) return;
     setActionLoading(true);
+    setStatusBanner(null);
     setProcessingItemIds(prev => Array.from(new Set([...prev, ...animeIds])));
     try {
       const res = await fetch(`/api/owner/artwork-manager/needs-review/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ animeIds }),
         credentials: 'include'
       });
@@ -832,13 +896,14 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       if (data.success) {
         setSelectedReviewIds(prev => prev.filter(id => !animeIds.includes(id)));
         if (data.scanState) updateScanStateSafely(data.scanState);
+        setStatusBanner({ type: 'success', text: data.message || `Completed ${endpoint} on ${animeIds.length} item(s).` });
         await fetchDashboard();
         await fetchAnimeList(page, statusFilter, searchQuery);
       } else {
-        alert(data.error || 'Operation failed.');
+        setStatusBanner({ type: 'error', text: data.error || 'Operation failed.' });
       }
     } catch (err: any) {
-      alert(`Error executing workspace action: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error executing workspace action: ${err.message}` });
     } finally {
       setActionLoading(false);
       setProcessingItemIds(prev => prev.filter(id => !animeIds.includes(id)));
@@ -847,10 +912,11 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
   const handleChooseReplacementCandidate = async (animeId: string, selectedCandidateUrl: string, source: string) => {
     setActionLoading(true);
+    setStatusBanner(null);
     try {
       const res = await fetch('/api/owner/artwork-manager/needs-review/choose-replacement', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ animeId, selectedCandidateUrl, source }),
         credentials: 'include'
       });
@@ -858,13 +924,14 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       if (data.success) {
         setChosenReplacementModal(null);
         if (data.scanState) updateScanStateSafely(data.scanState);
+        setStatusBanner({ type: 'success', text: data.message || 'Replacement artwork validated and saved.' });
         fetchDashboard();
         fetchAnimeList(page, statusFilter, searchQuery);
       } else {
-        alert(data.error || 'Failed to choose replacement.');
+        setStatusBanner({ type: 'error', text: data.error || 'Failed to choose replacement.' });
       }
     } catch (err: any) {
-      alert(`Error choosing replacement: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error choosing replacement: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -872,22 +939,24 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
   const handleRetryAllNeedsReview = async () => {
     setActionLoading(true);
+    setStatusBanner(null);
     try {
       const res = await fetch('/api/owner/artwork-manager/needs-review/retry-all', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
         if (data.scanState) updateScanStateSafely(data.scanState);
+        setStatusBanner({ type: 'success', text: data.message || 'Queued unresolved items for retry.' });
         await fetchDashboard();
         await fetchAnimeList(page, statusFilter, searchQuery);
       } else {
-        alert(data.message || 'No unresolved items found to retry.');
+        setStatusBanner({ type: 'error', text: data.message || 'No unresolved items found to retry.' });
       }
     } catch (err: any) {
-      alert(`Error retrying all items: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error retrying all items: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -895,22 +964,24 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
   const handleSearchAllNeedsReview = async () => {
     setActionLoading(true);
+    setStatusBanner(null);
     try {
       const res = await fetch('/api/owner/artwork-manager/needs-review/search-all', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
         if (data.scanState) updateScanStateSafely(data.scanState);
+        setStatusBanner({ type: 'success', text: data.message || 'Queued unresolved items for fresh search.' });
         await fetchDashboard();
         await fetchAnimeList(page, statusFilter, searchQuery);
       } else {
-        alert(data.message || 'No unresolved items found for source search.');
+        setStatusBanner({ type: 'error', text: data.message || 'No unresolved items found for source search.' });
       }
     } catch (err: any) {
-      alert(`Error searching all items: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error searching all items: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -936,6 +1007,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/pause', {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
@@ -944,7 +1016,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         fetchDashboard();
       }
     } catch (err: any) {
-      alert(`Error pausing scan: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error pausing scan: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -955,6 +1027,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/resume', {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
@@ -963,10 +1036,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setSubTab('workers');
         fetchDashboard();
       } else {
-        alert(data.message || 'Failed to resume.');
+        setStatusBanner({ type: 'error', text: data.message || 'Failed to resume.' });
       }
     } catch (err: any) {
-      alert(`Error resuming scan: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error resuming scan: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -977,33 +1050,35 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch('/api/owner/artwork-manager/stop', {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.state || data.job) updateScanStateSafely(data.state || data.job);
       fetchDashboard();
     } catch (err: any) {
-      alert(`Error stopping scan: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error stopping scan: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleResetScan = async () => {
-    if (!window.confirm('Reset artwork verification progress back to 0?')) return;
     setActionLoading(true);
     try {
       const res = await fetch('/api/owner/artwork-manager/reset', {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
         if (data.state || data.job) updateScanStateSafely(data.state || data.job);
         fetchDashboard();
+        setStatusBanner({ type: 'success', text: 'Job state reset.' });
       }
     } catch (err: any) {
-      alert(`Error resetting scan: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error resetting scan: ${err.message}` });
     } finally {
       setActionLoading(false);
     }
@@ -1015,10 +1090,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch(`/api/owner/artwork-manager/verify-single/${animeId}`, {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
         // Refresh item in inspector
         fetchAnimeList();
         fetchDashboard();
@@ -1035,11 +1112,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             jikanMatch: data.result.jikanMatch
           });
         }
+        setStatusBanner({ type: 'success', text: `Re-verified "${data.result?.animeTitle || animeId}" (${data.result?.status}).` });
       } else {
-        alert(data.error || 'Failed to verify single anime.');
+        setStatusBanner({ type: 'error', text: data.error || 'Failed to verify single anime.' });
       }
     } catch (err: any) {
-      alert(`Error verifying: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error verifying: ${err.message}` });
     } finally {
       setSingleVerifying(false);
     }
@@ -1049,12 +1127,13 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch(`/api/owner/artwork-manager/anime/${animeId}/apply-candidate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ candidateUrl, source }),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
         fetchAnimeList();
         fetchDashboard();
         fetchHistory();
@@ -1066,24 +1145,25 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             issue: null
           });
         }
-        alert('Candidate artwork applied and marked verified.');
+        setStatusBanner({ type: 'success', text: 'Candidate artwork applied and marked verified.' });
       } else {
-        alert(data.error || 'Failed to apply candidate.');
+        setStatusBanner({ type: 'error', text: data.error || 'Failed to apply candidate.' });
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error: ${err.message}` });
     }
   };
 
   const handleRevertArtwork = async (animeId: string) => {
-    if (!window.confirm('Revert artwork to previous backup?')) return;
     try {
       const res = await fetch(`/api/owner/artwork-manager/anime/${animeId}/revert`, {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
         fetchAnimeList();
         fetchDashboard();
         fetchHistory();
@@ -1095,12 +1175,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             issue: 'Manually reverted to backup.'
           });
         }
-        alert('Artwork reverted successfully.');
+        setStatusBanner({ type: 'success', text: 'Artwork reverted successfully.' });
       } else {
-        alert(data.message || data.error || 'Failed to revert.');
+        setStatusBanner({ type: 'error', text: data.message || data.error || 'Failed to revert.' });
       }
     } catch (err: any) {
-      alert(`Error reverting: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error reverting: ${err.message}` });
     }
   };
 
@@ -1108,18 +1188,20 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch(`/api/owner/artwork-manager/fake-issues/${issueId}/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getOwnerAuthHeaders() },
         body: JSON.stringify({ action }),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
+        if (data.scanState) updateScanStateSafely(data.scanState);
         fetchFakeIssues();
         fetchDashboard();
         fetchAnimeList();
+        setStatusBanner({ type: 'success', text: data.message || `Issue resolved (${action}).` });
       }
     } catch (err: any) {
-      alert(`Error resolving fake issue: ${err.message}`);
+      setStatusBanner({ type: 'error', text: `Error resolving fake issue: ${err.message}` });
     }
   };
 
@@ -1128,6 +1210,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     try {
       const res = await fetch(`/api/owner/artwork-manager/sources/${sourceId}/test`, {
         method: 'POST',
+        headers: getOwnerAuthHeaders(),
         credentials: 'include'
       });
       const data = await res.json();
@@ -1162,6 +1245,24 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   return (
     <div className="space-y-5 sm:space-y-6 animate-fade-in text-slate-100 max-w-full overflow-x-hidden">
       {/* 1. TOP HEADER & PRIMARY ACTION BAR */}
+      {statusBanner && (
+        <div
+          className={`p-3.5 rounded-xl border text-xs font-bold flex items-center justify-between gap-3 ${
+            statusBanner.type === 'success'
+              ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
+              : 'bg-rose-950/50 border-rose-500/40 text-rose-300'
+          }`}
+        >
+          <span>{statusBanner.text}</span>
+          <button
+            type="button"
+            onClick={() => setStatusBanner(null)}
+            className="p-1 rounded-lg hover:bg-slate-800/60 text-slate-300 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5">
           <div className="space-y-1.5 max-w-2xl min-w-0">
@@ -1983,8 +2084,17 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                               <p className="text-[11px] font-sans break-words">{anime.issue || 'Requires review before catalog verification.'}</p>
                             </div>
 
-                            {/* Sources Checked Badges */}
+                            {/* Sources Checked, Attempts, Retries, Confidence & Last Checked Badges */}
                             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                                Confidence: <strong className="text-amber-300">{anime.confidence ?? 0}%</strong>
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                                Sources Checked: <strong className="text-cyan-300">{Array.isArray((anime as any).sourcesChecked) && (anime as any).sourcesChecked.length > 0 ? (anime as any).sourcesChecked.join(', ') : 'AniList, TVmaze, TheTVDB'}</strong>
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                                Attempts: <strong className="text-white">{(anime as any).attempts ?? 1}</strong> • Retries: <strong className="text-white">{(anime as any).retries ?? 0}</strong>
+                              </span>
                               {anime.aniListMatch && (
                                 <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
                                   AniList Match: <strong className="text-emerald-400">{Math.round(anime.aniListMatch.score * 100)}%</strong>
@@ -1996,7 +2106,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                                 </span>
                               )}
                               <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono">
-                                Last Checked: {anime.lastVerifiedAt ? new Date(anime.lastVerifiedAt).toLocaleString() : 'Recent'}
+                                Last Checked: {anime.lastVerifiedAt ? new Date(anime.lastVerifiedAt).toLocaleString() : 'Pending'}
                               </span>
                             </div>
                           </div>
@@ -2344,7 +2454,11 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                               )}
                             </div>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-cyan-300 shrink-0 self-start sm:self-center">
-                              {w.status.toUpperCase()}
+                              {w.status === 'waiting' && w.waitReason
+                                ? `WAITING • ${w.waitReason}`
+                                : w.status === 'retrying' && w.waitReason
+                                ? `RETRYING • ${w.waitReason}`
+                                : w.status.toUpperCase()}
                             </span>
                           </div>
                         ))}
@@ -2415,7 +2529,21 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                   <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl">
                     <div className="text-[10px] font-bold text-cyan-400 uppercase">Waiting</div>
                     <div className="text-lg font-black text-cyan-400 font-mono">{waitingCount}</div>
-                    <div className="text-[9px] text-slate-500">Rate limiter slot</div>
+                    <div className="text-[9px] text-slate-400 truncate" title={
+                      waitingCount > 0
+                        ? Object.entries(scanState?.workerUtilization?.waitingByReason || {})
+                            .filter(([, cnt]) => cnt > 0)
+                            .map(([r, cnt]) => `${r}: ${cnt}`)
+                            .join(' • ') || 'Waiting for source'
+                        : '0 waiting (All active/idle)'
+                    }>
+                      {waitingCount > 0
+                        ? Object.entries(scanState?.workerUtilization?.waitingByReason || {})
+                            .filter(([, cnt]) => cnt > 0)
+                            .map(([r, cnt]) => `${r} (${cnt})`)
+                            .join(' • ') || 'Waiting for source'
+                        : '0 waiting (All clear)'}
+                    </div>
                   </div>
 
                   <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
@@ -2550,8 +2678,18 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Singleflight Cache</span>
                     <p className="text-base font-black text-amber-400 font-mono flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                      <span>{scanState?.sourceGatewayMetrics?.anilist?.cacheHits || 0} Hits</span>
-                      <span className="text-[10px] font-normal text-slate-400">({scanState?.sourceGatewayMetrics?.anilist?.deduplicatedRequests || 0} deduped)</span>
+                      <span>
+                        {Object.values(scanState?.sourceGatewayMetrics || {}).reduce(
+                          (acc: number, m: any) => acc + (m?.cacheHits || 0),
+                          0
+                        )} Hits
+                      </span>
+                      <span className="text-[10px] font-normal text-slate-400">
+                        ({Object.values(scanState?.sourceGatewayMetrics || {}).reduce(
+                          (acc: number, m: any) => acc + (m?.deduplicatedRequests || 0),
+                          0
+                        )} deduped)
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -2667,7 +2805,13 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               isWorking ? 'bg-emerald-400 animate-ping' : isWaiting ? 'bg-cyan-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
                             }`} />
-                            <span>{normalizedStatus}</span>
+                            <span>
+                              {isWaiting && worker.waitReason
+                                ? `WAITING: ${worker.waitReason}`
+                                : isRetrying && worker.waitReason
+                                ? `RETRYING: ${worker.waitReason}`
+                                : normalizedStatus}
+                            </span>
                           </span>
                         </div>
 
@@ -2714,9 +2858,16 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                           </div>
 
                           <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
-                            <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Step</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Step</span>
+                              {(isWaiting || isRetrying || worker.waitReason) && (
+                                <span className="px-1.5 py-0.5 rounded bg-cyan-950/90 border border-cyan-500/40 text-cyan-300 text-[9px] font-mono font-bold">
+                                  Reason: {worker.waitReason || (isRetrying ? 'Retry backoff' : 'Waiting for source')}
+                                </span>
+                              )}
+                            </div>
                             <span className="text-slate-200 text-[11px] block break-words">
-                              {worker.currentStep || (hasActiveTask ? 'Executing verification pipeline...' : 'Idle — awaiting queued task')}
+                              {worker.currentStep || (hasActiveTask ? 'Executing verification pipeline...' : 'Idle — No task')}
                             </span>
                           </div>
 
@@ -2956,7 +3107,11 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                           isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
                         }`} />
                         <span className="font-black text-sm text-white uppercase tracking-wider">
-                          Status: {(worker.currentTaskId && worker.status === 'idle') ? 'WORKING' : worker.status.toUpperCase()}
+                          Status: {(worker.currentTaskId && worker.status === 'idle')
+                            ? 'WORKING'
+                            : worker.status === 'waiting' && worker.waitReason
+                            ? `WAITING (${worker.waitReason})`
+                            : worker.status.toUpperCase()}
                         </span>
                       </div>
                       <span className="text-xs font-mono text-slate-400">
@@ -4541,9 +4696,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
               <button
                 type="button"
                 onClick={() => {
+                  const parsedCustom = parseInt(customBatchInput, 10);
                   const limit = selectedBatchOption === 'all'
                     ? undefined
-                    : (parseInt(customBatchInput, 10) || (typeof selectedBatchOption === 'number' ? selectedBatchOption : undefined));
+                    : (!isNaN(parsedCustom) && parsedCustom > 0
+                        ? parsedCustom
+                        : (typeof selectedBatchOption === 'number' && selectedBatchOption > 0 ? selectedBatchOption : undefined));
                   handleStartScan(batchModalConfig.mode, limit);
                 }}
                 disabled={actionLoading}

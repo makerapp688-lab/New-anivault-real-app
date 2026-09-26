@@ -75,6 +75,7 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
   let needsReview = 0;
   let unableToVerify = 0;
   let possibleFake = fakeIssues.filter(f => f.status === 'active' || (f as any).verdict !== 'verified_real').length;
+  let itemPossibleFakeCount = 0;
   let missing = 0;
 
   for (const item of catalogue) {
@@ -86,6 +87,10 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
       missing++;
       if (rec?.status === 'needs_review') needsReview++;
       else if (rec?.status === 'unable_to_verify') unableToVerify++;
+      else if (rec?.status === 'possible_fake') {
+        possibleFake++;
+        itemPossibleFakeCount++;
+      }
     } else {
       if (rec) {
         if (rec.status === 'verified') {
@@ -99,17 +104,23 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
           unableToVerify++;
         } else if (rec.status === 'possible_fake') {
           possibleFake++;
+          itemPossibleFakeCount++;
         }
       } else if (item.artwork?.verificationStatus === 'verified') {
         verified++;
+      } else if (item.artwork?.verificationStatus === 'needs_review') {
+        needsReview++;
+      } else if (item.artwork?.verificationStatus === 'unable_to_verify') {
+        unableToVerify++;
       }
     }
   }
 
-  const unverified = Math.max(0, catalogue.length - verified);
+  const unverified = Math.max(0, catalogue.length - verified - needsReview - unableToVerify - itemPossibleFakeCount);
   const snapshot = globalWorkerJobEngine.getSnapshot();
-  const pending = snapshot.status === 'running' || snapshot.status === 'paused'
-    ? (snapshot.queuedCount + snapshot.claimedCount)
+  const activeInFlight = snapshot.queuedCount + snapshot.claimedCount;
+  const pending = (snapshot.status === 'running' || snapshot.status === 'paused') && activeInFlight > 0
+    ? activeInFlight
     : unverified;
   const completed = snapshot.completedCount;
   const failed = snapshot.failedCount;
@@ -135,6 +146,17 @@ class ArtworkScannerEngine {
 
   constructor() {
     this.reloadCatalogueMap();
+    // Automatically resume unfinished tasks if server restarted during an active running job
+    const snap = globalWorkerJobEngine.getSnapshot();
+    if (snap.status === 'running' && (snap.queuedCount + snap.claimedCount) > 0) {
+      setTimeout(() => {
+        globalWorkerJobEngine.runJobPool(async (task, workerId) => {
+          return await this.processTaskByWorker(task, workerId, 'System Recovery');
+        }).catch(err => {
+          console.error('[ArtworkScanner] Error in auto-resumed worker pool:', err.message);
+        });
+      }, 200);
+    }
   }
 
   private reloadCatalogueMap() {
@@ -208,9 +230,10 @@ class ArtworkScannerEngine {
       return { success: false, message: 'Catalogue not found.' };
     }
 
-    // Active Job Reconnection: Do NOT create a duplicate job if one is already running
+    // Active Job Reconnection: Do NOT create a duplicate job if the same mode is actively processing tasks
     const currentSnapshot = globalWorkerJobEngine.getSnapshot();
-    if (currentSnapshot.status === 'running') {
+    const activeTasksRemaining = currentSnapshot.queuedCount + currentSnapshot.claimedCount;
+    if (currentSnapshot.status === 'running' && activeTasksRemaining > 0 && currentSnapshot.mode === mode) {
       const activeState = this.getJobState();
       return {
         success: true,
@@ -221,6 +244,10 @@ class ArtworkScannerEngine {
       };
     }
 
+    if (currentSnapshot.status === 'running' || currentSnapshot.status === 'paused') {
+      globalWorkerJobEngine.stopJob();
+    }
+
     this.reloadCatalogueMap();
     const catalogue: any[] = Array.from(this.catalogueMap.values());
     const records = loadVerificationRecords();
@@ -228,13 +255,21 @@ class ArtworkScannerEngine {
     // Determine target candidates from authoritative persisted state
     let candidates: any[] = [];
     if (mode === 'unverified') {
+      // Process Pending, Unverified, and previously unable-to-verify entries eligible for another attempt
       candidates = catalogue.filter(a => {
         const rec = records[a.id];
         const url = a.artwork?.verifiedArtworkUrl || a.artwork?.originalArtworkUrl;
         const isMissing = isPlaceholderArtworkUrl(url);
-        if (isMissing) return true;
-        const isVerified = rec?.status === 'verified' || rec?.status === 'auto_fixed' || (!rec && a.artwork?.verificationStatus === 'verified');
-        return !isVerified;
+        if (!rec) {
+          if (isMissing) return true;
+          return a.artwork?.verificationStatus !== 'verified' &&
+            a.artwork?.verificationStatus !== 'needs_review';
+        }
+        if (rec.status === 'unable_to_verify') {
+          const manuallyMarkedByOwner = Boolean(rec.issue && rec.issue.includes('Marked unable to verify by Owner'));
+          return !manuallyMarkedByOwner;
+        }
+        return !['verified', 'auto_fixed', 'needs_review', 'possible_fake'].includes(rec.status);
       });
     } else if (mode === 'fix_missing') {
       candidates = catalogue.filter(a => {
@@ -242,7 +277,7 @@ class ArtworkScannerEngine {
         const url = a.artwork?.verifiedArtworkUrl || a.artwork?.originalArtworkUrl;
         const isMissing = isPlaceholderArtworkUrl(url) ||
           (rec && isPlaceholderArtworkUrl(rec.currentArtworkUrl)) ||
-          Boolean(rec?.issue && (rec.issue.toLowerCase().includes('missing') || rec.issue.toLowerCase().includes('placeholder') || rec.issue.toLowerCase().includes('unreachable')));
+          Boolean(rec?.issue && (rec.issue.toLowerCase().includes('missing') || rec.issue.toLowerCase().includes('placeholder') || rec.issue.toLowerCase().includes('unreachable') || rec.issue.toLowerCase().includes('broken')));
         return isMissing;
       });
     } else {
@@ -251,6 +286,18 @@ class ArtworkScannerEngine {
 
     if (typeof limit === 'number' && limit > 0) {
       candidates = candidates.slice(0, limit);
+    }
+
+    if (candidates.length === 0) {
+      const jobState = this.getJobState();
+      return {
+        success: true,
+        message: mode === 'fix_missing'
+          ? 'All catalogue entries already have valid, reachable artwork (0 missing).'
+          : 'All eligible entries have already been verified (0 unverified pending).',
+        job: jobState,
+        state: jobState
+      };
     }
 
     const tasks = candidates.map(a => {
@@ -466,7 +513,7 @@ class ArtworkScannerEngine {
           details: `Fresh source search for missing poster on "${anime.title}"`
         });
 
-        finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, workerId, onWorkerStep });
+        finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, workerId, taskRetries: task.retryCount || 0, onWorkerStep });
       }
     } else {
       onWorkerStep('Checking artwork relevance & dimensions...', 'AniList', 'working');
@@ -483,7 +530,7 @@ class ArtworkScannerEngine {
         details: `Standard artwork check for "${anime.title}"`
       });
 
-      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, workerId, onWorkerStep });
+      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, workerId, taskRetries: task.retryCount || 0, onWorkerStep });
     }
 
     // In-memory globalDataStore is already updated immediately (and debounced to disk in background; flushed synchronously on job completion/pause/stop)
@@ -644,7 +691,7 @@ class ArtworkScannerEngine {
   }
 
   public resetScan(operator = 'Owner') {
-    globalWorkerJobEngine.stopJob();
+    globalWorkerJobEngine.resetJob();
     logAdminAction('Reset Artwork Verification Scan', operator, 'success');
     const state = this.getJobState();
     return { success: true, message: 'Artwork verification job state reset.', state, job: state };

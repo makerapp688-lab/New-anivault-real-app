@@ -1,5 +1,128 @@
 [
   {
+    "id": "LOG-1790438773896-8448",
+    "timestamp": "2026-09-26T16:06:13.896Z",
+    "action": "Start Verification Job (UNVERIFIED)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: unverified, batch=5, limit=5."
+  },
+  {
+    "id": "LOG-1790438770698-9733",
+    "timestamp": "2026-09-26T16:06:10.698Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=5, limit=5."
+  },
+  {
+    "id": "LOG-1790437935616-9814",
+    "timestamp": "2026-09-26T15:52:15.616Z",
+    "action": "Validate Watch Order: \"Attack on Titan\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "wo_attack_on_titan",
+    "details": "Watch order for \"Attack on Titan\" validated (watchordr) and linked to 8 catalogue record(s)."
+  },
+  {
+    "id": "LOG-1790437910168-8155",
+    "timestamp": "2026-09-26T15:51:50.168Z",
+    "action": "Start Verification Job (ALL)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: all, batch=856, limit=All."
+  },
+  {
+    "id": "LOG-1790437870312-4832",
+    "timestamp": "2026-09-26T15:51:10.312Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=67, limit=All."
+  },
+  {
+    "id": "LOG-1790437811743-9861",
+    "timestamp": "2026-09-26T15:50:11.743Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=212, limit=All."
+  },
+  {
+    "id": "LOG-1790437791671-4395",
+    "timestamp": "2026-09-26T15:49:51.671Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivex-latest-source-2026-09-26.zip",
+    "details": "Rebuilt & updated latest website source package (99 files, 6.84 MB compressed, SHA-256: a111acc939bd3a9b...)"
+  },
+  {
+    "id": "LOG-1790437481972-3726",
+    "timestamp": "2026-09-26T15:44:41.972Z",
+    "action": "Reset Artwork Verification Scan",
+    "operator": "makerapp688@gmail.com",
+    "result": "success"
+  },
+  {
+    "id": "LOG-1790437436858-9771",
+    "timestamp": "2026-09-26T15:43:56.858Z",
+    "action": "Update Worker Pool Config",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Set worker pool config to 50 active workers."
+  },
+  {
+    "id": "LOG-1790437436634-4541",
+    "timestamp": "2026-09-26T15:43:56.634Z",
+    "action": "Approve Current Artwork",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Approved current artwork for 1 items."
+  },
+  {
+    "id": "LOG-1790437370775-9243",
+    "timestamp": "2026-09-26T15:42:50.775Z",
+    "action": "Start Verification Job (ALL)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: all, batch=856, limit=All."
+  },
+  {
+    "id": "LOG-1790437369695-7041",
+    "timestamp": "2026-09-26T15:42:49.695Z",
+    "action": "Start Verification Job (UNVERIFIED)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: unverified, batch=20, limit=20."
+  },
+  {
+    "id": "LOG-1790437362451-5746",
+    "timestamp": "2026-09-26T15:42:42.451Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=8, limit=8."
+  },
+  {
+    "id": "LOG-1790434919939-5541",
+    "timestamp": "2026-09-26T15:01:59.939Z",
+    "action": "Download Latest App Source",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivex-latest-source-2026-09-26.zip",
+    "details": "Generated live .zip source package (99 files, 6.75 MB compressed, SHA-256: 3bb51c17c759ae28...)"
+  },
+  {
+    "id": "LOG-1790434918094-2888",
+    "timestamp": "2026-09-26T15:01:58.094Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivex-latest-source-2026-09-26.zip",
+    "details": "Rebuilt & updated latest website source package (99 files, 6.75 MB compressed, SHA-256: 3bb51c17c759ae28...)"
+  },
+  {
     "id": "LOG-1790434667460-9043",
     "timestamp": "2026-09-26T14:57:47.460Z",
     "action": "Download Latest App Source",

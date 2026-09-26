@@ -814,7 +814,6 @@ export class SourceGateway {
         cb.state = 'OPEN';
         const cooldownMs = Math.min(retryAfterMs || (isRateLimit ? 15000 : 10000), 25000);
         cb.openUntil = Date.now() + cooldownMs;
-        console.warn(`[CircuitBreaker] Circuit OPENED for source "${key}" for ${Math.round(cooldownMs / 1000)}s. Cause: ${errorMsg}`);
         // Immediately wake any queued waiters on this source so they failover to other available sources instead of waiting!
         this.flushWaitersOnCircuitOpen(key);
       }

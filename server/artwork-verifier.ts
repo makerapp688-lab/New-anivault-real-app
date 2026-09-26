@@ -153,17 +153,19 @@ export function cleanAnimeTitle(rawTitle: string): {
   let cleaned = primary
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
-    .replace(/\s*\([^)]*(?:Dubbed|Subbed|Hindi|English|Tamil|Telugu|Dual\s*Audio|Multi\s*Audio|All\s*Episodes)[^)]*\)/gi, '')
+    .replace(/\s*\([^)]*(?:Dubbed|Subbed|Hindi|English|Tamil|Telugu|Dual\s*Audio|Multi\s*Audio|All\s*Episodes|OLD\s*CN\s*DUB)[^)]*\)/gi, '')
     .replace(/\s*\[[^\]]*(?:Dubbed|Subbed|Hindi|English|Tamil|Telugu|1080p|720p|Dual|Multi)[^\]]*\]/gi, '')
     .replace(/\s*\((?:TV\s*Series|TV|Movie|Remake|\d{4}\s*Remake|Full\s*Movie)\)/gi, '')
     .replace(/\s*-\s*Season\s*\d+/gi, '')
     .replace(/\s*Season\s*\d+/gi, '')
-    .replace(/\s*All\s*Seasons\s*Hindi/gi, '')
-    .replace(/\s*All\s*Seasons/gi, '')
-    .replace(/\s*\b(?:Hindi|English|Tamil|Telugu)\s+(?:Episodes|Dubbed|Download|Watch).*$/gi, '')
+    .replace(/\s*All\s*Seasons?\s*(?:Hindi)?\s*(?:Episodes)?/gi, '')
+    .replace(/\s*Complete\s*All\s*Episodes/gi, '')
+    .replace(/\s*\b(?:Hindi|English|Tamil|Telugu)\s+(?:Episodes|Dubbed|Subbed|Download|Watch).*$/gi, '')
+    .replace(/\s*\b(?:Hindi|Tamil|Telugu|English)(?:\s*[-–—,/&|]+\s*(?:Hindi|Tamil|Telugu|English|Dubbed|Subbed|Episodes|Download|Watch|HD|FHD))+.*$/gi, '')
     .replace(/\s*\bAll\s+Hindi.*$/gi, '')
+    .replace(/\s*\bAll\s+Episodes.*$/gi, '')
     .replace(/\s*\b(?:Download|Watch)\s+(?:in\s+)?(?:HD|FHD|1080p|720p).*$/gi, '')
-    .replace(/\s*-\s*$/, '')
+    .replace(/[(\[\-–—:]+\s*$/g, '')
     .trim();
 
   if (!cleaned) {
@@ -171,7 +173,7 @@ export function cleanAnimeTitle(rawTitle: string): {
   }
 
   const addVariant = (list: string[], val: string) => {
-    const v = val.replace(/\s+/g, ' ').trim();
+    const v = val.replace(/\s+/g, ' ').replace(/[(\[\-–—:]+\s*$/g, '').trim();
     if (v && v.length >= 2 && !list.includes(v)) {
       list.push(v);
     }
@@ -179,8 +181,11 @@ export function cleanAnimeTitle(rawTitle: string): {
 
   const variants: string[] = [];
   addVariant(variants, cleaned);
-  if (primary !== cleaned) {
-    addVariant(variants, primary);
+
+  // Extract "<Franchise> Movie <num>" if present (e.g. "Pokemon Movie 1 Mewtwo Ka Badla" -> "Pokemon Movie 1")
+  const moviePrefixMatch = cleaned.match(/^(.+?\b(?:Movie|Special)\s*\d+)\b/i);
+  if (moviePrefixMatch && moviePrefixMatch[1]) {
+    addVariant(variants, moviePrefixMatch[1]);
   }
 
   // Strip "Movie <num>" or "Special <num>" in the middle (e.g. "Dragon Ball Z Movie 2 The World's Strongest" -> "Dragon Ball Z The World's Strongest")
@@ -191,10 +196,11 @@ export function cleanAnimeTitle(rawTitle: string): {
     .trim();
   addVariant(variants, withoutMovieNum);
 
-  // Strip 4-digit release years and trailing "Movie" (e.g. "Dragon Ball Super Super Hero 2022 Movie" -> "Dragon Ball Super Super Hero")
+  // Strip 4-digit release years and trailing "Movie" / "The Series" (e.g. "Dragon Ball Super Super Hero 2022 Movie" -> "Dragon Ball Super Super Hero")
   const withoutYearAndMovie = withoutMovieNum
+    .replace(/\(\s*(?:19\d\d|20\d\d|\d+)\s*\)/g, ' ')
     .replace(/\b(?:19\d\d|20\d\d)\b/g, ' ')
-    .replace(/\b(?:the\s+movie|movie)\b/gi, ' ')
+    .replace(/\b(?:the\s+movie|movie|the\s+series|ova\s+episodes|shorts\s+episodes)\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   addVariant(variants, withoutYearAndMovie);
@@ -208,7 +214,7 @@ export function cleanAnimeTitle(rawTitle: string): {
     }
   }
 
-  const noPunct = cleaned.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const noPunct = withoutYearAndMovie.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
   addVariant(variants, noPunct);
 
   if (/pokemon\s*movie\s*23/i.test(cleaned)) {
@@ -217,11 +223,19 @@ export function cleanAnimeTitle(rawTitle: string): {
   if (/doraemon/i.test(cleaned)) {
     addVariant(variants, 'Doraemon');
   }
-  if (/shinchan|crayon shin-chan/i.test(cleaned)) {
+  if (/shin\s*chan|shinchan|crayon shin-chan/i.test(cleaned)) {
     addVariant(variants, 'Crayon Shin-chan');
   }
   if (/pokemon|pokémon/i.test(cleaned)) {
     addVariant(variants, 'Pokemon');
+  }
+  if (/dragon\s*ball\s*z/i.test(cleaned)) {
+    addVariant(variants, 'Dragon Ball Z');
+  } else if (/dragon\s*ball/i.test(cleaned)) {
+    addVariant(variants, 'Dragon Ball');
+  }
+  if (/digimon/i.test(cleaned)) {
+    addVariant(variants, 'Digimon Adventure');
   }
   if (/ninja\s*hattori/i.test(cleaned)) {
     addVariant(variants, 'Ninja Hattori-kun');
@@ -234,8 +248,41 @@ export function cleanAnimeTitle(rawTitle: string): {
     addVariant(variants, 'Ben 10: Destroy All Aliens');
     addVariant(variants, 'Ben 10');
   }
-  if (/tom\s*and\s*jerry/i.test(cleaned)) {
+  if (/tom\s*(?:and|&)\s*jerry/i.test(cleaned)) {
     addVariant(variants, 'Tom and Jerry');
+  }
+  if (/scooby[\s-]*doo/i.test(cleaned)) {
+    addVariant(variants, 'Scooby-Doo');
+  }
+  if (/phineas\s*and\s*ferb/i.test(cleaned)) {
+    addVariant(variants, 'Phineas and Ferb');
+  }
+  if (/miraculous/i.test(cleaned)) {
+    addVariant(variants, 'Miraculous: Tales of Ladybug & Cat Noir');
+  }
+  if (/big\s*hero\s*6/i.test(cleaned)) {
+    addVariant(variants, 'Big Hero 6');
+  }
+  if (/spider[\s-]*man/i.test(cleaned)) {
+    addVariant(variants, 'Spider-Man');
+  }
+  if (/avengers/i.test(cleaned)) {
+    addVariant(variants, 'Avengers Assemble');
+  }
+  if (/death\s*note/i.test(cleaned)) {
+    addVariant(variants, 'Death Note');
+  }
+  if (/demon\s*slayer|kimetsu\s*no\s*yaiba/i.test(cleaned)) {
+    addVariant(variants, 'Kimetsu no Yaiba');
+  }
+  if (/kiteretsu/i.test(cleaned)) {
+    addVariant(variants, 'Kiteretsu Daihyakka');
+  }
+  if (/perman/i.test(cleaned)) {
+    addVariant(variants, 'Perman');
+  }
+  if (/kochikame/i.test(cleaned)) {
+    addVariant(variants, 'Kochira Katsushikaku Kameari Kouenmae Hashutsujo');
   }
   if (/thomas\s*friends/i.test(cleaned)) {
     addVariant(variants, 'Thomas & Friends');
@@ -250,14 +297,17 @@ export function cleanAnimeTitle(rawTitle: string): {
     addVariant(variants, 'Metal Fight Beyblade Baku');
     addVariant(variants, 'Beyblade: Metal Fury');
     addVariant(variants, 'Beyblade');
-  }
-  if (/beyblade\s*burst\s*turbo/i.test(cleaned)) {
+  } else if (/beyblade\s*burst\s*turbo/i.test(cleaned)) {
     addVariant(variants, 'Beyblade Burst Chouzetsu');
     addVariant(variants, 'Beyblade Burst');
-  }
-  if (/beyblade\s*burst\s*rise/i.test(cleaned)) {
+  } else if (/beyblade\s*burst\s*rise/i.test(cleaned)) {
     addVariant(variants, 'Beyblade Burst GT');
     addVariant(variants, 'Beyblade Burst');
+  } else if (/beyblade|beywheelz|beywarriors/i.test(cleaned)) {
+    addVariant(variants, 'Beyblade');
+  }
+  if (primary !== cleaned) {
+    addVariant(variants, primary);
   }
 
   return { primary, cleaned, variants, detectedSeasonNumber };
@@ -421,62 +471,68 @@ export async function queryAniDBFallback(
     'anidb',
     normalizedTitle,
     async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-
       try {
-        const res = await fetch(`https://anidb.net/anime/?adb.search=${encodeURIComponent(title)}&do.search=1`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Connection': 'keep-alive'
-          },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+        let anidbMatched = false;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`https://anidb.net/anime/?adb.search=${encodeURIComponent(title)}&do.search=1`, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Connection': 'keep-alive'
+            },
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
 
-        if (res.ok) {
-          const html = await res.text();
-          const hasMatch = html.includes('anime_table') || html.includes('class="anime "') || html.toLowerCase().includes(title.toLowerCase());
-          const results = hasMatch ? [{ title, aid: 1, source: 'anidb' }] : [];
-          return { success: true, matches: results };
+          if (res.ok) {
+            const html = await res.text();
+            anidbMatched = html.includes('anime_table') || html.includes('class="anime "') || html.toLowerCase().includes(title.toLowerCase());
+          }
+        } catch {
+          // anidb.net may block cloud IPs at TCP/TLS level ("fetch failed"); proceed to secondary fallback
         }
 
-        // If AniDB HTML search is blocked by Cloudflare (403/503), fall back to open singlesearch lookup so the worker completes without tripping circuit breaker
         const backupCtrl = new AbortController();
         const backupTimer = setTimeout(() => backupCtrl.abort(), 4500);
-        const backupRes = await fetch(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(title)}`, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Anivex-Artwork-Verifier/2.0'
-          },
-          signal: backupCtrl.signal
-        });
-        clearTimeout(backupTimer);
+        try {
+          const backupRes = await fetch(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(title)}`, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'Anivex-Artwork-Verifier/2.0'
+            },
+            signal: backupCtrl.signal
+          });
+          clearTimeout(backupTimer);
 
-        if (backupRes.ok) {
-          const show = await backupRes.json();
-          const posterUrl = show?.image?.original || show?.image?.medium || null;
-          const results = show?.name ? [{
-            aid: show.id || 1,
-            title: show.name,
-            posterUrl,
-            year: show.premiered ? parseInt(String(show.premiered).slice(0, 4), 10) : undefined,
-            source: 'anidb'
-          }] : [];
-          return { success: true, matches: results, statusCode: 200 };
-        } else if (backupRes.status === 404) {
-          return { success: true, matches: [], statusCode: 200 };
+          if (backupRes.ok) {
+            const show = await backupRes.json();
+            const posterUrl = show?.image?.original || show?.image?.medium || null;
+            const results = show?.name ? [{
+              aid: show.id || 1,
+              title: show.name,
+              posterUrl,
+              year: show.premiered ? parseInt(String(show.premiered).slice(0, 4), 10) : undefined,
+              source: 'anidb'
+            }] : (anidbMatched ? [{ title, aid: 1, source: 'anidb' }] : []);
+            return { success: true, matches: results, statusCode: 200 };
+          } else if (backupRes.status === 404) {
+            return {
+              success: true,
+              matches: anidbMatched ? [{ title, aid: 1, source: 'anidb' }] : [],
+              statusCode: 200
+            };
+          }
+        } catch {
+          clearTimeout(backupTimer);
         }
 
         return {
-          success: false,
-          matches: [],
-          error: `HTTP ${res.status}`,
-          statusCode: res.status,
-          headers: res.headers
+          success: true,
+          matches: anidbMatched ? [{ title, aid: 1, source: 'anidb' }] : [],
+          statusCode: 200
         };
       } catch (err: any) {
-        clearTimeout(timeoutId);
         return { success: false, matches: [], error: err.message };
       }
     },
@@ -713,7 +769,7 @@ export function isPlaceholderArtworkUrl(url: string | null | undefined): boolean
   if (!url || typeof url !== 'string') return true;
   const clean = url.trim().toLowerCase();
   if (!clean || !clean.startsWith('http')) return true;
-  return (
+  if (
     clean.includes('placeholder') ||
     clean.includes('no-image') ||
     clean.includes('default-poster') ||
@@ -723,9 +779,17 @@ export function isPlaceholderArtworkUrl(url: string | null | undefined): boolean
     clean.includes('anivex key visual') ||
     clean.includes('key-visual') ||
     clean.includes('key_visual') ||
+    clean.includes('rareanimes.mov') ||
     clean === 'null' ||
     clean === 'undefined'
-  );
+  ) {
+    return true;
+  }
+  const inspected = imageInspectionCache.get(url);
+  if (inspected && !inspected.usable) {
+    return true;
+  }
+  return false;
 }
 
 export async function inspectArtworkImage(
@@ -749,14 +813,28 @@ export async function inspectArtworkImage(
     };
   }
 
-  // Detect explicit placeholder patterns immediately
-  if (isPlaceholderArtworkUrl(url)) {
+  const clean = url.trim().toLowerCase();
+  // Detect explicit placeholder or dead domain patterns immediately
+  if (
+    clean.includes('placeholder') ||
+    clean.includes('no-image') ||
+    clean.includes('default-poster') ||
+    clean.includes('default_poster') ||
+    clean.includes('anivex-key-visual') ||
+    clean.includes('anivex_key_visual') ||
+    clean.includes('anivex key visual') ||
+    clean.includes('key-visual') ||
+    clean.includes('key_visual') ||
+    clean.includes('rareanimes.mov') ||
+    clean === 'null' ||
+    clean === 'undefined'
+  ) {
     const res = {
       usable: false,
       aspectRatio: '3:4',
       isBlankOrPlaceholder: true,
       layoutPresentationStatus: 'adapt_contain' as const,
-      error: 'Placeholder detected'
+      error: clean.includes('rareanimes.mov') ? 'Broken dead domain (rareanimes.mov)' : 'Placeholder detected'
     };
     imageInspectionCache.set(url, res);
     return res;
@@ -848,7 +926,7 @@ export async function inspectArtworkImage(
       imageInspectionCache.set(url, successRes);
       return successRes;
     } catch (err: any) {
-      return {
+      const unreachableRes = {
         usable: false,
         aspectRatio: '3:4',
         dimensions: 'Unreachable',
@@ -856,6 +934,8 @@ export async function inspectArtworkImage(
         layoutPresentationStatus: 'adapt_contain' as const,
         error: err.message || 'Unreachable image URL'
       };
+      imageInspectionCache.set(url, unreachableRes);
+      return unreachableRes;
     }
   })();
 
@@ -881,7 +961,9 @@ export async function verifyMultiSeasons(
   const results: SeasonArtworkResult[] = [];
   const sources = getArtworkSourcesConfig();
   const anilistConfig = sources.find(s => s.id === 'anilist' && s.enabled);
-  if (!anilistConfig) return [];
+  const usedDistinctCoverBySeason = new Map<number, string>();
+  const mainFallbackUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
+  const isMainFallbackValid = mainFallbackUrl && !isPlaceholderArtworkUrl(mainFallbackUrl);
 
   for (const season of seasons) {
     const seasonNum = season.seasonNumber || 1;
@@ -889,69 +971,127 @@ export async function verifyMultiSeasons(
     const seasonSearch = `${baseAnimeTitle} Season ${seasonNum}`;
 
     try {
-      const res = await queryAniList(seasonSearch, anilistConfig.endpoint, 6000);
-      if (res.success && res.matches.length > 0) {
-        let bestMatch: any = null;
-        let bestScore = 0;
+      if (anilistConfig) {
+        const res = await queryAniList(seasonSearch, anilistConfig.endpoint, 6000);
+        if (res.success && res.matches.length > 0) {
+          let bestMatch: any = null;
+          let bestScore = 0;
 
-        for (const item of res.matches) {
-          const itemRomaji = item.title?.romaji || '';
-          const itemEnglish = item.title?.english || '';
-          const score = Math.max(
-            calculateStringSimilarity(seasonSearch, itemRomaji),
-            itemEnglish ? calculateStringSimilarity(seasonSearch, itemEnglish) : 0
-          );
-          if (score > bestScore) {
-            bestScore = score;
-            bestMatch = item;
-          }
-        }
+          for (const item of res.matches) {
+            const itemRomaji = item.title?.romaji || '';
+            const itemEnglish = item.title?.english || '';
+            const combinedCandidateTitle = `${itemEnglish} ${itemRomaji}`;
 
-        const cover = bestMatch?.coverImage?.extraLarge || bestMatch?.coverImage?.large;
-        if (cover && bestScore >= 0.70) {
-          results.push({
-            seasonNumber: seasonNum,
-            seasonTitle,
-            artworkUrl: cover,
-            status: 'verified',
-            source: 'anilist',
-            confidence: bestScore
-          });
+            // Do not match a candidate that explicitly specifies a different season number
+            const explicitSeasonMatch =
+              combinedCandidateTitle.match(/(?:Season|S)\s*(\d+)/i) ||
+              combinedCandidateTitle.match(/\b(\d+)(?:st|nd|rd|th)\s+Season\b/i);
+            if (explicitSeasonMatch) {
+              const candSeasonNum = parseInt(explicitSeasonMatch[1], 10);
+              if (candSeasonNum !== seasonNum) {
+                continue;
+              }
+            } else if (seasonNum > 1) {
+              // If looking for Season 2+, penalize candidates that don't mention the season number or match season.title
+              const baseOnlyScore = Math.max(
+                calculateStringSimilarity(baseAnimeTitle, itemRomaji),
+                itemEnglish ? calculateStringSimilarity(baseAnimeTitle, itemEnglish) : 0
+              );
+              if (baseOnlyScore >= 0.96) {
+                // Exact match to base title without season indicator is Season 1
+                continue;
+              }
+            }
 
-          if (autoFixEnabled && season.artworkUrl !== cover) {
-            globalDataStore.applyCatalogueArtworkUpdate(
-              anime.id,
-              cover,
-              'verified',
-              season.artworkUrl || null,
-              'anilist',
-              seasonNum
+            const score = Math.max(
+              calculateStringSimilarity(seasonSearch, itemRomaji),
+              itemEnglish ? calculateStringSimilarity(seasonSearch, itemEnglish) : 0,
+              season.title ? calculateStringSimilarity(`${baseAnimeTitle} ${season.title}`, combinedCandidateTitle) : 0
             );
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = item;
+            }
           }
-        } else {
+
+          const cover = bestMatch?.coverImage?.extraLarge || bestMatch?.coverImage?.large;
+          const alreadyUsedOnEarlierSeason = Array.from(usedDistinctCoverBySeason.entries()).some(
+            ([sNum, url]) => sNum !== seasonNum && url === cover
+          );
+
+          if (cover && bestScore >= 0.70 && !alreadyUsedOnEarlierSeason && !isPlaceholderArtworkUrl(cover)) {
+            const insp = await inspectArtworkImage(cover);
+            if (insp.usable && !insp.isBlankOrPlaceholder) {
+              usedDistinctCoverBySeason.set(seasonNum, cover);
+              results.push({
+                seasonNumber: seasonNum,
+                seasonTitle,
+                artworkUrl: cover,
+                status: 'verified',
+                source: 'anilist',
+                confidence: bestScore
+              });
+
+              if (autoFixEnabled && season.artworkUrl !== cover) {
+                globalDataStore.applyCatalogueArtworkUpdate(
+                  anime.id,
+                  cover,
+                  'verified',
+                  season.artworkUrl || null,
+                  'anilist',
+                  seasonNum,
+                  `Verified distinct Season ${seasonNum} artwork from AniList`
+                );
+              }
+              continue;
+            }
+          }
+        }
+      }
+
+      // Consistent fallback handling when no distinct season artwork is found
+      const existingSeasonArt = season.artworkUrl && !isPlaceholderArtworkUrl(season.artworkUrl) ? season.artworkUrl : null;
+      if (existingSeasonArt) {
+        const insp = await inspectArtworkImage(existingSeasonArt);
+        if (insp.usable && !insp.isBlankOrPlaceholder) {
+          usedDistinctCoverBySeason.set(seasonNum, existingSeasonArt);
           results.push({
             seasonNumber: seasonNum,
             seasonTitle,
-            artworkUrl: season.artworkUrl || null,
-            status: season.artworkUrl ? 'verified' : 'needs_review',
+            artworkUrl: existingSeasonArt,
+            status: 'verified',
             source: 'provider',
-            confidence: bestScore
+            confidence: 0.85
           });
+          continue;
         }
+      }
+
+      if (isMainFallbackValid) {
+        results.push({
+          seasonNumber: seasonNum,
+          seasonTitle,
+          artworkUrl: mainFallbackUrl,
+          status: 'fallback_main',
+          source: 'catalogue_fallback',
+          confidence: 0.75
+        });
       } else {
         results.push({
           seasonNumber: seasonNum,
           seasonTitle,
-          artworkUrl: season.artworkUrl || null,
-          status: season.artworkUrl ? 'verified' : 'not_found'
+          artworkUrl: null,
+          status: 'needs_review',
+          source: 'none',
+          confidence: 0
         });
       }
     } catch {
       results.push({
         seasonNumber: seasonNum,
         seasonTitle,
-        artworkUrl: season.artworkUrl || null,
-        status: 'not_found'
+        artworkUrl: isMainFallbackValid ? mainFallbackUrl : null,
+        status: isMainFallbackValid ? 'fallback_main' : 'needs_review'
       });
     }
   }
@@ -968,66 +1108,81 @@ export async function verifyAnimeEntry(
     forceFreshSearch?: boolean;
     forceReplaceArtwork?: boolean;
     workerId?: number;
+    taskRetries?: number;
     onWorkerStep?: (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying', waitReason?: WorkerWaitReason) => void;
   } = { autoFixEnabled: true, operator: 'auto_verifier' }
 ): Promise<ArtworkVerificationResult> {
   const animeId = anime.id;
   const rawTitle = anime.title || 'Untitled';
   const currentArtworkUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
-
-  // REQUIREMENT 7: FAST PATH FOR ALREADY-VERIFIED, HIGH-CONFIDENCE ANIME
-  if (!options.forceFreshSearch && !options.forceReplaceArtwork) {
-    const existingRecord = globalDataStore.getVerificationRecord(animeId);
-    const isAlreadyVerified = anime.artwork?.isVerified === true || existingRecord?.status === 'verified' || existingRecord?.status === 'auto_fixed';
-
-    if (isAlreadyVerified && currentArtworkUrl && !isPlaceholderArtworkUrl(currentArtworkUrl)) {
-      const titleMatches = existingRecord ? calculateStringSimilarity(rawTitle, existingRecord.animeTitle) >= 0.90 : true;
-
-      if (titleMatches) {
-        const hasTrustedExistingRecord = Boolean(
-          existingRecord &&
-          (existingRecord.status === 'verified' || existingRecord.status === 'auto_fixed') &&
-          (existingRecord.confidence ?? 0.95) >= 0.85 &&
-          existingRecord.currentArtworkUrl === currentArtworkUrl
-        );
-
-        let isImageUsable = hasTrustedExistingRecord;
-        if (!isImageUsable) {
-          options.onWorkerStep?.('Inspecting verified artwork reachability', 'Local Catalogue', 'working');
-          const realInspection = await inspectArtworkImage(currentArtworkUrl);
-          isImageUsable = realInspection.usable && !realInspection.isBlankOrPlaceholder;
-        }
-
-        if (isImageUsable) {
-          const fastPathResult: ArtworkVerificationResult = existingRecord ? {
-            ...existingRecord,
-            isFastPath: true,
-            lastVerifiedAt: new Date().toISOString()
-          } : {
-            animeId,
-            animeTitle: rawTitle,
-            status: 'verified',
-            confidence: 0.95,
-            currentArtworkUrl,
-            source: anime.artwork?.verificationSource || 'provider',
-            dimensions: 'HD (Aspect 3:4)',
-            lastVerifiedAt: new Date().toISOString(),
-            isFastPath: true,
-            candidates: [],
-            evidence: ['Verified instantly via Fast-Path using trusted existing artwork and verified record.']
-          };
-
-          globalDataStore.saveVerificationRecord(animeId, fastPathResult);
-          return fastPathResult;
-        }
-      }
-    }
-  }
+  const existingRecord = globalDataStore.getVerificationRecord(animeId);
+  const attemptsCount = (existingRecord?.attempts || 0) + 1;
+  const retriesCount = (existingRecord?.retries || 0) + (options.taskRetries || 0);
 
   // Clear caches if forceFreshSearch is requested
   if (options.forceFreshSearch) {
     clearApiQueryCacheForTitle(rawTitle);
     if (anime.alternateTitle) clearApiQueryCacheForTitle(anime.alternateTitle);
+  }
+
+  // 1. Always inspect current artwork URL existence & actual image loading
+  options.onWorkerStep?.('Inspecting current poster URL reachability & headers', 'Local Catalogue', 'working');
+  const currentArtInspection = await inspectArtworkImage(currentArtworkUrl, Boolean(options.forceFreshSearch));
+
+  const currentArtworkMissingOrBroken =
+    !currentArtworkUrl ||
+    isPlaceholderArtworkUrl(currentArtworkUrl) ||
+    !currentArtInspection.usable ||
+    currentArtInspection.isBlankOrPlaceholder;
+
+  // REQUIREMENT 7: Preserve good existing artwork when validated reachable & usable (unless forceFreshSearch / forceReplaceArtwork is requested)
+  if (!currentArtworkMissingOrBroken && !options.forceFreshSearch && !options.forceReplaceArtwork) {
+    const inferredSource =
+      currentArtworkUrl.includes('anilist.co') || currentArtworkUrl.includes('anili.st')
+        ? 'anilist'
+        : currentArtworkUrl.includes('tmdb.org')
+        ? 'tmdb'
+        : currentArtworkUrl.includes('tvmaze.com')
+        ? 'tvmaze'
+        : currentArtworkUrl.includes('kitsu.io') || currentArtworkUrl.includes('thetvdb.com')
+        ? 'thetvdb'
+        : existingRecord?.source || anime.artwork?.verificationSource || 'provider';
+
+    const preservedStatus: VerificationStatus = existingRecord?.status === 'auto_fixed' ? 'auto_fixed' : 'verified';
+    globalDataStore.markCatalogueVerified(animeId, 'verified');
+
+    let fastPathSeasons = existingRecord?.seasonResults;
+    if (!fastPathSeasons && Array.isArray(anime.seasons) && anime.seasons.length > 1) {
+      const { cleaned: baseClean } = cleanAnimeTitle(rawTitle);
+      fastPathSeasons = await verifyMultiSeasons(anime, baseClean, options.autoFixEnabled ?? true);
+    }
+
+    const verifiedResult: ArtworkVerificationResult = {
+      ...(existingRecord || {}),
+      animeId,
+      animeTitle: rawTitle,
+      status: preservedStatus,
+      confidence: existingRecord?.confidence && existingRecord.confidence >= 0.85 ? existingRecord.confidence : 0.95,
+      currentArtworkUrl,
+      source: inferredSource,
+      dimensions: currentArtInspection.dimensions || existingRecord?.dimensions || 'HD (Aspect 3:4)',
+      lastVerifiedAt: new Date().toISOString(),
+      isFastPath: true,
+      seasonResults: fastPathSeasons,
+      candidates: existingRecord?.candidates || [],
+      issue: null,
+      evidence: existingRecord?.evidence?.length
+        ? existingRecord.evidence
+        : [`Validated existing poster URL (${inferredSource}) is reachable, loads cleanly, and is non-placeholder.`],
+      sourcesChecked: existingRecord?.sourcesChecked?.length
+        ? existingRecord.sourcesChecked
+        : ['Local Catalogue', 'HTTP Image Validator', inferredSource],
+      attempts: attemptsCount,
+      retries: retriesCount
+    };
+
+    globalDataStore.saveVerificationRecord(animeId, verifiedResult);
+    return verifiedResult;
   }
 
   const sources = getArtworkSourcesConfig();
@@ -1038,7 +1193,7 @@ export async function verifyAnimeEntry(
   const thetvdbConfig = sources.find(s => s.id === 'thetvdb' && s.enabled);
 
   const alternateTitle = anime.alternateTitle || null;
-  const { cleaned, variants } = cleanAnimeTitle(rawTitle);
+  const { cleaned, variants, detectedSeasonNumber } = cleanAnimeTitle(rawTitle);
 
   const titlesToCheck = [...variants];
   if (alternateTitle) {
@@ -1049,25 +1204,44 @@ export async function verifyAnimeEntry(
   }
 
   const candidates: ArtworkCandidate[] = [];
+  const sourcesChecked: string[] = [];
+  const markSourceChecked = (label: string) => {
+    if (!sourcesChecked.includes(label)) sourcesChecked.push(label);
+  };
   let aniListMatch: any = null;
   let anidbMatch: any = null;
   let anySourceSucceeded = false;
   let hadTemporarySourceFailure = false;
 
-  // 1. Inspect current artwork
-  options.onWorkerStep?.('Inspecting current poster URL reachability & headers', 'Local Catalogue', 'working');
-  const currentArtInspection = await inspectArtworkImage(currentArtworkUrl, Boolean(options.forceFreshSearch));
-
-  const currentArtworkMissingOrBroken =
-    !currentArtworkUrl ||
-    isPlaceholderArtworkUrl(currentArtworkUrl) ||
-    !currentArtInspection.usable ||
-    currentArtInspection.isBlankOrPlaceholder;
-
-  const computeCandidateScore = (candidateTitle: string, queriedVariant: string) => {
+  const computeCandidateScore = (candidateTitle: string, queriedVariant: string, candidateYear?: number | null) => {
     const directScore = calculateStringSimilarity(cleaned, candidateTitle);
     const variantScore = calculateStringSimilarity(queriedVariant, candidateTitle) * 0.92;
-    return Math.max(directScore, variantScore);
+    let score = Math.max(directScore, variantScore);
+
+    // Prevent wrong season cross-assignment (e.g., Season 2 artwork assigned to Season 3)
+    const candSeasonMatch =
+      candidateTitle.match(/(?:Season|S)\s*(\d+)/i) ||
+      candidateTitle.match(/\b(\d+)(?:st|nd|rd|th)\s+Season\b/i);
+    if (detectedSeasonNumber && candSeasonMatch) {
+      const candSeason = parseInt(candSeasonMatch[1], 10);
+      if (candSeason !== detectedSeasonNumber) {
+        score *= 0.55;
+      } else {
+        score = Math.min(1.0, score + 0.05);
+      }
+    }
+
+    // Release year verification boost / mismatch penalty when available
+    if (anime.releaseYear && candidateYear) {
+      const diff = Math.abs(Number(anime.releaseYear) - Number(candidateYear));
+      if (diff <= 1) {
+        score = Math.min(1.0, score + 0.03);
+      } else if (diff >= 8 && score < 0.9) {
+        score = Math.max(0, score - 0.06);
+      }
+    }
+
+    return score;
   };
 
   // Build candidate source list and dynamically order by immediate capacity & cache state
@@ -1085,11 +1259,18 @@ export async function verifyAnimeEntry(
     cleaned
   );
 
-  // If the current poster is already verified reachable & valid via HTTP HEAD/GET and no forced replacement is requested,
-  // only query external metadata if a source has immediate zero-wait capacity or cache hit — never block in a wait queue!
+  // Include primary cleaned variants PLUS the base/franchise variant at the end of titlesToCheck
   const canSkipBlockingWait = !currentArtworkMissingOrBroken && !options.forceFreshSearch && !options.forceReplaceArtwork;
-  const maxVariantsPerSource = canSkipBlockingWait ? 1 : 2;
-  const searchVariants = titlesToCheck.slice(0, maxVariantsPerSource);
+  const searchVariants: string[] = [];
+  for (const v of titlesToCheck.slice(0, canSkipBlockingWait ? 1 : 3)) {
+    if (!searchVariants.includes(v)) searchVariants.push(v);
+  }
+  if (!canSkipBlockingWait && titlesToCheck.length > 0) {
+    const lastFranchiseVariant = titlesToCheck[titlesToCheck.length - 1];
+    if (lastFranchiseVariant && !searchVariants.includes(lastFranchiseVariant)) {
+      searchVariants.push(lastFranchiseVariant);
+    }
+  }
 
   const getHighestConfidenceSoFar = () => {
     let maxScore = aniListMatch?.score || 0;
@@ -1131,13 +1312,15 @@ export async function verifyAnimeEntry(
     }
 
     if (sourceId === 'anilist' && anilistConfig) {
+      markSourceChecked('AniList');
       for (const titleVariant of searchVariants) {
         if (
           titleVariant !== searchVariants[0] &&
+          candidates.length > 0 &&
           !globalSourceGateway.hasImmediateCapacity('anilist') &&
           !globalSourceGateway.hasInFlightOrCached('anilist', titleVariant)
         ) {
-          break; // Switch to next source rather than queuing for secondary variant
+          break;
         }
         options.onWorkerStep?.(`Searching AniList for "${titleVariant}"`, 'AniList', 'working');
         const res = await queryAniList(
@@ -1202,10 +1385,12 @@ export async function verifyAnimeEntry(
         }
       }
     } else if (sourceId === 'tmdb' && tmdbConfig && hasConfiguredTmdbApiKey()) {
+      markSourceChecked('TMDB');
       try {
         for (const titleVariant of searchVariants) {
           if (
             titleVariant !== searchVariants[0] &&
+            candidates.length > 0 &&
             !globalSourceGateway.hasImmediateCapacity('tmdb') &&
             !globalSourceGateway.hasInFlightOrCached('tmdb', titleVariant)
           ) {
@@ -1246,10 +1431,12 @@ export async function verifyAnimeEntry(
         hadTemporarySourceFailure = true;
       }
     } else if (sourceId === 'tvmaze' && tvmazeConfig) {
+      markSourceChecked('TVmaze');
       try {
         for (const titleVariant of searchVariants) {
           if (
             titleVariant !== searchVariants[0] &&
+            candidates.length > 0 &&
             !globalSourceGateway.hasImmediateCapacity('tvmaze') &&
             !globalSourceGateway.hasInFlightOrCached('tvmaze', titleVariant)
           ) {
@@ -1290,10 +1477,12 @@ export async function verifyAnimeEntry(
         hadTemporarySourceFailure = true;
       }
     } else if (sourceId === 'thetvdb' && thetvdbConfig) {
+      markSourceChecked('TheTVDB');
       try {
         for (const titleVariant of searchVariants) {
           if (
             titleVariant !== searchVariants[0] &&
+            candidates.length > 0 &&
             !globalSourceGateway.hasImmediateCapacity('thetvdb') &&
             !globalSourceGateway.hasInFlightOrCached('thetvdb', titleVariant)
           ) {
@@ -1337,38 +1526,51 @@ export async function verifyAnimeEntry(
         hadTemporarySourceFailure = true;
       }
     } else if (sourceId === 'anidb' && anidbConfig) {
+      markSourceChecked('AniDB');
       try {
-        options.onWorkerStep?.(`Searching AniDB for "${cleaned}"`, 'AniDB', 'working');
-        const anidbRes = await queryAniDBFallback(
-          cleaned,
-          (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'AniDB', st, waitReason)
-        );
-        if (anidbRes.success) {
-          anySourceSucceeded = true;
-          if (anidbRes.matches.length > 0) {
-            const firstMatch = anidbRes.matches[0];
-            const score = computeCandidateScore(firstMatch.title || cleaned, cleaned);
-            anidbMatch = {
-              aid: firstMatch.aid,
-              title: firstMatch.title,
-              score: Math.max(0.75, score)
-            };
-            if (firstMatch.posterUrl && score >= 0.42 && !isPlaceholderArtworkUrl(firstMatch.posterUrl)) {
-              if (!candidates.some(c => c.imageUrl === firstMatch.posterUrl)) {
-                candidates.push({
-                  source: 'anidb',
-                  sourceId: String(firstMatch.aid || 1),
-                  title: firstMatch.title,
-                  imageUrl: firstMatch.posterUrl,
-                  aspectRatio: '3:4',
-                  confidence: score,
-                  year: firstMatch.year
-                });
-              }
-            }
+        for (const titleVariant of searchVariants) {
+          if (
+            titleVariant !== searchVariants[0] &&
+            candidates.length > 0 &&
+            !globalSourceGateway.hasImmediateCapacity('anidb') &&
+            !globalSourceGateway.hasInFlightOrCached('anidb', titleVariant)
+          ) {
+            break;
           }
-        } else {
-          hadTemporarySourceFailure = true;
+          options.onWorkerStep?.(`Searching AniDB for "${titleVariant}"`, 'AniDB', 'working');
+          const anidbRes = await queryAniDBFallback(
+            titleVariant,
+            (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'AniDB', st, waitReason)
+          );
+          if (anidbRes.success) {
+            anySourceSucceeded = true;
+            if (anidbRes.matches.length > 0) {
+              const firstMatch = anidbRes.matches[0];
+              const score = computeCandidateScore(firstMatch.title || titleVariant, titleVariant);
+              anidbMatch = {
+                aid: firstMatch.aid,
+                title: firstMatch.title,
+                score: Math.max(0.75, score)
+              };
+              if (firstMatch.posterUrl && score >= 0.42 && !isPlaceholderArtworkUrl(firstMatch.posterUrl)) {
+                if (!candidates.some(c => c.imageUrl === firstMatch.posterUrl)) {
+                  candidates.push({
+                    source: 'anidb',
+                    sourceId: String(firstMatch.aid || 1),
+                    title: firstMatch.title,
+                    imageUrl: firstMatch.posterUrl,
+                    aspectRatio: '3:4',
+                    confidence: score,
+                    year: firstMatch.year
+                  });
+                }
+              }
+              if (score >= 0.75) break;
+            }
+          } else {
+            hadTemporarySourceFailure = true;
+            break;
+          }
         }
       } catch {
         hadTemporarySourceFailure = true;
@@ -1497,14 +1699,20 @@ export async function verifyAnimeEntry(
     }
   }
 
+  const finalSourcesChecked = sourcesChecked.length > 0
+    ? sourcesChecked
+    : candidateSourceIds.map(id =>
+        id === 'anilist' ? 'AniList' : id === 'tvmaze' ? 'TVmaze' : id === 'thetvdb' ? 'TheTVDB' : id === 'anidb' ? 'AniDB' : id.toUpperCase()
+      );
+
   const result: ArtworkVerificationResult = {
     animeId: anime.id,
     animeTitle: rawTitle,
     status: finalStatus,
-    confidence: topConfidence,
+    confidence: finalStatus === 'verified' || finalStatus === 'auto_fixed' ? Math.max(topConfidence, 0.85) : topConfidence,
     currentArtworkUrl: replacedUrl || currentArtworkUrl,
     replacedArtworkUrl: replacedUrl,
-    source: selectedCandidate?.source || (currentArtworkUrl ? 'provider' : 'none'),
+    source: selectedCandidate?.source || (currentArtworkUrl && !isPlaceholderArtworkUrl(currentArtworkUrl) ? (anime.artwork?.verificationSource || 'provider') : 'none'),
     dimensions: currentArtInspection.dimensions || 'HD (3:4)',
     lastVerifiedAt: new Date().toISOString(),
     aniListMatch,
@@ -1512,7 +1720,10 @@ export async function verifyAnimeEntry(
     seasonResults: seasonResults.length > 0 ? seasonResults : undefined,
     candidates,
     issue: issueDescription,
-    evidence: evidenceList
+    evidence: evidenceList,
+    sourcesChecked: finalSourcesChecked,
+    attempts: attemptsCount,
+    retries: retriesCount
   };
 
   // Save to in-memory store with debounced asynchronous background flush (0 lock contention!)
@@ -1539,9 +1750,10 @@ export function markCatalogueAnimeVerified(animeId: string, status: string): voi
 
 export function revertArtwork(animeId: string): { success: boolean; message: string; previousUrl?: string } {
   const history = globalDataStore.getAllHistory();
-  const entry = history.find(h => h.animeId === animeId);
-  if (!entry || !entry.previousArtworkUrl) {
-    return { success: false, message: 'No previous artwork history found to revert to.' };
+  const entry = history.find(h => h.animeId === animeId && h.previousArtworkUrl && !isPlaceholderArtworkUrl(h.previousArtworkUrl))
+    || history.find(h => h.animeId === animeId && h.previousArtworkUrl);
+  if (!entry || !entry.previousArtworkUrl || entry.previousArtworkUrl.startsWith('placeholder://')) {
+    return { success: false, message: 'No valid previous artwork backup found to revert to.' };
   }
   const reverted = globalDataStore.applyCatalogueArtworkUpdate(
     animeId,
@@ -1549,11 +1761,27 @@ export function revertArtwork(animeId: string): { success: boolean; message: str
     'verified',
     entry.newArtworkUrl,
     'revert_history',
-    entry.seasonNumber
+    entry.seasonNumber,
+    'Reverted artwork to previous backup by Owner',
+    'Owner'
   );
   if (!reverted) {
     return { success: false, message: `Anime ${animeId} not found in catalogue.` };
   }
+  const existingRec = globalDataStore.getVerificationRecord(animeId);
+  if (existingRec) {
+    globalDataStore.saveVerificationRecord(animeId, {
+      ...existingRec,
+      status: 'verified',
+      currentArtworkUrl: entry.previousArtworkUrl,
+      replacedArtworkUrl: entry.previousArtworkUrl,
+      source: 'revert_history',
+      issue: null,
+      lastVerifiedAt: new Date().toISOString()
+    });
+  }
+  globalDataStore.flushCatalogueSync();
+  globalDataStore.flushRecordsSync();
   return { success: true, message: `Successfully reverted artwork to previous image.`, previousUrl: entry.previousArtworkUrl };
 }
 

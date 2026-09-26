@@ -297,6 +297,7 @@ export class ReusableWorkerJobEngine {
   private isProcessing = false;
   private shouldPause = false;
   private shouldStop = false;
+  private activeRunId = 0;
   private workerMap = new Map<number, WorkerInfo>();
 
   // Circuit Breakers / External Source Health
@@ -461,7 +462,6 @@ export class ReusableWorkerJobEngine {
       health.healthy = false;
       const backoffMs = is429 ? 20000 : 10000;
       health.openUntil = Date.now() + backoffMs;
-      console.warn(`[CircuitBreaker] Opened circuit breaker for ${sourceName} (${backoffMs}ms backoff). Error: ${errorMsg}`);
     }
   }
 
@@ -482,7 +482,6 @@ export class ReusableWorkerJobEngine {
         this.jobType = saved.jobType || 'artwork_verification';
         this.mode = saved.mode || 'all';
         this.batchLimit = saved.batchLimit || null;
-        this.status = saved.status === 'running' ? 'paused' : (saved.status || 'idle');
         this.startedAt = saved.startedAt || null;
         this.finishedAt = saved.finishedAt || null;
         this.lastLog = saved.lastLog || 'Job state reloaded.';
@@ -497,6 +496,102 @@ export class ReusableWorkerJobEngine {
           this.poolConfig.currentWorkers = Math.max(1, Math.min(50, saved.poolConfig.currentWorkers));
           this.poolConfig.maxWorkers = 50;
           this.poolConfig.concurrencyLimit = 50;
+        }
+
+        // Restore remaining unfinished tasks if server restarted during an active or paused job
+        this.tasksMap.clear();
+        this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+        const now = Date.now();
+
+        if (Array.isArray(saved.remainingTasks) && saved.remainingTasks.length > 0 && (saved.status === 'running' || saved.status === 'paused')) {
+          // 1. Re-populate completed task stubs so totalTasks and progressPercent remain authoritative
+          for (const cId of this.completedTaskSet) {
+            const parts = cId.split('_');
+            const aId = parts.length >= 2 ? parts.slice(1).join('_') : cId;
+            this.tasksMap.set(cId, {
+              taskId: cId,
+              jobId: this.jobId,
+              animeId: aId,
+              title: aId,
+              type: this.mode === 'fix_missing' ? 'fix_missing' : 'artwork_verification',
+              payload: { id: aId },
+              priority: 'MEDIUM',
+              status: 'completed',
+              workerId: null,
+              claimedByWorkerId: null,
+              enqueuedAt: now,
+              updatedAt: now,
+              completedAt: saved.updatedAt || new Date().toISOString(),
+              retryCount: 0,
+              maxRetries: 2
+            });
+          }
+          for (const fId of this.failedTaskSet) {
+            const parts = fId.split('_');
+            const aId = parts.length >= 2 ? parts.slice(1).join('_') : fId;
+            this.tasksMap.set(fId, {
+              taskId: fId,
+              jobId: this.jobId,
+              animeId: aId,
+              title: aId,
+              type: this.mode === 'fix_missing' ? 'fix_missing' : 'artwork_verification',
+              payload: { id: aId },
+              priority: 'MEDIUM',
+              status: 'failed',
+              workerId: null,
+              claimedByWorkerId: null,
+              enqueuedAt: now,
+              updatedAt: now,
+              completedAt: saved.updatedAt || new Date().toISOString(),
+              retryCount: 2,
+              maxRetries: 2
+            });
+          }
+
+          // 2. Re-enqueue unfinished tasks safely
+          for (const rt of saved.remainingTasks) {
+            if (!rt || !rt.taskId || this.completedTaskSet.has(rt.taskId) || this.failedTaskSet.has(rt.taskId)) {
+              continue;
+            }
+            const prio: TaskPriority = ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'].includes(rt.priority) ? rt.priority : 'MEDIUM';
+            const task: JobTask = {
+              taskId: rt.taskId,
+              jobId: this.jobId,
+              animeId: rt.animeId,
+              seasonId: rt.seasonId || null,
+              title: rt.title || rt.animeId,
+              type: rt.type || 'artwork_verification',
+              payload: { id: rt.animeId, title: rt.title || rt.animeId },
+              priority: prio,
+              status: 'queued',
+              workerId: null,
+              claimedByWorkerId: null,
+              enqueuedAt: now,
+              updatedAt: now,
+              retryCount: typeof rt.retryCount === 'number' ? rt.retryCount : 0,
+              maxRetries: 2
+            };
+            this.tasksMap.set(rt.taskId, task);
+            if (!this.priorityQueues[prio].includes(rt.taskId)) {
+              this.priorityQueues[prio].push(rt.taskId);
+            }
+          }
+        }
+
+        const remainingCount =
+          this.priorityQueues.HIGH.length +
+          this.priorityQueues.MEDIUM.length +
+          this.priorityQueues.NORMAL.length +
+          this.priorityQueues.LOW.length;
+
+        if (remainingCount === 0) {
+          this.status = this.completedTaskSet.size > 0 ? 'completed' : 'idle';
+          this.shouldPause = false;
+          this.shouldStop = false;
+        } else {
+          this.status = saved.status === 'paused' ? 'paused' : 'running';
+          this.shouldPause = this.status === 'paused';
+          this.shouldStop = false;
         }
 
         // Clean out any stale in-flight memory locks from a previous server process
@@ -529,11 +624,36 @@ export class ReusableWorkerJobEngine {
     try {
       if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
       const snapshot = this.getSnapshot();
+      const remainingTasks: Array<{
+        taskId: string;
+        animeId: string;
+        seasonId?: string | null;
+        title: string;
+        type: string;
+        priority: TaskPriority;
+        retryCount: number;
+      }> = [];
+
+      for (const task of this.tasksMap.values()) {
+        if (task.status !== 'completed' && task.status !== 'failed' && !this.completedTaskSet.has(task.taskId) && !this.failedTaskSet.has(task.taskId)) {
+          remainingTasks.push({
+            taskId: task.taskId,
+            animeId: task.animeId,
+            seasonId: task.seasonId || null,
+            title: task.title,
+            type: task.type,
+            priority: task.priority,
+            retryCount: task.retryCount || 0
+          });
+        }
+      }
+
       const tempPath = `${JOB_STATE_PATH}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
       fs.writeFileSync(tempPath, JSON.stringify({
         ...snapshot,
         completedTaskIds: Array.from(this.completedTaskSet),
-        failedTaskIds: Array.from(this.failedTaskSet)
+        failedTaskIds: Array.from(this.failedTaskSet),
+        remainingTasks
       }, null, 2), 'utf-8');
       fs.renameSync(tempPath, JOB_STATE_PATH);
     } catch (err: any) {
@@ -889,6 +1009,8 @@ export class ReusableWorkerJobEngine {
     this.mode = mode;
     this.batchLimit = batchLimit || null;
     this.status = 'running';
+    this.shouldPause = false;
+    this.shouldStop = false;
     this.startedAt = new Date().toISOString();
     this.finishedAt = null;
 
@@ -899,7 +1021,18 @@ export class ReusableWorkerJobEngine {
     this.liveAnimeRegistry.clear();
     this.completedTaskSet.clear();
     this.failedTaskSet.clear();
+    this.rateSamples = [];
     this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+
+    for (const w of this.workerMap.values()) {
+      w.status = 'idle';
+      w.waitReason = null;
+      w.currentTaskId = null;
+      w.currentAnimeId = null;
+      w.currentAnimeTitle = null;
+      w.tasksCompleted = 0;
+      w.tasksFailed = 0;
+    }
 
     let candidateTasks = tasks;
     if (batchLimit && batchLimit > 0) {
@@ -1501,6 +1634,7 @@ export class ReusableWorkerJobEngine {
       return;
     }
 
+    const myRunId = ++this.activeRunId;
     this.isProcessing = true;
     this.shouldPause = false;
     this.shouldStop = false;
@@ -1508,6 +1642,7 @@ export class ReusableWorkerJobEngine {
 
     // Watchdog timer running in background every 5s
     const watchdogTimer = setInterval(() => {
+      if (this.activeRunId !== myRunId) return;
       this.recoverStaleTasks();
     }, WATCHDOG_CHECK_INTERVAL_MS);
 
@@ -1518,7 +1653,7 @@ export class ReusableWorkerJobEngine {
         worker = this.workerMap.get(workerId)!;
       }
 
-      while (!this.shouldPause && !this.shouldStop) {
+      while (!this.shouldPause && !this.shouldStop && this.activeRunId === myRunId) {
         try {
           worker.lastHeartbeat = Date.now();
 
@@ -1567,6 +1702,7 @@ export class ReusableWorkerJobEngine {
 
           // 2. Active Heartbeat Timer while processing this task
           const heartbeatTimer = setInterval(() => {
+            if (this.activeRunId !== myRunId) return;
             this.heartbeat(workerId);
           }, HEARTBEAT_INTERVAL_MS);
 
@@ -1579,11 +1715,15 @@ export class ReusableWorkerJobEngine {
             this.notifyStateListeners();
             const result = await processor(task, workerId);
             clearInterval(heartbeatTimer);
-            this.completeTask(workerId, task.taskId, result, false);
+            if (this.activeRunId === myRunId) {
+              this.completeTask(workerId, task.taskId, result, false);
+            }
           } catch (err: any) {
             clearInterval(heartbeatTimer);
             console.error(`[Worker #${workerId}] Error processing task ${task.title}:`, err.message);
-            this.completeTask(workerId, task.taskId, { error: err.message }, true);
+            if (this.activeRunId === myRunId) {
+              this.completeTask(workerId, task.taskId, { error: err.message }, true);
+            }
           }
 
           // Non-blocking micro-yield to keep event loop cooperative without degrading throughput
@@ -1594,6 +1734,8 @@ export class ReusableWorkerJobEngine {
           await new Promise(r => setTimeout(r, 200));
         }
       }
+
+      if (this.activeRunId !== myRunId) return;
 
       // Worker shutdown/pause cleanup
       worker.status = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
@@ -1618,6 +1760,9 @@ export class ReusableWorkerJobEngine {
     await Promise.all(workerPromises);
 
     clearInterval(watchdogTimer);
+    if (this.activeRunId !== myRunId) {
+      return;
+    }
     this.isProcessing = false;
 
     // Flush in-memory stores to disk on completion
@@ -1674,6 +1819,7 @@ export class ReusableWorkerJobEngine {
   }
 
   public stopJob() {
+    this.activeRunId++;
     this.shouldStop = true;
     this.shouldPause = true;
     this.isProcessing = false;
@@ -1698,7 +1844,7 @@ export class ReusableWorkerJobEngine {
       w.currentSource = null;
       w.currentStep = null;
       w.taskStartedAt = null;
-      w.leaseExpiresAt = null;
+      worker_clear_lease: w.leaseExpiresAt = null;
     }
 
     this.lastLog = 'Job stopped by owner.';
@@ -1709,6 +1855,50 @@ export class ReusableWorkerJobEngine {
       details: 'Job execution stopped by owner request.'
     });
     this.saveJobState();
+    this.notifyStateListeners();
+  }
+
+  public resetJob() {
+    this.activeRunId++;
+    this.shouldStop = false;
+    this.shouldPause = false;
+    this.isProcessing = false;
+    this.jobId = 'job_' + Date.now();
+    this.status = 'idle';
+    this.startedAt = null;
+    this.finishedAt = null;
+    this.batchLimit = null;
+
+    this.tasksMap.clear();
+    this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+    this.claimedTasks.clear();
+    for (const animeId of Array.from(this.animeLeases.keys())) {
+      this.releaseAnimeLease(animeId);
+    }
+    this.seasonLeases.clear();
+    this.liveAnimeRegistry.clear();
+    this.completedTaskSet.clear();
+    this.failedTaskSet.clear();
+    this.rateSamples = [];
+
+    for (const w of this.workerMap.values()) {
+      w.status = 'idle';
+      w.waitReason = null;
+      w.currentTaskId = null;
+      w.currentAnimeId = null;
+      w.currentAnimeTitle = null;
+      w.seasonName = null;
+      w.operation = null;
+      w.currentSource = null;
+      w.currentStep = null;
+      w.taskStartedAt = null;
+      w.leaseExpiresAt = null;
+      w.tasksCompleted = 0;
+      w.tasksFailed = 0;
+    }
+
+    this.lastLog = 'Authoritative 50-worker coordinator ready.';
+    this.saveJobState(true);
     this.notifyStateListeners();
   }
 

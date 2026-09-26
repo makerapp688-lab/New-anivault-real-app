@@ -1,11 +1,11 @@
 {
-  "inspectedAt": "2026-09-24T14:14:05.436Z",
+  "inspectedAt": "2026-09-26T15:42:41.971Z",
   "totalCatalogue": 856,
-  "validArtworkCount": 830,
-  "missingArtworkCount": 26,
+  "validArtworkCount": 567,
+  "missingArtworkCount": 260,
   "incorrectArtworkCount": 0,
-  "requiresReplacementCount": 26,
-  "pendingCount": 26,
+  "requiresReplacementCount": 289,
+  "pendingCount": 289,
   "retryingCount": 0,
   "needsReviewCount": 0,
   "possibleFakeCount": 0,
@@ -13,563 +13,561 @@
     {
       "id": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
       "title": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
-      "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Doraemon-Nobitas-Little-Star-Wars-hindi.webp",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
       "status": "verified",
-      "hasArtwork": true,
-      "issue": "Artwork and anime identity successfully verified against trusted databases."
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_tv_series",
       "title": "Doraemon (TV Series)",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_all_seasons_episodes",
       "title": "Doraemon All Seasons Hindi",
-      "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-All-Seasons-Hindi-Episodes-Download.png",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_miraculous_tales_of_ladybug_cat_noir",
       "title": "Miraculous Tales of Ladybug & Cat Noir",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Miraculous-Tales-of-Ladybug-Cat-Noir-Season-5-2.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_frieren_beyond_journeys_end",
       "title": "Frieren: Beyond Journey's End",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx154587-qQTzQnEJJ3oB.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_baki",
       "title": "BAKI Season 1",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx97888-tdZ1r7qN1DRs.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_dan_da_dan",
       "title": "Dan Da Dan",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx171018-60q1B6GK2Ghb.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_horimiya_the_missing_pieces",
       "title": "Horimiya: The Missing Pieces",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx124080-3i22mRVPBS0T.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_daily_life_of_the_immortal_king",
       "title": "The Daily Life of the Immortal King",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx114121-vxWVgIBlBjox.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_kaiju_no_8",
       "title": "Kaiju No. 8",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx153288-25FBfFJzEQ5O.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_haikyu",
       "title": "Haikyu!!",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20464-ooZUyBe4ptp9.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_black_clover",
       "title": "Black Clover",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx97940-fyh8o7gNbha0.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sakamoto_days",
       "title": "Sakamoto Days",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx177709-e5Qx6RlsBgD5.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_zenshu",
       "title": "Zenshu",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx176273-raxxcgkslf4Q.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_assassination_classroom",
       "title": "Assassination Classroom",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20755-dWrhs569YGUO.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_baki_hanma",
       "title": "Baki Hanma",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx124195-5Z1JSrRlbMRe.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146646-RMrHipfzvfTM.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_tokyo_revengers",
       "title": "Tokyo Revengers",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx120120-cWDmnmeEntSe.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_death_note",
       "title": "Death Note",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1535-kUgkcrfOrkUM.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_vinland_saga",
       "title": "Vinland Saga",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101348-2fhDFPCuMNiz.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136430-gsBsJjA7hGh9.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_gintama",
       "title": "Gintama",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx918-iOaeBVUn4uK7.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_stranger_things_tales_from_85",
       "title": "Stranger Things: Tales from ’85 Season 1",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/04/Stranger-Things-Tales-from-85-Season-1.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_aur_birdopia_ka_sultan_hd",
       "title": "Doraemon The Movie Nobita Aur Birdopia ka Sultan",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-The-Movie-Nobita-Aur-Birdopia-ka-Sultan-Hindi-Download.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_my_hero_academia",
       "title": "My Hero Academia",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21459-nYh85uj2Fuwr.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100166-jUCZYbzn2XLw.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_classroom_of_the_elite",
       "title": "Classroom of the Elite",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx98659-WNyPLIZDpGGY.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_adventure_of_koya_koya_planet",
       "title": "Doraemon The Movie Adventure of Koya Koya Planet",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Adventure-of-Koya-Koya.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_your_name_2016_movie",
       "title": "Your Name (2016) Movie",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/03/Your-Name.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_robot_dad_hindi_dubbed",
       "title": "Shin Chan Movie Robot Dad",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/01/Shin-Chan-Movie-Robot-Dad.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_in_very_very_tasty_tasty",
       "title": "Shin Chan In Very Very Tasty Tasty",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/01/Shin-Chan-In-Very-Very-Tasty-Tasty2.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_villain_aur_dulhan",
       "title": "Shin Chan Movie Villain Aur Dulhan",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-2-3.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_treasure_of_the_buri_buri_kingdom",
       "title": "Shin Chan Movie Treasure Of the Buri Buri Kingdom",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/Shin-Chan-Movie-Treasure-Of-the-Buri-Buri-Kingdom.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_adventures_in_henderland",
       "title": "Shin Chan Movie Adventures In Henderland",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image-1-1.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_pokemon",
       "title": "Pokemon Season 20 Sun & Moon",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21507-4z4gJkZ3N3v0.png",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b527-t6dBVJ5OVcXK.png",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobita_aur_dinosaur_yoddha",
       "title": "Doraemon Nobita Aur Dinosaur Yoddha",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-Aur-Dinosaur-Yoddha-Hindi-.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobita_and_the_steel_troops_hd",
       "title": "Doraemon Nobita And The Steel Troops Download Hindi Dubbed 720P",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-And-The-Steel-Troops-Download-Hindi-Dubbed.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobita_and_the_spiral_city_remastered_hd",
       "title": "Doraemon Nobita and the Spiral City (1997) Remastered",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-and-the-Spiral-City.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobita_and_the_birth_of_japan_hd",
       "title": "Doraemon Nobita and the Birth of Japan",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-Nobita-and-the-Birth-of-Japan-1.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_movie_nobitas_little_star_wars",
       "title": "Doraemon Movie Nobitas Little Star Wars 2021 Download [480/720/1080]",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-2-2-scaled.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_underwater_adventure",
       "title": "Doraemon The Movie Underwater Adventure",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-5.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_stand_by_me_2",
       "title": "Doraemon The Movie Stand By Me 2",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-1-2-scaled.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobitas_chronicle_of_the_moon_exploration",
       "title": "Doraemon The Movie Nobitas Chronicle of the Moon Exploration (2019) English,",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobitas-Chronicle-of-the-Moon-Exploration.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_toofani_adventure",
       "title": "Doraemon The Movie Toofani Adventure",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Gadget-Museum-Ka-Rahasya-1.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_the_explorer_bow_bow",
       "title": "Doraemon The Movie Nobita The Explorer Bow Bow",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-The-Explorer-Bow-Bow-2.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_in_jannat_no_1",
       "title": "Doraemon The Movie Nobita In Jannat No 1",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-In-Jannat-No-1-Hindi-Download.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobitas_three_magical_swordsmen",
       "title": "Doraemon The Movie Nobitas Three Magical Swordsmen",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobitas-Three-Magical-Swordsmen-Hindi-Download-1.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobitas_dorabian_nights",
       "title": "Doraemon The Movie Nobitas Dorabian Nights",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobitas-Dorabian-Nights-Hindi-Dubbed-Download-720P-1.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobitas_dinosaur",
       "title": "Doraemon The Movie Nobitas Dinosaur",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/zyro-image-1.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobitas_great_adventure_in_the_south_seas",
       "title": "Doraemon Nobitas Great Adventure in The South Seas",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Nobitas-Great-Adventure-in-The-South-Seas.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobitas_little_space_war_hd",
       "title": "Doraemon Nobita&#039;s Little Space War",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Nobitas-Little-Space-War-Movie.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_2017_great_adventure_in_the_antarctic_kachi_kochi",
       "title": "Doraemon The Movie 2017: Great Adventure in the Antarctic Kachi Kochi (Nobita Chal Pada Antarctica)",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/12/Great-Adventure-in-the-Antarctic-Kachi-Kochi-Nobita-Chal-Pada-Antarctica.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_2018_nobitas_treasure_island",
       "title": "Doraemon the Movie 2018: Nobitas Treasure Island",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/01/Doraemon-the-Movie-2018-Nobitas-Treasure-Island.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_gadget_museum_ka_rahasya_hd",
       "title": "Doraemon The Movie Gadget Museum Ka Rahasya",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Gadget-Museum-Ka-Rahasya.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_galaxy_super_express_hd",
       "title": "Doraemon The Movie Galaxy Super Express",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Galaxy-Super-Express.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_jadoo_mantar_aur_jahnoom_hd",
       "title": "Doraemon The Movie Jadoo Mantar Aur Jahnoom",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Jadoo-Mantar-Aur-Jahnoom.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_khel_khilona_bhool_bhulaiya",
       "title": "Doraemon The Movie Khel Khilona Bhool Bhulaiya",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Khel-Khilona-Bhool-Bhulaiya-Hindi-Download-720P.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_and_jungle_mein_dangal_hd",
       "title": "Doraemon The Movie Nobita and Jungle Mein Dangal",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-and-Jungle-Mein-Dangal.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_and_the_kingdom_of_robot_singham_hd",
       "title": "Doraemon The Movie Nobita and The Kingdom of Robot Singham",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-The-Movie-Nobita-and-The-Kingdom-of-Robot-Singham.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_aur_antariksh_daku",
       "title": "Doraemon The Movie Nobita Aur Antariksh Daku",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-Aur-Antariksh-Daku.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_aur_ek_jalpari_hd",
       "title": "Doraemon The Movie Nobita Aur Ek Jalpari",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-Aur-Ek-Jalpari-Hindi-Download.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_aur_jadooi_tapu",
       "title": "Doraemon The Movie Nobita Aur Jadooi Tapu Download Hindi Dubbed 720p",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-Aur-Jadooi-Tapu-Hindi.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_bana_superhero",
       "title": "Doraemon The Movie Nobita Bana Superhero",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/06/Doraemon-The-Movie-Nobita-Bana-Superhero.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_in_hara_hara_planet_hd",
       "title": "Doraemon The Movie Nobita In Hara Hara Planet",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-In-Hara-Hara-Planet-Hindi-Movie.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_in_ichi_mera_dost_hd",
       "title": "Doraemon The Movie Nobita in Ichi Mera Dost",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/06/Doraemon-The-Movie-Nobita-in-Ichi-Mera-Dost-Hindi-Movie.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_naruto_shippuden",
       "title": "Naruto: Shippuden",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1735-kGfVm0YqCPcu.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_all_doraemon_movies_in",
       "title": "All Doraemon Movies in",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Movies.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_attack_on_titan",
       "title": "Attack on Titan",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx16498-buvcRTBx4NSm.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_jujutsu_kaisen",
       "title": "Jujutsu Kaisen",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-LHBAeoZDIsnF.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_naruto",
       "title": "Naruto",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20-dE6UHbFFg1A5.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_demon_slayer",
       "title": "Demon Slayer: Kimetsu no Yaiba",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101922-WBsBl0ClmgYL.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_solo_leveling",
       "title": "Solo Leveling",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151807-it355ZgzquUd.png",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-9BDMjAZGEbq4.png",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_bungle_in_the_jungle",
       "title": "Shin Chan Movie Bungle In The Jungle",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image-2.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas",
       "title": "Shin Chan Movie Action Kamen vs Higure Rakshas",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_all_shinchan_movies_in",
       "title": "All Shinchan Movies in",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/All-Shinchan-Movies-in-Hindi-Download.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_dark_tama_tama_thrilling_chase",
       "title": "Shin Chan Movie Dark Tama Tama Thrilling Chase",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-1.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_the_golden_sword_hindi",
       "title": "Shin Chan Movie The Golden Sword",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-3.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_the_spy_hindi",
       "title": "Shin Chan Movie The Spy",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-4.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_movie_himawari_banegi_rajkumari",
       "title": "Shin Chan Movie Himawari Banegi Rajkumari",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-6.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_shin_chan_the_movie_masala_story",
       "title": "Shin Chan The Movie Masala Story",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-2-5.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_yeh_bhi_tha_nobita_woh_bhi_tha_nobita",
       "title": "Doraemon The Movie Yeh Bhi Tha Nobita Woh Bhi Tha Nobita",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+      "status": "verified",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_stand_by_me",
       "title": "Doraemon The Movie Stand By Me",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Stand-By-Me-2-e1590517235111.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_the_movie_nobita_ki_nayi_duniya",
       "title": "Doraemon The Movie Nobita Ki Nayi Duniya",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon_The_Movie_Nobita_Ki_Nayi_Duniya_1-N0ykhChs.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
@@ -604,392 +602,392 @@
       "id": "anivault_rt_daemons_of_the_shadow_realm",
       "title": "Daemons of the Shadow Realm",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Daemons-of-the-Shadow-Realm-Season-1-1024x576.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_dr_stone",
       "title": "Dr. STONE",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105333-GybuoSoOZfpH.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_high_school_dxd",
       "title": "High School DxD",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/nx11617-nmxMU9Zh3H5R.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_wistoria_wand_and_sword",
       "title": "Wistoria: Wand and Sword",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx174576-tpKcHG0eO6CS.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182300-IYkq5KrkQq1V.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_bleach_thousand_year_blood_war",
       "title": "Bleach: Thousand-Year Blood War",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx116674-p3zK4PUX2Aag.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185874-aU3e6tBT6wwA.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobitas_sky_utopia",
       "title": "Doraemon Nobita’s Sky Utopia Hindi Dubbed",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/05/Doraemon-Nobitas-Sky-Utopia-movie-e1746426976452.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_doraemon_nobitas_new_dinosaur_hd",
       "title": "Doraemon Nobita’s New Dinosaur Hindi",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/01/Doraemon-Nobitas-New-Dinosaur-1024x576.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_devil_may_cry",
       "title": "Devil May Cry",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1726-IrpH32PVADiO.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_release_that_witch",
       "title": "Release That Witch",
       "artworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/release-that-witch-season-1-1024x576.webp",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_mushoku_tensei",
       "title": "Mushoku Tensei: Jobless Reincarnation",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx108465-1ANspF1EWyFx.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178789-hNXjKFzUq7mk.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_that_time_i_got_reincarnated_as_a_slime",
       "title": "That Time I Got Reincarnated as a Slime",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101280-tDxCVJm714nt.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182205-q2AeO1owuQbO.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_blue_lock",
       "title": "Blue Lock",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx137822-U8naszP96vzC.png",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163146-BVZPgyzkqi82.png",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_rezero",
       "title": "Re:Zero - Starting Life in Another World",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21355-wRVUrGxpvIQQ.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online",
       "title": "Sword Art Online",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11757-SxYDUzdr9rh2.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_no_game_no_life",
       "title": "No Game, No Life",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b19815-sEOQ9yQaPKlk.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_bleach",
       "title": "Bleach",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx269-d2GmRkJbMopq.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_konosuba_gods_blessing_on_this_wonderful_world_season_2_hindi_dubbed_episodes_download_hd",
       "title": "KONOSUBA - God's blessing on this wonderful world!",
-      "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/KONOSUBA-Gods-blessing-on-this-wonderful-world-Season-2-Hindi-Dubbed-Episodes-Download-HD1-470x264.jpg",
-      "status": "unverified",
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_spirited_away",
       "title": "Spirited Away",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199-sWefXJvXkDOb.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_rising_of_the_shield_hero",
       "title": "The Rising of the Shield Hero",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx99263-LcazQwdlWzMy.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online_ii",
       "title": "Sword Art Online II",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_angel_beats",
       "title": "Angel Beats!",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx6547-SYexAn5aFyss.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_overlord",
       "title": "Overlord",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20832-vUNm5zrYWifc.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_devil_is_a_part_timer",
       "title": "The Devil is a Part-Timer!",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx15809-ECv3HyOYJKrk.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_re_zero_starting_life_in_another_world_season_2",
       "title": "Re:ZERO -Starting Life in Another World- Season 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108632-lQWnmw7XaNOK.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_fairy_tail",
       "title": "Fairy Tail",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b6702-KI4qgSMyI8Pm.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_konosuba_god_s_blessing_on_this_wonderful_world_2",
       "title": "KONOSUBA -God's blessing on this wonderful world! 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_miss_kobayashi_s_dragon_maid",
       "title": "Miss Kobayashi's Dragon Maid",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21776-bwPaYKhnKfUs.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_mushoku_tensei_jobless_reincarnation_cour_2",
       "title": "Mushoku Tensei: Jobless Reincarnation Cour 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx127720-ADJgIrUVMdU9.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_that_time_i_got_reincarnated_as_a_slime_season_2",
       "title": "That Time I Got Reincarnated as a Slime Season 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108511-PufFordLNyIb.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_eminence_in_shadow",
       "title": "The Eminence in Shadow",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx130298-YMdcKHytpWNH.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_re_zero_starting_life_in_another_world_season_2_part_2",
       "title": "Re:ZERO -Starting Life in Another World- Season 2 Part 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx119661-GDbUZxrZMz01.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online_alicization",
       "title": "Sword Art Online: Alicization",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx100182-KctPmCJ2smHQ.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_wonder_egg_priority",
       "title": "WONDER EGG PRIORITY",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx124845-JXORhqCTGt04.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_saga_of_tanya_the_evil",
       "title": "Saga of Tanya the Evil",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21613-qT3NiwYP5dYc.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_that_time_i_got_reincarnated_as_a_slime_season_2_part_2",
       "title": "That Time I Got Reincarnated as a Slime Season 2 Part 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx116742-jn0dW23ftehq.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_overlord_ii",
       "title": "Overlord II",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx98437-5q0GWqHhNAgJ.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_fullmetal_alchemist",
       "title": "Fullmetal Alchemist",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121-zjmixZ428Mwv.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_mushoku_tensei_jobless_reincarnation_season_2",
       "title": "Mushoku Tensei: Jobless Reincarnation Season 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146065-IjirxRK26O03.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_overlord_iii",
       "title": "Overlord III",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101474-tGRyvSAWMjU9.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_rising_of_the_shield_hero_season_2",
       "title": "The Rising of the Shield Hero Season 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx111321-dIr3dEKOIPer.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_konosuba_god_s_blessing_on_this_wonderful_world_legend_of_cr",
       "title": "KONOSUBA -God's blessing on this wonderful world!- Legend of Crimson",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx102976-2Yi5icRbjukO.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_log_horizon",
       "title": "Log Horizon",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx17265-RyErURYesjJt.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_no_game_no_life_zero",
       "title": "No Game, No Life Zero",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx21875-ybSgx75MgRMM.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_arifureta_from_commonplace_to_world_s_strongest",
       "title": "Arifureta: From Commonplace to World's Strongest",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100668-DvOn5bMOt4cy.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online_alicization_war_of_underworld",
       "title": "Sword Art Online: Alicization - War of Underworld",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108759-jcXbDf9BJTcb.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_mushoku_tensei_jobless_reincarnation_season_2_part_2",
       "title": "Mushoku Tensei: Jobless Reincarnation Season 2 Part 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166873-xO0BRPkmwFll.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_how_not_to_summon_a_demon_lord",
       "title": "How NOT to Summon a Demon Lord",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101004-rJLBIWGypbYK.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_world_s_finest_assassin_gets_reincarnated_in_another_wor",
       "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx129898-FRUzDtPhRigt.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_cautious_hero_the_hero_is_overpowered_but_overly_cautious",
       "title": "Cautious Hero: The Hero Is Overpowered but Overly Cautious",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105156-ZVtxISdoUqnY.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_gate",
       "title": "Gate",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20994-pSDk4I58jAK5.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online_alicization_war_of_underworld_part_2",
       "title": "Sword Art Online: Alicization - War of Underworld Part 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114308-8UBiS7U9buzu.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_re_zero_starting_life_in_another_world_season_3",
       "title": "Re:ZERO -Starting Life in Another World- Season 3",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163134-yieRFbvUOH9a.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_the_eminence_in_shadow_season_2",
       "title": "The Eminence in Shadow Season 2",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx161964-JpkEbHI8ivaP.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_sword_art_online_the_movie_ordinal_scale",
       "title": "Sword Art Online the Movie: Ordinal Scale",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx21403-k8DZhZ3x1BCO.png",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_that_time_i_got_reincarnated_as_a_slime_season_3",
       "title": "That Time I Got Reincarnated as a Slime Season 3",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156822-Jzo2ITWgm4kM.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
       "id": "anivault_rt_wise_man_s_grandchild",
       "title": "Wise Man’s Grandchild",
       "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100112-eExFpnYG2QAK.jpg",
-      "status": "unverified",
+      "status": "verified",
       "hasArtwork": true
     },
     {
@@ -3389,30 +3387,34 @@
     {
       "id": "mal_1686",
       "title": "Bleach: Memories of Nobody",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-j5P3w0k8a2vN.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true,
+      "issue": "Artwork automatically fixed with verified poster from anilist (100% match)."
     },
     {
       "id": "mal_2889",
       "title": "Bleach: The DiamondDust Rebellion",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-q8P0v2k4a7vN.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true,
+      "issue": "Artwork automatically fixed with verified poster from anilist (84% match)."
     },
     {
       "id": "mal_4835",
       "title": "Bleach: Fade to Black",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-k2W0n8vK4p1L.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true,
+      "issue": "Artwork automatically fixed with verified poster from anilist (78% match)."
     },
     {
       "id": "mal_8247",
       "title": "Bleach: Hell Verse",
-      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-a8P2k0v4wL9n.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+      "status": "auto_fixed",
+      "hasArtwork": true,
+      "issue": "Artwork automatically fixed with verified poster from anilist (73% match)."
     },
     {
       "id": "mal_44200",
@@ -4013,2021 +4015,2256 @@
       "id": "anivault_rt_hindi_pokemon_season_1_indigo_league_hindi_episodes_watch_download_hd",
       "title": "Pokemon",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/09/Pokemon-Season-01-Indigo-League-All-Episodes-Download-In-Hindi-In-720P-1080P.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_adventures_in_the_orange_islands_season_2_hindi_tamil_telugu_episodes_download_hd",
       "title": "Pokemon Adventures on the Orange Islands",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/04/Pokemon-Adventures-on-the-Orange-Islands-Season-2-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_xy_mega_evolution_special_episodes_hindi_tamil_telugu_watch_download_hd",
       "title": "Pokemon XY Mega Evolution Special Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/10/images-10.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_pikachus_winter_vacation_special_hindi_episodes_download_hd",
       "title": "Pokemon Pikachu’s Winter Vacation Special Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/06/Pokemon-Pikachus-Winter-Vacation-Special-Hindi-Episodes-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_the_series_xyz_season_19_episodes_hindi_dubbed_download_hd",
       "title": "Pokémon the Series: XYZ (",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2024/04/Pokemon-Season-19-XYZ-in-Hindi.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_horizons_the_series_season_26_episodes_hindi_dubbed_download_hd",
       "title": "Pokémon Horizons: The Series (",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2024/05/pokemon-season-26-horizons-in-hindi.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_1_mewtwo_ka_badla_hindi_download_360p_480p_720p_1080p_fhd",
       "title": "Pokemon Movie 1 Mewtwo Ka Badla",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/09/Pokemon-Movie-–-01-Mewtwo-ka-Badla-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_mewtwo_returns_movie_hindi_download_hd",
       "title": "Pokemon Mewtwo Returns (2001) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/10/Pokemon-Mewtwo-Returns-2001-Movie-Hindi-Dubbed-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_2_ash_pikachu_aur_lugia_in_danger_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 2 Ash Pikachu Aur Lugia in Danger Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-02-Ash-Pikachu-Aur-Lugia-in-Danger-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_3_unown_ka_tehelka_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 3 Unown ka Tehelka Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-03-Unown-Ka-Tehelka-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_4_khatre_ka_jungle_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 4 Khatre Ka Jungle Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-04-Khatre-Ka-Jungle-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_5_soul_dew_ka_raaz_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 5 Soul Dew Ka Raaz Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/10/Pokemon-Movie-–-05-Soul-Dew-Ka-Raaz-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_6_jirachi_ka_wonder_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 6 Jirachi Ka Wonder Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-06-Jirachi-Ka-Wonder-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_7_deoxy_aur_tory_ki_story_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 7 Deoxy Aur Tory Ki Story Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-07-Deoxy-Aur-Tory-Ki-Story-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_8_lucario_ki_toofani_shakti_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 8 Lucario Ki Toofani Shakti Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-08-Lucario-Ki-Toofani-Shakti-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_9_ranger_and_the_temple_of_the_sea_hindi_download_hd",
       "title": "Pokemon Movie 9 Ranger and the Temple of the Sea",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/10/Pokemon-Movie-9-Ranger-and-the-Temple-of-the-Sea-Hindi-Download-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_10_darkrai_dost_ya_dushman_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 10 Darkrai Dost ya Dushman Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-10-Darkrai-Dost-Ya-Dushman-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_11_giratina_aur_ek_mahaa_yodhha_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 11 Giratina aur ek Mahaa Yodhha Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-Movie-–-11-Giratina-Aur-Ek-Maha-Yodhha-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_12_arceus_aur_jeevan_ka_jewel_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 12 Arceus aur Jeevan ka Jewel Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/09/Pokemon-Movie-–-12-Arceus-Aur-Jeevan-Ka-Jewel-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_13_zoroark_mayajaal_ka_ustaad_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 13 Zoroark Mayajaal ka Ustaad Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/09/Pokemon-Movie-–-13-Zoroark-Mayajaal-Ka-Ustaad-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_14_victini_aur_reshiram_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 14 Victini Aur Reshiram Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/10/Pokemon-Movie-–-14-Victini-Aur-Reshiram-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_15_kyurem_ka_muqabala_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 15 Kyurem Ka Muqabala Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/10/Pokemon-Movie-–-15-Kyurem-Ka-Muqabala-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_16_genesect_aur_mewtwo_ek_shaandar_kahani_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 16 Genesect Aur Mewtwo Ek Shaandar Kahani Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/11/Pokemon-Movie-–-16-Genesect-Aur-Mewtwo-Ek-Shaandar-Kahani-Hindi-Jap-Eng.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_17_dabang_diancie_aur_diamond_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 17 Dabang Diancie Aur Diamond Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/10/Pokemon-Movie-17-Hindi-–-Tamil-–-Telugu-Download-Dabang-Diancie-Aur-Diamond.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_18_hoopa_and_the_magic_rings_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 18 Hoopa and the Magic Rings Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/06/Pokemon-Movie-18-Hindi-–-Tamil-–-Telugu-Download-Hoopa-and-the-Magic-Rings.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_19_volcanion_ki_kahani_hindi_dubbed_download_hd",
       "title": "Pokemon Movie 19 Volcanion Ki Kahani Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/10/m4.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_20_aap_selected_ho_hindi_tamil_telugu_download_hd",
       "title": "Pokemon Movie 20 Aap Selected Ho Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/10/m5.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_22_mewtwo_strikes_back_evolution_hindi_download_hd",
       "title": "Pokemon Movie 22 Mewtwo Strikes Back Evolution",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Pokemon-The-Movie-–-Mewtwo-Strikes-Back-Evolution-Hindi-Tamil-Telugu-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_movie_23_jungle_ke_raaz_hindi_download_hd",
       "title": "Pokemon Movie 23 Jungle Ke Raaz",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114564-Imh6m5Tejii6.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_1_dead_zone_hindi_download_0_hd",
       "title": "Dragon Ball Z Movie 1 Dead Zone",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/04/DBZ-MOVIE-1-1024x688.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_2_the_worlds_strongest_hindi_download_hd",
       "title": "Dragon Ball Z Movie 2 The World’s Strongest",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/895-GuuZOIRCBHhI.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_3_the_tree_of_might_hindi_download_hd",
       "title": "Dragon Ball Z Movie 3 The Tree of Might",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/896.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_4_lord_slug_hindi_download_hd",
       "title": "Dragon Ball Z Movie 4 Lord Slug",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/897-XgUEvu807MpG.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_5_coolers_revenge_hindi_watch_download_hd",
       "title": "Dragon Ball Z Movie 5 Cooler’s Revenge Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/03/Dragon-Ball-Z-Movie-5-Coolers-Revenge-Hindi-Watch-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_6_the_return_of_cooler_hindi_watch_download_hd",
       "title": "Dragon Ball Z Movie 6 The Return of Cooler Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/los-guerreros-mas-poderosos.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_7_super_android_13_hindi_watch_download_0_hd",
       "title": "Dragon Ball Z Movie 7 Super Android 13 Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/super-android-13-dvd-cover.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_8_broly_the_legendary_super_saiyan_hindi_watch_download_hd",
       "title": "Dragon Ball Z Movie 8 Broly The Legendary Super Saiyan Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/DBZ-MOVIE-8.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_9_bojack_unbound_hindi_download_hd",
       "title": "Dragon Ball Z Movie 9 Bojack Unbound Hindi Watch Download (OLD CN DUB)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/dragon-ball-z-movie-18-widescreen-wallpaper.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_10_broly_second_coming_hindi_watch_download_fhd",
       "title": "Dragon Ball Z Movie 10 Broly – Second Coming Hindi Watch Download FHD",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/30218-dragon-ball-z-broly-triple-feature-bluray-full.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_11_bio_broly_hindi_watch_download_hd",
       "title": "Dragon Ball Z Movie 11 Bio-Broly Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/DBZ-MOVIE-11.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_12_fusion_reborn_hindi_watch_download_hd",
       "title": "Dragon Ball Z Movie 12 Fusion Reborn Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/12-la-fusion-de-goku-y-vegeta-janemba.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_z_movie_15_resurrection_f_hindi_download_hd",
       "title": "Dragon Ball Z Movie 15 Resurrection F",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/Dragon-Ball-Z-Movie-15-Resurrection-F-Hindi-Dubbed-Movie-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dragon_ball_super_super_hero_2022_movie_hindi_download_hd",
       "title": "Dragon Ball Super Super Hero 2022 Movie",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_beyblade_season_1_remastered_hindi_episodes_download_hd",
       "title": "Beyblade",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/04/91dWMKt7LSL._RI_.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_metal_fusion_season_1_hindi_episodes_watch_download_hd",
       "title": "Beyblade Metal Fusion",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/06/Beyblade-Metal-Fusion-Hindi-Episodes-Download.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_metal_masters_season_2_hindi_episodes_download_in_hd",
       "title": "Beyblade Metal Masters",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b8410-fXa60HqVggen.png",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_beyblade_metal_fury_season_3_hindi_episodes_download_cn_dub",
       "title": "Beyblade Metal Fury",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Beyblade-Metal-Fury-Season-3-Hindi-Episodes-Download-HD-CN.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_shogun_steel_season_4_hindi_episodes_download_hd",
       "title": "Beyblade Shogun Steel",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/rti-1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_season_1_hindi_episodes_download_in_hd",
       "title": "Beyblade Burst",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/03/Beyblade-Burst-Season-1-Episodes-Hindi-Download-360p-480p-720p-1080p.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_evolution_season_2_hindi_episodes_download_in_hd",
       "title": "Beyblade Burst Evolution",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/04/beyblade-burst-turbo-les-accros-aux-series-interieur-dessin-anime-beyblade-burst-en-francais.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_turbo_season_3_hindi_episodes_download_in_hd",
       "title": "Beyblade Burst Turbo",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101115-D0LrlWZtbOeX.png",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_rise_season_4_hindi_episodes_watch_download_hd",
       "title": "Beyblade Burst Rise",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108853-ebznx715AJ9x.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_surge_season_5_hindi_episodes_download_hd",
       "title": "Beyblade Burst Surge",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/11/beyblade-burst-surge-jpg.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_burst_quaddrive_season_6_hindi_episodes_download_hd",
       "title": "Beyblade Burst QuadDrive",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/12/Beyblade-Burst-QuadDrive-Episodes-in-Tamil-Telugu-Hindi-Eng-1080p.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beywheelz_season_1_hindi_episodes_download_720p_hd",
       "title": "BeyWheelz",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/3.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beywarriors_beyraiderz_season_2_hindi_episodes_watch_download_hd",
       "title": "BeyWarriors BeyRaiderz Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/12/Untitled-1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beywarriors_cyborg_season_3_hindi_episodes_download_hd",
       "title": "BeyWarriors Cyborg",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/01/BeyWarriors-Cyborg-Season-3-Hindi-Episodes-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_ek_bhayankar_yudh_movie_hindi_download_in_hd",
       "title": "Beyblade Ek Bhayankar Yudh Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Beyblade-Movie-Ek-Bhayankar-Yudh-Movie-Hindi-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_beyblade_movie_gen_2_metal_fight_hindi_download_hd",
       "title": "Beyblade Movie Gen 2 - Metal Fight",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/07/Untitled-2.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_doraemon_season_1_hindi_episodes_download_in_hd",
       "title": "Doraemon",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/Doraemon_1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_doraemon_all_movies_hindi_dubbed_download_hd",
       "title": "Doraemon All Movies",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/04/Doraemon-All-Movies-Hindi-–-Tamil-–-Telugu-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_shinchan_all_movies_hindi_tamil_telugu_download_hd",
       "title": "Shin Chan All Movies Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/09/Shin-Chan-All-Movies-Hindi-Dubbed-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_shinchan_season_1_hindi_episodes_download_in_hd",
       "title": "Shinchan",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/Shin-Chan-Season-1-Hindi-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_mickey_mouse_clubhouse_season_1_hindi_episodes_download_hd",
       "title": "Mickey Mouse Clubhouse",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/05/Mickey-Mouse-Clubhouse-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_perman_all_hindi_dubbed_episodes_download_watch_online",
       "title": "Perman All Season Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/04/wp2474160.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kochikame_hindi_dubbed_episodes_download_hd",
       "title": "Kochikame",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/Kochikame-Hindi-Dubbed-Episodes-Download-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kochikame_the_movie_hindi_subbed_download_in_hd",
       "title": "Kochikame The Movie Hindi Subbed Download in HD",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/05/qiFWFZc.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kiteretsu_all_season_hindi_dubbed_episodes_download_hd",
       "title": "Kiteretsu All Season Episodes Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/10/Kiteretsu-All-Hindi-Dubbed-Episodes-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_gutsy_frog_dokonjou_gaeru_hindi_episodes_download_fhd",
       "title": "The Gutsy Frog (Dokonjou Gaeru) Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/4.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_luckyman_1994_complete_all_episodes_hindi_dubbed_download_hd",
       "title": "Luckyman (1994) Complete All Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2024/09/Luckyman-1994-Complete-All-Episodes-Hindi-Dubbed-Download-HD-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ghostforce_season_1_hindi_episodes_download_hd",
       "title": "Ghostforce",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/11/dis2.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_ghost_and_molly_mcgee_season_1_hindi_episodes_download",
       "title": "The Ghost and Molly McGee",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/11/The-Ghost-and-Molly-McGee-Season-1-Episodes-in-Hindi-Eng-Dual-Audio-Download-jpg.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kim_possible_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Kim Possible",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/07/Kim-Possible-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD-jpg.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_big_hero_6_the_series_season_1_hindi_episodes_download_0hd",
       "title": "Big Hero 6 The Series",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/08/Big-Hero-6-The-Series-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_big_hero_6_2014_movie_hindi_dubbed_download_in_hd",
       "title": "Big Hero 6 2014 Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Big-Hero-6-2014-Movie-Hindi-Dubbed-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_big_hero_6_baymax_returns_2017_movie_hindi_tamil_download_in_hd",
       "title": "Big Hero 6 Baymax Returns 2017 Movie Hindi – Tamil Download in HD",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Big-Hero-6-Baymax-Returns-2017-Movie-Hindi-–-Tamil-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_miraculous_world_new_york_united_heroez_movie_hindi_download_hd",
       "title": "Miraculous World: New York, United Heroez Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Miraculous-World-New-York-United-Heroez-Disney-India-Hindi-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_miraculous_world_shanghai_the_legend_of_ladydragon_movie_hindi_download_360p_480p_720p_hd_1080p_fhd",
       "title": "Miraculous World Shanghai - The Legend of Ladydragon Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_phineas_and_ferb_season_1_hindi_episodes_download_hd",
       "title": "Phineas and Ferb",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Phineas-and-Ferb-Season-1-Hindi-Tamil-Telugu-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_phineas_and_ferb_movie_across_the_2nd_dimension_hindi_tamil_telugu_download_fhd",
       "title": "Phineas And Ferb Movie Across the 2nd Dimension Hindi – Tamil – Telugu Download FHD",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/Phineas-And-Ferb-The-Movie-Across-the-2nd-Dimension.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_phineas_and_ferb_star_wars_movie_hindi_tamil_telugu_download_fhd",
       "title": "Phineas and Ferb Star Wars Movie Hindi – Tamil – Telugu Download FHD",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/Phineas-and-Ferb-Star-Wars-Movie-Hindi-–-Tamil-–-Telugu-Download-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_phineas_and_ferb_mission_marvel_movie_hindi_dubbed_download_hd",
       "title": "Phineas and Ferb Mission Marvel Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/Phineas-and-Ferb-Mission-Marvel-Special-Movie-Hindi-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tron_uprising_season_1_hindi_episodes_download_360p_480p_720p_hd_1080p_fhd",
       "title": "Tron Uprising",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Tron-Uprising-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_little_mermaid_season_1_hindi_episodes_download_hd",
       "title": "The Little Mermaid",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/The-Little-Mermaid-Season-1-Hindi-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_digimon_xros_wars_season_1_hindi_episodes_download_720p_hd_1080p_fhd",
       "title": "Digimon Xros Wars",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Digimon-Xros-Wars-Season-1-Hindi-Episodes-Download-e1583404651388.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ryukendo_all_hindi_episodes_download",
       "title": "Ryukendo All Hindi",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Ryukendo-All-Hindi-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cars_2006_movie_hindi_dubbed_download_hd_disney_movies",
       "title": "Cars (2006) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Disney’s-Cars-Movie-Hindi-Dubbed-Download-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cars_2_2011_movie_hindi_dubbed_download_hd",
       "title": "Cars 2 (2011) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Disney’s-Cars-2-Movie-Hindi-Dubbed-Download-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cars_3_2017_movie_hindi_dubbed_download_hd",
       "title": "Cars 3 (2017) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Disney’s-Cars-3-Movie-Hindi-Dubbed-Download-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tangled_the_series_season_1_hindi_episodes_download_hd",
       "title": "Tangled The Series",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/1532676485802_1533032644025_l_medium.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_star_vs_the_forces_of_evil_season_1_hindi_episodes_download_hd",
       "title": "Star vs the Forces of Evil",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Star-vs-the-Forces-of-Evil-Season-1-Hindi-Dubbed-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_milo_murphys_law_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Milo Murphy’s Law",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/05/Milo-Murphys-Law-Season-1-Hindi-Episodes-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_gravity_falls_season_1_hindi_episodes_download_hd",
       "title": "Gravity Falls",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Gravity-Falls-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_timon_and_pumbaa_season_1_episodes_hindi_tamil_telugu_download_hd",
       "title": "Timon and Pumbaa",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Timon-Pumbaa-Season-1-Hindi-Episodes-Download-360p-480p.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_new_adventures_of_winnie_the_pooh_season_1_hindi_episodes_download_01",
       "title": "The New Adventures of Winnie the Pooh",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/The-New-Adventures-of-Winnie-the-Pooh-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_planes_2013_movie_hindi_dubbed_download_hd",
       "title": "Planes (2013) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Planes-2013-Movie-Hindi-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_lilo_stitch_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Lilo & Stitch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/04/Lilo-Stitch-Season-1-Hindi-Dubbed-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ducktales_season_1_hindi_tamil_telugu_episodes_download",
       "title": "DuckTales",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/03/DuckTales-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD-scaled.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_talespin_season_1_hindi_episodes_download_hd",
       "title": "TaleSpin",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/05/TaleSpin-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ultra_b_season_1_hindi_episodes_download_hd",
       "title": "Ultra B",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/04/Ultra-B-Episodes-Hindi-Telugu-Jap-Multi-Audio-WEB-480p-720p-1080p-HD-10bit-HEVC-REMASTERED.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_yu_gi_oh_duel_monsters_season_1_hindi_episodes_download_hd",
       "title": "Yu-Gi-Oh! Duel Monsters",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/11/Yu-Gi-Oh-Duel-Monsters-Hindi-Dubbed-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_avengers_assemble_season_2_hindi_tamil_telugu_episodes_download_hd",
       "title": "Avengers Assemble",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/05/Avengers-Assemble-Season-2-Hindi-English-Tamil-Telugu-Multi-Audio-480p-720p-1080p-HD-WEB-DL-ESub.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_bakugan_battle_brawlers_season_1_hindi_episodes_download_in_hd",
       "title": "Bakugan Battle Brawlers",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/10/Bakugan-Battle-Brawlers-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_guardians_of_the_galaxy_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Guardians of the Galaxy",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/12/Guardians-of-the-Galaxy-Season-1-Hindi-Episodes-Download-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_hulk_and_the_agent_of_smash_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Hulk And The Agent Of SMASH",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/12/Hulk-And-The-Agent-Of-SMASH-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_iron_man_armored_adventures_season_1_hindi_episodes_download_in_hd",
       "title": "Iron Man Armored Adventures",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/01/Iron-Man-Armored-Adventures-Season-1-Hindi-Episodes-Download-in-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_iron_man_1994_all_hindi_episodes_download",
       "title": "Iron Man (1994) All Hindi",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/05/Iron-Man-The-Animated-Series-1994-Hindi-Dubbed-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_iron_man_2010_hindi_episodes_download_hd",
       "title": "Iron Man 2010 Hindi Episodes",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/6875.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_wolverine_2011_season_1_hindi_episodes_download_hd",
       "title": "Wolverine (2011)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/12/Download-Wolverine-Anime-Series-Episodes-in-Hindi-Multi-Audio.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_x_men_2011_season_1_hindi_episodes_download_hd",
       "title": "X-Men (2011)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2023/01/Marvel-Anime-X-Men-2011-Episodes-in-Hindi-English-Dual-Audio-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_blade_2011_season_1_hindi_episodes_download_hd",
       "title": "Blade (2011)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2023/02/Marvel-Anime-Blade-2011-Episodes-in-Hindi-Eng-Jap-Multi-Audio-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_marvel_disk_wars_the_avengers_hindi_episodes_download_hd",
       "title": "Marvel Disk Wars The Avengers Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/06/Marvel-Disk-Wars-The-Avengers-Episodes-Hindi-Download-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ultimate_spider_man_season_1_hindi_episodes_download_hd",
       "title": "Ultimate Spider-Man",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/04/Ultimate-Spider-Man-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_marvel_future_avengers_season_1_hindi_episodes_download_hd",
       "title": "Marvel Future Avengers",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/01/Marvel-Future-Avengers-Hindi-Episodes-Download-in-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_marvels_spider_man_2017_season_2_hindi_dubbed_episodes_download_hd",
       "title": "Marvel’s Spider-Man (2017)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/12/Download-Marvels-Spider-Season-2-in-Hindi.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_spider_man_the_animated_series_1994_all_season_hindi_episodes_download_hd",
       "title": "Spider-Man The Animated Series (1994) All Season Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Spider-Man-The-Animated-Series-1992-Hindi-Dubbed-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_spectacular_spider_man_season_1_hindi_episodes_720p_hd",
       "title": "The Spectacular Spider-Man",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/The-Spectacular-Spider-Man-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_star_wars_resistance_season_1_episodes_hindi_download_hd",
       "title": "Star Wars Resistance",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Star-Wars-Resistance-Season-1-Episodes-Hindi-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_star_wars_rebels_season_1_hindi_episodes_download_hd",
       "title": "Star Wars Rebels",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Star-Wars-Rebels-Season-1-Multi-Audio-Hindi-Eng-Tamil-Telugu-720p-1080p-HD-WEB-DL-ESub.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_avengers_earths_mightiest_heroes_season_1_hindi_episode_download_in_01",
       "title": "The Avengers: Earth’s Mightiest Heroes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/04/The-Avengers-Earths-Mightiest-Heroes-Season-1-Episodes-in-Hindi-English-Tamil-Telugu-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_thor_tales_of_asgard_movie_hindi_watch_download_hd",
       "title": "Thor Tales of Asgard Movie Hindi Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/06/Thor-Tales-of-Asgard-Movie-Hindi-Watch-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_avatar_the_last_airbender_season_1_hindi_tamil_telugu_malayalam_episodes_download",
       "title": "Avatar The Last Airbender",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/02/Avatar-The-Last-Airbender-Season-1-Hindi-–-Tamil-–-Telugu-–-Bengali-–-Malayalam-Episodes-Download-Nick-ETV-Dub.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_avatar_the_legend_of_korra_season_1_hindi_episodes_download_hd",
       "title": "Avatar The Legend of Korra",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2023/01/Avatar-The-Legend-of-Korra-Season-1-Episodes-in-Tamil-Telugu-Hindi-Eng-1080p-BluRay-ESub.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dinosaur_king_season_1_hindi_episodes_download_hd",
       "title": "Dinosaur King",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/08/Dinosaur-King-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_digimon_adventure_tri_movie_1_reunion_hindi_download_360p_480p_720p_hd_1080p",
       "title": "Digimon Adventure tri Movie 1 Reunion",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Digimon-Adventure-tri-Movie-1-Reunion-Hindi-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_digimon_adventure_tri_movie_2_determination_hindi_download_360p_480p_720p_hd_1080p",
       "title": "Digimon Adventure tri Movie 2 Determination",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Digimon-Adventure-tri-Movie-2-Determination-Hindi-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_digimon_adventure_tri_movie_3_confession_hindi_download_360p_480p_720p_hd_1080p",
       "title": "Digimon Adventure tri Movie 3 Confession",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Digimon-Adventure-tri-Movie-3-Confession-Hindi-Dubbed-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_digimon_adventure_tri_movie_4_loss_hindi_download_360p_480p_720p_hd1080p",
       "title": "Digimon Adventure tri Movie 4 Loss",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Digimon-Adventure-tri-Movie-4-Loss-Hindi-Download-360p-480p-720p-HD1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ghosts_at_school_hindi_episodes_download_ghost_at_school",
       "title": "Ghosts at School Hindi",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/06/ghost-stories.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_idaten_jump_season_1_all_hindi_dubbed_episodes_download_hd",
       "title": "Idaten Jump",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1316-LGJ4cP4Kwltj.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_jing_ju_cats_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Jing Ju Cats",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121199-p3YA6OPNRut6.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_mighty_cat_masked_niyander_hindi_tamil_episodes_download_hd",
       "title": "Mighty Cat Masked Niyander Hindi – Tamil Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/01/Mighty-Cat-Masked-Niyander-Episodes-Hindi-Tamil-Eng-Multi-Audio-576p-WEB-DL.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ninja_hattori_1981_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Ninja Hattori (1981)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/47115599-124b-4666-a2ad-4734e9647ccf-bbdccbaa-3391-4ba9-be19-8c963f1c4d60_RGB_SD._RI_VVEiwVdxppnlI0S5ffT8NkLFqaL73RAB_TTW_-1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ninja_hattori_returns_season_1_hindi_episodes_download_hd",
       "title": "Ninja Hattori Returns",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/03/Ninja-Hattori-Returns-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ninja_hattori_the_movie_picture_dairy_hindi_download_hd",
       "title": "Ninja Hattori The Movie Picture Dairy",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/06/Screenshot-2-990x739.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ninja_hattori_home_town_movie_hindi_download_hd_remastered",
       "title": "Ninja Hattori Home Town Movie",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/4936.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_zeo_season_4_1996_hindi_download_hd",
       "title": "Power Rangers Zeo",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/01/Power-Rangers-Zeo-Season-4-1996-Hindi-Download-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_turbo_season_5_1997_hindi_download_hd",
       "title": "Power Rangers Turbo",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_in_space_season_6_1998_hindi_download_hd",
       "title": "Power Rangers In Space",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_lost_galaxy_season_7_1999_hindi_download_hd",
       "title": "Power Rangers Lost Galaxy",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_lightspeed_rescue_season_8_2000_hindi_download_hd",
       "title": "Power Rangers Lightspeed Rescue",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/10/power_rangers_lightspeed_rescue_w___bay_background_by_thepeopleslima_d7q3kb8-fullview.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_time_force_season_9_2001_hindi_download_hd",
       "title": "Power Rangers Time Force",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_wild_force_season_10_2002_hindi_download_hd",
       "title": "Power Rangers Wild Force",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/12/Power-Rangers-Wild-Force-Season-10-Hindi-Episodes-Download-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_ninja_storm_season_11_2003_hindi_download_hd",
       "title": "Power Rangers Ninja Storm",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/01/Power-Rangers-Ninja-Storm-Episodes-Hindi-English-Dual-Audio-720p-1080p-HD-DVDRip-10bit-HEVC-ESub-REMASTERED.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_dino_thunder_season_12_2004_hindi_download_hd",
       "title": "Power Rangers Dino Thunder",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/01/Power-Rangers-Season-12-Dino-Thunder-Hindi-Dubbed-Episodes-Download-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_mystic_force_season_14_2006_hindi_download_hd",
       "title": "Power Rangers Mystic Force",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/Power-Ranger-image-power-ranger-36731020-1024-578-1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_operation_overdrive_season_15_2007_hindi_download_hd",
       "title": "Power Rangers Operation Overdrive",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/12/Power-Rangers-Operation-Overdrive-Episodes-Hindi-DD2.0-Eng-2.0-Dual-Audio-480p-DVDRip.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_jungle_fury_season_16_2008_hindi_download_hd",
       "title": "Power Rangers Jungle Fury",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/08/Power-Rangers-Season-16-Jungle-Fury-Hindi-Dubbed-Episodes-HQ.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_rpm_season_17_2009_hindi_download_hd",
       "title": "Power Rangers RPM",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/Power-Rangers-Season-17-RPM-Hindi-Episodes-Download-720p-HD.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_samurai_season_18_2011_hindi_download_hd",
       "title": "Power Rangers Samurai",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/08/Power-Rangers-Season-18-Samurai-Hindi-Episodes-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_super_samurai_season_19_2012_hindi_download_hd",
       "title": "Power Rangers Super Samurai",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/07/Power-Rangers-Season-19-Super-Samurai-Hindi-Dubbed-Episodes-Download-360p-480p-720p-HD-1080p-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_megaforce_season_20_2013_hindi_download_hd",
       "title": "Power Rangers Megaforce",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Power-Rangers-Season-20-Megaforce-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_super_megaforce_season_21_2014_hindi_download_hd",
       "title": "Power Rangers Super Megaforce",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/12/Power-Rangers-Season-21-Super-Megaforce-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_dino_charge_season_22_2015_hindi_download_hd",
       "title": "Power Rangers Dino Charge",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Power-Rangers-Season-22-Dino-Charge-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_dino_super_charge_season_23_2016_hindi_download_hd",
       "title": "Power Rangers Dino Super Charge",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2018/03/Power-Rangers-Season-23-Dino-Super-Charge-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_ninja_steel_season_24_2017_hindi_download_hd",
       "title": "Power Rangers Ninja Steel",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/01/Power-Rangers-Ninja-Steel-Season-24-2017-Hindi-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_beast_morphers_1_season_26_2019_hindi_download_hd",
       "title": "Power Rangers Beast Morphers",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/01/Power-Rangers-Beast-Morphers-1-Season-26-2019-Hindi-Download-HD-scaled.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_dino_fury_1_season_28_2021_hindi_download_hd",
       "title": "Power Rangers Dino Fury (1)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/01/Power-Rangers-Dino-Fury-1-Season-28-2021-Hindi-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_dino_fury_2_season_29_2022_hindi_download_hd",
       "title": "Power Rangers Dino Fury (2)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/02/Power-Rangers-Dino-Fury-2-Season-29-2022-Hindi-Download-HD-scaled.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_cosmic_fury_season_30_2023_hindi_download_hd",
       "title": "Power Rangers Cosmic Fury",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2023/10/Power-Rangers-Cosmic-Fury-Season-30-by-Netflix-Available-Now-in-Hindi.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_power_rangers_samurai_clash_of_the_red_rangers_2011_hindi_dubbed_download_hd",
       "title": "Power Rangers Samurai Clash of the Red Rangers (2011)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/SAMU.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_mighty_morphin_power_rangers_once_always_2023_hindi_dubbed_download_hd",
       "title": "Mighty Morphin Power Rangers Once Always 2023",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_power_rangers_2017_hindi_dubbed_download_hd",
       "title": "Power Rangers (2017)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/01/Power-Rangers-2017-Hindi-Dubbed-Download-HD.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_teenage_mutant_ninja_turtles_season_1_hindi_dubbed_download_01",
       "title": "Teenage Mutant Ninja Turtles",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2023/03/Teenage-Mutant-Ninja-Turtles-Season-1-Hindi-–-Tamil-–-Telugu-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_thomas_friends_all_hindi_episodes_download_fhd",
       "title": "Thomas Friends All Hindi",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/24/61753.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_winx_club_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Winx Club",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/Winx-Club-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_winx_club_the_secret_of_the_lost_kingdom_movie_hindi_download_1080p_hd",
       "title": "Winx Club The Secret of the Lost Kingdom Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Winx-Club-The-Secret-of-the-Lost-Kingdom-2007-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_winx_club_special_the_fate_of_bloom_2011_movie_hindi_download_1080p_hd",
       "title": "Winx Club Special: The Fate of Bloom (2011) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Winx-Club-Special-The-Fate-of-Bloom-2011-REMASTERED-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_winx_club_special_2_revenge_of_the_trix_movie_hindi_download_1080p_hd",
       "title": "Winx Club Special 2 Revenge of the Trix Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Winx-Club-Special-2-Revenge-of-the-Trix-2011-REMASTERED-Dual-Audio-Hindi-English-480p-720p-1080p-HD-10bit-HEVC.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_winx_club_special_3_the_battle_for_magix_movie_hindi_download_1080p_hd",
       "title": "Winx Club Special 3 The Battle For Magix Movie",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/273/684918.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_winx_club_special_4_the_shadow_phoenix_movie_hindi_download_1080p_hd",
       "title": "Winx Club Special 4 The Shadow Phoenix Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Winx-Club-Special-4-The-Shadow-Phoenix-Movie-Hindi-Download-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_zinba_all_hindi_episodes_download_hd",
       "title": "Zinba All",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/01/Zinba-All-Hindi-Dubbed-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_zatch_bell_season_1_hindi_episodes_download_hd",
       "title": "Zatch Bell",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/01/Zatch-Bell-All-Hindi-Dubbed-Episodes-Download-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_adventure_time_season_1_hindi_episodes_download_hd",
       "title": "Adventure Time",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/05/Adventure-Time-Season-1-Episodes-in-Hindi-Download-Netflix.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_destroy_all_aliens_hindi_dubbed_download_hd",
       "title": "Ben 10 Destroy All Aliens",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_ben_10_secret_of_the_omnitrix_movie_hindi_tamil_telugu_watch_download_hd",
       "title": "Ben 10 Secret of the Omnitrix Movie Hindi – Tamil – Telugu Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/Ben-10-Secret-of-the-Omnitrix-Movie-Hindi-–-Tamil-–-Telugu-Download-FHD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_classic_season_1_hindi_episodes_download_hd",
       "title": "Ben 10 Classic",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Ben-10-Classic-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_alien_force_season_2_hindi_episodes_download_hd",
       "title": "Ben 10 Alien Force",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/08/Ben-10-Alien-Force-Season-2-Hindi-Episodes-Download-in-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_ultimate_alien_season_1_hindi_episodes_download_hd",
       "title": "Ben 10 Ultimate Alien",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/07/Ben-10-Ultimate-Alien-Season-1-Hindi-Episodes-Watch-Download-HD-scaled.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_reboot_2016_season_3_hindi_episodes_download_hd",
       "title": "Ben 10 Reboot (2016)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/b10dsa.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_ben_10_omniverse_all_episodes_hindi_tamil_telugu_download_hd",
       "title": "Ben 10 Omniverse All Episodes Hindi – Tamil – Telugu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/02/Ben-10-Omniverse-All-Episodes-In-Hindi-–-Tamil-–-Telugu-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_baby_looney_tunes_season_1_hindi_episodes_download_hd",
       "title": "Baby Looney Tunes",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/578/1447062.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_bob_the_builder_all_episodes_hindi_dubbed_download_hd",
       "title": "Bob the Builder All Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Bob-the-Builder-S01-S09-Hindi-Eng-Dual-Audio-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_courage_the_cowardly_dog_season_2_hindi_episodes_download_hd",
       "title": "Courage The Cowardly Dog",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Courage-The-Cowardly-Dog-Season-2-Hindi-Episodes-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_dc_super_hero_girls_season_1_hindi_episodes_watch_download_hd",
       "title": "Dc Super Hero Girls",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/378/947185.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_dexters_laboratory_season_1_hindi_episodes_download",
       "title": "Dexters Laboratory",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Dexters-Laboratory-Season-1-Hindi-Episodes-Download-HD.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_generator_rex_season_1_hindi_episodes_download_hd",
       "title": "Generator Rex",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/08/Generator-Rex-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_horrid_henry_season_3_episodes_hindi_download_hd",
       "title": "Horrid Henry",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/06/Horrid-Henry-Season-3-Episodes-Hindi-English-Dual-Audio-Download.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_johnny_test_2021_season_1_hindi_episodes_download_hd",
       "title": "Johnny Test 2021",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/42/106275.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_johnny_test_2021_season_2_hindi_episodes_download_hd",
       "title": "Johnny Test (2022)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/07/Johnny-Test-2021-Season-2-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_jackie_chan_adventures_season_1_hindi_episodes_hd",
       "title": "Jackie Chan Adventures",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/11/Jackie-Chan-Adventures-Season-1-Hindi-Episodes-HD.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_oggy_and_the_cockroaches_season_3_hindi_episodes_download_hd",
       "title": "Oggy and the Cockroaches",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/12/Oggy-and-the-Cockroaches-Season-3-Hindi-Episodes-Download-HD-1.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_redakai_conquer_the_kairu_season_1_hindi_episodes_download_hd",
       "title": "Redakai Conquer the Kairu",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Redakai-Conquer-the-Kairu-Season-1-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_samurai_jack_all_season_hindi_dubbed_episodes_download_hd",
       "title": "Samurai Jack All Season",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Samurai-Jack-All-Seasons-Hindi-Episodes-Download-Complete-Series.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_supa_strikas_season_2_hindi_episodes_download_hd",
       "title": "Supa Strikas",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/03/Supa-Strikas-Season-2-Hindi-Episodes-Download-360p-480p-720p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_teen_titans_go_season_1_hindi_episodes_download_hd",
       "title": "Teen Titans Go",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2022/02/Teen-Titans-Go-Season-1-Hindi-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_powerpuff_girls_season_1_6_hindi_tamil_telugu_episodes_download_hd",
       "title": "The Powerpuff Girls",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/12/The-Powerpuff-Girls-Season-1-6-Hindi-–-Tamil-–-Telugu-Episodes-Download-HD-scaled.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_powerpuff_girls_movie_2002_hindi_download_hd",
       "title": "The Powerpuff Girls Movie 2002",
-      "artworkUrl": null,
-      "status": "missing",
-      "hasArtwork": false,
-      "issue": "Artwork missing or empty"
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/11/27896.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerrys_giant_adventure_2013_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry’s Giant Adventure (2013) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/Tom-and-Jerrys-Giant-Adventure-2013-Multi-Audio-Hindi-Eng-Tamil-Telugu-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
-    },
-    {
-      "id": "anivault_rt_hindi_tom_and_jerry_willy_wonka_and_the_chocolate_factory_2017_movie_hindi_dubbed_download_hd",
-      "title": "Tom and Jerry Willy Wonka and the Chocolate Factory (2017) Movie",
-      "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/Tom-and-Jerry-Willy-Wonka-and-the-Chocolate-Factory-2017-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
-    },
-    {
-      "id": "anivault_rt_hindi_tom_and_jerry_shiver_me_whiskers_2006_movie_hindi_dubbed_download_hd",
-      "title": "Tom And Jerry Shiver Me Whiskers 2006 Movie",
-      "artworkUrl": null,
       "status": "missing",
       "hasArtwork": false,
       "issue": "Artwork missing or empty"
     },
     {
+      "id": "anivault_rt_hindi_tom_and_jerry_willy_wonka_and_the_chocolate_factory_2017_movie_hindi_dubbed_download_hd",
+      "title": "Tom and Jerry Willy Wonka and the Chocolate Factory (2017) Movie",
+      "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/11/Tom-and-Jerry-Willy-Wonka-and-the-Chocolate-Factory-2017-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
+    },
+    {
+      "id": "anivault_rt_hindi_tom_and_jerry_shiver_me_whiskers_2006_movie_hindi_dubbed_download_hd",
+      "title": "Tom And Jerry Shiver Me Whiskers 2006 Movie",
+      "artworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/483/1209807.jpg",
+      "status": "auto_fixed",
+      "hasArtwork": true
+    },
+    {
       "id": "anivault_rt_hindi_tom_and_jerry_back_to_oz_2016_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry Back to Oz (2016) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/05/Tom-Jerry-Back-to-Oz-2016-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_robin_hood_and_his_merry_mouse_2012_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry Robin Hood and His Merry Mouse (2012) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/02/Tom-and-Jerry-Robin-Hood-and-His-Merry-Mouse-2012-Hindi-Eng-Dual-Audio-Download-480p-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_the_wizard_of_oz_2011_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry & The Wizard of Oz (2011) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/02/Tom-and-Jerry-The-Wizard-of-Oz-2011-Movie-Hindi-Dubbed-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_the_fast_and_the_furry_2005_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry The Fast and the Furry (2005) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/09/Tom-and-Jerry-The-Fast-and-the-Furry-Movie-Hindi-Dowload-FHD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_meet_sherlock_holmes_2010_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry Meet Sherlock Holmes (2010) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/02/Tom-and-Jerry-Meet-Sherlock-Holmes-2010-Movie-Hindi-Dubbed-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_the_lost_dragon_2014_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry The Lost Dragon (2014) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/01/Tom-and-Jerry-The-Lost-Dragon-2014-Movie-Hindi-Dubbed-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_yo_kai_watch_season_1_hindi_tamil_telugu_episodes_download_hd",
       "title": "Yo-kai Watch",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/04/Yo-Kai-Watch-2014-Hindi-Episodes-Download-720p-1080p-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_boruto_naruto_next_generations_hindi_subbed_episodes_download_hd",
       "title": "Boruto Naruto Next Generations",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Boruto-Naruto-Next-Generations-Hindi-Subbed-Episodes-Download-HD.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tomb_raider_king_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Tomb Raider King",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Tomb-Raider-King-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_official_android_app",
       "title": "The Wait is Over: Official",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/The-Wait-is-Over-Official-RareAnimes-Android-App-Is-Finally-Here.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_hana_kimi_season_2_hindi_dubbed_episodes_download_hd",
       "title": "Hana-Kimi",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Hana-Kimi-Season-2-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_trapped_in_a_dating_sim_the_world_of_otome_games_is_tough_for_mobs_season_2_hindi_episodes_download_hd",
       "title": "Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Trapped-in-a-Dating-Sim-The-World-of-Otome-Games-Is-Tough-for-Mobs-Season-2-Hindi-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_clevatess_season_2_hindi_dubbed_episodes_download_hd",
       "title": "Clevatess",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Clevatess-Season-2-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_toy_story_5_2026_movie_hindi_dubbed_download_hd",
       "title": "Toy Story 5 (2026) Movie English Dubbed",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Toy-Story-5-2026-Movie-English-Dubbed-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_konosuba_an_explosion_on_this_wonderful_world_season_1_hindi_dubbed_episodes_download_hd",
       "title": "KONOSUBA – An Explosion on This Wonderful World!",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/KONOSUBA-–-An-Explosion-on-This-Wonderful-World-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_thunder_3_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Thunder 3",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Thunder-3-Season-1-Hindi-Dubbed-Episodes-Download-HD-1-300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cloudy_with_a_chance_of_meatballs_2009_movie_hindi_download_hd",
       "title": "Cloudy with a Chance of Meatballs (2009) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Cloudy-with-a-Chance-of-Meatballs-2009-Movie-Hindi-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_jojos_bizarre_adventure_season_3_diamond_is_unbreakable_hindi_dubbed_episodes_download_hd",
       "title": "JoJo's Bizarre Adventure",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/JoJos-Bizarre-Adventure-Season-3-Diamond-Is-Unbreakable-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_captain_tsubasa_junior_youth_arc_season_2_hindi_dubbed_episodes_download_hd",
       "title": "Captain Tsubasa Junior Youth Arc",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Captain-Tsubasa-Junior-Youth-Arc-Season-2-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_looney_tunes_cartoons_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Looney Tunes Cartoons",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Looney-Tunes-Cartoons-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_white_snake_2019_movie_hindi_dubbed_download_hd",
       "title": "White Snake (2019) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/White-Snake-2019-Movie-Hindi-Dubbed-Download-HD-scaled.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_rio_2011_movie_hindi_dubbed_download_hd",
       "title": "Rio (2011) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Rio-2011-Movie-Hindi-Dubbed-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_sparks_of_tomorrow_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Sparks of Tomorrow",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Sparks-of-Tomorrow-Season-1-Hindi-Dubbed-Episodes-Download-HD-1-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_jungle_tales_with_mowgli_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Jungle Tales with Mowgli",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Jungle-Tales-with-Mowgli-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_hanaori_san_still_wants_to_fight_in_the_next_life_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Hanaori-san Still Wants to Fight in the Next Life",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Hanaori-san-Still-Wants-to-Fight-in-the-Next-Life-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_welcome_to_demon_school_iruma_kun_season_3_hindi_dubbed_episodes_download_hd",
       "title": "Welcome to Demon School! Iruma-kun",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Welcome-to-Demon-School-Iruma-kun-Season-3-Hindi-Dubbed-Episodes-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_heaven_officials_blessing_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Heaven Official's Blessing",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Heaven-Officials-Blessing-Season-1-Hindi-Dubbed-Episodes-Download-HD-300x200.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_100_girlfriends_who_really_really_really_really_really_love_you_season_1_hindi_dubbed_episodes_download_hd",
       "title": "The 100 Girlfriends Who Really, Really, Really, Really, REALLY Love You",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/The-100-Girlfriends-Who-Really-Really-Really-Really-REALLY-Love-You-Season-1-Hindi-Dubbed-Episodes-Download--300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_avatar_aang_the_last_airbender_2026_movie_hindi_dubbed_download_480p_720p_1080p_2160p_4k",
       "title": "Avatar Aang: The Last Airbender (2026) Movie English Dubbed",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/04/Avatar-Aang-The-Last-Airbender-2026-Movie-English-Dubbed-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_jaadugar_a_witch_in_mongolia_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Jaadugar A Witch in Mongolia",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Jaadugar-A-Witch-in-Mongolia-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_boboiboy_galaxy_sori_season_2_hindi_episodes_download_hd",
       "title": "BoBoiBoy Galaxy Sori",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/BoBoiBoy-Galaxy-Sori-Season-1-Hindi-Episodes-Download-HD-1-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kaiju_no_8_narumis_week_at_work_shorts_episodes_download_hd",
       "title": "Kaiju No. 8 - Narumi's Week at Work Shorts Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Kaiju-No.-8-Narumis-Week-at-Work-Shorts-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_black_torch_season_1_hindi_dubbed_episodes_download_hd",
       "title": "BLACK TORCH",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/BLACK-TORCH-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_bandbudh_aur_budbak_complete_all_episodes_hindi_dubbed_download_hd",
       "title": "Bandbudh Aur Budbak Complete All Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Bandbudh-Aur-Budbak-Complete-All-Episodes-Hindi-Dubbed-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_beginning_after_the_end_season_2_hindi_episodes_download_hd",
       "title": "The Beginning After the End",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/04/The-Beginning-After-the-End-Season-2-Hindi-Episodes-Download-HD-300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_elusive_samurai_season_2_hindi_dubbed_episodes_download_hd",
       "title": "The Elusive Samurai",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/The-Elusive-Samurai-Season-2-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_i_became_a_legend_after_my_10_year_long_last_stand_season_1_hindi_dubbed_episodes_download_hd",
       "title": "I Became a Legend After My 10 Year-Long Last Stand",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/I-Became-a-Legend-After-My-10-Year-Long-Last-Stand-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_pokemon_horizons_the_search_for_laqua_season_27_episodes_hindi_dubbed_download_hd",
       "title": "Pokémon Horizons The Search for Laqua (",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/12/Pokemon-Horizons-The-Search-for-Laqua-Season-27-Episodes-Hindi-Dubbed-Download-HD-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_legend_of_exorcism_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Legend of Exorcism",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Legend-of-Exorcism-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_frontier_lord_begins_with_zero_subjects_season_1_hindi_dubbed_episodes_download_hd",
       "title": "The Frontier Lord Begins with Zero Subjects",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/The-Frontier-Lord-Begins-with-Zero-Subjects-Season-1-Hindi-Dubbed-Episodes-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_bandbudh_aur_budbak_2_0_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Bandbudh aur Budbak 2.0",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Bandbudh-aur-Budbak-2.0-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_chainsmoker_cat_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Chainsmoker Cat",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Chainsmoker-Cat-Season-1-Hindi-Dubbed-Episodes-Download-HD-1-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_smoking_behind_the_supermarket_with_you_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Smoking Behind the Supermarket with You",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Smoking-Behind-the-Supermarket-with-You-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_exiled_heavy_knight_knows_how_to_game_the_system_season_1_hindi_dubbed_episodes_download_hd",
       "title": "The Exiled Heavy Knight Knows How to Game the System",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/The-Exiled-Heavy-Knight-Knows-How-to-Game-the-System-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_stranger_things_tales_from_85_season_2_hindi_dubbed_episodes_download_hd",
       "title": "Stranger Things Tales from '85",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Stranger-Things-Tales-from-85-Season-2-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_lego_scooby_doo_knight_time_terror_2015_movie_hindi_download_hd",
       "title": "LEGO Scooby-Doo! Knight Time Terror (2015) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/LEGO-Scooby-Doo-Knight-Time-Terror-2015-Movie-Hindi-Download-HD-1-300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_boss_baby_2017_movie_hindi_dubbed_download_hd",
       "title": "The Boss Baby (2017) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/The-Boss-Baby-2017-Movie-Hindi-Dubbed-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cinderella_chef_season_3_hindi_dubbed_episodes_download_hd",
       "title": "Cinderella Chef",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Cinderella-Chef-Season-3-Hindi-Dubbed-Episodes-Download-HD-300x200.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_migration_2023_movie_hindi_dubbed_download_hd",
       "title": "Migration (2023) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/05/Migration-2023-Movie-Hindi-Dubbed-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_forbidden_compass_2025_movie_english_dubbed_download_hd",
       "title": "Tom and Jerry: Forbidden Compass (2025) Movie English Dubbed",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-Forbidden-Compass-2025-Movie-English-Dubbed-Download-HD-470x264.jpeg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_campfire_cooking_in_another_world_with_my_absurd_skill_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Campfire Cooking in Another World with My Absurd Skill",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2024/10/Campfire-Cooking-in-Another-World-with-My-Absurd-Skill-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_fixies_top_secret_2017_movie_hindi_dubbed_download_hd",
       "title": "The Fixies: Top Secret (2017) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/The-Fixies-Top-Secret-2017-Movie-Hindi-Dubbed-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_death_note_relight_2_ls_successors_2009_movie_hindi_download_hd",
       "title": "Death Note Relight 2: L's Successors (2009) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Death-Note-Relight-2-Ls-Successors-2009-Movie-Hindi-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_first_order_season_1_hindi_dubbed_episodes_download_hd",
       "title": "The First Order",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/The-First-Order-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_lord_of_mysteries_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Lord of Mysteries",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/06/Lord-of-Mysteries-Season-1-Hindi-Subbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_paw_patrol_the_dino_movie_2026_movie_hindi_dubbed_download_480p_720p_1080p_2160p_4k",
       "title": "PAW Patrol: The Dino Movie (2026) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/PAW-Patrol-The-Dino-Movie-2026-Movie-Hindi-Dubbed-Download-480p-720p-1080p-2160p-4k-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_all_season_episodes_hindi_download_hd",
       "title": "Tom and Jerry All Season Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-All-Season-Episodes-Hindi-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_jerry_kids_show_hindi_episodes_download_hd",
       "title": "Tom & Jerry Kids Show Hindi Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-Jerry-Kids-Show-Hindi-Episodes-Download-HD-scaled.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_tales_season_2_hindi_episodes_download_hd",
       "title": "Tom and Jerry Tales",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-Tales-Season-2-Hindi-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_that_time_i_got_reincarnated_as_a_slime_the_movie_tears_of_the_azure_sea_2026_movie_hindi_dubbed_download_hd",
       "title": "That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea (2026) Movie Hindi Subbed",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/06/That-Time-I-Got-Reincarnated-as-a-Slime-the-Movie-Tears-of-the-Azure-Sea-2026-Movie-Hindi-Subbed-Download-HD-1-300x200.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_obocchama_kun_complete_all_episodes_hindi_dubbed_download_hd",
       "title": "Obocchama kun All Episodes In",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/03/Obocchama-Kun-Hindi-Episodes-Download-480p-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_death_note_relight_1_visions_of_a_god_2007_movie_hindi_download_hd",
       "title": "Death Note Relight: Visions of a God (2007) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Death-Note-Relight-Visions-of-a-God-2007-Movie-Hindi-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_demon_slayer_kimetsu_no_yaiba_infinity_castle_2025_movie_hindi_dubbed_download_hd",
       "title": "Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/01/Demon-Slayer-Kimetsu-no-Yaiba-Infinity-Castle-2025-Movie-Hindi-Dubbed-Download-HD-300x200.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_marriage_toxin_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Marriage Toxin",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/04/Marriage-Toxin-Season-1-Hindi-Dubbed-Episodes-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_the_tom_and_jerry_show_season_4_hindi_episodes_download_hd",
       "title": "The Tom and Jerry Show",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Justice-League-Season-4-Hindi-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_special_shorts_english_episodes_download_hd",
       "title": "Tom and Jerry Special Shorts English Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-Special-Shorts-English-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_rio_2_2014_movie_hindi_dubbed_download_hd",
       "title": "Rio 2 (2014) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Rio-2-2014-Movie-Hindi-Dubbed-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_luca_2021_movie_hindi_dubbed_download_hd",
       "title": "Luca (2021) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Luca-2021-Movie-Hindi-Dubbed-Download-HD-300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_scooby_doo_where_are_you_now_2021_hindi_download_hd",
       "title": "Scooby-Doo, Where Are You Now! (2021)",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Scooby-Doo-Where-Are-You-Now-2021-Hindi-Download-HD-300x200.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_2021_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry (2021) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-2021-Movie-Hindi-Dubbed-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tom_and_jerry_santas_little_helpers_2014_movie_hindi_dubbed_download_hd",
       "title": "Tom and Jerry Santa's Little Helpers (2014) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Tom-and-Jerry-Santas-Little-Helpers-2014-Movie-Hindi-Dubbed-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_skeleton_knight_in_another_world_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Skeleton Knight in Another World",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/06/Skeleton-Knight-in-Another-World-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_kamen_rider_gavv_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Kamen Rider Gavv",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Kamen-Rider-Gavv-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_snoopy_presents_theres_no_place_like_home_snoopy_2026_movie_hindi_dubbed_download_hd",
       "title": "Snoopy Presents: There's No Place Like Home, Snoopy (2026) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/Snoopy-Presents-Theres-No-Place-Like-Home-Snoopy-2026-Movie-Hindi-Dubbed-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_haikyu_ova_episodes_hindi_dubbed_download_hd",
       "title": "Haikyu!! OVA Episodes",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/07/Haikyu-OVA-Episodes-Hindi-Dubbed-Download-HD-300x200.jpg",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_happy_halloween_scooby_doo_2020_hindi_download_hd_movie_34",
       "title": "Happy Halloween, Scooby-Doo! (2020) English",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/04/Happy-Halloween-Scooby-Doo-2020-English-Download-HD-Movie-34-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_tamons_b_side_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Tamon's B-Side",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/06/Tamons-B-Side-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_mobile_suit_gundam_hathaway_the_sorcery_of_nymph_circe_2026_movie_hindi_download_hd",
       "title": "MOBILE SUIT GUNDAM HATHAWAY The Sorcery of Nymph Circe (2026) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/MOBILE-SUIT-GUNDAM-HATHAWAY-The-Sorcery-of-Nymph-Circe-2026-Movie-Hindi-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_cloudy_with_a_chance_of_meatballs_2_2013_movie_hindi_download_hd",
       "title": "Cloudy with a Chance of Meatballs 2 (2013) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Cloudy-with-a-Chance-of-Meatballs-2-2013-Movie-Hindi-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_grand_theft_auto_vi_an_extended_look_2026_english_dubbed_download_480p_720p_1080p_2160p_4k",
       "title": "Grand Theft Auto VI An Extended Look (2026) Movie English Dubbed",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Grand-Theft-Auto-VI-An-Extended-Look-2026-Movie-English-Dubbed-Download-HD-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_boonie_bears_the_hidden_protector_2026_movie_hindi_download_hd",
       "title": "Boonie Bears The Hidden Protector (2026) Movie",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Boonie-Bears-The-Hidden-Protector-2026-Movie-Hindi-Download-HD-470x264.png",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_from_overshadowed_to_overpowered_second_reincarnation_of_a_talentless_sage_season_1_hindi_dubbed_episodes_download_hd",
       "title": "From Overshadowed to Overpowered: Second Reincarnation of a Talentless Sage",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/06/From-Overshadowed-to-Overpowered-Second-Reincarnation-of-a-Talentless-Sage-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_sabrina_the_animated_series_season_1_hindi_dubbed_download_hd",
       "title": "Sabrina: The Animated Series",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Sabrina-The-Animated-Series-Season-1-Hindi-Dubbed-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     },
     {
       "id": "anivault_rt_hindi_yowayowa_sensei_season_1_hindi_dubbed_episodes_download_hd",
       "title": "Yowayowa Sensei",
       "artworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/06/Yowayowa-Sensei-Season-1-Hindi-Dubbed-Episodes-Download-HD-470x264.webp",
-      "status": "unverified",
-      "hasArtwork": true
+      "status": "missing",
+      "hasArtwork": false,
+      "issue": "Artwork missing or empty"
     }
   ]
 }

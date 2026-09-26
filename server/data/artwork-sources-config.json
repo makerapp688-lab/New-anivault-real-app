@@ -11,11 +11,11 @@
     "priority": 1,
     "status": "operational",
     "description": "AniList GraphQL API for verified cover artwork, romaji/english titles, synonyms, and metadata.",
-    "lastChecked": "2026-09-26T10:18:18.359Z",
-    "lastLatencyMs": 272,
+    "lastChecked": "2026-09-26T16:06:09.307Z",
+    "lastLatencyMs": 328,
     "lastError": null,
-    "lastSuccessfulChecked": "2026-09-26T10:18:18.359Z",
-    "lastMessage": "Connected successfully (272ms). Verified cover returned."
+    "lastSuccessfulChecked": "2026-09-26T16:06:09.307Z",
+    "lastMessage": "Connected successfully (328ms). Verified cover returned."
   },
   {
     "id": "jikan",
@@ -45,11 +45,11 @@
     "priority": 3,
     "status": "operational",
     "description": "Secondary fallback. Used to cross-check anime titles, identity, and verification data.",
-    "lastChecked": "2026-09-26T09:19:07.737Z",
-    "lastSuccessfulChecked": "2026-09-26T09:19:07.737Z",
-    "lastLatencyMs": 80,
+    "lastChecked": "2026-09-26T16:06:09.542Z",
+    "lastSuccessfulChecked": "2026-09-26T16:06:09.542Z",
+    "lastLatencyMs": 226,
     "lastError": null,
-    "lastMessage": "AniDB connectivity confirmed (80ms). Active as secondary fallback."
+    "lastMessage": "AniDB connectivity confirmed (226ms). Active as secondary fallback."
   },
   {
     "id": "tmdb",
@@ -78,11 +78,11 @@
     "priority": 5,
     "status": "operational",
     "description": "TVmaze open REST database. Reliable coverage for TV series, animated shows, and clean original posters.",
-    "lastChecked": "2026-09-26T09:19:07.656Z",
-    "lastSuccessfulChecked": "2026-09-26T09:19:07.656Z",
-    "lastLatencyMs": 836,
+    "lastChecked": "2026-09-26T16:06:10.390Z",
+    "lastSuccessfulChecked": "2026-09-26T16:06:10.390Z",
+    "lastLatencyMs": 837,
     "lastError": null,
-    "lastMessage": "Connected successfully (836ms). TVmaze show entry verified."
+    "lastMessage": "Connected successfully (837ms). TVmaze show entry verified."
   },
   {
     "id": "thetvdb",
@@ -96,10 +96,10 @@
     "priority": 6,
     "status": "operational",
     "description": "TheTVDB open media database gateway for supplementary anime artwork and season poster resolution.",
-    "lastChecked": "2026-09-26T09:19:07.987Z",
-    "lastSuccessfulChecked": "2026-09-26T09:19:07.987Z",
-    "lastLatencyMs": 249,
+    "lastChecked": "2026-09-26T16:06:10.661Z",
+    "lastSuccessfulChecked": "2026-09-26T16:06:10.661Z",
+    "lastLatencyMs": 265,
     "lastError": null,
-    "lastMessage": "TheTVDB open media gateway operational (249ms)."
+    "lastMessage": "TheTVDB open media gateway operational (265ms)."
   }
 ]

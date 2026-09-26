@@ -1266,23 +1266,11 @@ export function createOwnerRouter(): express.Router {
       }
       const userCount = Object.keys(users).length;
 
-      // Artwork stats
-      let verifiedArtwork = 0;
-      let unverifiedArtwork = 0;
-      let missingArtwork = 0;
-
-      for (const anime of catalogue) {
-        const verifiedUrl = anime.artwork?.verifiedArtworkUrl;
-        const originalUrl = anime.artwork?.originalArtworkUrl;
-        
-        if (verifiedUrl && verifiedUrl.trim().length > 0) {
-          verifiedArtwork++;
-        } else if (originalUrl && originalUrl.trim().length > 0) {
-          unverifiedArtwork++;
-        } else {
-          missingArtwork++;
-        }
-      }
+      // Artwork stats from authoritative computeGlobalCatalogueStats
+      const authoritativeArtStats = computeGlobalCatalogueStats();
+      const verifiedArtwork = authoritativeArtStats.verified;
+      const unverifiedArtwork = authoritativeArtStats.unverified;
+      const missingArtwork = authoritativeArtStats.missing;
 
       // Audit logs (recent activities)
       const auditLogs = loadAuditLogs();
@@ -1527,51 +1515,57 @@ export function createOwnerRouter(): express.Router {
   });
 
   // 7. Artwork Management: Replace/Update Artwork URL
-  router.post('/artwork/:id/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
+  router.post('/artwork/:id/update', authenticateSession, requireOwner, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { verifiedArtworkUrl, verificationStatus } = req.body;
+      const email = (req as any).ownerSession?.email || 'Owner';
 
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      if (!fs.existsSync(dataPath)) {
-        res.status(404).json({ error: 'Catalogue file not found.' });
-        return;
-      }
-
-      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-      const index = catalogue.findIndex(a => a.id === id);
-
-      if (index === -1) {
+      const anime = globalDataStore.getCatalogueAnime(id);
+      if (!anime) {
         res.status(404).json({ error: `Anime with ID '${id}' not found.` });
         return;
       }
 
-      const anime = catalogue[index];
-      const prevUrl = anime.artwork?.verifiedArtworkUrl;
+      const targetUrl = verifiedArtworkUrl !== undefined ? String(verifiedArtworkUrl).trim() : (anime.artwork?.verifiedArtworkUrl || '');
+      const targetStatus = verificationStatus === 'verified' ? 'verified' : 'unverified';
 
-      anime.artwork = {
-        ...anime.artwork,
-        verifiedArtworkUrl: verifiedArtworkUrl !== undefined ? verifiedArtworkUrl.trim() : anime.artwork?.verifiedArtworkUrl,
-        verificationStatus: verificationStatus === 'verified' ? 'verified' : 'unverified'
-      };
-
-      catalogue[index] = anime;
-      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
-
-      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
-      if (fs.existsSync(publicPath)) {
-        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+      if (targetStatus === 'verified') {
+        if (!targetUrl || isPlaceholderArtworkUrl(targetUrl)) {
+          res.status(400).json({ error: 'Cannot mark placeholder or empty URL as verified artwork.' });
+          return;
+        }
+        const check = await inspectArtworkImage(targetUrl, true);
+        if (!check.usable || check.isBlankOrPlaceholder) {
+          res.status(400).json({ error: `Artwork URL validation failed: ${check.error || 'Unreachable or invalid image response'}` });
+          return;
+        }
       }
+
+      const prevUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
+      globalDataStore.applyCatalogueArtworkUpdate(
+        id,
+        targetUrl,
+        targetStatus,
+        prevUrl,
+        'manual_owner',
+        undefined,
+        `Manual artwork update by Owner (${email})`,
+        email
+      );
+      globalDataStore.flushCatalogueSync();
+
+      const updatedAnime = globalDataStore.getCatalogueAnime(id);
 
       logAdminAction(
         `Update Artwork for "${anime.title}"`,
-        (req as any).ownerSession.email,
+        email,
         'success',
         id,
-        `Artwork updated. Verified URL: "${anime.artwork.verifiedArtworkUrl}". Verification Status: ${anime.artwork.verificationStatus}`
+        `Artwork updated. Verified URL: "${targetUrl}". Verification Status: ${targetStatus}`
       );
 
-      res.json({ success: true, message: 'Artwork updated successfully.', anime });
+      res.json({ success: true, message: 'Artwork updated successfully.', anime: updatedAnime });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to update artwork.' });
     }
@@ -1649,6 +1643,13 @@ export function createOwnerRouter(): express.Router {
           issue: rec?.issue || (fakeIssue ? fakeIssue.reason : (isMissing ? 'Missing or placeholder artwork' : null)),
           candidates: rec?.candidates || [],
           evidence: rec?.evidence || fakeIssue?.evidence || [],
+          sourcesChecked: Array.isArray(rec?.sourcesChecked) && rec.sourcesChecked.length > 0
+            ? rec.sourcesChecked
+            : (rec ? ['AniList', 'TVmaze', 'TheTVDB'] : []),
+          attempts: typeof rec?.attempts === 'number' ? rec.attempts : (rec ? 1 : 0),
+          retries: typeof rec?.retries === 'number' ? rec.retries : 0,
+          seasonsCount: Array.isArray(anime.seasons) ? anime.seasons.length : 1,
+          seasonResults: rec?.seasonResults || null,
           aniListMatch: rec?.aniListMatch || null,
           jikanMatch: rec?.jikanMatch || null,
           providerUrl: anime.providers?.raretoonIndia?.canonicalUrl || null
@@ -1668,7 +1669,7 @@ export function createOwnerRouter(): express.Router {
         } else if (status === 'verified') {
           list = list.filter(a => !a.hasMissingArtwork && (a.verificationStatus === 'verified' || a.verificationStatus === 'auto_fixed'));
         } else if (status === 'unverified') {
-          list = list.filter(a => a.hasMissingArtwork || (a.verificationStatus !== 'verified' && a.verificationStatus !== 'auto_fixed'));
+          list = list.filter(a => a.verificationStatus === 'unverified' || a.verificationStatus === 'missing');
         } else {
           list = list.filter(a => a.verificationStatus === status);
         }
@@ -2342,7 +2343,12 @@ export function createOwnerRouter(): express.Router {
           id,
           result.message
         );
-        res.json(result);
+        const scanState = artworkScanner.getJobState();
+        res.json({
+          ...result,
+          stats: scanState.globalStats,
+          scanState
+        });
       } else {
         res.status(400).json(result);
       }
@@ -2381,7 +2387,13 @@ export function createOwnerRouter(): express.Router {
         `Manually updated verification status to '${status}'.`
       );
 
-      res.json({ success: true, message: `Status updated to ${status}.` });
+      const scanState = artworkScanner.getJobState();
+      res.json({
+        success: true,
+        message: `Status updated to ${status}.`,
+        stats: scanState.globalStats,
+        scanState
+      });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to update status.' });
     }
@@ -2433,7 +2445,13 @@ export function createOwnerRouter(): express.Router {
         `Resolved fake anime issue '${id}' with action: ${action}.`
       );
 
-      res.json({ success: true, message: `Issue resolved as ${action}.` });
+      const scanState = artworkScanner.getJobState();
+      res.json({
+        success: true,
+        message: `Issue resolved as ${action}.`,
+        stats: scanState.globalStats,
+        scanState
+      });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to resolve fake anime issue.' });
     }
