@@ -144,7 +144,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         }
       }
     } catch (err) {
-      console.error('Failed to check owner session', err);
+      console.warn('Could not check owner session', err);
     }
   };
 
@@ -153,7 +153,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
       await logoutFromServer();
       setOwnerSession({ authenticated: false });
     } catch (err) {
-      console.error('Failed to log out owner', err);
+      console.warn('Could not log out owner', err);
     }
   };
 
@@ -967,56 +967,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             <span>Report a Bug</span>
           </button>
         </div>
-
-        {/* Download App Source Code Card - Owner Account Only */}
-        {isOwner && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border border-emerald-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="text-xs font-bold text-white flex items-center gap-2">
-                <Download className="w-4 h-4 text-emerald-400" />
-                <span>Download App Source Code Archive (.tar.gz)</span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  OWNER ONLY
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Download the complete Anivex project codebase to test or run locally.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const ownerToken = localStorage.getItem('anivault_owner_session_token');
-                  if (!ownerToken) {
-                    alert('You must be logged in as the verified Owner to download the source code.');
-                    return;
-                  }
-                  const headers: Record<string, string> = {
-                    'Authorization': `Bearer ${ownerToken}`,
-                    'x-anivault-owner-session': ownerToken
-                  };
-                  // Pre-flight check to show clean user-facing errors on missing files or permissions
-                  const res = await fetch('/api/download-source?check=true', { headers });
-                  if (!res.ok) {
-                    const err = await res.json().catch(() => ({ error: 'Download failed' }));
-                    alert(err.error || 'Failed to download source archive.');
-                    return;
-                  }
-                  // Direct native device-compatible download navigation
-                  window.location.href = `/api/download-source?token=${encodeURIComponent(ownerToken)}`;
-                } catch {
-                  alert('An error occurred while downloading source code.');
-                }
-              }}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download Source Code</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Bug Report Modal for Users & Guests */}

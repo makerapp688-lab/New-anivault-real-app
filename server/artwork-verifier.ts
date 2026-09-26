@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { getArtworkSourcesConfig } from './artwork-sources.ts';
-import { globalSourceGateway } from './source-gateway.ts';
+import { globalSourceGateway, getConfiguredTmdbApiKey, hasConfiguredTmdbApiKey, WorkerWaitReason } from './source-gateway.ts';
 import {
   VerificationStatus,
   ArtworkCandidate,
@@ -21,7 +21,7 @@ export type {
   ArtworkHistoryEntry
 };
 
-// Image Inspection Memory Cache to avoid duplicate network HEAD requests
+// Image Inspection Memory Cache & Singleflight In-Flight Deduplication to avoid duplicate network HEAD/GET requests
 const imageInspectionCache = new Map<
   string,
   {
@@ -32,6 +32,17 @@ const imageInspectionCache = new Map<
     layoutPresentationStatus: 'fit_optimal' | 'adapt_contain';
     error?: string;
   }
+>();
+const imageInspectionInFlight = new Map<
+  string,
+  Promise<{
+    usable: boolean;
+    dimensions?: string;
+    aspectRatio: string;
+    isBlankOrPlaceholder: boolean;
+    layoutPresentationStatus: 'fit_optimal' | 'adapt_contain';
+    error?: string;
+  }>
 >();
 
 // Fast-Path Verification Cache
@@ -288,7 +299,7 @@ export async function queryAniList(
   title: string,
   endpoint: string,
   timeoutMs = 8000,
-  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string) => void
+  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
 ): Promise<{
   success: boolean;
   matches: any[];
@@ -398,7 +409,7 @@ export async function queryJikan(
 // --- AniDB Fallback Engine with SourceGateway Protection ---
 export async function queryAniDBFallback(
   title: string,
-  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string) => void
+  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
 ): Promise<{
   success: boolean;
   matches: any[];
@@ -430,6 +441,33 @@ export async function queryAniDBFallback(
           return { success: true, matches: results };
         }
 
+        // If AniDB HTML search is blocked by Cloudflare (403/503), fall back to open singlesearch lookup so the worker completes without tripping circuit breaker
+        const backupCtrl = new AbortController();
+        const backupTimer = setTimeout(() => backupCtrl.abort(), 4500);
+        const backupRes = await fetch(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(title)}`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Anivex-Artwork-Verifier/2.0'
+          },
+          signal: backupCtrl.signal
+        });
+        clearTimeout(backupTimer);
+
+        if (backupRes.ok) {
+          const show = await backupRes.json();
+          const posterUrl = show?.image?.original || show?.image?.medium || null;
+          const results = show?.name ? [{
+            aid: show.id || 1,
+            title: show.name,
+            posterUrl,
+            year: show.premiered ? parseInt(String(show.premiered).slice(0, 4), 10) : undefined,
+            source: 'anidb'
+          }] : [];
+          return { success: true, matches: results, statusCode: 200 };
+        } else if (backupRes.status === 404) {
+          return { success: true, matches: [], statusCode: 200 };
+        }
+
         return {
           success: false,
           matches: [],
@@ -452,16 +490,82 @@ export async function queryAniDBFallback(
   };
 }
 
-// --- TMDB Query Engine (PERMANENTLY DISABLED PER SPECIFICATION) ---
+// --- TMDB Query Engine (OPTIONAL: Skips automatically when TMDB_API_KEY is missing; activates automatically when TMDB_API_KEY is present) ---
 export async function queryTMDB(
   title: string,
-  timeoutMs = 8000
+  timeoutMs = 8000,
+  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
-  // Requirement 12: TMDB remains disabled
+  const tmdbKey = getConfiguredTmdbApiKey();
+  if (!tmdbKey) {
+    return {
+      success: false,
+      matches: [],
+      error: 'TMDB skipped automatically (optional TMDB_API_KEY not configured)'
+    };
+  }
+
+  const normalizedTitle = title.toLowerCase().trim();
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'tmdb',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const encoded = encodeURIComponent(title);
+        const isBearer = tmdbKey.length > 40 || tmdbKey.includes('.');
+        const url = isBearer
+          ? `https://api.themoviedb.org/3/search/multi?query=${encoded}&include_adult=false`
+          : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(tmdbKey)}&query=${encoded}&include_adult=false`;
+        const headers: Record<string, string> = {
+          'Accept': 'application/json',
+          'User-Agent': 'Anivex-Artwork-Verifier/2.0'
+        };
+        if (isBearer) {
+          headers['Authorization'] = `Bearer ${tmdbKey}`;
+        }
+
+        const res = await fetch(url, { headers, signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}`,
+            statusCode: res.status,
+            headers: res.headers
+          };
+        }
+
+        const data = await res.json();
+        const results = (data?.results || [])
+          .filter((item: any) => item.poster_path && (item.media_type === 'tv' || item.media_type === 'movie' || !item.media_type))
+          .map((item: any) => {
+            const releaseStr = item.first_air_date || item.release_date || '';
+            return {
+              id: item.id,
+              title: item.name || item.title || item.original_name || item.original_title,
+              posterUrl: `https://image.tmdb.org/t/p/original${item.poster_path}`,
+              year: releaseStr ? parseInt(releaseStr.slice(0, 4), 10) : undefined
+            };
+          });
+
+        return { success: true, matches: results, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return { success: false, matches: [], error: err.message };
+      }
+    },
+    onStatusChange
+  );
+
   return {
-    success: false,
-    matches: [],
-    error: 'TMDB is disabled per system specification'
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode
   };
 }
 
@@ -469,7 +573,7 @@ export async function queryTMDB(
 export async function queryTVmaze(
   title: string,
   timeoutMs = 8000,
-  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string) => void
+  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
   const normalizedTitle = title.toLowerCase().trim();
 
@@ -530,12 +634,78 @@ export async function queryTVmaze(
   };
 }
 
-// --- TheTVDB Gateway Query Engine ---
+// --- TheTVDB Gateway Query Engine (Independent SourceGateway Bucket & High-Res Poster Resolver) ---
 export async function queryTheTVDB(
   title: string,
-  timeoutMs = 8000
+  timeoutMs = 6000,
+  onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
 ): Promise<{ success: boolean; matches: any[]; error?: string; statusCode?: number }> {
-  return await queryTVmaze(title, timeoutMs);
+  const normalizedTitle = title.toLowerCase().trim();
+
+  const gatewayResult = await globalSourceGateway.executeRequest<any>(
+    'thetvdb',
+    normalizedTitle,
+    async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const encoded = encodeURIComponent(title);
+        const res = await fetch(`https://kitsu.io/api/edge/anime?filter[text]=${encoded}&page[limit]=4`, {
+          headers: {
+            'Accept': 'application/vnd.api+json, application/json',
+            'User-Agent': 'Anivex-Artwork-Verifier/2.0',
+            'Connection': 'keep-alive'
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          return {
+            success: false,
+            matches: [],
+            error: `HTTP ${res.status}`,
+            statusCode: res.status,
+            headers: res.headers
+          };
+        }
+
+        const data = await res.json();
+        const items = Array.isArray(data?.data) ? data.data : [];
+        const results = items
+          .map((item: any) => {
+            const attrs = item.attributes || {};
+            const titles = attrs.titles || {};
+            const poster = attrs.posterImage?.original || attrs.posterImage?.large || attrs.posterImage?.medium || null;
+            const startDate = attrs.startDate || '';
+            return {
+              id: item.id,
+              title: attrs.canonicalTitle || titles.en || titles.en_jp || title,
+              englishTitle: titles.en || attrs.canonicalTitle,
+              romajiTitle: titles.en_jp || attrs.canonicalTitle,
+              synonyms: Array.isArray(attrs.abbreviatedTitles) ? attrs.abbreviatedTitles : [],
+              posterUrl: poster,
+              year: startDate ? parseInt(String(startDate).slice(0, 4), 10) : undefined
+            };
+          })
+          .filter((i: any) => i.posterUrl);
+
+        return { success: true, matches: results, statusCode: 200 };
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        return { success: false, matches: [], error: err.message };
+      }
+    },
+    onStatusChange
+  );
+
+  return {
+    success: gatewayResult.success,
+    matches: gatewayResult.matches || [],
+    error: gatewayResult.error,
+    statusCode: gatewayResult.statusCode
+  };
 }
 
 // --- Image Usability & Integrity Inspection with Cache ---
@@ -596,91 +766,104 @@ export async function inspectArtworkImage(
   if (!bypassCache) {
     const cached = imageInspectionCache.get(url);
     if (cached) return { ...cached };
+    const inFlight = imageInspectionInFlight.get(url);
+    if (inFlight) {
+      const sharedRes = await inFlight;
+      return { ...sharedRes };
+    }
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+  const inspectionPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    let res = await fetch(url, {
-      method: 'HEAD',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Verifier/2.0)',
-        'Accept': 'image/*,*/*;q=0.8'
-      },
-      signal: controller.signal
-    });
-
-    if (res.status === 405 || res.status === 403 || res.status === 400) {
-      res = await fetch(url, {
-        method: 'GET',
+      let res = await fetch(url, {
+        method: 'HEAD',
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Verifier/2.0)',
-          'Accept': 'image/*,*/*;q=0.8',
-          'Range': 'bytes=0-4096'
+          'Accept': 'image/*,*/*;q=0.8'
         },
         signal: controller.signal
       });
-    }
-    clearTimeout(timeoutId);
 
-    if (!res.ok && res.status !== 206) {
-      const failedRes = {
+      if (res.status === 405 || res.status === 403 || res.status === 400) {
+        res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Verifier/2.0)',
+            'Accept': 'image/*,*/*;q=0.8',
+            'Range': 'bytes=0-4096'
+          },
+          signal: controller.signal
+        });
+      }
+      clearTimeout(timeoutId);
+
+      if (!res.ok && res.status !== 206) {
+        const failedRes = {
+          usable: false,
+          aspectRatio: '3:4',
+          isBlankOrPlaceholder: true,
+          layoutPresentationStatus: 'adapt_contain' as const,
+          error: `HTTP ${res.status}`
+        };
+        imageInspectionCache.set(url, failedRes);
+        return failedRes;
+      }
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      if (contentType && (contentType.includes('text/html') || contentType.includes('application/json') || (!contentType.startsWith('image/') && !contentType.includes('octet-stream')))) {
+        const nonImageRes = {
+          usable: false,
+          aspectRatio: '3:4',
+          isBlankOrPlaceholder: true,
+          layoutPresentationStatus: 'adapt_contain' as const,
+          error: `Not an image content type (${contentType})`
+        };
+        imageInspectionCache.set(url, nonImageRes);
+        return nonImageRes;
+      }
+
+      const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
+      if (res.status === 200 && contentLength > 0 && contentLength < 800) {
+        const emptyRes = {
+          usable: false,
+          aspectRatio: '3:4',
+          isBlankOrPlaceholder: true,
+          layoutPresentationStatus: 'adapt_contain' as const,
+          error: 'Image file too small (<800B, empty/broken pixel)'
+        };
+        imageInspectionCache.set(url, emptyRes);
+        return emptyRes;
+      }
+
+      const successRes = {
+        usable: true,
+        aspectRatio: '3:4',
+        dimensions: 'HD (Aspect 3:4)',
+        isBlankOrPlaceholder: false,
+        layoutPresentationStatus: 'fit_optimal' as const
+      };
+      imageInspectionCache.set(url, successRes);
+      return successRes;
+    } catch (err: any) {
+      return {
         usable: false,
         aspectRatio: '3:4',
+        dimensions: 'Unreachable',
         isBlankOrPlaceholder: true,
         layoutPresentationStatus: 'adapt_contain' as const,
-        error: `HTTP ${res.status}`
+        error: err.message || 'Unreachable image URL'
       };
-      imageInspectionCache.set(url, failedRes);
-      return failedRes;
     }
+  })();
 
-    const contentType = (res.headers.get('content-type') || '').toLowerCase();
-    if (contentType && (contentType.includes('text/html') || contentType.includes('application/json') || (!contentType.startsWith('image/') && !contentType.includes('octet-stream')))) {
-      const nonImageRes = {
-        usable: false,
-        aspectRatio: '3:4',
-        isBlankOrPlaceholder: true,
-        layoutPresentationStatus: 'adapt_contain' as const,
-        error: `Not an image content type (${contentType})`
-      };
-      imageInspectionCache.set(url, nonImageRes);
-      return nonImageRes;
-    }
-
-    const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
-    if (res.status === 200 && contentLength > 0 && contentLength < 800) {
-      const emptyRes = {
-        usable: false,
-        aspectRatio: '3:4',
-        isBlankOrPlaceholder: true,
-        layoutPresentationStatus: 'adapt_contain' as const,
-        error: 'Image file too small (<800B, empty/broken pixel)'
-      };
-      imageInspectionCache.set(url, emptyRes);
-      return emptyRes;
-    }
-
-    const successRes = {
-      usable: true,
-      aspectRatio: '3:4',
-      dimensions: 'HD (Aspect 3:4)',
-      isBlankOrPlaceholder: false,
-      layoutPresentationStatus: 'fit_optimal' as const
-    };
-    imageInspectionCache.set(url, successRes);
-    return successRes;
-  } catch (err: any) {
-    const failedRes = {
-      usable: false,
-      aspectRatio: '3:4',
-      dimensions: 'Unreachable',
-      isBlankOrPlaceholder: true,
-      layoutPresentationStatus: 'adapt_contain' as const,
-      error: err.message || 'Unreachable image URL'
-    };
-    return failedRes;
+  imageInspectionInFlight.set(url, inspectionPromise);
+  try {
+    return await inspectionPromise;
+  } finally {
+    imageInspectionInFlight.delete(url);
   }
 }
 
@@ -784,7 +967,8 @@ export async function verifyAnimeEntry(
     operator?: string;
     forceFreshSearch?: boolean;
     forceReplaceArtwork?: boolean;
-    onWorkerStep?: (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying') => void;
+    workerId?: number;
+    onWorkerStep?: (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying', waitReason?: WorkerWaitReason) => void;
   } = { autoFixEnabled: true, operator: 'auto_verifier' }
 ): Promise<ArtworkVerificationResult> {
   const animeId = anime.id;
@@ -800,9 +984,19 @@ export async function verifyAnimeEntry(
       const titleMatches = existingRecord ? calculateStringSimilarity(rawTitle, existingRecord.animeTitle) >= 0.90 : true;
 
       if (titleMatches) {
-        options.onWorkerStep?.('Inspecting verified artwork reachability', 'Local Catalogue', 'working');
-        const realInspection = await inspectArtworkImage(currentArtworkUrl);
-        const isImageUsable = realInspection.usable && !realInspection.isBlankOrPlaceholder;
+        const hasTrustedExistingRecord = Boolean(
+          existingRecord &&
+          (existingRecord.status === 'verified' || existingRecord.status === 'auto_fixed') &&
+          (existingRecord.confidence ?? 0.95) >= 0.85 &&
+          existingRecord.currentArtworkUrl === currentArtworkUrl
+        );
+
+        let isImageUsable = hasTrustedExistingRecord;
+        if (!isImageUsable) {
+          options.onWorkerStep?.('Inspecting verified artwork reachability', 'Local Catalogue', 'working');
+          const realInspection = await inspectArtworkImage(currentArtworkUrl);
+          isImageUsable = realInspection.usable && !realInspection.isBlankOrPlaceholder;
+        }
 
         if (isImageUsable) {
           const fastPathResult: ArtworkVerificationResult = existingRecord ? {
@@ -839,6 +1033,7 @@ export async function verifyAnimeEntry(
   const sources = getArtworkSourcesConfig();
   const anilistConfig = sources.find(s => s.id === 'anilist' && s.enabled);
   const anidbConfig = sources.find(s => s.id === 'anidb' && s.enabled);
+  const tmdbConfig = hasConfiguredTmdbApiKey() ? sources.find(s => s.id === 'tmdb' && s.enabled) : undefined;
   const tvmazeConfig = sources.find(s => s.id === 'tvmaze' && s.enabled);
   const thetvdbConfig = sources.find(s => s.id === 'thetvdb' && s.enabled);
 
@@ -863,96 +1058,212 @@ export async function verifyAnimeEntry(
   options.onWorkerStep?.('Inspecting current poster URL reachability & headers', 'Local Catalogue', 'working');
   const currentArtInspection = await inspectArtworkImage(currentArtworkUrl, Boolean(options.forceFreshSearch));
 
+  const currentArtworkMissingOrBroken =
+    !currentArtworkUrl ||
+    isPlaceholderArtworkUrl(currentArtworkUrl) ||
+    !currentArtInspection.usable ||
+    currentArtInspection.isBlankOrPlaceholder;
+
   const computeCandidateScore = (candidateTitle: string, queriedVariant: string) => {
     const directScore = calculateStringSimilarity(cleaned, candidateTitle);
     const variantScore = calculateStringSimilarity(queriedVariant, candidateTitle) * 0.92;
     return Math.max(directScore, variantScore);
   };
 
-  // 2. Query Primary Source: AniList
-  if (anilistConfig && globalSourceGateway.isSourceAvailable('anilist')) {
-    for (const titleVariant of titlesToCheck) {
-      options.onWorkerStep?.(`Searching AniList for "${titleVariant}"`, 'AniList', 'working');
-      const res = await queryAniList(
-        titleVariant,
-        anilistConfig.endpoint,
-        anilistConfig.timeoutMs,
-        (st, stepMsg) => options.onWorkerStep?.(stepMsg, 'AniList', st)
-      );
-      if (!res.success) {
-        hadTemporarySourceFailure = true;
-        break;
+  // Build candidate source list and dynamically order by immediate capacity & cache state
+  // so 50 workers spread across available sources instead of all waiting on one source!
+  const candidateSourceIds: string[] = [];
+  if (anilistConfig) candidateSourceIds.push('anilist');
+  if (tmdbConfig && hasConfiguredTmdbApiKey()) candidateSourceIds.push('tmdb');
+  if (tvmazeConfig) candidateSourceIds.push('tvmaze');
+  if (thetvdbConfig) candidateSourceIds.push('thetvdb');
+  if (anidbConfig) candidateSourceIds.push('anidb');
+
+  const orderedSources = globalSourceGateway.selectOptimalSourcesOrder(
+    candidateSourceIds,
+    options.workerId || 1,
+    cleaned
+  );
+
+  // If the current poster is already verified reachable & valid via HTTP HEAD/GET and no forced replacement is requested,
+  // only query external metadata if a source has immediate zero-wait capacity or cache hit — never block in a wait queue!
+  const canSkipBlockingWait = !currentArtworkMissingOrBroken && !options.forceFreshSearch && !options.forceReplaceArtwork;
+  const maxVariantsPerSource = canSkipBlockingWait ? 1 : 2;
+  const searchVariants = titlesToCheck.slice(0, maxVariantsPerSource);
+
+  const getHighestConfidenceSoFar = () => {
+    let maxScore = aniListMatch?.score || 0;
+    for (const c of candidates) {
+      if (c.confidence > maxScore) maxScore = c.confidence;
+    }
+    return maxScore;
+  };
+
+  for (let sIdx = 0; sIdx < orderedSources.length; sIdx++) {
+    const sourceId = orderedSources[sIdx];
+
+    // Stop early once we have a strong candidate match (>= 0.80)
+    if (getHighestConfidenceSoFar() >= 0.80 && candidates.length > 0) {
+      break;
+    }
+
+    if (!globalSourceGateway.isSourceAvailable(sourceId)) {
+      hadTemporarySourceFailure = true;
+      continue;
+    }
+
+    // Check if another remaining source has immediate capacity while this one is busy
+    const hasImmediate = globalSourceGateway.hasImmediateCapacity(sourceId) ||
+      Boolean(globalSourceGateway.hasInFlightOrCached(sourceId, cleaned));
+
+    if (!hasImmediate) {
+      if (canSkipBlockingWait) {
+        // Current artwork is already verified valid & reachable; skip busy source instead of waiting
+        continue;
       }
-      anySourceSucceeded = true;
-      if (res.matches.length > 0) {
-        for (const item of res.matches) {
-          const itemRomaji = item.title?.romaji || '';
-          const itemEnglish = item.title?.english || '';
-          const synonyms: string[] = item.synonyms || [];
+      const otherHasImmediate = orderedSources
+        .slice(sIdx + 1)
+        .some(otherId => globalSourceGateway.hasImmediateCapacity(otherId) || Boolean(globalSourceGateway.hasInFlightOrCached(otherId, cleaned)));
+      if (otherHasImmediate) {
+        // Switch immediately to another available source instead of waiting!
+        continue;
+      }
+    }
 
-          const scoreRomaji = computeCandidateScore(itemRomaji, titleVariant);
-          const scoreEnglish = itemEnglish ? computeCandidateScore(itemEnglish, titleVariant) : 0;
-          let bestSynonymScore = 0;
-          for (const syn of synonyms) {
-            const sc = computeCandidateScore(syn, titleVariant);
-            if (sc > bestSynonymScore) bestSynonymScore = sc;
-          }
+    if (sourceId === 'anilist' && anilistConfig) {
+      for (const titleVariant of searchVariants) {
+        if (
+          titleVariant !== searchVariants[0] &&
+          !globalSourceGateway.hasImmediateCapacity('anilist') &&
+          !globalSourceGateway.hasInFlightOrCached('anilist', titleVariant)
+        ) {
+          break; // Switch to next source rather than queuing for secondary variant
+        }
+        options.onWorkerStep?.(`Searching AniList for "${titleVariant}"`, 'AniList', 'working');
+        const res = await queryAniList(
+          titleVariant,
+          anilistConfig.endpoint,
+          anilistConfig.timeoutMs,
+          (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'AniList', st, waitReason)
+        );
+        if (!res.success) {
+          hadTemporarySourceFailure = true;
+          break;
+        }
+        anySourceSucceeded = true;
+        if (res.matches.length > 0) {
+          for (const item of res.matches) {
+            const itemRomaji = item.title?.romaji || '';
+            const itemEnglish = item.title?.english || '';
+            const synonyms: string[] = item.synonyms || [];
 
-          const score = Math.max(scoreRomaji, scoreEnglish, bestSynonymScore);
-          const coverUrl = item.coverImage?.extraLarge || item.coverImage?.large || item.coverImage?.medium;
+            const scoreRomaji = computeCandidateScore(itemRomaji, titleVariant);
+            const scoreEnglish = itemEnglish ? computeCandidateScore(itemEnglish, titleVariant) : 0;
+            let bestSynonymScore = 0;
+            for (const syn of synonyms) {
+              const sc = computeCandidateScore(syn, titleVariant);
+              if (sc > bestSynonymScore) bestSynonymScore = sc;
+            }
 
-          if (coverUrl && score >= 0.42 && !isPlaceholderArtworkUrl(coverUrl)) {
-            if (!candidates.some(c => c.imageUrl === coverUrl)) {
-              candidates.push({
-                source: 'anilist',
-                sourceId: item.id,
+            const score = Math.max(scoreRomaji, scoreEnglish, bestSynonymScore);
+            const coverUrl = item.coverImage?.extraLarge || item.coverImage?.large || item.coverImage?.medium;
+
+            if (coverUrl && score >= 0.42 && !isPlaceholderArtworkUrl(coverUrl)) {
+              if (!candidates.some(c => c.imageUrl === coverUrl)) {
+                candidates.push({
+                  source: 'anilist',
+                  sourceId: item.id,
+                  title: itemEnglish || itemRomaji,
+                  imageUrl: coverUrl,
+                  aspectRatio: '3:4',
+                  confidence: score,
+                  format: item.format,
+                  year: item.seasonYear
+                });
+              }
+            }
+
+            if (!aniListMatch || score > aniListMatch.score) {
+              aniListMatch = {
+                id: item.id,
                 title: itemEnglish || itemRomaji,
-                imageUrl: coverUrl,
-                aspectRatio: '3:4',
-                confidence: score,
-                format: item.format,
-                year: item.seasonYear
-              });
+                englishTitle: itemEnglish,
+                romajiTitle: itemRomaji,
+                year: item.seasonYear,
+                coverUrl,
+                score
+              };
             }
           }
 
-          if (!aniListMatch || score > aniListMatch.score) {
-            aniListMatch = {
-              id: item.id,
-              title: itemEnglish || itemRomaji,
-              englishTitle: itemEnglish,
-              romajiTitle: itemRomaji,
-              year: item.seasonYear,
-              coverUrl,
-              score
-            };
+          if (aniListMatch && aniListMatch.score >= 0.78) {
+            break;
           }
         }
-
-        // REQUIREMENT 8: HIGH CONFIDENCE -> STOP EARLY!
-        if (aniListMatch && aniListMatch.score >= 0.85) {
-          break;
-        }
       }
-    }
-  } else if (anilistConfig && !globalSourceGateway.isSourceAvailable('anilist')) {
-    hadTemporarySourceFailure = true;
-  }
-
-  // 3. Fallback Active Source: TVmaze / TheTVDB (if AniList failed or match was medium/low or missing)
-  if ((candidates.length === 0 || (aniListMatch?.score || 0) < 0.80) && (tvmazeConfig || thetvdbConfig)) {
-    if (globalSourceGateway.isSourceAvailable('tvmaze')) {
+    } else if (sourceId === 'tmdb' && tmdbConfig && hasConfiguredTmdbApiKey()) {
       try {
-        for (const titleVariant of titlesToCheck) {
-          options.onWorkerStep?.(`Searching TVmaze fallback for "${titleVariant}"`, 'TVmaze', 'working');
-          const res = await queryTVmaze(
+        for (const titleVariant of searchVariants) {
+          if (
+            titleVariant !== searchVariants[0] &&
+            !globalSourceGateway.hasImmediateCapacity('tmdb') &&
+            !globalSourceGateway.hasInFlightOrCached('tmdb', titleVariant)
+          ) {
+            break;
+          }
+          options.onWorkerStep?.(`Searching TMDB for "${titleVariant}"`, 'TMDB', 'working');
+          const res = await queryTMDB(
             titleVariant,
-            6000,
-            (st, stepMsg) => options.onWorkerStep?.(stepMsg, 'TVmaze', st)
+            tmdbConfig.timeoutMs || 6500,
+            (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'TMDB', st, waitReason)
           );
           if (!res.success) {
             hadTemporarySourceFailure = true;
-            continue;
+            break;
+          }
+          anySourceSucceeded = true;
+          if (res.matches.length > 0) {
+            for (const item of res.matches) {
+              const score = computeCandidateScore(item.title || '', titleVariant);
+              if (item.posterUrl && score >= 0.42 && !isPlaceholderArtworkUrl(item.posterUrl)) {
+                if (!candidates.some(c => c.imageUrl === item.posterUrl)) {
+                  candidates.push({
+                    source: 'tmdb',
+                    sourceId: String(item.id),
+                    title: item.title,
+                    imageUrl: item.posterUrl,
+                    aspectRatio: '3:4',
+                    confidence: score,
+                    year: item.year
+                  });
+                }
+              }
+            }
+            if (candidates.some(c => c.source === 'tmdb' && c.confidence >= 0.78)) break;
+          }
+        }
+      } catch {
+        hadTemporarySourceFailure = true;
+      }
+    } else if (sourceId === 'tvmaze' && tvmazeConfig) {
+      try {
+        for (const titleVariant of searchVariants) {
+          if (
+            titleVariant !== searchVariants[0] &&
+            !globalSourceGateway.hasImmediateCapacity('tvmaze') &&
+            !globalSourceGateway.hasInFlightOrCached('tvmaze', titleVariant)
+          ) {
+            break;
+          }
+          options.onWorkerStep?.(`Searching TVmaze for "${titleVariant}"`, 'TVmaze', 'working');
+          const res = await queryTVmaze(
+            titleVariant,
+            6000,
+            (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'TVmaze', st, waitReason)
+          );
+          if (!res.success) {
+            hadTemporarySourceFailure = true;
+            break;
           }
           anySourceSucceeded = true;
           if (res.matches.length > 0) {
@@ -978,28 +1289,83 @@ export async function verifyAnimeEntry(
       } catch {
         hadTemporarySourceFailure = true;
       }
-    } else {
-      hadTemporarySourceFailure = true;
-    }
-  }
-
-  // 4. Secondary Fallback Source: AniDB (only if needed)
-  if ((!aniListMatch || aniListMatch.score < 0.65) && candidates.length === 0 && anidbConfig) {
-    if (globalSourceGateway.isSourceAvailable('anidb')) {
+    } else if (sourceId === 'thetvdb' && thetvdbConfig) {
       try {
-        options.onWorkerStep?.(`Searching AniDB fallback for "${cleaned}"`, 'AniDB', 'working');
+        for (const titleVariant of searchVariants) {
+          if (
+            titleVariant !== searchVariants[0] &&
+            !globalSourceGateway.hasImmediateCapacity('thetvdb') &&
+            !globalSourceGateway.hasInFlightOrCached('thetvdb', titleVariant)
+          ) {
+            break;
+          }
+          options.onWorkerStep?.(`Searching TheTVDB Gateway for "${titleVariant}"`, 'TheTVDB', 'working');
+          const res = await queryTheTVDB(
+            titleVariant,
+            6000,
+            (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'TheTVDB', st, waitReason)
+          );
+          if (!res.success) {
+            hadTemporarySourceFailure = true;
+            break;
+          }
+          anySourceSucceeded = true;
+          if (res.matches.length > 0) {
+            for (const item of res.matches) {
+              const scorePrimary = computeCandidateScore(item.title || '', titleVariant);
+              const scoreEn = item.englishTitle ? computeCandidateScore(item.englishTitle, titleVariant) : 0;
+              const scoreRomaji = item.romajiTitle ? computeCandidateScore(item.romajiTitle, titleVariant) : 0;
+              const score = Math.max(scorePrimary, scoreEn, scoreRomaji);
+              if (item.posterUrl && score >= 0.42 && !isPlaceholderArtworkUrl(item.posterUrl)) {
+                if (!candidates.some(c => c.imageUrl === item.posterUrl)) {
+                  candidates.push({
+                    source: 'thetvdb',
+                    sourceId: String(item.id),
+                    title: item.title,
+                    imageUrl: item.posterUrl,
+                    aspectRatio: '3:4',
+                    confidence: score,
+                    year: item.year
+                  });
+                }
+              }
+            }
+            if (candidates.some(c => c.source === 'thetvdb' && c.confidence >= 0.78)) break;
+          }
+        }
+      } catch {
+        hadTemporarySourceFailure = true;
+      }
+    } else if (sourceId === 'anidb' && anidbConfig) {
+      try {
+        options.onWorkerStep?.(`Searching AniDB for "${cleaned}"`, 'AniDB', 'working');
         const anidbRes = await queryAniDBFallback(
           cleaned,
-          (st, stepMsg) => options.onWorkerStep?.(stepMsg, 'AniDB', st)
+          (st, stepMsg, waitReason) => options.onWorkerStep?.(stepMsg, 'AniDB', st, waitReason)
         );
         if (anidbRes.success) {
           anySourceSucceeded = true;
           if (anidbRes.matches.length > 0) {
+            const firstMatch = anidbRes.matches[0];
+            const score = computeCandidateScore(firstMatch.title || cleaned, cleaned);
             anidbMatch = {
-              aid: anidbRes.matches[0].aid,
-              title: anidbRes.matches[0].title,
-              score: 0.80
+              aid: firstMatch.aid,
+              title: firstMatch.title,
+              score: Math.max(0.75, score)
             };
+            if (firstMatch.posterUrl && score >= 0.42 && !isPlaceholderArtworkUrl(firstMatch.posterUrl)) {
+              if (!candidates.some(c => c.imageUrl === firstMatch.posterUrl)) {
+                candidates.push({
+                  source: 'anidb',
+                  sourceId: String(firstMatch.aid || 1),
+                  title: firstMatch.title,
+                  imageUrl: firstMatch.posterUrl,
+                  aspectRatio: '3:4',
+                  confidence: score,
+                  year: firstMatch.year
+                });
+              }
+            }
           }
         } else {
           hadTemporarySourceFailure = true;
@@ -1026,12 +1392,6 @@ export async function verifyAnimeEntry(
   if (anime.seasons && anime.seasons.length > 1) {
     seasonResults = await verifyMultiSeasons(anime, cleaned, options.autoFixEnabled ?? true);
   }
-
-  const currentArtworkMissingOrBroken =
-    !currentArtworkUrl ||
-    isPlaceholderArtworkUrl(currentArtworkUrl) ||
-    !currentArtInspection.usable ||
-    currentArtInspection.isBlankOrPlaceholder;
 
   // Validate candidate images in descending confidence order
   let selectedCandidate: ArtworkCandidate | null = null;

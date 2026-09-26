@@ -283,7 +283,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Miraculous-Tales-of-Ladybug-Cat-Noir-Season-5-2.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -644,7 +645,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx171018-60q1B6GK2Ghb.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -752,7 +754,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx124080-3i22mRVPBS0T.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -817,7 +820,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx114121-vxWVgIBlBjox.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -868,7 +872,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx153288-25FBfFJzEQ5O.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -921,7 +926,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20464-ooZUyBe4ptp9.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -973,7 +979,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx97940-fyh8o7gNbha0.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1024,7 +1031,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx177709-e5Qx6RlsBgD5.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1075,7 +1083,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx176273-raxxcgkslf4Q.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1128,7 +1137,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20755-dWrhs569YGUO.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1177,10 +1187,12 @@
       "Sports"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx124195-5Z1JSrRlbMRe.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146646-RMrHipfzvfTM.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx124195-5Z1JSrRlbMRe.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -1216,7 +1228,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/baki-hanma-season-2-hindi-dubbed-episodes-download/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146646-RMrHipfzvfTM.jpg"
       }
     ],
     "totalEpisodes": 2,
@@ -1245,7 +1258,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx120120-cWDmnmeEntSe.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1298,7 +1312,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1535-kUgkcrfOrkUM.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1349,10 +1364,12 @@
       "Thriller"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101348-2fhDFPCuMNiz.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136430-gsBsJjA7hGh9.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101348-2fhDFPCuMNiz.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -1388,7 +1405,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/vinland-saga-season-2-hindi-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136430-gsBsJjA7hGh9.jpg"
       }
     ],
     "totalEpisodes": 2,
@@ -1419,7 +1437,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx918-iOaeBVUn4uK7.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1470,7 +1489,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/04/Stranger-Things-Tales-from-85-Season-1.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1522,7 +1542,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-The-Movie-Nobita-Aur-Birdopia-ka-Sultan-Hindi-Download.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1571,10 +1592,12 @@
       "School"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21459-nYh85uj2Fuwr.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100166-jUCZYbzn2XLw.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21856-gutauxhWAwn6.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -1597,7 +1620,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/my-hero-academia-season-1-hindi-dubbed-episodes/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx204356-RNYmxUVVz3Z2.png"
       },
       {
         "seasonNumber": 2,
@@ -1610,7 +1634,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/my-hero-academia-season-2-hindi-dubbed-episodes/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21856-gutauxhWAwn6.png"
       },
       {
         "seasonNumber": 3,
@@ -1623,7 +1648,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/my-hero-academia-season-3-hindi-dubbed-episodes/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100166-jUCZYbzn2XLw.jpg"
       },
       {
         "seasonNumber": 4,
@@ -1718,7 +1744,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx98659-WNyPLIZDpGGY.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1811,7 +1838,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Adventure-of-Koya-Koya.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1862,7 +1890,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/03/Your-Name.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1915,7 +1944,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/01/Shin-Chan-Movie-Robot-Dad.png",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -1967,7 +1997,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/01/Shin-Chan-In-Very-Very-Tasty-Tasty2.png",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2020,7 +2051,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-2-3.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2073,7 +2105,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/Shin-Chan-Movie-Treasure-Of-the-Buri-Buri-Kingdom.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2125,7 +2158,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image-1-1.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2174,10 +2208,12 @@
       "School"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21507-4z4gJkZ3N3v0.png",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b527-t6dBVJ5OVcXK.png",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21507-4z4gJkZ3N3v0.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -2243,7 +2279,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-Aur-Dinosaur-Yoddha-Hindi-.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2295,7 +2332,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-And-The-Steel-Troops-Download-Hindi-Dubbed.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2347,7 +2385,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-and-the-Spiral-City.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2399,7 +2438,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-Nobita-and-the-Birth-of-Japan-1.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2451,7 +2491,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-2-2-scaled.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2503,7 +2544,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-5.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2555,7 +2597,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/zyro-image-1-2-scaled.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2607,7 +2650,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobitas-Chronicle-of-the-Moon-Exploration.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2660,7 +2704,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Gadget-Museum-Ka-Rahasya-1.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2712,7 +2757,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-The-Explorer-Bow-Bow-2.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2765,7 +2811,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-In-Jannat-No-1-Hindi-Download.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2817,7 +2864,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobitas-Three-Magical-Swordsmen-Hindi-Download-1.png",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2869,7 +2917,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobitas-Dorabian-Nights-Hindi-Dubbed-Download-720P-1.png",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2921,7 +2970,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/zyro-image-1.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -2973,7 +3023,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Nobitas-Great-Adventure-in-The-South-Seas.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3025,7 +3076,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Nobitas-Little-Space-War-Movie.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3077,7 +3129,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/12/Great-Adventure-in-the-Antarctic-Kachi-Kochi-Nobita-Chal-Pada-Antarctica.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3129,7 +3182,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/01/Doraemon-the-Movie-2018-Nobitas-Treasure-Island.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3181,7 +3235,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Gadget-Museum-Ka-Rahasya.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3233,7 +3288,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Galaxy-Super-Express.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3285,7 +3341,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Jadoo-Mantar-Aur-Jahnoom.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3337,7 +3394,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Khel-Khilona-Bhool-Bhulaiya-Hindi-Download-720P.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3389,7 +3447,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-and-Jungle-Mein-Dangal.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3442,7 +3501,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/Doraemon-The-Movie-Nobita-and-The-Kingdom-of-Robot-Singham.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3494,7 +3554,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-Aur-Antariksh-Daku.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3546,7 +3607,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-Aur-Ek-Jalpari-Hindi-Download.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3598,7 +3660,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-Aur-Jadooi-Tapu-Hindi.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3650,7 +3713,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/06/Doraemon-The-Movie-Nobita-Bana-Superhero.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3702,7 +3766,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Nobita-In-Hara-Hara-Planet-Hindi-Movie.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3754,7 +3819,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/06/Doraemon-The-Movie-Nobita-in-Ichi-Mera-Dost-Hindi-Movie.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -3807,7 +3873,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1735-kGfVm0YqCPcu.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4056,7 +4123,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-Movies.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4109,7 +4177,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx16498-buvcRTBx4NSm.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4202,7 +4271,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-LHBAeoZDIsnF.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4492,7 +4562,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20-dE6UHbFFg1A5.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4647,7 +4718,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101922-WBsBl0ClmgYL.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4735,10 +4807,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151807-it355ZgzquUd.png",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-9BDMjAZGEbq4.png",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151807-it355ZgzquUd.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -4889,7 +4963,8 @@
             "title": "Episode 13",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-9BDMjAZGEbq4.png"
       }
     ],
     "totalEpisodes": 25,
@@ -4919,7 +4994,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image-2.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -4971,7 +5047,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5023,7 +5100,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/07/All-Shinchan-Movies-in-Hindi-Download.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5075,7 +5153,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-1.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5127,7 +5206,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-3.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5179,7 +5259,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-4.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5231,7 +5312,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-6.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5283,7 +5365,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/02/zyro-image-2-5.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5388,7 +5471,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon-The-Movie-Stand-By-Me-2-e1590517235111.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5440,7 +5524,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Doraemon_The_Movie_Nobita_Ki_Nayi_Duniya_1-N0ykhChs.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5697,7 +5782,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Daemons-of-the-Shadow-Realm-Season-1-1024x576.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5748,7 +5834,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx105333-GybuoSoOZfpH.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5841,7 +5928,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/nx11617-nmxMU9Zh3H5R.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -5889,10 +5977,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx174576-tpKcHG0eO6CS.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182300-IYkq5KrkQq1V.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx174576-tpKcHG0eO6CS.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -5928,7 +6018,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/wistoria-wand-and-sword-season-2-hindi-dubbed-episodes/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182300-IYkq5KrkQq1V.jpg"
       }
     ],
     "totalEpisodes": 2,
@@ -5955,10 +6046,12 @@
       "School"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx116674-p3zK4PUX2Aag.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185874-aU3e6tBT6wwA.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx169755-Rqb7MjnzdTc6.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -5994,7 +6087,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/bleach-thousand-year-blood-war-season-2-hindi-dubbed/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx159322-Sp1GflRhE6Po.jpg"
       },
       {
         "seasonNumber": 3,
@@ -6007,7 +6101,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/bleach-thousand-year-blood-war-season-3-hindi-dubbed/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx169755-Rqb7MjnzdTc6.jpg"
       },
       {
         "seasonNumber": 4,
@@ -6020,7 +6115,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/bleach-thousand-year-blood-war-season-4-episodes-hindi-dubbed-download-hd-jio-cinema/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185874-aU3e6tBT6wwA.jpg"
       }
     ],
     "totalEpisodes": 4,
@@ -6050,7 +6146,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2025/05/Doraemon-Nobitas-Sky-Utopia-movie-e1746426976452.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -6102,7 +6199,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/01/Doraemon-Nobitas-New-Dinosaur-1024x576.jpg",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -6154,7 +6252,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1726-IrpH32PVADiO.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -6219,7 +6318,8 @@
       "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/release-that-witch-season-1-1024x576.webp",
       "isVerified": true,
       "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "aspectRatio": "16:9",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -6268,10 +6368,12 @@
       "Drama"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx108465-1ANspF1EWyFx.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178789-hNXjKFzUq7mk.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146065-IjirxRK26O03.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -6532,7 +6634,8 @@
             "title": "Episode 24",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146065-IjirxRK26O03.png"
       },
       {
         "seasonNumber": 3,
@@ -6660,7 +6763,8 @@
             "title": "Episode 24",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/mushoku-tensei-jobless-reincarnation-season-3-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178789-hNXjKFzUq7mk.jpg"
       }
     ],
     "totalEpisodes": 71,
@@ -6688,10 +6792,12 @@
       "Thriller"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101280-tDxCVJm714nt.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182205-q2AeO1owuQbO.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156822-Jzo2ITWgm4kM.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -6957,7 +7063,8 @@
             "title": "Episode 24",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108511-PufFordLNyIb.jpg"
       },
       {
         "seasonNumber": 3,
@@ -7085,7 +7192,8 @@
             "title": "Episode 24",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156822-Jzo2ITWgm4kM.jpg"
       },
       {
         "seasonNumber": 4,
@@ -7098,7 +7206,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/that-time-i-got-reincarnated-as-a-slime-season-4-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182205-q2AeO1owuQbO.jpg"
       }
     ],
     "totalEpisodes": 73,
@@ -7126,10 +7235,12 @@
       "School"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx137822-U8naszP96vzC.png",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163146-BVZPgyzkqi82.png",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx137822-U8naszP96vzC.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -7345,7 +7456,8 @@
             "title": "Episode 14",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163146-BVZPgyzkqi82.png"
       }
     ],
     "totalEpisodes": 38,
@@ -7374,10 +7486,12 @@
       "Thriller"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21355-wRVUrGxpvIQQ.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163134-yieRFbvUOH9a.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -7653,7 +7767,8 @@
             "title": "Episode 25",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108632-lQWnmw7XaNOK.jpg"
       },
       {
         "seasonNumber": 3,
@@ -7741,7 +7856,8 @@
             "title": "Episode 16",
             "canonicalUrl": "https://www.rareanimes.mov/home/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163134-yieRFbvUOH9a.jpg"
       },
       {
         "seasonNumber": 4,
@@ -7754,7 +7870,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/rezero-starting-life-in-another-world-season-4-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg"
       }
     ],
     "totalEpisodes": 67,
@@ -7782,10 +7899,12 @@
       "Isekai"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11757-SxYDUzdr9rh2.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11757-SxYDUzdr9rh2.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -7941,7 +8060,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/sword-art-online-season-2-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg"
       }
     ],
     "totalEpisodes": 26,
@@ -7974,7 +8094,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b19815-sEOQ9yQaPKlk.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8084,7 +8205,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx269-d2GmRkJbMopq.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8255,10 +8377,12 @@
       "Isekai"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/KONOSUBA-Gods-blessing-on-this-wonderful-world-Season-2-Hindi-Dubbed-Episodes-Download-HD1-470x264.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png",
       "isVerified": true,
-      "verificationSource": "provider_verified",
-      "aspectRatio": "16:9"
+      "verificationSource": "anilist",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/09/KONOSUBA-Gods-blessing-on-this-wonderful-world-Season-2-Hindi-Dubbed-Episodes-Download-HD1-470x264.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -8339,7 +8463,8 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/konosuba-gods-blessing-on-this-wonderful-world-season-2-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png"
       }
     ],
     "totalEpisodes": 11,
@@ -8370,7 +8495,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199-sWefXJvXkDOb.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8429,7 +8555,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx99263-LcazQwdlWzMy.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8603,7 +8730,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8774,7 +8902,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx6547-SYexAn5aFyss.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -8887,7 +9016,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20832-vUNm5zrYWifc.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9015,7 +9145,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx15809-ECv3HyOYJKrk.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9132,7 +9263,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108632-lQWnmw7XaNOK.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9247,7 +9379,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b6702-KI4qgSMyI8Pm.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9423,7 +9556,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9521,7 +9655,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21776-bwPaYKhnKfUs.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9635,7 +9770,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx127720-ADJgIrUVMdU9.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9746,7 +9882,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108511-PufFordLNyIb.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -9856,7 +9993,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx130298-YMdcKHytpWNH.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10008,7 +10146,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx119661-GDbUZxrZMz01.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10117,7 +10256,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx100182-KctPmCJ2smHQ.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10289,7 +10429,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx124845-JXORhqCTGt04.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10397,7 +10538,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21613-qT3NiwYP5dYc.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10507,7 +10649,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx116742-jn0dW23ftehq.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10615,7 +10758,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx98437-5q0GWqHhNAgJ.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10729,7 +10873,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121-zjmixZ428Mwv.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -10903,7 +11048,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146065-IjirxRK26O03.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11016,7 +11162,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101474-tGRyvSAWMjU9.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11131,7 +11278,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx111321-dIr3dEKOIPer.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11249,7 +11397,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx102976-2Yi5icRbjukO.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11308,7 +11457,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx17265-RyErURYesjJt.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11485,7 +11635,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx21875-ybSgx75MgRMM.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11547,7 +11698,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100668-DvOn5bMOt4cy.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11662,7 +11814,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108759-jcXbDf9BJTcb.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11771,7 +11924,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166873-xO0BRPkmwFll.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11881,7 +12035,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101004-rJLBIWGypbYK.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -11994,7 +12149,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx129898-FRUzDtPhRigt.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12103,7 +12259,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105156-ZVtxISdoUqnY.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12212,7 +12369,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20994-pSDk4I58jAK5.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12320,7 +12478,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114308-8UBiS7U9buzu.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12428,7 +12587,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163134-yieRFbvUOH9a.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12556,7 +12716,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx161964-JpkEbHI8ivaP.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12666,7 +12827,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx21403-k8DZhZ3x1BCO.png",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12727,7 +12889,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156822-Jzo2ITWgm4kM.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {
@@ -12898,7 +13061,8 @@
       "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100112-eExFpnYG2QAK.jpg",
       "isVerified": true,
       "verificationSource": "official_cdn",
-      "aspectRatio": "3:4"
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified"
     },
     "providers": {
       "raretoonIndia": {

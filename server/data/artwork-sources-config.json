@@ -62,7 +62,9 @@
     "timeoutMs": 8000,
     "priority": 4,
     "status": "disabled",
-    "description": "DISABLED / NOT USED FOR ARTWORK VERIFICATION. Preserved for stored artwork history."
+    "description": "Optional source (Automatically skipped when TMDB_API_KEY is not set; automatically enables when TMDB_API_KEY is added).",
+    "lastError": null,
+    "lastMessage": "Optional (TMDB_API_KEY not set — skipped automatically)"
   },
   {
     "id": "tvmaze",

@@ -25,6 +25,14 @@ import {
   validateAndApplyWatchOrder
 } from './watch-order-sources.js';
 import {
+  inspectLatestAppSourceMetadata,
+  buildLatestAppSourceArchive,
+  updateLatestAppSourceArchive,
+  getLatestOrBuildAppSourceArchive,
+  validateZipArchiveBuffer,
+  getArchiveDiskPath
+} from './source-packager.js';
+import {
   loadVerificationRecords,
   saveVerificationRecords,
   loadFakeAnimeIssues,
@@ -462,12 +470,49 @@ export function getSessionEmail(req: Request): string | null {
 }
 
 export function authenticateSession(req: Request, res: Response, next: NextFunction): void {
+  loadSessions();
   const cookies = parseCookies(req);
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-  const customHeader = req.headers['x-anivault-owner-session'] as string;
-  const queryToken = (req.query.token || req.query.ownerToken) as string;
-  const sessionId = cookies['anivault_owner_session'] || bearerToken || customHeader || queryToken;
+  const customOwnerHeader = (req.headers['x-anivault-owner-session'] || req.headers['x-owner-session']) as string;
+  const customUserHeader = req.headers['x-anivault-user-session'] as string;
+  const rawPathToken = (req.params?.ownerToken) as string;
+  const pathToken = rawPathToken ? decodeURIComponent(rawPathToken).replace(/_dot_/g, '.') : '';
+  const queryToken = (req.query.token || req.query.ownerToken || pathToken) as string;
+
+  // Detect if caller is explicitly using a normal user session
+  if (customUserHeader && !customOwnerHeader) {
+    (req as any).isNormalUserRequest = true;
+    (req as any).ownerSession = null;
+    return next();
+  }
+
+  if (bearerToken) {
+    const decodedBearer = verifyAndDecodeSessionToken(bearerToken);
+    if (decodedBearer && decodedBearer.role === 'user') {
+      (req as any).isNormalUserRequest = true;
+      (req as any).ownerSession = null;
+      return next();
+    }
+  }
+
+  if (queryToken) {
+    const decodedQuery = verifyAndDecodeSessionToken(queryToken);
+    if (decodedQuery && decodedQuery.role === 'user') {
+      (req as any).isNormalUserRequest = true;
+      (req as any).ownerSession = null;
+      return next();
+    }
+  }
+
+  // If no explicit owner token header/query was provided and a normal user session cookie is active without an owner cookie
+  if (!bearerToken && !customOwnerHeader && !queryToken && cookies['anivault_user_session'] && !cookies['anivault_owner_session']) {
+    (req as any).isNormalUserRequest = true;
+    (req as any).ownerSession = null;
+    return next();
+  }
+
+  const sessionId = bearerToken || customOwnerHeader || queryToken || cookies['anivault_owner_session'];
 
   if (!sessionId) {
     (req as any).ownerSession = null;
@@ -526,6 +571,10 @@ export function requireOwner(req: Request, res: Response, next: NextFunction): v
   const session = (req as any).ownerSession;
 
   if (!session) {
+    if ((req as any).isNormalUserRequest) {
+      res.status(403).json({ error: 'Forbidden: Access denied. Only the authenticated Owner account can access this resource.' });
+      return;
+    }
     res.status(401).json({ error: 'Unauthorized: Authentication session required for Anivex Owner access.' });
     return;
   }
@@ -982,6 +1031,7 @@ export function createOwnerRouter(): express.Router {
       googleEmail: googleEmail,
       isGoogleAuthorized: isGoogleAuthorized,
       ownerExists: ownerExists,
+      sessionToken: isOwnerSessionActive && session ? session.sessionId : undefined,
       owner: isAuthorized && owner ? {
         email: owner.email,
         username: owner.username,
@@ -2580,6 +2630,7 @@ export function createOwnerRouter(): express.Router {
           cookieSecure: process.env.NODE_ENV === 'production',
           protectedEndpoints: [
             '/api/owner/*',
+            '/api/owner/source-package/download',
             '/api/bug-reports/owner/*',
             '/api/auth/session',
             '/api/auth/update-username'
@@ -2590,6 +2641,157 @@ export function createOwnerRouter(): express.Router {
       res.status(500).json({ error: 'Failed to fetch settings diagnostics.' });
     }
   });
+
+  // 9. Owner-Only Live Source Package Metadata Inspection
+  router.get('/source-package/info', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const session = (req as any).ownerSession;
+      const ownerUsername = session?.username || 'Death197';
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      // Ensure a verified archive file exists on disk ready for immediate download
+      getLatestOrBuildAppSourceArchive(ownerUsername, false);
+      const metadata = inspectLatestAppSourceMetadata();
+      res.json({
+        success: true,
+        metadata,
+        sessionToken: session?.sessionId
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        error: err.message || 'Failed to inspect live project source state.'
+      });
+    }
+  });
+
+  // 9b. Owner-Only Rebuild & Update Latest App Source Download Package
+  router.post('/source-package/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const session = (req as any).ownerSession;
+      const ownerUsername = session?.username || 'Death197';
+      const ownerEmail = session?.email || 'makerapp688@gmail.com';
+
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      const pkg = updateLatestAppSourceArchive(ownerUsername);
+      const metadata = inspectLatestAppSourceMetadata();
+
+      logAdminAction(
+        'Update Latest App Source Package',
+        ownerEmail,
+        'success',
+        pkg.filename,
+        `Rebuilt & updated latest website source package (${pkg.totalFiles} files, ${(pkg.compressedBytes / (1024 * 1024)).toFixed(2)} MB compressed, SHA-256: ${pkg.sha256.slice(0, 16)}...)`
+      );
+
+      res.json({
+        success: true,
+        message: `Latest website source package rebuilt and updated (${pkg.totalFiles} files, ${(pkg.compressedBytes / (1024 * 1024)).toFixed(2)} MB). Ready for download.`,
+        sessionToken: session?.sessionId,
+        package: {
+          filename: pkg.filename,
+          generatedAt: pkg.generatedAt,
+          sha256: pkg.sha256,
+          compressedBytes: pkg.compressedBytes,
+          uncompressedBytes: pkg.uncompressedBytes,
+          totalFiles: pkg.totalFiles,
+          excludedSensitiveItems: pkg.excludedSensitiveItems
+        },
+        metadata
+      });
+    } catch (err: any) {
+      console.error('[OwnerSourceUpdate Error]', err);
+      res.status(500).json({
+        error: err.message || 'Failed to update latest application source package.'
+      });
+    }
+  });
+
+  // 10. Owner-Only Live Source Package Generator & Download (supports both /source-package/download and /source-package/download/:filename)
+  const handleOwnerSourcePackageDownload = (req: Request, res: Response) => {
+    try {
+      const session = (req as any).ownerSession;
+      const ownerUsername = session?.username || 'Death197';
+      const ownerEmail = session?.email || 'makerapp688@gmail.com';
+
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
+      if (req.query.check === 'true') {
+        const meta = inspectLatestAppSourceMetadata();
+        res.json({
+          success: true,
+          available: meta.available,
+          packageName: meta.packageName,
+          totalFiles: meta.totalFiles,
+          totalUncompressedBytes: meta.totalUncompressedBytes,
+          excludedSensitiveItems: meta.excludedSensitiveItems,
+          generatedAt: meta.generatedAt
+        });
+        return;
+      }
+
+      const forceFresh = req.query.fresh === 'true' || req.query.fresh === '1';
+      const pkg = getLatestOrBuildAppSourceArchive(ownerUsername, forceFresh);
+
+      // Explicitly verify the archive exists on disk, is readable, and is a valid ZIP archive before returning
+      const archiveDiskPath = getArchiveDiskPath();
+      if (!fs.existsSync(archiveDiskPath)) {
+        throw new Error('Generated source archive file does not exist on disk.');
+      }
+      fs.accessSync(archiveDiskPath, fs.constants.R_OK);
+      const diskStat = fs.statSync(archiveDiskPath);
+      if (diskStat.size < 22) {
+        throw new Error('Generated source archive file on disk is empty or corrupted.');
+      }
+      validateZipArchiveBuffer(pkg.buffer, pkg.totalFiles);
+
+      if (req.query.preload !== '1') {
+        logAdminAction(
+          'Download Latest App Source',
+          ownerEmail,
+          'success',
+          pkg.filename,
+          `Generated live .zip source package (${pkg.totalFiles} files, ${(pkg.compressedBytes / (1024 * 1024)).toFixed(2)} MB compressed, SHA-256: ${pkg.sha256.slice(0, 16)}...)`
+        );
+      }
+
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Length', String(pkg.compressedBytes));
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${pkg.filename}"; filename*=UTF-8''${encodeURIComponent(pkg.filename)}`
+      );
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Anivex-Source-Filename', pkg.filename);
+      res.setHeader('X-Anivex-Source-Generated-At', pkg.generatedAt);
+      res.setHeader('X-Anivex-Source-Files-Count', String(pkg.totalFiles));
+      res.setHeader('X-Anivex-Source-SHA256', pkg.sha256);
+
+      res.status(200).end(pkg.buffer);
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to generate live application source .zip package.';
+      console.error('[OwnerSourceDownload Error]', err);
+      try {
+        const session = (req as any).ownerSession;
+        logAdminAction(
+          'Download Latest App Source',
+          session?.email || 'makerapp688@gmail.com',
+          'failure',
+          undefined,
+          `Archive generation failed: ${errorMessage}`
+        );
+      } catch {}
+      res.status(500).json({
+        error: errorMessage,
+        code: 'ARCHIVE_GENERATION_FAILED'
+      });
+    }
+  };
+
+  router.get('/source-package/download', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
+  router.get('/source-package/download/t/:ownerToken', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
+  router.get('/source-package/download/t/:ownerToken/:requestedFilename', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
+  router.get('/source-package/download/:requestedFilename', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
 
   return router;
 }

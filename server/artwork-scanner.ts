@@ -13,6 +13,7 @@ import {
 } from './artwork-verifier.ts';
 import { logAdminAction } from './audit-logger.ts';
 import { globalWorkerJobEngine, TaskPriority, createDeterministicTaskId } from './worker-job-engine.ts';
+import { WorkerWaitReason } from './source-gateway.ts';
 import { globalDataStore } from './data-store.ts';
 
 export interface WorkerStatusInfo {
@@ -301,9 +302,10 @@ class ArtworkScannerEngine {
       ? `Season ${task.seasonId}`
       : (anime.season ? `Season ${anime.season}` : (Array.isArray(anime.seasons) && anime.seasons.length > 0 ? `${anime.seasons.length} Seasons` : 'Main / All Seasons'));
 
-    const onWorkerStep = (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying') => {
+    const onWorkerStep = (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying', waitReason?: WorkerWaitReason) => {
       globalWorkerJobEngine.updateWorkerProgress(workerId, {
         status: status || 'working',
+        waitReason: status === 'waiting' || status === 'retrying' ? (waitReason || null) : null,
         currentAnimeId: anime.id,
         currentAnimeTitle: anime.title,
         seasonName: seasonLabel,
@@ -315,12 +317,13 @@ class ArtworkScannerEngine {
 
     globalWorkerJobEngine.updateWorkerProgress(workerId, {
       status: 'working',
+      waitReason: null,
       currentAnimeId: anime.id,
       currentAnimeTitle: anime.title,
       seasonName: seasonLabel,
       operation,
       currentStep: 'Querying external metadata sources...',
-      currentSource: 'AniList / TVmaze / AniDB'
+      currentSource: 'AniList / TVmaze / TheTVDB'
     });
 
     globalWorkerJobEngine.recordActivityEvent({
@@ -352,7 +355,7 @@ class ArtworkScannerEngine {
         details: `Querying active sources (AniList, TVmaze, AniDB) for "${anime.title}"`
       });
 
-      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, onWorkerStep });
+      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, workerId, onWorkerStep });
 
       onWorkerStep('Saving verification record & recalculating state...', finalRes.source || 'AniList', 'working');
 
@@ -427,7 +430,7 @@ class ArtworkScannerEngine {
                 issue: null,
                 lastVerifiedAt: new Date().toISOString()
               };
-              saveVerificationRecords(records);
+              globalDataStore.saveVerificationRecord(anime.id, records[anime.id]);
 
               globalWorkerJobEngine.recordActivityEvent({
                 workerId,
@@ -463,7 +466,7 @@ class ArtworkScannerEngine {
           details: `Fresh source search for missing poster on "${anime.title}"`
         });
 
-        finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, onWorkerStep });
+        finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, workerId, onWorkerStep });
       }
     } else {
       onWorkerStep('Checking artwork relevance & dimensions...', 'AniList', 'working');
@@ -480,13 +483,10 @@ class ArtworkScannerEngine {
         details: `Standard artwork check for "${anime.title}"`
       });
 
-      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, onWorkerStep });
+      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, workerId, onWorkerStep });
     }
 
-    // Persist result immediately so authoritative counts and disk state are always synchronized
-    globalDataStore.flushCatalogueSync();
-    globalDataStore.flushRecordsSync();
-
+    // In-memory globalDataStore is already updated immediately (and debounced to disk in background; flushed synchronously on job completion/pause/stop)
     return finalRes;
   }
 

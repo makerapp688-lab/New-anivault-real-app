@@ -31,7 +31,8 @@ import {
   ExternalLink,
   ChevronRight,
   Eye,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react';
 import { getAccountAvatar, resolveOwnerUsername } from '../utils/userStorage.ts';
 import { Anime } from '../types.ts';
@@ -122,6 +123,21 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [auditSearchQuery, setAuditSearchQuery] = useState('');
 
+  // Owner-Only Live Source Package Download State
+  const [sourcePkgInfo, setSourcePkgInfo] = useState<any>(null);
+  const [downloadingSource, setDownloadingSource] = useState(false);
+  const [updatingSource, setUpdatingSource] = useState(false);
+  const [sourceDownloadStatus, setSourceDownloadStatus] = useState<{
+    type: 'idle' | 'generating' | 'success' | 'error';
+    message: string;
+    filename?: string;
+    sha256?: string;
+    totalFiles?: number;
+    compressedMB?: string;
+    generatedAt?: string;
+    directSaveUrl?: string;
+  }>({ type: 'idle', message: '' });
+
   // Load overview metrics, diagnostics, etc.
   useEffect(() => {
     if (isOpen) {
@@ -140,7 +156,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       fetchCatalogue();
       fetchUsers();
       fetchAuditLogs();
+      fetchSourcePackageInfo();
       setTestResult(null);
+      setSourceDownloadStatus({ type: 'idle', message: '' });
     } else {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
@@ -251,6 +269,263 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       }
     } catch (err) {
       console.error('Failed to fetch audit logs', err);
+    }
+  };
+
+  const ensureOwnerToken = async (): Promise<string> => {
+    let token = localStorage.getItem('anivault_owner_session_token') || '';
+    if (token) {
+      const checkRes = await fetch('/api/owner/session', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-anivault-owner-session': token
+        },
+        credentials: 'include'
+      }).catch(() => null);
+      if (checkRes && checkRes.ok) {
+        const checkData = await checkRes.json().catch(() => null);
+        if (checkData?.authenticated) {
+          if (checkData.sessionToken && checkData.sessionToken !== token) {
+            token = checkData.sessionToken;
+            localStorage.setItem('anivault_owner_session_token', token);
+          }
+          return token;
+        }
+      }
+    }
+
+    try {
+      const switchRes = await fetch('/api/owner/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+      if (switchRes.ok) {
+        const switchData = await switchRes.json();
+        if (switchData.sessionToken) {
+          localStorage.setItem('anivault_owner_session_token', switchData.sessionToken);
+          return switchData.sessionToken;
+        }
+      }
+    } catch {
+      // Quiet fallback
+    }
+
+    return token;
+  };
+
+  const fetchSourcePackageInfo = async () => {
+    try {
+      const token = await ensureOwnerToken();
+      const res = await fetch('/api/owner/source-package/info', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-anivault-owner-session': token
+        },
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSourcePkgInfo(data.metadata || null);
+        if (data.sessionToken) {
+          localStorage.setItem('anivault_owner_session_token', data.sessionToken);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch source package metadata', err);
+    }
+  };
+
+  const getDirectOwnerSaveUrl = (filenameOverride?: string, tokenOverride?: string) => {
+    const token = tokenOverride ?? (localStorage.getItem('anivault_owner_session_token') || '');
+    const rawName =
+      filenameOverride ||
+      sourcePkgInfo?.packageName ||
+      `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+    const targetName = rawName.endsWith('.zip')
+      ? rawName
+      : rawName.replace(/\.(tar\.gz|tgz)$/i, '') + '.zip';
+    if (token) {
+      const safePathToken = token.replace(/\./g, '_dot_');
+      return `/api/owner/source-package/download/t/${encodeURIComponent(safePathToken)}/${encodeURIComponent(targetName)}`;
+    }
+    return `/api/owner/source-package/download/${encodeURIComponent(targetName)}`;
+  };
+
+  const triggerBrowserAttachmentDownload = (downloadUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleUpdateLatestSource = async () => {
+    setUpdatingSource(true);
+    setSourceDownloadStatus({
+      type: 'generating',
+      message: 'Generating and refreshing the source archive using the latest current ANIVEX project files...'
+    });
+
+    try {
+      const token = await ensureOwnerToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-anivault-owner-session'] = token;
+      }
+
+      const res = await fetch('/api/owner/source-package/update', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        cache: 'no-store'
+      });
+
+      const data = await res.json().catch(() => ({ error: `Server returned HTTP ${res.status}` }));
+      if (!res.ok || !data.success) {
+        setSourceDownloadStatus({
+          type: 'error',
+          message: data.error || 'Failed to update latest application source package.'
+        });
+        return;
+      }
+
+      if (data.sessionToken) {
+        localStorage.setItem('anivault_owner_session_token', data.sessionToken);
+      }
+
+      const pkg = data.package || {};
+      const compressedMB = ((pkg.compressedBytes || 0) / (1024 * 1024)).toFixed(2);
+      if (data.metadata) {
+        setSourcePkgInfo(data.metadata);
+      } else {
+        fetchSourcePackageInfo();
+      }
+      fetchAuditLogs();
+
+      setSourceDownloadStatus({
+        type: 'success',
+        message: `Latest ANIVEX source archive (${pkg.totalFiles} files, ${compressedMB} MB) has been generated and replaced the previous version. Tap "Download Latest App Source" to download it.`,
+        filename: pkg.filename,
+        sha256: pkg.sha256,
+        totalFiles: pkg.totalFiles,
+        compressedMB,
+        generatedAt: pkg.generatedAt,
+        directSaveUrl: getDirectOwnerSaveUrl(pkg.filename, data.sessionToken || token)
+      });
+    } catch (err: any) {
+      setSourceDownloadStatus({
+        type: 'error',
+        message: err.message || 'Network error while updating latest source package.'
+      });
+    } finally {
+      setUpdatingSource(false);
+    }
+  };
+
+  const handleDownloadLatestSource = async () => {
+    setDownloadingSource(true);
+
+    try {
+      const activeToken = localStorage.getItem('anivault_owner_session_token') || '';
+      const rawFilename =
+        sourcePkgInfo?.packageName ||
+        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+      const finalFilename = rawFilename.endsWith('.zip')
+        ? rawFilename
+        : rawFilename.replace(/\.(tar\.gz|tgz)$/i, '') + '.zip';
+
+      if (activeToken && sourcePkgInfo?.available) {
+        const downloadUrl = getDirectOwnerSaveUrl(finalFilename, activeToken);
+        triggerBrowserAttachmentDownload(downloadUrl, finalFilename);
+
+        const finalMB = sourcePkgInfo?.lastCompressedBytes
+          ? (sourcePkgInfo.lastCompressedBytes / (1024 * 1024)).toFixed(2)
+          : ((sourcePkgInfo?.totalUncompressedBytes || 0) / (1024 * 1024)).toFixed(2);
+
+        setSourceDownloadStatus({
+          type: 'success',
+          message: `Downloading "${finalFilename}" (${sourcePkgInfo.totalFiles} files). Choose "Download" or "Save to Drive" in your browser's download sheet.`,
+          filename: finalFilename,
+          sha256: sourcePkgInfo.lastSha256 || '',
+          totalFiles: sourcePkgInfo.totalFiles,
+          compressedMB: finalMB,
+          generatedAt: sourcePkgInfo.lastUpdatedAt || sourcePkgInfo.generatedAt,
+          directSaveUrl: downloadUrl
+        });
+
+        setTimeout(() => {
+          fetchSourcePackageInfo();
+          fetchAuditLogs();
+        }, 800);
+        return;
+      }
+
+      setSourceDownloadStatus({
+        type: 'generating',
+        message: 'Verifying the latest ANIVEX source archive exists and is readable before starting browser download...'
+      });
+
+      const token = await ensureOwnerToken();
+      const infoRes = await fetch('/api/owner/source-package/info', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-anivault-owner-session': token
+        },
+        credentials: 'include',
+        cache: 'no-store'
+      });
+
+      const infoData = await infoRes.json().catch(() => ({ error: `Verification failed (HTTP ${infoRes.status}).` }));
+      if (!infoRes.ok || !infoData?.metadata?.available) {
+        setSourceDownloadStatus({
+          type: 'error',
+          message: infoData?.error || 'Latest source archive could not be verified on the server.'
+        });
+        return;
+      }
+
+      const verifiedToken = infoData.sessionToken || token;
+      if (verifiedToken) {
+        localStorage.setItem('anivault_owner_session_token', verifiedToken);
+      }
+      setSourcePkgInfo(infoData.metadata);
+
+      const verifiedFilename =
+        infoData.metadata.packageName ||
+        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+      const downloadUrl = getDirectOwnerSaveUrl(verifiedFilename, verifiedToken);
+      triggerBrowserAttachmentDownload(downloadUrl, verifiedFilename);
+
+      const finalMB = infoData.metadata.lastCompressedBytes
+        ? (infoData.metadata.lastCompressedBytes / (1024 * 1024)).toFixed(2)
+        : ((infoData.metadata.totalUncompressedBytes || 0) / (1024 * 1024)).toFixed(2);
+
+      setSourceDownloadStatus({
+        type: 'success',
+        message: `Downloading "${verifiedFilename}" (${infoData.metadata.totalFiles} files, ${finalMB} MB). Choose "Download" or "Save to Drive" in your browser's download sheet.`,
+        filename: verifiedFilename,
+        sha256: infoData.metadata.lastSha256 || '',
+        totalFiles: infoData.metadata.totalFiles,
+        compressedMB: finalMB,
+        generatedAt: infoData.metadata.lastUpdatedAt || infoData.metadata.generatedAt,
+        directSaveUrl: downloadUrl
+      });
+
+      fetchAuditLogs();
+    } catch (err: any) {
+      setSourceDownloadStatus({
+        type: 'error',
+        message: err?.message || 'Failed to download the latest application source archive.'
+      });
+    } finally {
+      setDownloadingSource(false);
     }
   };
 
@@ -811,6 +1086,137 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Owner-Only Download Latest App Source Section */}
+              <div
+                id="owner-download-latest-source-card"
+                className="bg-slate-900/90 border-2 border-emerald-500/40 rounded-2xl p-5 space-y-4 shadow-lg shadow-emerald-950/20"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Download className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm font-black uppercase tracking-wider text-white">
+                        Download Latest App Source
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/40">
+                        OWNER ONLY
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        LIVE .ZIP ARCHIVE
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Generates a fresh <code className="text-emerald-300 font-mono">.zip</code> development archive on-demand from the current ANIVEX server &amp; project state. Passwords, SMTP credentials, API keys, session tokens, and sensitive <code className="text-rose-300 font-mono">.env</code> secrets are automatically stripped.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      id="btn-update-latest-app-source"
+                      onClick={handleUpdateLatestSource}
+                      disabled={updatingSource || downloadingSource}
+                      className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    >
+                      {updatingSource ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Updating File...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4" />
+                          <span>Update Download File</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      id="btn-download-latest-app-source"
+                      onClick={handleDownloadLatestSource}
+                      disabled={downloadingSource || updatingSource}
+                      className="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    >
+                      {downloadingSource ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Starting Download...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Download Latest App Source</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {sourcePkgInfo && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                      <span className="text-slate-400">Live Project Files:</span>
+                      <span className="font-mono font-bold text-emerald-400">{sourcePkgInfo.totalFiles} files</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                      <span className="text-slate-400">Uncompressed Source:</span>
+                      <span className="font-mono font-bold text-slate-200">
+                        {((sourcePkgInfo.totalUncompressedBytes || 0) / (1024 * 1024)).toFixed(2)} MB
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                      <span className="text-slate-400">Secret Sanitization:</span>
+                      <span className="font-mono font-bold text-amber-400">Enforced (No Secrets)</span>
+                    </div>
+                  </div>
+                )}
+
+                {sourceDownloadStatus.type !== 'idle' && (
+                  <div
+                    id="source-download-status-banner"
+                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 border ${
+                      sourceDownloadStatus.type === 'generating'
+                        ? 'bg-amber-950/50 border-amber-500/40 text-amber-200'
+                        : sourceDownloadStatus.type === 'success'
+                        ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
+                        : 'bg-rose-950/60 border-rose-500/40 text-rose-200'
+                    }`}
+                  >
+                    {sourceDownloadStatus.type === 'generating' && (
+                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0 mt-0.5" />
+                    )}
+                    {sourceDownloadStatus.type === 'success' && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    )}
+                    {sourceDownloadStatus.type === 'error' && (
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="font-bold">
+                        {sourceDownloadStatus.type === 'generating'
+                          ? 'Building Live Source Package...'
+                          : sourceDownloadStatus.type === 'success'
+                          ? 'Latest App Source Package Downloaded'
+                          : 'Source Package Download Error'}
+                      </p>
+                      <p className="text-[11px] opacity-90 leading-relaxed">{sourceDownloadStatus.message}</p>
+                      {sourceDownloadStatus.type === 'success' && sourceDownloadStatus.filename && (
+                        <div className="pt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-emerald-300/90">
+                          <span>Archive: {sourceDownloadStatus.filename}</span>
+                          {sourceDownloadStatus.generatedAt && (
+                            <span>Generated: {new Date(sourceDownloadStatus.generatedAt).toLocaleTimeString()}</span>
+                          )}
+                          {sourceDownloadStatus.sha256 && (
+                            <span>SHA-256: {sourceDownloadStatus.sha256.slice(0, 16)}...</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Email service transmitter matrix (Original feature preserved and enhanced) */}
@@ -1557,6 +1963,109 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Download className="w-5 h-5 text-emerald-400" />
+                    <div>
+                      <h3 className="text-sm font-black text-white uppercase tracking-wider">Download Latest App Source</h3>
+                      <p className="text-[11px] text-slate-400">
+                        On-demand live project .zip archive generator (Owner-only endpoint: <code className="text-emerald-400 font-mono">/api/owner/source-package/download</code>)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleUpdateLatestSource}
+                      disabled={updatingSource || downloadingSource}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    >
+                      {updatingSource ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Updating File...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4" />
+                          <span>Update Download File</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadLatestSource}
+                      disabled={downloadingSource || updatingSource}
+                      className="px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    >
+                      {downloadingSource ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Starting Download...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Download Latest App Source</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {sourcePkgInfo?.excludedSensitiveItems && (
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-300 block">
+                      Excluded Secrets &amp; Sensitive Files (Never Packaged):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {sourcePkgInfo.excludedSensitiveItems.map((item: string) => (
+                        <span
+                          key={item}
+                          className="bg-slate-950 border border-rose-500/30 text-[10px] font-mono text-rose-300 px-2 py-0.5 rounded"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sourceDownloadStatus.type !== 'idle' && (
+                  <div
+                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 border ${
+                      sourceDownloadStatus.type === 'generating'
+                        ? 'bg-amber-950/50 border-amber-500/40 text-amber-200'
+                        : sourceDownloadStatus.type === 'success'
+                        ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
+                        : 'bg-rose-950/60 border-rose-500/40 text-rose-200'
+                    }`}
+                  >
+                    {sourceDownloadStatus.type === 'generating' && (
+                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0 mt-0.5" />
+                    )}
+                    {sourceDownloadStatus.type === 'success' && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    )}
+                    {sourceDownloadStatus.type === 'error' && (
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="font-bold">
+                        {sourceDownloadStatus.type === 'generating'
+                          ? 'Building Live .zip Source Archive...'
+                          : sourceDownloadStatus.type === 'success'
+                          ? 'Latest Version (.zip) Ready'
+                          : 'Source Package Download Error'}
+                      </p>
+                      <p className="text-[11px] opacity-90 leading-relaxed">{sourceDownloadStatus.message}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">

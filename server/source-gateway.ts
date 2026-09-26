@@ -12,6 +12,13 @@ export interface SourceLimits {
 
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
+export type WorkerWaitReason =
+  | 'No task'
+  | 'Rate limited'
+  | 'Waiting for source'
+  | 'DB busy'
+  | 'Retry backoff';
+
 export interface CircuitBreakerStatus {
   state: CircuitState;
   failureCount: number;
@@ -52,38 +59,63 @@ const GATEWAY_CACHE_PATH = path.join(DATA_DIR, 'source-gateway-cache.json');
 // - thetvdb: Gateway fallback (120/min, 4/s, concurrency 1-4)
 // - jikan: PERMANENTLY DISABLED (Test source #2 disabled per spec)
 // - tmdb: PERMANENTLY DISABLED (Disabled per spec)
+export function getConfiguredTmdbApiKey(): string | null {
+  const raw = (process.env.TMDB_API_KEY || '').trim();
+  if (
+    !raw ||
+    raw === 'YOUR_TMDB_API_KEY_HERE' ||
+    raw === 'MY_TMDB_API_KEY' ||
+    raw === 'undefined' ||
+    raw === 'null'
+  ) {
+    return null;
+  }
+  return raw;
+}
+
+export function hasConfiguredTmdbApiKey(): boolean {
+  return Boolean(getConfiguredTmdbApiKey());
+}
+
+function isSourceDisabled(sourceId: string): boolean {
+  const key = sourceId.toLowerCase();
+  if (key === 'jikan') return true;
+  if (key === 'tmdb') return !hasConfiguredTmdbApiKey();
+  return false;
+}
+
 const DEFAULT_SOURCE_LIMITS: Record<string, SourceLimits> = {
   anilist: {
-    rateLimitPerMinute: 90,
-    rateLimitPerSecond: 2,
-    minConcurrent: 1,
-    maxConcurrent: 4,
-    currentConcurrent: 2,
-    timeoutMs: 8000
+    rateLimitPerMinute: 85,
+    rateLimitPerSecond: 3,
+    minConcurrent: 2,
+    maxConcurrent: 8,
+    currentConcurrent: 6,
+    timeoutMs: 6500
   },
   anidb: {
-    rateLimitPerMinute: 30,
-    rateLimitPerSecond: 1,
-    minConcurrent: 1,
-    maxConcurrent: 2,
-    currentConcurrent: 1,
-    timeoutMs: 8000
+    rateLimitPerMinute: 90,
+    rateLimitPerSecond: 6,
+    minConcurrent: 2,
+    maxConcurrent: 12,
+    currentConcurrent: 10,
+    timeoutMs: 6000
   },
   tvmaze: {
-    rateLimitPerMinute: 120,
-    rateLimitPerSecond: 4,
-    minConcurrent: 1,
-    maxConcurrent: 5,
-    currentConcurrent: 3,
-    timeoutMs: 8000
+    rateLimitPerMinute: 180,
+    rateLimitPerSecond: 12,
+    minConcurrent: 2,
+    maxConcurrent: 20,
+    currentConcurrent: 18,
+    timeoutMs: 6000
   },
   thetvdb: {
-    rateLimitPerMinute: 120,
-    rateLimitPerSecond: 4,
-    minConcurrent: 1,
-    maxConcurrent: 5,
-    currentConcurrent: 3,
-    timeoutMs: 8000
+    rateLimitPerMinute: 180,
+    rateLimitPerSecond: 12,
+    minConcurrent: 2,
+    maxConcurrent: 20,
+    currentConcurrent: 18,
+    timeoutMs: 6000
   },
   jikan: {
     rateLimitPerMinute: 0,
@@ -94,16 +126,14 @@ const DEFAULT_SOURCE_LIMITS: Record<string, SourceLimits> = {
     timeoutMs: 0
   },
   tmdb: {
-    rateLimitPerMinute: 0,
-    rateLimitPerSecond: 0,
-    minConcurrent: 0,
-    maxConcurrent: 0,
-    currentConcurrent: 0,
-    timeoutMs: 0
+    rateLimitPerMinute: 150,
+    rateLimitPerSecond: 8,
+    minConcurrent: 2,
+    maxConcurrent: 16,
+    currentConcurrent: 12,
+    timeoutMs: 6500
   }
 };
-
-const DISABLED_SOURCES = new Set(['jikan', 'tmdb']);
 
 export class SourceGateway {
   private limits: Map<string, SourceLimits> = new Map();
@@ -138,16 +168,21 @@ export class SourceGateway {
 
   public registerSource(sourceId: string, limits: SourceLimits) {
     const key = sourceId.toLowerCase();
+    const disabled = isSourceDisabled(key);
     this.limits.set(key, { ...limits });
     this.circuitBreakers.set(key, {
-      state: DISABLED_SOURCES.has(key) ? 'OPEN' : 'CLOSED',
+      state: disabled ? 'OPEN' : 'CLOSED',
       failureCount: 0,
-      openUntil: DISABLED_SOURCES.has(key) ? Number.MAX_SAFE_INTEGER : 0,
-      lastError: DISABLED_SOURCES.has(key) ? 'Source permanently disabled by system specification' : null,
+      openUntil: disabled ? Number.MAX_SAFE_INTEGER : 0,
+      lastError: key === 'jikan'
+        ? 'Source permanently disabled by system specification'
+        : disabled
+        ? 'Optional TMDB_API_KEY not set — skipped automatically'
+        : null,
       lastSuccessAt: null
     });
     this.tokenBuckets.set(key, {
-      tokens: limits.rateLimitPerSecond,
+      tokens: Math.max(limits.rateLimitPerSecond, limits.currentConcurrent),
       lastRefill: Date.now(),
       minuteTokens: limits.rateLimitPerMinute,
       lastMinuteRefill: Date.now()
@@ -164,7 +199,7 @@ export class SourceGateway {
       cacheHits: 0,
       cacheMisses: 0,
       rateLimitEvents: 0,
-      circuitBreakerState: DISABLED_SOURCES.has(key) ? 'OPEN' : 'CLOSED',
+      circuitBreakerState: disabled ? 'OPEN' : 'CLOSED',
       currentConcurrencyLimit: limits.currentConcurrent,
       activeRequests: 0,
       avgLatencyMs: 0,
@@ -237,10 +272,17 @@ export class SourceGateway {
   // --- Source Availability & Smart Work Switching Check ---
   public isSourceAvailable(sourceId: string): boolean {
     const key = sourceId.toLowerCase();
-    if (DISABLED_SOURCES.has(key)) return false;
+    if (isSourceDisabled(key)) return false;
 
     const cb = this.circuitBreakers.get(key);
     if (!cb) return true;
+    // If TMDB key was added dynamically at runtime, auto-open circuit breaker that was only closed due to missing key
+    if (key === 'tmdb' && cb.state === 'OPEN' && cb.openUntil === Number.MAX_SAFE_INTEGER) {
+      cb.state = 'CLOSED';
+      cb.openUntil = 0;
+      cb.lastError = null;
+      return true;
+    }
     if (cb.state === 'OPEN') {
       if (Date.now() >= cb.openUntil) {
         cb.state = 'HALF_OPEN';
@@ -249,6 +291,235 @@ export class SourceGateway {
       return false;
     }
     return true;
+  }
+
+  private refreshBucketTokens(key: string) {
+    const limit = this.limits.get(key);
+    if (!limit || limit.rateLimitPerSecond <= 0) return null;
+    let bucket = this.tokenBuckets.get(key);
+    const now = Date.now();
+    if (!bucket) {
+      bucket = {
+        tokens: limit.rateLimitPerSecond,
+        lastRefill: now,
+        minuteTokens: limit.rateLimitPerMinute,
+        lastMinuteRefill: now
+      };
+      this.tokenBuckets.set(key, bucket);
+      return bucket;
+    }
+
+    const secElapsed = (now - bucket.lastRefill) / 1000;
+    const maxBurst = Math.max(limit.rateLimitPerSecond, limit.currentConcurrent);
+    if (secElapsed >= 0.05) {
+      bucket.tokens = Math.min(maxBurst, bucket.tokens + secElapsed * limit.rateLimitPerSecond);
+      bucket.lastRefill = now;
+    }
+
+    const minElapsed = (now - bucket.lastMinuteRefill) / 1000;
+    if (minElapsed >= 1) {
+      bucket.minuteTokens = Math.min(
+        limit.rateLimitPerMinute,
+        bucket.minuteTokens + minElapsed * (limit.rateLimitPerMinute / 60)
+      );
+      bucket.lastMinuteRefill = now;
+    }
+    return bucket;
+  }
+
+  /**
+   * Checks whether a source can execute a request immediately without blocking in a queue.
+   * Used by the 50-worker pool to dynamically route workers to available sources instead of waiting.
+   */
+  public canExecuteImmediately(
+    sourceId: string,
+    requestKey?: string
+  ): {
+    canExecute: boolean;
+    hasCacheOrInFlight: boolean;
+    waitReason?: WorkerWaitReason;
+    activeRatio: number;
+  } {
+    const key = sourceId.toLowerCase();
+    if (isSourceDisabled(key)) {
+      return { canExecute: false, hasCacheOrInFlight: false, waitReason: 'Waiting for source', activeRatio: 999 };
+    }
+
+    if (requestKey) {
+      const normKey = `${key}:${requestKey.toLowerCase().trim()}`;
+      if (this.getCached(normKey) !== null) {
+        return { canExecute: true, hasCacheOrInFlight: true, activeRatio: -1 };
+      }
+      if (this.inFlightRequests.has(normKey)) {
+        return { canExecute: true, hasCacheOrInFlight: true, activeRatio: 0 };
+      }
+    }
+
+    if (!this.isSourceAvailable(key)) {
+      return { canExecute: false, hasCacheOrInFlight: false, waitReason: 'Rate limited', activeRatio: 900 };
+    }
+
+    const limit = this.limits.get(key);
+    const maxConcurrent = limit ? limit.currentConcurrent : 2;
+    const currentActive = this.activeRequestCounts.get(key) || 0;
+    const waitersCount = this.concurrencyWaiters.get(key)?.length || 0;
+
+    if (currentActive >= maxConcurrent || waitersCount > 0) {
+      return {
+        canExecute: false,
+        hasCacheOrInFlight: false,
+        waitReason: 'Waiting for source',
+        activeRatio: (currentActive + waitersCount + 1) / Math.max(1, maxConcurrent)
+      };
+    }
+
+    const bucket = this.refreshBucketTokens(key);
+    if (bucket && (bucket.tokens < 1 || bucket.minuteTokens < 1)) {
+      return {
+        canExecute: false,
+        hasCacheOrInFlight: false,
+        waitReason: 'Rate limited',
+        activeRatio: 500
+      };
+    }
+
+    return {
+      canExecute: true,
+      hasCacheOrInFlight: false,
+      activeRatio: currentActive / Math.max(1, maxConcurrent)
+    };
+  }
+
+  /**
+   * Ranks candidate sources so workers automatically spread across healthy, non-busy sources
+   * instead of all 50 workers piling onto a single source queue.
+   */
+  public getOptimalSourceOrder(candidateSourceIds: string[], requestKey?: string, workerHint = 0): string[] {
+    const available = candidateSourceIds.filter(id => !isSourceDisabled(id));
+    const scored = available.map((id, idx) => {
+      const status = this.canExecuteImmediately(id, requestKey);
+      // Slight deterministic rotation based on workerHint so simultaneous workers spread across sources
+      const rotationBias = ((idx + workerHint) % Math.max(1, available.length)) * 0.08;
+      const score = status.hasCacheOrInFlight
+        ? -10 + idx * 0.01
+        : status.canExecute
+        ? status.activeRatio + rotationBias
+        : status.activeRatio + 100 + idx;
+      return { id, score, canExecute: status.canExecute };
+    });
+
+    scored.sort((a, b) => a.score - b.score);
+    return scored.map(s => s.id);
+  }
+
+  private refillBucketNow(key: string) {
+    const limit = this.limits.get(key);
+    if (!limit || limit.rateLimitPerSecond <= 0) return null;
+    let bucket = this.tokenBuckets.get(key);
+    const now = Date.now();
+    if (!bucket) {
+      bucket = {
+        tokens: limit.rateLimitPerSecond,
+        lastRefill: now,
+        minuteTokens: limit.rateLimitPerMinute,
+        lastMinuteRefill: now
+      };
+      this.tokenBuckets.set(key, bucket);
+      return bucket;
+    }
+
+    const secElapsed = Math.max(0, (now - bucket.lastRefill) / 1000);
+    const maxBurst = Math.max(limit.rateLimitPerSecond, limit.currentConcurrent);
+    if (secElapsed > 0.05) {
+      bucket.tokens = Math.min(maxBurst, bucket.tokens + secElapsed * limit.rateLimitPerSecond);
+      bucket.lastRefill = now;
+    }
+
+    const minElapsed = Math.max(0, (now - bucket.lastMinuteRefill) / 1000);
+    if (minElapsed > 0.5) {
+      bucket.minuteTokens = Math.min(
+        limit.rateLimitPerMinute,
+        bucket.minuteTokens + minElapsed * (limit.rateLimitPerMinute / 60)
+      );
+      bucket.lastMinuteRefill = now;
+    }
+    return bucket;
+  }
+
+  /**
+   * Returns true if the source can immediately process a request right now
+   * without blocking on concurrency semaphores or rate-limit token buckets.
+   */
+  public hasImmediateCapacity(sourceId: string): boolean {
+    const key = sourceId.toLowerCase();
+    if (!this.isSourceAvailable(key)) return false;
+    const limit = this.limits.get(key);
+    if (!limit || limit.currentConcurrent <= 0) return false;
+
+    const active = this.activeRequestCounts.get(key) || 0;
+    const waiters = this.concurrencyWaiters.get(key)?.length || 0;
+    if (active >= limit.currentConcurrent || waiters > 0) {
+      return false;
+    }
+
+    const bucket = this.refillBucketNow(key);
+    if (!bucket) return false;
+    return bucket.tokens >= 1 && bucket.minuteTokens >= 1;
+  }
+
+  /**
+   * Checks if a given request key is already cached or in-flight on a source.
+   */
+  public hasInFlightOrCached(sourceId: string, requestKey: string): 'cached' | 'inflight' | false {
+    const key = sourceId.toLowerCase();
+    const fullKey = `${key}:${requestKey.toLowerCase().trim()}`;
+    if (this.getCached(fullKey) !== null) return 'cached';
+    if (this.inFlightRequests.has(fullKey)) return 'inflight';
+    return false;
+  }
+
+  /**
+   * Selects the best available source order for a worker so workers automatically
+   * spread across healthy sources instead of queuing behind a single rate-limited/busy source.
+   */
+  public selectOptimalSourcesOrder(candidateSources: string[], workerId = 1, requestKey?: string): string[] {
+    const available = candidateSources.filter(s => this.isSourceAvailable(s));
+    if (available.length <= 1) return available;
+
+    // 1. If any source already has a cached result for this requestKey, put it first!
+    if (requestKey) {
+      const cachedSource = available.find(s => this.hasInFlightOrCached(s, requestKey) === 'cached');
+      if (cachedSource) {
+        return [cachedSource, ...available.filter(s => s !== cachedSource)];
+      }
+    }
+
+    // 2. Partition into sources with immediate zero-wait capacity vs busy/rate-limited sources
+    const immediate: string[] = [];
+    const busy: string[] = [];
+    for (const s of available) {
+      if (this.hasImmediateCapacity(s)) {
+        immediate.push(s);
+      } else {
+        busy.push(s);
+      }
+    }
+
+    // Rotate among immediate sources by workerId so 50 workers spread evenly across all healthy sources without stampeding a single domain
+    if (immediate.length > 1) {
+      const offset = workerId % immediate.length;
+      const rotatedImmediate = [...immediate.slice(offset), ...immediate.slice(0, offset)];
+      return [...rotatedImmediate, ...busy];
+    }
+
+    // Sort busy sources by fewest waiters + active requests
+    busy.sort((a, b) => {
+      const loadA = (this.activeRequestCounts.get(a) || 0) + (this.concurrencyWaiters.get(a)?.length || 0) * 2;
+      const loadB = (this.activeRequestCounts.get(b) || 0) + (this.concurrencyWaiters.get(b)?.length || 0) * 2;
+      return loadA - loadB;
+    });
+
+    return [...immediate, ...busy];
   }
 
   // --- Adaptive Concurrency Control (AIMD) ---
@@ -293,74 +564,68 @@ export class SourceGateway {
   }
 
   // --- Rate Limiting: Dual-Token Bucket (Per-Second & Per-Minute) ---
-  private async acquireRateLimitToken(sourceId: string): Promise<void> {
+  private async acquireRateLimitToken(
+    sourceId: string,
+    onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
+  ): Promise<boolean> {
     const key = sourceId.toLowerCase();
+    if (!this.isSourceAvailable(key)) return false;
+
     const limit = this.limits.get(key) || {
       rateLimitPerMinute: 60,
-      rateLimitPerSecond: 2,
+      rateLimitPerSecond: 4,
       minConcurrent: 1,
-      maxConcurrent: 2,
-      currentConcurrent: 2,
-      timeoutMs: 8000
+      maxConcurrent: 8,
+      currentConcurrent: 4,
+      timeoutMs: 6500
     };
 
-    if (limit.rateLimitPerSecond <= 0) return;
+    if (limit.rateLimitPerSecond <= 0) return true;
 
-    const bucket = this.tokenBuckets.get(key) || {
-      tokens: limit.rateLimitPerSecond,
-      lastRefill: Date.now(),
-      minuteTokens: limit.rateLimitPerMinute,
-      lastMinuteRefill: Date.now()
-    };
-
-    const now = Date.now();
-
-    // Refill per-second tokens
-    const secElapsed = (now - bucket.lastRefill) / 1000;
-    if (secElapsed >= 0.5) {
-      bucket.tokens = Math.min(limit.rateLimitPerSecond, bucket.tokens + secElapsed * limit.rateLimitPerSecond);
-      bucket.lastRefill = now;
-    }
-
-    // Refill per-minute tokens
-    const minElapsed = (now - bucket.lastMinuteRefill) / 1000;
-    if (minElapsed >= 5) {
-      bucket.minuteTokens = Math.min(
-        limit.rateLimitPerMinute,
-        bucket.minuteTokens + (minElapsed * (limit.rateLimitPerMinute / 60))
-      );
-      bucket.lastMinuteRefill = now;
-    }
+    const bucket = this.refillBucketNow(key)!;
 
     if (bucket.tokens >= 1 && bucket.minuteTokens >= 1) {
       bucket.tokens -= 1;
       bucket.minuteTokens -= 1;
-      return;
+      return true;
     }
 
-    // Must wait for token refill
+    // Must wait for token refill — only set status to 'waiting' with 'Rate limited' when actually waiting!
     const waitSec = Math.max(
       (1 - bucket.tokens) / Math.max(1, limit.rateLimitPerSecond),
       (1 - bucket.minuteTokens) / Math.max(1, limit.rateLimitPerMinute / 60)
     );
-    const waitMs = Math.min(Math.ceil(waitSec * 1000), 2000);
+    const waitMs = Math.min(Math.max(25, Math.ceil(waitSec * 1000)), 850);
 
     const metric = this.metrics.get(key);
     if (metric) metric.rateLimitEvents++;
 
+    onStatusChange?.(
+      'waiting',
+      `Rate limited — waiting ${waitMs}ms for ${sourceId} quota refill`,
+      'Rate limited'
+    );
+
     await new Promise(r => setTimeout(r, waitMs));
 
-    // Consume token after wait
-    bucket.tokens = Math.max(0, bucket.tokens - 1);
-    bucket.minuteTokens = Math.max(0, bucket.minuteTokens - 1);
-    bucket.lastRefill = Date.now();
+    if (!this.isSourceAvailable(key)) {
+      return false;
+    }
+
+    const refilled = this.refillBucketNow(key)!;
+    refilled.tokens = Math.max(0, refilled.tokens - 1);
+    refilled.minuteTokens = Math.max(0, refilled.minuteTokens - 1);
+    return true;
   }
 
   // --- Semaphore Concurrency Management ---
-  private async acquireSemaphore(sourceId: string): Promise<() => void> {
+  private async acquireSemaphore(
+    sourceId: string,
+    onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
+  ): Promise<() => void> {
     const key = sourceId.toLowerCase();
     const limit = this.limits.get(key);
-    const maxConcurrent = limit ? limit.currentConcurrent : 2;
+    const maxConcurrent = limit ? limit.currentConcurrent : 4;
 
     const current = this.activeRequestCounts.get(key) || 0;
 
@@ -370,6 +635,12 @@ export class SourceGateway {
       if (metric) metric.activeRequests = current + 1;
       return () => this.releaseSemaphore(key);
     }
+
+    onStatusChange?.(
+      'waiting',
+      `Waiting for source — ${sourceId} concurrency (${current}/${maxConcurrent} active)`,
+      'Waiting for source'
+    );
 
     return new Promise((resolve) => {
       const waiters = this.concurrencyWaiters.get(key) || [];
@@ -382,6 +653,15 @@ export class SourceGateway {
       });
       this.concurrencyWaiters.set(key, waiters);
     });
+  }
+
+  private flushWaitersOnCircuitOpen(key: string) {
+    const waiters = this.concurrencyWaiters.get(key);
+    if (!waiters || waiters.length === 0) return;
+    while (waiters.length > 0) {
+      const next = waiters.shift();
+      if (next) next();
+    }
   }
 
   private releaseSemaphore(key: string) {
@@ -465,13 +745,30 @@ export class SourceGateway {
   // --- Circuit Breaker Management ---
   public getCircuitStatus(sourceId: string): CircuitBreakerStatus {
     const key = sourceId.toLowerCase();
+    const disabled = isSourceDisabled(key);
     const cb = this.circuitBreakers.get(key) || {
-      state: DISABLED_SOURCES.has(key) ? 'OPEN' : 'CLOSED',
+      state: disabled ? 'OPEN' : 'CLOSED',
       failureCount: 0,
-      openUntil: DISABLED_SOURCES.has(key) ? Number.MAX_SAFE_INTEGER : 0
+      openUntil: disabled ? Number.MAX_SAFE_INTEGER : 0
     };
 
-    if (cb.state === 'OPEN' && !DISABLED_SOURCES.has(key) && Date.now() >= cb.openUntil) {
+    if (key === 'tmdb') {
+      if (disabled) {
+        return {
+          state: 'OPEN',
+          failureCount: 0,
+          openUntil: Number.MAX_SAFE_INTEGER,
+          lastError: 'Optional TMDB_API_KEY not set — skipped automatically',
+          lastSuccessAt: cb.lastSuccessAt ?? null
+        };
+      } else if (cb.state === 'OPEN' && cb.openUntil === Number.MAX_SAFE_INTEGER) {
+        cb.state = 'CLOSED';
+        cb.openUntil = 0;
+        cb.lastError = null;
+      }
+    }
+
+    if (cb.state === 'OPEN' && !disabled && Date.now() >= cb.openUntil) {
       cb.state = 'HALF_OPEN';
     }
 
@@ -481,7 +778,7 @@ export class SourceGateway {
   public recordSuccess(sourceId: string, latencyMs: number) {
     const key = sourceId.toLowerCase();
     const cb = this.circuitBreakers.get(key);
-    if (cb && !DISABLED_SOURCES.has(key)) {
+    if (cb && !isSourceDisabled(key)) {
       cb.state = 'CLOSED';
       cb.failureCount = 0;
       cb.openUntil = 0;
@@ -502,7 +799,7 @@ export class SourceGateway {
 
   public recordFailure(sourceId: string, errorMsg: string, statusCode?: number, retryAfterMs?: number) {
     const key = sourceId.toLowerCase();
-    if (DISABLED_SOURCES.has(key)) return;
+    if (isSourceDisabled(key)) return;
 
     const cb = this.circuitBreakers.get(key);
     const { isRateLimit } = this.classifyError({ message: errorMsg }, statusCode);
@@ -515,9 +812,11 @@ export class SourceGateway {
 
       if (isRateLimit || cb.failureCount >= 3) {
         cb.state = 'OPEN';
-        const cooldownMs = retryAfterMs || (isRateLimit ? 25000 : 15000);
+        const cooldownMs = Math.min(retryAfterMs || (isRateLimit ? 15000 : 10000), 25000);
         cb.openUntil = Date.now() + cooldownMs;
         console.warn(`[CircuitBreaker] Circuit OPENED for source "${key}" for ${Math.round(cooldownMs / 1000)}s. Cause: ${errorMsg}`);
+        // Immediately wake any queued waiters on this source so they failover to other available sources instead of waiting!
+        this.flushWaitersOnCircuitOpen(key);
       }
     }
 
@@ -533,7 +832,7 @@ export class SourceGateway {
     sourceId: string,
     requestKey: string,
     fetchFn: () => Promise<{ success: boolean; data?: T; matches?: T[]; error?: string; statusCode?: number; headers?: Record<string, string> | Headers }>,
-    onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string) => void
+    onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string, waitReason?: WorkerWaitReason) => void
   ): Promise<{
     success: boolean;
     data?: T;
@@ -546,11 +845,13 @@ export class SourceGateway {
   }> {
     const key = sourceId.toLowerCase();
 
-    // REQUIREMENT 12: DISABLED SOURCES ENFORCEMENT
-    if (DISABLED_SOURCES.has(key)) {
+    // REQUIREMENT 12: DISABLED / OPTIONAL UNCONFIGURED SOURCES ENFORCEMENT
+    if (isSourceDisabled(key)) {
       return {
         success: false,
-        error: `Source "${sourceId}" is permanently disabled by system specification.`,
+        error: key === 'tmdb'
+          ? 'Source "tmdb" is skipped automatically (optional TMDB_API_KEY is not set; other sources remain active).'
+          : `Source "${sourceId}" is permanently disabled by system specification.`,
         isCircuitOpen: true
       };
     }
@@ -587,27 +888,40 @@ export class SourceGateway {
     const fullReqKey = `${key}:${requestKey.toLowerCase().trim()}`;
     if (this.inFlightRequests.has(fullReqKey)) {
       if (metric) metric.deduplicatedRequests++;
-      onStatusChange?.('waiting', `Awaiting shared in-flight ${sourceId} query for "${requestKey}"`);
+      onStatusChange?.(
+        'waiting',
+        `Waiting for source — deduplicated in-flight ${sourceId} query for "${requestKey}"`,
+        'Waiting for source'
+      );
       const result = await this.inFlightRequests.get(fullReqKey);
+      onStatusChange?.('working', `Received deduplicated ${sourceId} result for "${requestKey}"`);
       return { ...result, isDeduplicated: true };
     }
 
     // 4. Create and register Singleflight Execution Promise
     const executionPromise = (async () => {
-      const limit = this.limits.get(key);
-      const maxConcurrent = limit ? limit.currentConcurrent : 2;
-      const currentActive = this.activeRequestCounts.get(key) || 0;
-      if (currentActive >= maxConcurrent) {
-        onStatusChange?.('waiting', `Waiting for ${sourceId} concurrency slot (${currentActive}/${maxConcurrent} busy)`);
-      }
-
-      // Acquire Concurrency Semaphore
-      const release = await this.acquireSemaphore(key);
+      // Acquire Concurrency Semaphore (only sets 'waiting' if slot is not immediately available)
+      const release = await this.acquireSemaphore(key, onStatusChange);
 
       try {
-        // Acquire Rate Limit Token
-        onStatusChange?.('waiting', `Acquiring ${sourceId} rate-limit token`);
-        await this.acquireRateLimitToken(key);
+        // Re-check circuit breaker after waking from semaphore so workers never call a newly rate-limited source
+        if (!this.isSourceAvailable(key)) {
+          return {
+            success: false,
+            error: `Source "${sourceId}" entered rate-limit cooldown while waiting; switching source.`,
+            isCircuitOpen: true
+          };
+        }
+
+        // Acquire Rate Limit Token (only sets 'waiting' if token is not immediately available)
+        const tokenAcquired = await this.acquireRateLimitToken(key, onStatusChange);
+        if (!tokenAcquired || !this.isSourceAvailable(key)) {
+          return {
+            success: false,
+            error: `Source "${sourceId}" rate-limited; switching to alternative source.`,
+            isCircuitOpen: true
+          };
+        }
 
         let attempts = 0;
         const maxAttempts = 2;
@@ -615,6 +929,14 @@ export class SourceGateway {
 
         while (attempts < maxAttempts) {
           attempts++;
+          if (!this.isSourceAvailable(key)) {
+            return {
+              success: false,
+              error: `Source "${sourceId}" circuit open; failing over to next available source.`,
+              isCircuitOpen: true
+            };
+          }
+
           try {
             onStatusChange?.('working', `Querying ${sourceId} for "${requestKey}" (attempt ${attempts})`);
             const res = await fetchFn();
@@ -632,24 +954,36 @@ export class SourceGateway {
             const errorClassification = this.classifyError({ message: res.error }, res.statusCode, res.headers);
             this.recordFailure(key, res.error || 'Request failed', res.statusCode, errorClassification.retryAfterMs);
 
-            if (!errorClassification.isTemporary || attempts >= maxAttempts) {
-              return res;
+            // If rate-limited (429) or circuit opened, do NOT sleep inside this source — return immediately so the worker switches to another available source!
+            if (errorClassification.isRateLimit || !this.isSourceAvailable(key) || !errorClassification.isTemporary || attempts >= maxAttempts) {
+              return {
+                ...res,
+                isCircuitOpen: errorClassification.isRateLimit || !this.isSourceAvailable(key)
+              };
             }
 
-            // Exponential backoff + jitter for retry
-            const backoffMs = errorClassification.retryAfterMs || Math.min(2500, Math.pow(2, attempts) * 350 + Math.random() * 200);
-            onStatusChange?.('retrying', `Retrying ${sourceId} after ${Math.round(backoffMs)}ms backoff (${res.error || 'transient error'})`);
+            // Short bounded retry backoff for non-429 transient network hiccups
+            const backoffMs = Math.min(900, Math.pow(2, attempts) * 200 + Math.random() * 120);
+            onStatusChange?.(
+              'retrying',
+              `Retry backoff — retrying ${sourceId} in ${Math.round(backoffMs)}ms (${res.error || 'transient error'})`,
+              'Retry backoff'
+            );
             await new Promise(r => setTimeout(r, backoffMs));
           } catch (err: any) {
             const errorClassification = this.classifyError(err);
             this.recordFailure(key, err.message, undefined, errorClassification.retryAfterMs);
 
-            if (!errorClassification.isTemporary || attempts >= maxAttempts) {
-              return { success: false, error: err.message };
+            if (errorClassification.isRateLimit || !this.isSourceAvailable(key) || !errorClassification.isTemporary || attempts >= maxAttempts) {
+              return { success: false, error: err.message, isCircuitOpen: !this.isSourceAvailable(key) };
             }
 
-            const backoffMs = Math.min(2500, Math.pow(2, attempts) * 350 + Math.random() * 200);
-            onStatusChange?.('retrying', `Retrying ${sourceId} after ${Math.round(backoffMs)}ms backoff (${err.message})`);
+            const backoffMs = Math.min(900, Math.pow(2, attempts) * 200 + Math.random() * 120);
+            onStatusChange?.(
+              'retrying',
+              `Retry backoff — retrying ${sourceId} in ${Math.round(backoffMs)}ms (${err.message})`,
+              'Retry backoff'
+            );
             await new Promise(r => setTimeout(r, backoffMs));
           }
         }

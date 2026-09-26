@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { getConfiguredTmdbApiKey, hasConfiguredTmdbApiKey } from './source-gateway.js';
 
 export type ArtworkSourceStatus =
   | 'operational'
@@ -80,13 +81,15 @@ const DEFAULT_SOURCES: ArtworkSourceConfig[] = [
     name: 'TMDB (The Movie Database)',
     type: 'rest',
     endpoint: 'https://api.themoviedb.org/3',
-    enabled: false, // Disabled per specification: TMDB removed from active pipeline
+    enabled: hasConfiguredTmdbApiKey(),
     rateLimitPerMinute: 120,
     rateLimitPerSecond: 4,
     timeoutMs: 8000,
     priority: 4,
-    status: 'disabled',
-    description: 'DISABLED / NOT USED FOR ARTWORK VERIFICATION. Preserved for stored artwork history.'
+    status: hasConfiguredTmdbApiKey() ? 'untested' : 'disabled',
+    description: hasConfiguredTmdbApiKey()
+      ? 'TMDB (The Movie Database) active via configured TMDB_API_KEY.'
+      : 'Optional source (Automatically skipped when TMDB_API_KEY is not set; other artwork sources remain active).'
   },
   {
     id: 'tvmaze',
@@ -116,7 +119,15 @@ const DEFAULT_SOURCES: ArtworkSourceConfig[] = [
   }
 ];
 
+let cachedSourcesConfig: ArtworkSourceConfig[] | null = null;
+let cachedTmdbKeyState: boolean | null = null;
+
 export function getArtworkSourcesConfig(): ArtworkSourceConfig[] {
+  const tmdbKeyPresent = hasConfiguredTmdbApiKey();
+  if (cachedSourcesConfig && cachedTmdbKeyState === tmdbKeyPresent) {
+    return cachedSourcesConfig;
+  }
+
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -126,14 +137,35 @@ export function getArtworkSourcesConfig(): ArtworkSourceConfig[] {
       if (Array.isArray(data) && data.length > 0) {
         let modified = false;
 
-        // Force disable Jikan (position #2) and TMDB per requirement
+        // Force disable Jikan (position #2) per requirement; make TMDB optional based on TMDB_API_KEY
         for (const s of data) {
-          if (s.id === 'tmdb' || s.id === 'jikan') {
+          if (s.id === 'jikan') {
             if (s.enabled || s.status !== 'disabled') {
               s.enabled = false;
               s.status = 'disabled';
               s.description = `DISABLED / NOT USED FOR ARTWORK VERIFICATION.`;
               modified = true;
+            }
+          } else if (s.id === 'tmdb') {
+            if (!tmdbKeyPresent) {
+              if (s.enabled || s.status !== 'disabled' || s.lastError) {
+                s.enabled = false;
+                s.status = 'disabled';
+                s.lastError = null;
+                s.lastMessage = 'Optional (TMDB_API_KEY not set — skipped automatically)';
+                s.description = 'Optional source (Automatically skipped when TMDB_API_KEY is not set; automatically enables when TMDB_API_KEY is added).';
+                modified = true;
+              }
+            } else {
+              // Automatically enable TMDB when a TMDB_API_KEY is present
+              if (!s.enabled || s.status === 'disabled') {
+                s.enabled = true;
+                s.status = 'untested';
+                s.lastError = null;
+                s.lastMessage = 'TMDB_API_KEY detected — TMDB automatically enabled.';
+                s.description = 'TMDB (The Movie Database) active via configured TMDB_API_KEY.';
+                modified = true;
+              }
             }
           }
         }
@@ -146,6 +178,8 @@ export function getArtworkSourcesConfig(): ArtworkSourceConfig[] {
           }
         }
 
+        cachedSourcesConfig = data;
+        cachedTmdbKeyState = tmdbKeyPresent;
         if (modified) {
           saveArtworkSourcesConfig(data);
         }
@@ -157,11 +191,15 @@ export function getArtworkSourcesConfig(): ArtworkSourceConfig[] {
   }
 
   // Initialize with defaults
+  cachedSourcesConfig = DEFAULT_SOURCES;
+  cachedTmdbKeyState = tmdbKeyPresent;
   saveArtworkSourcesConfig(DEFAULT_SOURCES);
   return DEFAULT_SOURCES;
 }
 
 export function saveArtworkSourcesConfig(sources: ArtworkSourceConfig[]): void {
+  cachedSourcesConfig = sources;
+  cachedTmdbKeyState = hasConfiguredTmdbApiKey();
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -184,7 +222,7 @@ export function updateArtworkSourceHealth(
     const idx = sources.findIndex(s => s.id === sourceId);
     if (idx === -1) return;
     const s = sources[idx];
-    if (s.id === 'tmdb' || s.id === 'jikan' || !s.enabled) return;
+    if (s.id === 'jikan' || (s.id === 'tmdb' && !hasConfiguredTmdbApiKey()) || !s.enabled) return;
 
     const nowIso = new Date().toISOString();
     s.status = status;
@@ -226,8 +264,25 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
 
   const source = sources[sourceIndex];
 
-  // Enforce disabled state: Test Connection must NOT re-enable a disabled source
-  if (source.id === 'tmdb' || source.id === 'jikan' || !source.enabled) {
+  // If TMDB is tested without TMDB_API_KEY, skip gracefully without configuration error
+  if (source.id === 'tmdb' && !hasConfiguredTmdbApiKey()) {
+    source.enabled = false;
+    source.status = 'disabled';
+    source.lastError = null;
+    source.lastMessage = 'Optional (TMDB_API_KEY not set — skipped automatically)';
+    sources[sourceIndex] = source;
+    saveArtworkSourcesConfig(sources);
+
+    return {
+      success: false,
+      latencyMs: 0,
+      message: 'TMDB is optional and automatically skipped because TMDB_API_KEY is not configured. Other artwork sources remain active.',
+      status: 'disabled'
+    };
+  }
+
+  // Enforce disabled state for Jikan or manually disabled sources
+  if (source.id === 'jikan' || !source.enabled) {
     source.enabled = false;
     source.status = 'disabled';
     sources[sourceIndex] = source;
@@ -385,6 +440,73 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         const msg = `TVmaze response: HTTP ${res.status}`;
         source.status = status;
         source.lastChecked = new Date().toISOString();
+        source.lastLatencyMs = latencyMs;
+        source.lastError = `HTTP ${res.status}`;
+        source.lastMessage = msg;
+        sources[sourceIndex] = source;
+        saveArtworkSourcesConfig(sources);
+
+        return {
+          success: false,
+          latencyMs,
+          message: msg,
+          status
+        };
+      }
+    } else if (source.id === 'tmdb') {
+      const tmdbKey = getConfiguredTmdbApiKey();
+      if (!tmdbKey) {
+        return {
+          success: false,
+          latencyMs: 0,
+          message: 'TMDB skipped automatically (optional TMDB_API_KEY not configured).',
+          status: 'disabled'
+        };
+      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
+      const isBearer = tmdbKey.length > 40 || tmdbKey.includes('.');
+      const url = isBearer
+        ? `${source.endpoint}/search/tv?query=Naruto`
+        : `${source.endpoint}/search/tv?api_key=${encodeURIComponent(tmdbKey)}&query=Naruto`;
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'User-Agent': 'Anivex-Artwork-Manager/1.0'
+      };
+      if (isBearer) {
+        headers['Authorization'] = `Bearer ${tmdbKey}`;
+      }
+
+      const res = await fetch(url, { headers, signal: controller.signal });
+      clearTimeout(timeoutId);
+      const latencyMs = Date.now() - startTime;
+      const nowIso = new Date().toISOString();
+
+      if (res.ok) {
+        const json = await res.json();
+        const first = json?.results?.[0];
+        const msg = `Connected successfully (${latencyMs}ms). TMDB entry verified.`;
+        source.status = 'operational';
+        source.lastChecked = nowIso;
+        source.lastSuccessfulChecked = nowIso;
+        source.lastLatencyMs = latencyMs;
+        source.lastError = null;
+        source.lastMessage = msg;
+        sources[sourceIndex] = source;
+        saveArtworkSourcesConfig(sources);
+
+        return {
+          success: true,
+          latencyMs,
+          message: msg,
+          status: 'operational',
+          sampleTitle: first?.name || 'Naruto'
+        };
+      } else {
+        const status: ArtworkSourceStatus = res.status === 429 ? 'rate_limited' : 'temporarily_unavailable';
+        const msg = `TMDB HTTP ${res.status} (Safe fallback engaged)`;
+        source.status = status;
+        source.lastChecked = nowIso;
         source.lastLatencyMs = latencyMs;
         source.lastError = `HTTP ${res.status}`;
         source.lastMessage = msg;

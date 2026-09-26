@@ -176,11 +176,14 @@ async function runTestSuite() {
     return { success: true, matches: [] };
   });
   assert.strictEqual(tmdbRes.success, false);
-  assert.ok(tmdbRes.error?.includes('disabled'), 'TMDB must be blocked by specification');
+  assert.ok(
+    tmdbRes.error?.includes('skipped') || tmdbRes.error?.includes('disabled'),
+    'TMDB must be skipped automatically when TMDB_API_KEY is absent'
+  );
 
   assert.strictEqual(globalSourceGateway.isSourceAvailable('jikan'), false);
   assert.strictEqual(globalSourceGateway.isSourceAvailable('tmdb'), false);
-  console.log('✓ PASS: Permanently disabled sources (Jikan, TMDB) rejected instantly with zero network calls.');
+  console.log('✓ PASS: Disabled/unconfigured optional sources (Jikan, TMDB without key) skipped instantly with zero network calls.');
 
   // ------------------------------------------------------------------
   // TEST 6: Fast-Path for Already-Verified Anime

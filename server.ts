@@ -4,7 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { runIngestion } from './server/raretoon-ingest.ts';
-import { createOwnerRouter, authenticateSession, isEmailAuthorizedOwner } from './server/owner-auth.js';
+import { createOwnerRouter, authenticateSession, requireOwner, isEmailAuthorizedOwner } from './server/owner-auth.js';
+import { buildLatestAppSourceArchive, getLatestOrBuildAppSourceArchive, inspectLatestAppSourceMetadata, validateZipArchiveBuffer } from './server/source-packager.js';
 import { createUserAuthRouter } from './server/user-auth.js';
 import { logEmailConfigDiagnostics } from './server/email-service.js';
 
@@ -77,31 +78,70 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/download-source', authenticateSession, (req, res) => {
-  const session = (req as any).ownerSession;
-  if (!session || session.role !== 'owner' || !isEmailAuthorizedOwner(session.email)) {
-    res.status(403).json({ error: 'Access denied. The source code download feature is reserved strictly for the verified Owner account.' });
+// Block any direct static URL access to source archive filenames outside the authenticated Owner API
+app.use((req, res, next) => {
+  const lowerPath = req.path.toLowerCase();
+  const isOwnerDownloadApi =
+    lowerPath.startsWith('/api/owner/source-package/download') ||
+    lowerPath === '/api/download-source';
+
+  if (
+    !isOwnerDownloadApi &&
+    (lowerPath.endsWith('.tar.gz') ||
+      lowerPath.endsWith('.tgz') ||
+      lowerPath.endsWith('.zip') ||
+      lowerPath.includes('anivault-source') ||
+      lowerPath.includes('anivex-source'))
+  ) {
+    res.status(403).json({
+      error: 'Forbidden: Direct URL access to source archives is prohibited. Use the authenticated Owner Administration endpoint.'
+    });
     return;
   }
+  next();
+});
 
-  let archivePath = path.join(process.cwd(), 'public', 'anivault-source.tar.gz');
-  if (!fs.existsSync(archivePath)) {
-    archivePath = path.join(process.cwd(), 'dist', 'anivault-source.tar.gz');
+app.get('/api/download-source', authenticateSession, requireOwner, (req, res) => {
+  try {
+    const session = (req as any).ownerSession;
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    if (req.query.check === 'true') {
+      const meta = inspectLatestAppSourceMetadata();
+      res.json({
+        success: true,
+        available: meta.available,
+        packageName: meta.packageName,
+        totalFiles: meta.totalFiles,
+        generatedAt: meta.generatedAt
+      });
+      return;
+    }
+
+    const forceFresh = req.query.fresh === 'true' || req.query.fresh === '1';
+    const pkg = getLatestOrBuildAppSourceArchive(session?.username || 'Death197', forceFresh);
+    validateZipArchiveBuffer(pkg.buffer, pkg.totalFiles);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Length', String(pkg.compressedBytes));
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${pkg.filename}"; filename*=UTF-8''${encodeURIComponent(pkg.filename)}`
+    );
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Anivex-Source-Filename', pkg.filename);
+    res.setHeader('X-Anivex-Source-Generated-At', pkg.generatedAt);
+    res.setHeader('X-Anivex-Source-Files-Count', String(pkg.totalFiles));
+    res.setHeader('X-Anivex-Source-SHA256', pkg.sha256);
+    res.status(200).end(pkg.buffer);
+  } catch (err: any) {
+    console.error('[DownloadSource Error]', err);
+    res.status(500).json({
+      error: err?.message || 'Failed to generate live source .zip archive.',
+      code: 'ARCHIVE_GENERATION_FAILED'
+    });
   }
-
-  if (!fs.existsSync(archivePath)) {
-    res.status(404).json({ error: 'Project archive not found.' });
-    return;
-  }
-
-  if (req.query.check === 'true') {
-    res.json({ success: true });
-    return;
-  }
-
-  res.setHeader('Content-Type', 'application/gzip');
-  res.setHeader('Content-Disposition', 'attachment; filename="anivex-source-code.tar.gz"');
-  fs.createReadStream(archivePath).pipe(res);
 });
 
 app.get('/api/stats', (req, res) => {

@@ -470,7 +470,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         }
       }
     } catch (err) {
-      console.error('Failed to load artwork manager dashboard:', err);
+      console.warn('Could not load artwork manager dashboard:', err);
     } finally {
       setLoadingDashboard(false);
     }
@@ -495,7 +495,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setPage(data.page || 1);
       }
     } catch (err) {
-      console.error('Failed to load anime registry:', err);
+      console.warn('Could not load anime registry:', err);
     } finally {
       setListLoading(false);
     }
@@ -510,7 +510,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setFakeIssues(data.issues || []);
       }
     } catch (err) {
-      console.error('Failed to load fake issues:', err);
+      console.warn('Could not load fake issues:', err);
     }
   };
 
@@ -523,7 +523,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setHistoryList(data.history || []);
       }
     } catch (err) {
-      console.error('Failed to load history:', err);
+      console.warn('Could not load history:', err);
     }
   };
 
@@ -536,7 +536,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         setSourcesList(data.sources || []);
       }
     } catch (err) {
-      console.error('Failed to load sources:', err);
+      console.warn('Could not load sources:', err);
     }
   };
 
@@ -550,7 +550,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         if (Array.isArray(data.records)) setWatchOrderRecords(data.records);
       }
     } catch (err) {
-      console.error('Failed to load watch order sources:', err);
+      console.warn('Could not load watch order sources:', err);
     }
   };
 

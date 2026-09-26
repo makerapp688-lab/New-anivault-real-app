@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { globalSourceGateway } from './source-gateway.ts';
+import { globalSourceGateway, WorkerWaitReason } from './source-gateway.ts';
 import { globalDataStore } from './data-store.ts';
 
 export type TaskPriority = 'HIGH' | 'MEDIUM' | 'NORMAL' | 'LOW';
@@ -51,6 +51,7 @@ export interface WorkerCompletedTask {
 export interface WorkerInfo {
   workerId: number;
   status: 'idle' | 'claiming' | 'working' | 'waiting' | 'retrying' | 'paused' | 'error' | 'stopped' | 'stalled' | 'busy' | 'backing_off';
+  waitReason?: WorkerWaitReason | null;
   currentTaskId?: string | null;
   currentAnimeId?: string | null;
   currentAnimeTitle?: string | null;
@@ -181,6 +182,7 @@ export interface JobStateSnapshot {
     waiting: number;
     retrying: number;
     utilizationPercent: number;
+    waitingByReason?: Record<WorkerWaitReason, number>;
   };
   databasePerformance: {
     totalReads: number;
@@ -307,8 +309,14 @@ export class ReusableWorkerJobEngine {
   // Performance rate samples
   private rateSamples: Array<{ timestamp: number; count: number }> = [];
 
+  // Debounce timers to prevent synchronous disk I/O contention across 50 concurrent workers
+  private saveStateTimer: NodeJS.Timeout | null = null;
+  private saveEventsTimer: NodeJS.Timeout | null = null;
+  private lastStaleSweepAt = 0;
+
   // Live SSE / state change subscribers
   private stateListeners = new Set<() => void>();
+  private notifyTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.initWorkers();
@@ -324,11 +332,15 @@ export class ReusableWorkerJobEngine {
   }
 
   public notifyStateListeners() {
-    for (const listener of this.stateListeners) {
-      try {
-        listener();
-      } catch {}
-    }
+    if (this.notifyTimer) return;
+    this.notifyTimer = setTimeout(() => {
+      this.notifyTimer = null;
+      for (const listener of this.stateListeners) {
+        try {
+          listener();
+        } catch {}
+      }
+    }, 60);
   }
 
   public getWorkerPoolConfig(): WorkerPoolConfig {
@@ -396,7 +408,19 @@ export class ReusableWorkerJobEngine {
     }
   }
 
-  private saveActivityEvents() {
+  private saveActivityEvents(immediate = false) {
+    if (!immediate) {
+      if (this.saveEventsTimer) return;
+      this.saveEventsTimer = setTimeout(() => {
+        this.saveEventsTimer = null;
+        this.saveActivityEvents(true);
+      }, 600);
+      return;
+    }
+    if (this.saveEventsTimer) {
+      clearTimeout(this.saveEventsTimer);
+      this.saveEventsTimer = null;
+    }
     try {
       if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
       const tempPath = `${WORKER_EVENTS_PATH}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
@@ -488,9 +512,21 @@ export class ReusableWorkerJobEngine {
     }
   }
 
-  public saveJobState() {
+  public saveJobState(immediate = false) {
+    if (this.mode === 'benchmark') return;
+    if (!immediate && this.isProcessing) {
+      if (this.saveStateTimer) return;
+      this.saveStateTimer = setTimeout(() => {
+        this.saveStateTimer = null;
+        this.saveJobState(true);
+      }, 500);
+      return;
+    }
+    if (this.saveStateTimer) {
+      clearTimeout(this.saveStateTimer);
+      this.saveStateTimer = null;
+    }
     try {
-      if (this.mode === 'benchmark') return;
       if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
       const snapshot = this.getSnapshot();
       const tempPath = `${JOB_STATE_PATH}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
@@ -503,6 +539,23 @@ export class ReusableWorkerJobEngine {
     } catch (err: any) {
       console.error('[WorkerCoordinator] Error saving state:', err.message);
     }
+  }
+
+  public inferWaitReason(step?: string | null, status?: string | null): WorkerWaitReason {
+    const s = (step || '').toLowerCase();
+    if (s.includes('rate limit') || s.includes('429') || s.includes('quota')) {
+      return 'Rate limited';
+    }
+    if (s.includes('backoff') || s.includes('retry') || status === 'retrying' || status === 'backing_off') {
+      return 'Retry backoff';
+    }
+    if (s.includes('db') || s.includes('database') || s.includes('persistence') || s.includes('flush')) {
+      return 'DB busy';
+    }
+    if (s.includes('no task') || s.includes('queue drained') || s.includes('awaiting unclaimed')) {
+      return 'No task';
+    }
+    return 'Waiting for source';
   }
 
   // --- Release Leases ---
@@ -730,16 +783,24 @@ export class ReusableWorkerJobEngine {
           ? 'stale'
           : (w.health || 'healthy');
 
+      let effectiveWaitReason: WorkerWaitReason | null = null;
+      if (effectiveStatus === 'waiting' || effectiveStatus === 'retrying' || effectiveStatus === 'backing_off') {
+        effectiveWaitReason = w.waitReason || this.inferWaitReason(w.currentStep, effectiveStatus);
+      } else if (effectiveStatus === 'idle' && this.status === 'running') {
+        effectiveWaitReason = w.waitReason || 'No task';
+      }
+
       return {
         ...w,
         status: effectiveStatus,
+        waitReason: effectiveWaitReason,
         currentTaskId: activeTaskId,
         currentAnimeId: w.currentAnimeId || ownedTask?.animeId || null,
         currentAnimeTitle: w.currentAnimeTitle || ownedTask?.title || null,
         seasonName: w.seasonName || (ownedTask?.seasonId ? `Season ${ownedTask.seasonId}` : 'Main / All Seasons'),
         operation: w.operation || (ownedTask ? this.mapTaskTypeToOperation(ownedTask.type) : null),
         currentSource: w.currentSource || (activeTaskId ? 'AniList' : null),
-        currentStep: w.currentStep || (activeTaskId ? 'Executing verification pipeline' : null),
+        currentStep: w.currentStep || (activeTaskId ? 'Executing verification pipeline' : (effectiveWaitReason === 'No task' ? 'No task — awaiting available task in queue' : null)),
         retryCount: ownedTask ? ownedTask.retryCount : (w.retryCount || 0),
         health: effectiveHealth
       };
@@ -753,6 +814,20 @@ export class ReusableWorkerJobEngine {
     const utilizationPercent = this.poolConfig.currentWorkers > 0
       ? Math.round((busyOrActiveCount / this.poolConfig.currentWorkers) * 100)
       : 0;
+
+    const waitingByReason: Record<WorkerWaitReason, number> = {
+      'No task': 0,
+      'Rate limited': 0,
+      'Waiting for source': 0,
+      'DB busy': 0,
+      'Retry backoff': 0
+    };
+    for (const w of workers) {
+      if (w.status === 'waiting' || w.status === 'retrying' || w.status === 'backing_off') {
+        const reason = w.waitReason || this.inferWaitReason(w.currentStep, w.status);
+        waitingByReason[reason] = (waitingByReason[reason] || 0) + 1;
+      }
+    }
 
     const dbStoreMetrics = globalDataStore.getStoreMetrics();
 
@@ -782,7 +857,8 @@ export class ReusableWorkerJobEngine {
         idle: idleCount,
         waiting: waitingCount,
         retrying: retryingCount,
-        utilizationPercent
+        utilizationPercent,
+        waitingByReason
       },
       databasePerformance: {
         totalReads: dbStoreMetrics.totalDbReads,
@@ -1061,6 +1137,15 @@ export class ReusableWorkerJobEngine {
       if (update.retryCount !== undefined) worker.retryCount = update.retryCount;
       if (update.health !== undefined) worker.health = update.health;
       if (update.lastError !== undefined) worker.lastError = update.lastError;
+
+      if (worker.status === 'waiting' || worker.status === 'retrying' || worker.status === 'backing_off') {
+        worker.waitReason = update.waitReason || this.inferWaitReason(worker.currentStep, worker.status);
+      } else if (worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy') {
+        worker.waitReason = null;
+      } else if (update.waitReason !== undefined) {
+        worker.waitReason = update.waitReason;
+      }
+
       if (worker.currentTaskId) {
         const task = this.tasksMap.get(worker.currentTaskId);
         if (task && task.claimedByWorkerId === workerId && task.status !== 'completed' && task.status !== 'failed') {
@@ -1077,13 +1162,17 @@ export class ReusableWorkerJobEngine {
   // --- Atomic Task Claiming with Anime-Level and Season-Level Locks ---
   public claimTask(workerId: number): JobTask | null {
     const now = Date.now();
-    // 1. Recover stale tasks first
-    this.recoverStaleTasks();
+    // 1. Recover stale tasks periodically (throttled to at most once every 2s so 50 concurrent workers don't scan all maps on every claim)
+    if (now - this.lastStaleSweepAt > 2000) {
+      this.lastStaleSweepAt = now;
+      this.recoverStaleTasks();
+    }
 
     const worker = this.workerMap.get(workerId);
     if (!worker) return null;
     if (this.shouldPause || this.shouldStop) {
       worker.status = this.shouldPause ? 'paused' : 'stopped';
+      worker.waitReason = null;
       return null;
     }
 
@@ -1177,8 +1266,8 @@ export class ReusableWorkerJobEngine {
     const animeId = task.animeId || task.payload?.id || chosenTaskId;
     const leaseExpiresAt = now + LEASE_DURATION_MS;
 
-    // ATOMIC TASK CLAIM (QUEUED -> CLAIMING)
-    task.status = 'claiming';
+    // ATOMIC TASK CLAIM (QUEUED -> CLAIMED)
+    task.status = 'claimed';
     task.workerId = workerId;
     task.claimedByWorkerId = workerId;
     task.claimedAt = now;
@@ -1198,7 +1287,7 @@ export class ReusableWorkerJobEngine {
     };
     this.animeLeases.set(animeId, animeLease);
 
-    // ATOMIC SEASON LEASE CLAIM
+    // ATOMIC SEASON LEASE CLAIM (for season-level tasks)
     if (task.seasonId) {
       const seasonKey = `${animeId}:${task.seasonId}`;
       this.seasonLeases.set(seasonKey, {
@@ -1221,6 +1310,7 @@ export class ReusableWorkerJobEngine {
 
     // Update worker info (CLAIMING initially; transitions to WORKING on execution)
     worker.status = 'claiming';
+    worker.waitReason = null;
     worker.currentTaskId = chosenTaskId;
     worker.currentAnimeId = animeId;
     worker.currentAnimeTitle = task.title;
@@ -1353,12 +1443,15 @@ export class ReusableWorkerJobEngine {
       if (!isError) {
         worker.tasksCompleted++;
         worker.status = 'idle';
+        worker.waitReason = null;
       } else {
         if (task && task.status === 'retrying') {
           worker.status = 'retrying';
+          worker.waitReason = 'Retry backoff';
         } else {
           worker.tasksFailed++;
           worker.status = 'error';
+          worker.waitReason = null;
         }
         worker.lastError = typeof result === 'string' ? result : (result?.error || 'Task error');
       }
@@ -1442,10 +1535,33 @@ export class ReusableWorkerJobEngine {
               break; // Truly complete
             }
 
-            // Some tasks exist but their anime is currently locked by another worker:
-            // Yield and wait briefly before asking coordinator again
-            worker.status = 'idle';
-            await new Promise(r => setTimeout(r, 30));
+            // Determine the real backend reason why no task could be claimed right now
+            const nowMs = Date.now();
+            let hasRetryBackoffTasks = false;
+            for (const p of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+              for (const tId of this.priorityQueues[p]) {
+                const t = this.tasksMap.get(tId);
+                if (t && t.retryAfter && nowMs < t.retryAfter) {
+                  hasRetryBackoffTasks = true;
+                  break;
+                }
+              }
+              if (hasRetryBackoffTasks) break;
+            }
+
+            if (hasRetryBackoffTasks) {
+              worker.status = 'waiting';
+              worker.waitReason = 'Retry backoff';
+              worker.currentStep = 'Retry backoff — waiting for task retry cooldown';
+            } else {
+              worker.status = 'idle';
+              worker.waitReason = 'No task';
+              worker.currentStep = queuedCount === 0
+                ? 'No task — queue drained, final tasks finishing on active workers'
+                : 'No task — remaining queued anime locked by active workers';
+            }
+
+            await new Promise(r => setTimeout(r, 25));
             continue;
           }
 
@@ -1459,6 +1575,7 @@ export class ReusableWorkerJobEngine {
             task.status = 'running';
             task.updatedAt = Date.now();
             worker.status = 'working';
+            worker.waitReason = null;
             this.notifyStateListeners();
             const result = await processor(task, workerId);
             clearInterval(heartbeatTimer);
@@ -1470,7 +1587,7 @@ export class ReusableWorkerJobEngine {
           }
 
           // Non-blocking micro-yield to keep event loop cooperative without degrading throughput
-          await new Promise(r => setTimeout(r, 4));
+          await new Promise(r => setTimeout(r, 2));
         } catch (workerErr: any) {
           // REQUIREMENT 10: WORKER FAILURE ISOLATION
           console.error(`[WorkerCoordinator] Worker #${workerId} loop error:`, workerErr.message);
@@ -1480,6 +1597,7 @@ export class ReusableWorkerJobEngine {
 
       // Worker shutdown/pause cleanup
       worker.status = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
+      worker.waitReason = null;
       worker.currentTaskId = null;
       worker.currentAnimeId = null;
       worker.currentAnimeTitle = null;
@@ -1519,7 +1637,8 @@ export class ReusableWorkerJobEngine {
       this.saveJobHistory();
     }
 
-    this.saveJobState();
+    this.saveActivityEvents(true);
+    this.saveJobState(true);
     this.notifyStateListeners();
   }
 
