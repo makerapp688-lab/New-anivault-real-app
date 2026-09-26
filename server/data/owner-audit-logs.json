@@ -1,5 +1,66 @@
 [
   {
+    "id": "LOG-1790420870613-3894",
+    "timestamp": "2026-09-26T11:07:50.613Z",
+    "action": "Batch Watch Order Check (4 franchises)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Compared Watchordr & The Anime Order for: Demon Slayer, Jujutsu Kaisen, Naruto, Attack on Titan"
+  },
+  {
+    "id": "LOG-1790418067049-4630",
+    "timestamp": "2026-09-26T10:21:07.049Z",
+    "action": "Reset Artwork Verification Scan",
+    "operator": "Owner",
+    "result": "success"
+  },
+  {
+    "id": "LOG-1790418030693-9160",
+    "timestamp": "2026-09-26T10:20:30.693Z",
+    "action": "Reset Artwork Verification Scan",
+    "operator": "Owner",
+    "result": "success"
+  },
+  {
+    "id": "LOG-1790418030664-4139",
+    "timestamp": "2026-09-26T10:20:30.664Z",
+    "action": "Approve Current Artwork",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Approved current artwork for 1 items."
+  },
+  {
+    "id": "LOG-1790417959115-9992",
+    "timestamp": "2026-09-26T10:19:19.115Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=11, limit=All."
+  },
+  {
+    "id": "LOG-1790417898384-6073",
+    "timestamp": "2026-09-26T10:18:18.384Z",
+    "action": "Start Verification Job (FIX_MISSING)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: fix_missing, batch=15, limit=15."
+  },
+  {
+    "id": "LOG-1790416469450-6198",
+    "timestamp": "2026-09-26T09:54:29.450Z",
+    "action": "Reset Artwork Verification Scan",
+    "operator": "Owner",
+    "result": "success"
+  },
+  {
+    "id": "LOG-1790414503688-3184",
+    "timestamp": "2026-09-26T09:21:43.688Z",
+    "action": "Start Verification Job (UNVERIFIED)",
+    "operator": "Owner",
+    "result": "success",
+    "details": "Job launched: unverified, batch=3, limit=3."
+  },
+  {
     "id": "LOG-1790250196314-1707",
     "timestamp": "2026-09-24T11:43:16.314Z",
     "action": "Reset Artwork Verification Scan",

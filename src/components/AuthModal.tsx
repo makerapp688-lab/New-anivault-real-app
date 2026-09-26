@@ -483,7 +483,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-bold text-white dark:text-white light:text-slate-900">
-                      {currentAccount.username || 'AnimeExplorer'}
+                      {currentAccount.role === 'owner' || currentAccount.id === 'usr_owner'
+                        ? (currentAccount.username && currentAccount.username !== 'Owner' ? currentAccount.username : 'Death197')
+                        : (currentAccount.username || 'AnimeExplorer')}
                     </span>
                     <button
                       type="button"
@@ -969,7 +971,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                               <div className="space-y-0.5 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-black text-white tracking-tight truncate">
-                                    {acc.username || acc.name || 'Owner'}
+                                    {acc.username && acc.username !== 'Owner' ? acc.username : (acc.name && acc.name !== 'Owner' ? acc.name : 'Death197')}
                                   </span>
                                   <span className="text-[10px] font-mono font-bold text-amber-400 border border-amber-400/60 bg-amber-500/15 px-1.5 py-0.2 rounded">
                                     &#123;owner&#125;

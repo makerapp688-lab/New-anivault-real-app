@@ -3,6 +3,7 @@ import path from 'path';
 
 export type ArtworkSourceStatus =
   | 'operational'
+  | 'testing'
   | 'rate_limited'
   | 'temporarily_unavailable'
   | 'timeout'
@@ -24,8 +25,10 @@ export interface ArtworkSourceConfig {
   priority: number;
   status: ArtworkSourceStatus;
   lastChecked?: string;
+  lastSuccessfulChecked?: string;
   lastLatencyMs?: number;
   lastError?: string | null;
+  lastMessage?: string | null;
   description: string;
 }
 
@@ -169,6 +172,40 @@ export function saveArtworkSourcesConfig(sources: ArtworkSourceConfig[]): void {
   }
 }
 
+export function updateArtworkSourceHealth(
+  sourceId: string,
+  status: ArtworkSourceStatus,
+  latencyMs?: number,
+  error?: string | null,
+  message?: string | null
+): void {
+  try {
+    const sources = getArtworkSourcesConfig();
+    const idx = sources.findIndex(s => s.id === sourceId);
+    if (idx === -1) return;
+    const s = sources[idx];
+    if (s.id === 'tmdb' || s.id === 'jikan' || !s.enabled) return;
+
+    const nowIso = new Date().toISOString();
+    s.status = status;
+    s.lastChecked = nowIso;
+    if (status === 'operational') {
+      s.lastSuccessfulChecked = nowIso;
+      s.lastError = null;
+    } else if (error !== undefined) {
+      s.lastError = error;
+    }
+    if (typeof latencyMs === 'number') {
+      s.lastLatencyMs = latencyMs;
+    }
+    if (message !== undefined) {
+      s.lastMessage = message;
+    }
+    sources[idx] = s;
+    saveArtworkSourcesConfig(sources);
+  } catch {}
+}
+
 export async function testSourceConnectivity(sourceId: string): Promise<{
   success: boolean;
   latencyMs: number;
@@ -237,34 +274,40 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       if (res.ok) {
         const json = await res.json();
         const media = json?.data?.Media;
+        const nowIso = new Date().toISOString();
+        const msg = `Connected successfully (${latencyMs}ms). Verified cover returned.`;
         source.status = 'operational';
-        source.lastChecked = new Date().toISOString();
+        source.lastChecked = nowIso;
+        source.lastSuccessfulChecked = nowIso;
         source.lastLatencyMs = latencyMs;
         source.lastError = null;
+        source.lastMessage = msg;
         sources[sourceIndex] = source;
         saveArtworkSourcesConfig(sources);
 
         return {
           success: true,
           latencyMs,
-          message: `Connected successfully (${latencyMs}ms). Verified cover returned.`,
+          message: msg,
           status: 'operational',
           sampleTitle: media?.title?.english || media?.title?.romaji || 'Naruto'
         };
       } else {
         const text = await res.text();
         const status: ArtworkSourceStatus = res.status === 429 ? 'rate_limited' : 'temporarily_unavailable';
+        const msg = `HTTP ${res.status}: ${text.slice(0, 100)} (Safe fallback engaged)`;
         source.status = status;
         source.lastChecked = new Date().toISOString();
         source.lastLatencyMs = latencyMs;
         source.lastError = `HTTP ${res.status}: ${text.slice(0, 100)}`;
+        source.lastMessage = msg;
         sources[sourceIndex] = source;
         saveArtworkSourcesConfig(sources);
 
         return {
           success: false,
           latencyMs,
-          message: `HTTP ${res.status}: ${text.slice(0, 100)} (Safe fallback engaged)`,
+          message: msg,
           status
         };
       }
@@ -283,18 +326,24 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       const latencyMs = Date.now() - startTime;
       const isOnline = res.ok || res.status === 403 || res.status === 301 || res.status === 302;
       const status: ArtworkSourceStatus = isOnline ? 'operational' : 'temporarily_unavailable';
+      const nowIso = new Date().toISOString();
+      const msg = isOnline
+        ? `AniDB connectivity confirmed (${latencyMs}ms). Active as secondary fallback.`
+        : `AniDB HTTP ${res.status}`;
 
       source.status = status;
-      source.lastChecked = new Date().toISOString();
+      source.lastChecked = nowIso;
+      if (isOnline) source.lastSuccessfulChecked = nowIso;
       source.lastLatencyMs = latencyMs;
-      source.lastError = null;
+      source.lastError = isOnline ? null : `HTTP ${res.status}`;
+      source.lastMessage = msg;
       sources[sourceIndex] = source;
       saveArtworkSourcesConfig(sources);
 
       return {
         success: isOnline,
         latencyMs,
-        message: `AniDB connectivity confirmed (${latencyMs}ms). Active as secondary fallback.`,
+        message: msg,
         status,
         sampleTitle: 'AniDB Titles Database'
       };
@@ -313,33 +362,39 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       if (res.ok) {
         const json = await res.json();
         const first = json?.[0]?.show;
+        const nowIso = new Date().toISOString();
+        const msg = `Connected successfully (${latencyMs}ms). TVmaze show entry verified.`;
         source.status = 'operational';
-        source.lastChecked = new Date().toISOString();
+        source.lastChecked = nowIso;
+        source.lastSuccessfulChecked = nowIso;
         source.lastLatencyMs = latencyMs;
         source.lastError = null;
+        source.lastMessage = msg;
         sources[sourceIndex] = source;
         saveArtworkSourcesConfig(sources);
 
         return {
           success: true,
           latencyMs,
-          message: `Connected successfully (${latencyMs}ms). TVmaze show entry verified.`,
+          message: msg,
           status: 'operational',
           sampleTitle: first?.name || 'Naruto'
         };
       } else {
         const status: ArtworkSourceStatus = res.status === 429 ? 'rate_limited' : 'temporarily_unavailable';
+        const msg = `TVmaze response: HTTP ${res.status}`;
         source.status = status;
         source.lastChecked = new Date().toISOString();
         source.lastLatencyMs = latencyMs;
         source.lastError = `HTTP ${res.status}`;
+        source.lastMessage = msg;
         sources[sourceIndex] = source;
         saveArtworkSourcesConfig(sources);
 
         return {
           success: false,
           latencyMs,
-          message: `TVmaze response: HTTP ${res.status}`,
+          message: msg,
           status
         };
       }
@@ -354,18 +409,24 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
 
       clearTimeout(timeoutId);
       const latencyMs = Date.now() - startTime;
+      const nowIso = new Date().toISOString();
+      const msg = res.ok
+        ? `TheTVDB open media gateway operational (${latencyMs}ms).`
+        : `TheTVDB gateway HTTP ${res.status}`;
 
       source.status = res.ok ? 'operational' : 'temporarily_unavailable';
-      source.lastChecked = new Date().toISOString();
+      source.lastChecked = nowIso;
+      if (res.ok) source.lastSuccessfulChecked = nowIso;
       source.lastLatencyMs = latencyMs;
-      source.lastError = null;
+      source.lastError = res.ok ? null : `HTTP ${res.status}`;
+      source.lastMessage = msg;
       sources[sourceIndex] = source;
       saveArtworkSourcesConfig(sources);
 
       return {
         success: res.ok,
         latencyMs,
-        message: `TheTVDB open media gateway operational (${latencyMs}ms).`,
+        message: msg,
         status: source.status,
         sampleTitle: 'TheTVDB Database'
       };
@@ -373,16 +434,21 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       const res = await fetch(source.endpoint);
       const latencyMs = Date.now() - startTime;
       const status: ArtworkSourceStatus = res.ok ? 'operational' : 'temporarily_unavailable';
+      const nowIso = new Date().toISOString();
+      const msg = `HTTP Status ${res.status} (${latencyMs}ms)`;
       source.status = status;
-      source.lastChecked = new Date().toISOString();
+      source.lastChecked = nowIso;
+      if (res.ok) source.lastSuccessfulChecked = nowIso;
       source.lastLatencyMs = latencyMs;
+      source.lastError = res.ok ? null : `HTTP ${res.status}`;
+      source.lastMessage = msg;
       sources[sourceIndex] = source;
       saveArtworkSourcesConfig(sources);
 
       return {
         success: res.ok,
         latencyMs,
-        message: `HTTP Status ${res.status}`,
+        message: msg,
         status
       };
     }
@@ -390,18 +456,20 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
     const latencyMs = Date.now() - startTime;
     const isTimeout = err.name === 'AbortError' || err.message?.toLowerCase().includes('timeout');
     const status: ArtworkSourceStatus = isTimeout ? 'timeout' : 'temporarily_unavailable';
+    const msg = `Connection issue: ${err.message} (Safe fallback engaged)`;
 
     source.status = status;
     source.lastChecked = new Date().toISOString();
     source.lastLatencyMs = latencyMs;
     source.lastError = err.message;
+    source.lastMessage = msg;
     sources[sourceIndex] = source;
     saveArtworkSourcesConfig(sources);
 
     return {
       success: false,
       latencyMs,
-      message: `Connection issue: ${err.message} (Safe fallback engaged)`,
+      message: msg,
       status
     };
   }

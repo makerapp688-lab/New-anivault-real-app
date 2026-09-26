@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
           {(() => {
-            const isOwner = account.role === 'owner';
+            const isOwner = account.role === 'owner' || account.id === 'usr_owner';
             const isGuest = account.id === 'guest_user' || account.provider === 'guest';
             const avatarUrl = isOwner ? getAccountAvatar('usr_owner') : (!isGuest ? getAccountAvatar(account.id) : null);
             return avatarUrl ? (
@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <User className="w-3.5 h-3.5" />
             );
           })()}
-            <span>Account</span>
+            <span>{account.role === 'owner' || account.id === 'usr_owner' ? (account.username && account.username !== 'Owner' ? account.username : 'Death197') : (!isGuest && account.username ? account.username : 'Account')}</span>
           </button>
         </div>
 

@@ -6,6 +6,7 @@ import {
   saveVerificationRecords,
   loadFakeAnimeIssues,
   inspectArtworkImage,
+  isPlaceholderArtworkUrl,
   cleanAnimeTitle,
   applyArtworkUpdate,
   markCatalogueAnimeVerified
@@ -30,6 +31,9 @@ export interface GlobalCatalogueStats {
   possibleFake: number;
   missing: number;
   unverified: number;
+  pending: number;
+  completed: number;
+  failed: number;
   historyCount: number;
 }
 
@@ -75,8 +79,7 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
   for (const item of catalogue) {
     const rec = records[item.id];
     const url = item.artwork?.verifiedArtworkUrl || item.artwork?.originalArtworkUrl;
-    const cleanUrl = typeof url === 'string' ? url.trim().toLowerCase() : '';
-    const isMissing = !cleanUrl || cleanUrl.includes('placeholder') || cleanUrl.includes('default-poster') || cleanUrl.includes('default_poster') || cleanUrl.includes('no-image') || cleanUrl === 'null' || cleanUrl === 'undefined';
+    const isMissing = isPlaceholderArtworkUrl(url);
 
     if (isMissing) {
       missing++;
@@ -84,11 +87,18 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
       else if (rec?.status === 'unable_to_verify') unableToVerify++;
     } else {
       if (rec) {
-        if (rec.status === 'verified') verified++;
-        else if (rec.status === 'auto_fixed') autoFixed++;
-        else if (rec.status === 'needs_review') needsReview++;
-        else if (rec.status === 'unable_to_verify') unableToVerify++;
-        else if (rec.status === 'possible_fake') possibleFake++;
+        if (rec.status === 'verified') {
+          verified++;
+        } else if (rec.status === 'auto_fixed') {
+          verified++;
+          autoFixed++;
+        } else if (rec.status === 'needs_review') {
+          needsReview++;
+        } else if (rec.status === 'unable_to_verify') {
+          unableToVerify++;
+        } else if (rec.status === 'possible_fake') {
+          possibleFake++;
+        }
       } else if (item.artwork?.verificationStatus === 'verified') {
         verified++;
       }
@@ -96,6 +106,12 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
   }
 
   const unverified = Math.max(0, catalogue.length - verified);
+  const snapshot = globalWorkerJobEngine.getSnapshot();
+  const pending = snapshot.status === 'running' || snapshot.status === 'paused'
+    ? (snapshot.queuedCount + snapshot.claimedCount)
+    : unverified;
+  const completed = snapshot.completedCount;
+  const failed = snapshot.failedCount;
 
   return {
     total: catalogue.length,
@@ -106,6 +122,9 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
     possibleFake,
     missing,
     unverified,
+    pending,
+    completed,
+    failed,
     historyCount
   };
 }
@@ -138,12 +157,17 @@ class ArtworkScannerEngine {
       failedTasksCount: snapshot.failedCount,
       processedCount: snapshot.completedCount + snapshot.failedCount,
       remainingTasksCount: snapshot.queuedCount + snapshot.claimedCount,
+      queuedCount: snapshot.queuedCount,
+      claimedCount: snapshot.claimedCount,
       progressPercent: snapshot.progressPercent,
       lastLog: snapshot.lastLog,
       workerCount: snapshot.workerCount,
       poolConfig: snapshot.poolConfig,
       etaFormatted: snapshot.etaFormatted,
       avgTaskDurationMs: snapshot.avgTaskDurationMs,
+      tasksPerMinute: snapshot.tasksPerMinute,
+      workerUtilization: snapshot.workerUtilization,
+      databasePerformance: snapshot.databasePerformance,
       systemHealth: snapshot.systemHealth,
       sourceGatewayMetrics: snapshot.sourceGatewayMetrics,
       activeWorkers: snapshot.activeWorkers,
@@ -152,6 +176,7 @@ class ArtworkScannerEngine {
       activityEvents: snapshot.activityEvents,
       startedAt: snapshot.startedAt,
       updatedAt: snapshot.updatedAt,
+      stateVersion: Date.now(),
       globalStats,
       sourceHealth: snapshot.sourceHealth,
       // Legacy compatibility
@@ -164,9 +189,10 @@ class ArtworkScannerEngine {
         unableToVerify: globalStats.unableToVerify,
         possibleFake: globalStats.possibleFake,
         missing: globalStats.missing,
+        completed: snapshot.completedCount,
         failed: snapshot.failedCount,
-        retrying: 0,
-        pending: snapshot.queuedCount
+        retrying: snapshot.workerUtilization?.retrying || 0,
+        pending: globalStats.pending
       }
     };
   }
@@ -176,27 +202,47 @@ class ArtworkScannerEngine {
     operator = 'Owner',
     mode: 'all' | 'unverified' | 'fix_missing' = 'all',
     limit?: number
-  ): { success: boolean; message: string; job?: any } {
+  ): { success: boolean; alreadyRunning?: boolean; message: string; job?: any; state?: any } {
     if (!fs.existsSync(CATALOGUE_PATH)) {
       return { success: false, message: 'Catalogue not found.' };
+    }
+
+    // Active Job Reconnection: Do NOT create a duplicate job if one is already running
+    const currentSnapshot = globalWorkerJobEngine.getSnapshot();
+    if (currentSnapshot.status === 'running') {
+      const activeState = this.getJobState();
+      return {
+        success: true,
+        alreadyRunning: true,
+        message: `Connected to active verification job (${currentSnapshot.jobId}).`,
+        job: activeState,
+        state: activeState
+      };
     }
 
     this.reloadCatalogueMap();
     const catalogue: any[] = Array.from(this.catalogueMap.values());
     const records = loadVerificationRecords();
 
-    // Determine target candidates
+    // Determine target candidates from authoritative persisted state
     let candidates: any[] = [];
     if (mode === 'unverified') {
       candidates = catalogue.filter(a => {
         const rec = records[a.id];
-        const isVerified = rec?.status === 'verified' || a.artwork?.verificationStatus === 'verified';
+        const url = a.artwork?.verifiedArtworkUrl || a.artwork?.originalArtworkUrl;
+        const isMissing = isPlaceholderArtworkUrl(url);
+        if (isMissing) return true;
+        const isVerified = rec?.status === 'verified' || rec?.status === 'auto_fixed' || (!rec && a.artwork?.verificationStatus === 'verified');
         return !isVerified;
       });
     } else if (mode === 'fix_missing') {
       candidates = catalogue.filter(a => {
+        const rec = records[a.id];
         const url = a.artwork?.verifiedArtworkUrl || a.artwork?.originalArtworkUrl;
-        return !url || url.includes('placeholder') || url.includes('default-poster');
+        const isMissing = isPlaceholderArtworkUrl(url) ||
+          (rec && isPlaceholderArtworkUrl(rec.currentArtworkUrl)) ||
+          Boolean(rec?.issue && (rec.issue.toLowerCase().includes('missing') || rec.issue.toLowerCase().includes('placeholder') || rec.issue.toLowerCase().includes('unreachable')));
+        return isMissing;
       });
     } else {
       candidates = [...catalogue];
@@ -236,10 +282,12 @@ class ArtworkScannerEngine {
       console.error('[ArtworkScanner] Fatal error in worker pool:', err.message);
     });
 
+    const jobState = this.getJobState();
     return {
       success: true,
       message: `Artwork verification job started (${mode}, batch=${tasks.length}).`,
-      job: this.getJobState()
+      job: jobState,
+      state: jobState
     };
   }
 
@@ -249,12 +297,28 @@ class ArtworkScannerEngine {
     if (!anime) throw new Error(`Anime record ${animeId} not found`);
 
     const operation = globalWorkerJobEngine.mapTaskTypeToOperation(task.type);
+    const seasonLabel = task.seasonId
+      ? `Season ${task.seasonId}`
+      : (anime.season ? `Season ${anime.season}` : (Array.isArray(anime.seasons) && anime.seasons.length > 0 ? `${anime.seasons.length} Seasons` : 'Main / All Seasons'));
+
+    const onWorkerStep = (step: string, source?: string, status?: 'working' | 'waiting' | 'retrying') => {
+      globalWorkerJobEngine.updateWorkerProgress(workerId, {
+        status: status || 'working',
+        currentAnimeId: anime.id,
+        currentAnimeTitle: anime.title,
+        seasonName: seasonLabel,
+        operation,
+        currentStep: step,
+        currentSource: source || 'AniList'
+      });
+    };
 
     globalWorkerJobEngine.updateWorkerProgress(workerId, {
       status: 'working',
       currentAnimeId: anime.id,
       currentAnimeTitle: anime.title,
-      seasonName: anime.season ? `Season ${anime.season}` : null,
+      seasonName: seasonLabel,
+      operation,
       currentStep: 'Querying external metadata sources...',
       currentSource: 'AniList / TVmaze / AniDB'
     });
@@ -271,11 +335,10 @@ class ArtworkScannerEngine {
       details: `Worker #${workerId} initiated ${operation} for "${anime.title}"`
     });
 
-    if (task.type === 'artwork_reverify' || task.type === 'artwork_search_again') {
-      globalWorkerJobEngine.updateWorkerProgress(workerId, {
-        currentStep: 'Running multi-pass search & candidate match...',
-        currentSource: 'AniList / TVmaze / AniDB'
-      });
+    let finalRes: any;
+
+    if (task.type === 'artwork_reverify' || task.type === 'artwork_search_again' || task.type === 'RETRY_VERIFICATION' || task.type === 'SEARCH_ARTWORK') {
+      onWorkerStep('Running multi-pass search & candidate match...', 'AniList / TVmaze / AniDB', 'working');
 
       globalWorkerJobEngine.recordActivityEvent({
         workerId,
@@ -289,11 +352,11 @@ class ArtworkScannerEngine {
         details: `Querying active sources (AniList, TVmaze, AniDB) for "${anime.title}"`
       });
 
-      const res = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true });
+      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, onWorkerStep });
 
-      globalWorkerJobEngine.updateWorkerProgress(workerId, { currentStep: 'Saving verification record...' });
+      onWorkerStep('Saving verification record & recalculating state...', finalRes.source || 'AniList', 'working');
 
-      if (res.replacedArtworkUrl) {
+      if (finalRes.replacedArtworkUrl) {
         globalWorkerJobEngine.recordActivityEvent({
           workerId,
           taskId: task.taskId,
@@ -301,19 +364,14 @@ class ArtworkScannerEngine {
           animeTitle: anime.title,
           operation,
           eventType: 'artwork_saved',
-          source: res.source || 'AniList',
+          source: finalRes.source || 'AniList',
           step: 'Verified artwork saved',
-          details: `Replaced artwork for "${anime.title}" with verified ${res.source || 'AniList'} poster`,
-          result: { url: res.replacedArtworkUrl }
+          details: `Replaced artwork for "${anime.title}" with verified ${finalRes.source || 'AniList'} poster`,
+          result: { url: finalRes.replacedArtworkUrl }
         });
       }
-
-      return res;
-    } else if (task.type === 'artwork_fix') {
-      globalWorkerJobEngine.updateWorkerProgress(workerId, {
-        currentStep: 'Evaluating candidate artwork usability...',
-        currentSource: 'Verification Records'
-      });
+    } else if (task.type === 'artwork_fix' || task.type === 'fix_missing' || task.type === 'FIX_ARTWORK' || task.type === 'FIX_MISSING') {
+      onWorkerStep('Evaluating candidate artwork usability...', 'Verification Records', 'working');
 
       globalWorkerJobEngine.recordActivityEvent({
         workerId,
@@ -329,83 +387,86 @@ class ArtworkScannerEngine {
 
       const records = loadVerificationRecords();
       const rec = records[anime.id];
-      const bestCandidate = rec?.candidates?.find((c: any) => c.confidence >= 0.50 && c.imageUrl);
+      const bestCandidate = rec?.candidates?.find((c: any) => c.confidence >= 0.45 && c.imageUrl && !isPlaceholderArtworkUrl(c.imageUrl));
 
       if (bestCandidate?.imageUrl) {
-        const inspection = await inspectArtworkImage(bestCandidate.imageUrl);
+        onWorkerStep(`Validating candidate image from ${bestCandidate.source || 'AniList'}...`, bestCandidate.source || 'AniList', 'working');
+        const inspection = await inspectArtworkImage(bestCandidate.imageUrl, true);
         if (inspection.usable && !inspection.isBlankOrPlaceholder) {
-          globalWorkerJobEngine.updateWorkerProgress(workerId, {
-            currentStep: 'Saving verified replacement artwork...',
-            currentSource: bestCandidate.source || 'AniList'
-          });
+          onWorkerStep('Saving & verifying replacement artwork...', bestCandidate.source || 'AniList', 'working');
 
-          globalWorkerJobEngine.recordActivityEvent({
-            workerId,
-            taskId: task.taskId,
-            animeId: anime.id,
-            animeTitle: anime.title,
-            operation,
-            eventType: 'replacement_found',
-            source: bestCandidate.source || 'AniList',
-            step: 'Valid high-confidence candidate matched',
-            details: `Matched candidate (${Math.round(bestCandidate.confidence * 100)}% confidence) from ${bestCandidate.source || 'AniList'}`
-          });
+          const currentUrl = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl || null;
+          const applied = applyArtworkUpdate(anime.id, bestCandidate.imageUrl, 'verified', currentUrl, bestCandidate.source);
+          const reloaded = globalDataStore.getCatalogueAnime(anime.id);
+          const savedUrl = reloaded?.artwork?.verifiedArtworkUrl;
 
-          applyArtworkUpdate(anime.id, bestCandidate.imageUrl, 'verified', null, bestCandidate.source);
-          records[anime.id] = {
-            ...records[anime.id],
-            animeId: anime.id,
-            animeTitle: anime.title,
-            status: 'auto_fixed',
-            confidence: bestCandidate.confidence,
-            currentArtworkUrl: bestCandidate.imageUrl,
-            replacedArtworkUrl: bestCandidate.imageUrl,
-            source: bestCandidate.source,
-            issue: null,
-            lastVerifiedAt: new Date().toISOString()
-          };
-          saveVerificationRecords(records);
+          if (applied && savedUrl === bestCandidate.imageUrl && !isPlaceholderArtworkUrl(savedUrl)) {
+            const reloadInspection = await inspectArtworkImage(savedUrl);
+            if (reloadInspection.usable && !reloadInspection.isBlankOrPlaceholder) {
+              globalWorkerJobEngine.recordActivityEvent({
+                workerId,
+                taskId: task.taskId,
+                animeId: anime.id,
+                animeTitle: anime.title,
+                operation,
+                eventType: 'replacement_found',
+                source: bestCandidate.source || 'AniList',
+                step: 'Valid high-confidence candidate matched & verified',
+                details: `Matched candidate (${Math.round(bestCandidate.confidence * 100)}% confidence) from ${bestCandidate.source || 'AniList'}`
+              });
 
-          globalWorkerJobEngine.recordActivityEvent({
-            workerId,
-            taskId: task.taskId,
-            animeId: anime.id,
-            animeTitle: anime.title,
-            operation,
-            eventType: 'artwork_saved',
-            source: bestCandidate.source || 'AniList',
-            step: 'Artwork update saved to database',
-            details: `Saved new poster for "${anime.title}"`,
-            result: { url: bestCandidate.imageUrl }
-          });
+              records[anime.id] = {
+                ...records[anime.id],
+                animeId: anime.id,
+                animeTitle: anime.title,
+                status: 'auto_fixed',
+                confidence: bestCandidate.confidence,
+                currentArtworkUrl: bestCandidate.imageUrl,
+                replacedArtworkUrl: bestCandidate.imageUrl,
+                source: bestCandidate.source,
+                issue: null,
+                lastVerifiedAt: new Date().toISOString()
+              };
+              saveVerificationRecords(records);
 
-          return { status: 'auto_fixed', currentArtworkUrl: bestCandidate.imageUrl };
+              globalWorkerJobEngine.recordActivityEvent({
+                workerId,
+                taskId: task.taskId,
+                animeId: anime.id,
+                animeTitle: anime.title,
+                operation,
+                eventType: 'artwork_saved',
+                source: bestCandidate.source || 'AniList',
+                step: 'Artwork update saved & verified in database',
+                details: `Saved and verified new poster for "${anime.title}"`,
+                result: { url: bestCandidate.imageUrl }
+              });
+
+              finalRes = { status: 'auto_fixed', currentArtworkUrl: bestCandidate.imageUrl };
+            }
+          }
         }
       }
 
-      globalWorkerJobEngine.updateWorkerProgress(workerId, {
-        currentStep: 'Searching replacement poster from sources...',
-        currentSource: 'AniList / Jikan'
-      });
+      if (!finalRes) {
+        onWorkerStep('Searching replacement poster from trusted sources...', 'AniList / TVmaze', 'working');
 
-      globalWorkerJobEngine.recordActivityEvent({
-        workerId,
-        taskId: task.taskId,
-        animeId: anime.id,
-        animeTitle: anime.title,
-        operation,
-        eventType: 'source_searched',
-        source: 'AniList & Jikan',
-        step: 'Searching fresh replacement poster',
-        details: `Fresh source search for missing poster on "${anime.title}"`
-      });
+        globalWorkerJobEngine.recordActivityEvent({
+          workerId,
+          taskId: task.taskId,
+          animeId: anime.id,
+          animeTitle: anime.title,
+          operation,
+          eventType: 'source_searched',
+          source: 'AniList & TVmaze',
+          step: 'Searching fresh replacement poster',
+          details: `Fresh source search for missing poster on "${anime.title}"`
+        });
 
-      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true });
+        finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, forceFreshSearch: true, onWorkerStep });
+      }
     } else {
-      globalWorkerJobEngine.updateWorkerProgress(workerId, {
-        currentStep: 'Checking artwork relevance & dimensions...',
-        currentSource: 'AniList'
-      });
+      onWorkerStep('Checking artwork relevance & dimensions...', 'AniList', 'working');
 
       globalWorkerJobEngine.recordActivityEvent({
         workerId,
@@ -419,8 +480,14 @@ class ArtworkScannerEngine {
         details: `Standard artwork check for "${anime.title}"`
       });
 
-      return await verifyAnimeEntry(anime, { autoFixEnabled: true, operator });
+      finalRes = await verifyAnimeEntry(anime, { autoFixEnabled: true, operator, onWorkerStep });
     }
+
+    // Persist result immediately so authoritative counts and disk state are always synchronized
+    globalDataStore.flushCatalogueSync();
+    globalDataStore.flushRecordsSync();
+
+    return finalRes;
   }
 
   // Enqueue High Priority Re-verification Tasks (for Needs Review Workspace)
@@ -504,7 +571,8 @@ class ArtworkScannerEngine {
 
     for (const anime of this.catalogueMap.values()) {
       const rec = records[anime.id];
-      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || !anime.artwork?.verifiedArtworkUrl;
+      const url = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl;
+      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || isPlaceholderArtworkUrl(url);
       if (isUnresolved) {
         targetIds.push(anime.id);
       }
@@ -530,7 +598,8 @@ class ArtworkScannerEngine {
 
     for (const anime of this.catalogueMap.values()) {
       const rec = records[anime.id];
-      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || !anime.artwork?.verifiedArtworkUrl;
+      const url = anime.artwork?.verifiedArtworkUrl || anime.artwork?.originalArtworkUrl;
+      const isUnresolved = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify' || anime.artwork?.verificationStatus === 'needs_review' || isPlaceholderArtworkUrl(url);
       if (isUnresolved) {
         targetIds.push(anime.id);
       }
@@ -551,7 +620,8 @@ class ArtworkScannerEngine {
 
   public pauseScan(operator = 'Owner') {
     globalWorkerJobEngine.pauseJob();
-    return { success: true, message: 'Job paused.' };
+    const state = this.getJobState();
+    return { success: true, message: 'Job paused.', state, job: state };
   }
 
   public resumeScan(operator = 'Owner') {
@@ -563,18 +633,21 @@ class ArtworkScannerEngine {
       console.error('[ArtworkScanner] Error resuming pool:', err.message);
     });
 
-    return { success: true, message: 'Job resumed successfully.' };
+    const state = this.getJobState();
+    return { success: true, message: 'Job resumed successfully.', state, job: state };
   }
 
   public stopScan(operator = 'Owner') {
     globalWorkerJobEngine.stopJob();
-    return { success: true, message: 'Job stopped. Completed progress retained.' };
+    const state = this.getJobState();
+    return { success: true, message: 'Job stopped. Completed progress retained.', state, job: state };
   }
 
   public resetScan(operator = 'Owner') {
     globalWorkerJobEngine.stopJob();
     logAdminAction('Reset Artwork Verification Scan', operator, 'success');
-    return { success: true, message: 'Artwork verification job state reset.' };
+    const state = this.getJobState();
+    return { success: true, message: 'Artwork verification job state reset.', state, job: state };
   }
 
   // --- INSPECT ALL: Complete Non-Destructive Catalogue Inspection ---
@@ -583,7 +656,7 @@ class ArtworkScannerEngine {
       throw new Error('Catalogue file not found.');
     }
 
-    const catalogue: any[] = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8'));
+    const catalogue: any[] = globalDataStore.getAllCatalogueAnime();
     const records = loadVerificationRecords();
     const fakeIssues = loadFakeAnimeIssues();
 
@@ -601,7 +674,7 @@ class ArtworkScannerEngine {
       const rec = records[anime.id];
       const isFake = fakeIssues.some(f => f.catalogueId === anime.id && f.status === 'active');
 
-      const isMissing = !artUrl || artUrl.includes('placeholder') || artUrl.includes('default-poster');
+      const isMissing = isPlaceholderArtworkUrl(artUrl);
       const hasIssue = rec?.status === 'needs_review' || rec?.status === 'unable_to_verify';
 
       if (isFake) {

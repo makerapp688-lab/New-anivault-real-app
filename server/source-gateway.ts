@@ -532,7 +532,8 @@ export class SourceGateway {
   public async executeRequest<T>(
     sourceId: string,
     requestKey: string,
-    fetchFn: () => Promise<{ success: boolean; data?: T; matches?: T[]; error?: string; statusCode?: number; headers?: Record<string, string> | Headers }>
+    fetchFn: () => Promise<{ success: boolean; data?: T; matches?: T[]; error?: string; statusCode?: number; headers?: Record<string, string> | Headers }>,
+    onStatusChange?: (status: 'waiting' | 'working' | 'retrying', step: string) => void
   ): Promise<{
     success: boolean;
     data?: T;
@@ -562,6 +563,7 @@ export class SourceGateway {
     const cachedData = this.getCached<any>(cacheKey);
     if (cachedData) {
       if (metric) metric.cacheHits++;
+      onStatusChange?.('working', `Cache hit on ${sourceId} for "${requestKey}"`);
       return {
         success: true,
         matches: Array.isArray(cachedData) ? cachedData : undefined,
@@ -585,17 +587,26 @@ export class SourceGateway {
     const fullReqKey = `${key}:${requestKey.toLowerCase().trim()}`;
     if (this.inFlightRequests.has(fullReqKey)) {
       if (metric) metric.deduplicatedRequests++;
+      onStatusChange?.('waiting', `Awaiting shared in-flight ${sourceId} query for "${requestKey}"`);
       const result = await this.inFlightRequests.get(fullReqKey);
       return { ...result, isDeduplicated: true };
     }
 
     // 4. Create and register Singleflight Execution Promise
     const executionPromise = (async () => {
+      const limit = this.limits.get(key);
+      const maxConcurrent = limit ? limit.currentConcurrent : 2;
+      const currentActive = this.activeRequestCounts.get(key) || 0;
+      if (currentActive >= maxConcurrent) {
+        onStatusChange?.('waiting', `Waiting for ${sourceId} concurrency slot (${currentActive}/${maxConcurrent} busy)`);
+      }
+
       // Acquire Concurrency Semaphore
       const release = await this.acquireSemaphore(key);
 
       try {
         // Acquire Rate Limit Token
+        onStatusChange?.('waiting', `Acquiring ${sourceId} rate-limit token`);
         await this.acquireRateLimitToken(key);
 
         let attempts = 0;
@@ -605,6 +616,7 @@ export class SourceGateway {
         while (attempts < maxAttempts) {
           attempts++;
           try {
+            onStatusChange?.('working', `Querying ${sourceId} for "${requestKey}" (attempt ${attempts})`);
             const res = await fetchFn();
             const latencyMs = Date.now() - startTime;
 
@@ -626,9 +638,9 @@ export class SourceGateway {
 
             // Exponential backoff + jitter for retry
             const backoffMs = errorClassification.retryAfterMs || Math.min(2500, Math.pow(2, attempts) * 350 + Math.random() * 200);
+            onStatusChange?.('retrying', `Retrying ${sourceId} after ${Math.round(backoffMs)}ms backoff (${res.error || 'transient error'})`);
             await new Promise(r => setTimeout(r, backoffMs));
           } catch (err: any) {
-            const latencyMs = Date.now() - startTime;
             const errorClassification = this.classifyError(err);
             this.recordFailure(key, err.message, undefined, errorClassification.retryAfterMs);
 
@@ -637,6 +649,7 @@ export class SourceGateway {
             }
 
             const backoffMs = Math.min(2500, Math.pow(2, attempts) * 350 + Math.random() * 200);
+            onStatusChange?.('retrying', `Retrying ${sourceId} after ${Math.round(backoffMs)}ms backoff (${err.message})`);
             await new Promise(r => setTimeout(r, backoffMs));
           }
         }

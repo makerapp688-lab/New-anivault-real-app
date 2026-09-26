@@ -14,15 +14,20 @@ export interface WorkerPoolConfig {
 
 export interface JobTask<T = any> {
   taskId: string;
+  jobId: string;
   animeId: string;
   seasonId?: string | null;
   title: string;
   type: string;
   payload: T;
   priority: TaskPriority;
-  status: 'queued' | 'claimed' | 'completed' | 'failed' | 'retrying';
+  status: 'queued' | 'claiming' | 'running' | 'claimed' | 'completed' | 'failed' | 'retrying' | 'waiting';
+  workerId?: number | null;
   claimedByWorkerId?: number | null;
   claimedAt?: number | null;
+  startedAt?: number | null;
+  updatedAt?: number;
+  lastHeartbeat?: number | null;
   leaseExpiresAt?: number | null;
   completedAt?: string | null;
   enqueuedAt?: number;
@@ -302,10 +307,28 @@ export class ReusableWorkerJobEngine {
   // Performance rate samples
   private rateSamples: Array<{ timestamp: number; count: number }> = [];
 
+  // Live SSE / state change subscribers
+  private stateListeners = new Set<() => void>();
+
   constructor() {
     this.initWorkers();
     this.loadJobState();
     this.loadActivityEvents();
+  }
+
+  public onStateChange(listener: () => void): () => void {
+    this.stateListeners.add(listener);
+    return () => {
+      this.stateListeners.delete(listener);
+    };
+  }
+
+  public notifyStateListeners() {
+    for (const listener of this.stateListeners) {
+      try {
+        listener();
+      } catch {}
+    }
   }
 
   public getWorkerPoolConfig(): WorkerPoolConfig {
@@ -423,6 +446,14 @@ export class ReusableWorkerJobEngine {
     try {
       if (fs.existsSync(JOB_STATE_PATH)) {
         const saved = JSON.parse(fs.readFileSync(JOB_STATE_PATH, 'utf-8'));
+        if (saved.mode === 'benchmark') {
+          this.jobId = 'job_init';
+          this.status = 'idle';
+          this.completedTaskSet.clear();
+          this.failedTaskSet.clear();
+          this.initWorkers();
+          return;
+        }
         this.jobId = saved.jobId || 'job_init';
         this.jobType = saved.jobType || 'artwork_verification';
         this.mode = saved.mode || 'all';
@@ -433,10 +464,10 @@ export class ReusableWorkerJobEngine {
         this.lastLog = saved.lastLog || 'Job state reloaded.';
 
         if (Array.isArray(saved.completedTaskIds)) {
-          this.completedTaskSet = new Set(saved.completedTaskIds);
+          this.completedTaskSet = new Set(saved.completedTaskIds.filter((id: string) => !id.includes('bench-anime-')));
         }
         if (Array.isArray(saved.failedTaskIds)) {
-          this.failedTaskSet = new Set(saved.failedTaskIds);
+          this.failedTaskSet = new Set(saved.failedTaskIds.filter((id: string) => !id.includes('bench-anime-')));
         }
         if (saved.poolConfig && typeof saved.poolConfig.currentWorkers === 'number') {
           this.poolConfig.currentWorkers = Math.max(1, Math.min(50, saved.poolConfig.currentWorkers));
@@ -459,6 +490,7 @@ export class ReusableWorkerJobEngine {
 
   public saveJobState() {
     try {
+      if (this.mode === 'benchmark') return;
       if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
       const snapshot = this.getSnapshot();
       const tempPath = `${JOB_STATE_PATH}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
@@ -502,30 +534,44 @@ export class ReusableWorkerJobEngine {
         this.claimedTasks.delete(taskId);
 
         // Safely release anime lease and season lease
+        const task = this.tasksMap.get(taskId);
         if (claim.animeId) {
           this.releaseAnimeLease(claim.animeId);
+          if (task?.seasonId) {
+            this.releaseSeasonLease(claim.animeId, task.seasonId);
+          }
         }
 
-        // Recover task
-        const task = this.tasksMap.get(taskId);
-        if (task && task.status === 'claimed') {
+        // Recover task: never mark completed, never lose completed work, prevent duplicate processing
+        if (task && task.status !== 'completed' && task.status !== 'failed') {
           if (task.retryCount < task.maxRetries) {
             task.retryCount++;
             task.status = 'queued';
+            task.workerId = null;
             task.claimedByWorkerId = null;
             task.claimedAt = null;
+            task.startedAt = null;
             task.leaseExpiresAt = null;
+            task.lastHeartbeat = null;
+            task.updatedAt = now;
             task.retryAfter = null; // Healthy worker can claim immediately
-            this.priorityQueues[task.priority].unshift(taskId);
+            if (!this.priorityQueues[task.priority].includes(taskId)) {
+              this.priorityQueues[task.priority].unshift(taskId);
+            }
           } else {
             task.status = 'failed';
+            task.workerId = null;
+            task.claimedByWorkerId = null;
+            task.leaseExpiresAt = null;
+            task.updatedAt = now;
+            task.completedAt = new Date().toISOString();
             task.lastError = `Max retries exceeded after worker #${claim.workerId} heartbeat timeout`;
             this.failedTaskSet.add(taskId);
           }
         }
 
         // Reset stale worker
-        if (worker && (worker.status === 'working' || worker.status === 'busy' || worker.status === 'claiming')) {
+        if (worker && worker.currentTaskId === taskId) {
           worker.status = 'idle';
           worker.health = 'stale';
           worker.currentTaskId = null;
@@ -650,13 +696,62 @@ export class ReusableWorkerJobEngine {
       tasksPerMinute = Math.round(processed / totalElapsedMin);
     }
 
-    const workers = Array.from(this.workerMap.values());
-    const activeCount = workers.filter(w => w.status === 'working' || w.status === 'busy').length;
+    // Enforce authoritative worker state: NEVER show IDLE while a worker owns an active task
+    const activeWorkerClaimsByWorkerId = new Map<number, { taskId: string; animeId: string }>();
+    for (const [tId, c] of this.claimedTasks.entries()) {
+      activeWorkerClaimsByWorkerId.set(c.workerId, { taskId: tId, animeId: c.animeId });
+    }
+
+    const workers: WorkerInfo[] = Array.from(this.workerMap.values()).map(w => {
+      const ownedClaim = activeWorkerClaimsByWorkerId.get(w.workerId);
+      const activeTaskId = w.currentTaskId || ownedClaim?.taskId || null;
+      const ownedTask = activeTaskId ? this.tasksMap.get(activeTaskId) : null;
+      let effectiveStatus = w.status;
+
+      if (activeTaskId && ownedTask && ownedTask.status !== 'completed' && ownedTask.status !== 'failed') {
+        if (effectiveStatus === 'idle' || effectiveStatus === 'stopped') {
+          effectiveStatus = ownedTask.status === 'claiming'
+            ? 'claiming'
+            : ownedTask.status === 'waiting'
+            ? 'waiting'
+            : ownedTask.status === 'retrying'
+            ? 'retrying'
+            : 'working';
+        }
+      } else if (!activeTaskId && (effectiveStatus === 'working' || effectiveStatus === 'claiming' || effectiveStatus === 'waiting' || effectiveStatus === 'busy')) {
+        effectiveStatus = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
+      }
+
+      const hbAge = now - (w.lastHeartbeat || now);
+      const effectiveHealth: 'healthy' | 'stale' | 'error' =
+        effectiveStatus === 'error'
+          ? 'error'
+          : (activeTaskId && hbAge > LEASE_DURATION_MS)
+          ? 'stale'
+          : (w.health || 'healthy');
+
+      return {
+        ...w,
+        status: effectiveStatus,
+        currentTaskId: activeTaskId,
+        currentAnimeId: w.currentAnimeId || ownedTask?.animeId || null,
+        currentAnimeTitle: w.currentAnimeTitle || ownedTask?.title || null,
+        seasonName: w.seasonName || (ownedTask?.seasonId ? `Season ${ownedTask.seasonId}` : 'Main / All Seasons'),
+        operation: w.operation || (ownedTask ? this.mapTaskTypeToOperation(ownedTask.type) : null),
+        currentSource: w.currentSource || (activeTaskId ? 'AniList' : null),
+        currentStep: w.currentStep || (activeTaskId ? 'Executing verification pipeline' : null),
+        retryCount: ownedTask ? ownedTask.retryCount : (w.retryCount || 0),
+        health: effectiveHealth
+      };
+    });
+
+    const activeCount = workers.filter(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy').length;
     const idleCount = workers.filter(w => w.status === 'idle').length;
-    const waitingCount = workers.filter(w => w.status === 'waiting' || w.status === 'claiming').length;
+    const waitingCount = workers.filter(w => w.status === 'waiting').length;
     const retryingCount = workers.filter(w => w.status === 'retrying' || w.status === 'backing_off').length;
+    const busyOrActiveCount = activeCount + waitingCount + retryingCount;
     const utilizationPercent = this.poolConfig.currentWorkers > 0
-      ? Math.round((activeCount / this.poolConfig.currentWorkers) * 100)
+      ? Math.round((busyOrActiveCount / this.poolConfig.currentWorkers) * 100)
       : 0;
 
     const dbStoreMetrics = globalDataStore.getStoreMetrics();
@@ -699,7 +794,7 @@ export class ReusableWorkerJobEngine {
         heapTotalMb,
         status: systemHealthStatus
       },
-      activeWorkers: Array.from(this.workerMap.values()),
+      activeWorkers: workers,
       liveAnimeRegistry: liveAnimeRegistryObj,
       activeAnimeLocks,
       activityEvents: this.getActivityEvents(),
@@ -755,6 +850,7 @@ export class ReusableWorkerJobEngine {
 
       const task: JobTask<T> = {
         taskId: deterministicId,
+        jobId: this.jobId,
         animeId,
         seasonId,
         title: item.title,
@@ -762,7 +858,10 @@ export class ReusableWorkerJobEngine {
         payload: item.payload,
         priority,
         status: 'queued',
+        workerId: null,
+        claimedByWorkerId: null,
         enqueuedAt: Date.now(),
+        updatedAt: Date.now(),
         retryCount: 0,
         maxRetries: 2
       };
@@ -773,12 +872,35 @@ export class ReusableWorkerJobEngine {
 
     this.lastLog = `Launched ${mode} job with ${this.tasksMap.size} unique tasks across ${this.poolConfig.currentWorkers} coordinated workers.`;
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   public enqueueHighPriorityTasks<T>(
     tasks: Array<{ taskId: string; animeId?: string; seasonId?: string | null; title: string; payload: T; type?: string }>
   ) {
+    // If previous job was idle or completed, initialize a fresh active job session so progress counters are clean
+    if (this.status === 'idle' || this.status === 'completed') {
+      this.jobId = 'job_' + Date.now();
+      this.mode = tasks[0]?.type || 'high_priority';
+      this.status = 'running';
+      this.startedAt = new Date().toISOString();
+      this.finishedAt = null;
+      this.tasksMap.clear();
+      this.claimedTasks.clear();
+      this.animeLeases.clear();
+      this.seasonLeases.clear();
+      this.liveAnimeRegistry.clear();
+      this.completedTaskSet.clear();
+      this.failedTaskSet.clear();
+      this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+    } else if (this.status === 'paused') {
+      this.status = 'running';
+      this.shouldPause = false;
+      this.shouldStop = false;
+    }
+
     let addedCount = 0;
+    const now = Date.now();
     for (const item of tasks) {
       const animeId = item.animeId || (item.payload as any)?.id || item.taskId;
       const type = item.type || 'artwork_reverify';
@@ -791,7 +913,12 @@ export class ReusableWorkerJobEngine {
       // Deduplication check:
       const existing = this.tasksMap.get(deterministicId);
       if (existing) {
-        if (existing.status === 'claimed' || (existing.status === 'queued' && this.priorityQueues.HIGH.includes(deterministicId))) {
+        const isActivelyOwned =
+          existing.status === 'claiming' ||
+          existing.status === 'running' ||
+          existing.status === 'waiting' ||
+          existing.status === 'claimed';
+        if (isActivelyOwned || (existing.status === 'queued' && this.priorityQueues.HIGH.includes(deterministicId))) {
           // Already actively running or in high queue, skip duplicate
           continue;
         }
@@ -805,6 +932,7 @@ export class ReusableWorkerJobEngine {
 
       const task: JobTask<T> = {
         taskId: deterministicId,
+        jobId: this.jobId,
         animeId,
         seasonId,
         title: item.title,
@@ -812,7 +940,10 @@ export class ReusableWorkerJobEngine {
         payload: item.payload,
         priority: 'HIGH',
         status: 'queued',
-        enqueuedAt: Date.now(),
+        workerId: null,
+        claimedByWorkerId: null,
+        enqueuedAt: now,
+        updatedAt: now,
         retryCount: 0,
         maxRetries: 2
       };
@@ -826,6 +957,37 @@ export class ReusableWorkerJobEngine {
 
     this.lastLog = `Queued ${addedCount} high-priority tasks into active worker queue.`;
     this.saveJobState();
+    this.notifyStateListeners();
+  }
+
+  public resolveManualAnimeAction(animeId: string, animeTitle: string, operation: string, details: string) {
+    // Remove any queued tasks for this animeId so workers do not overwrite manual owner decision
+    for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+      const q = this.priorityQueues[prio];
+      for (let i = q.length - 1; i >= 0; i--) {
+        const t = this.tasksMap.get(q[i]);
+        if (t && t.animeId === animeId && t.status === 'queued') {
+          q.splice(i, 1);
+          t.status = 'completed';
+          t.completedAt = new Date().toISOString();
+          t.updatedAt = Date.now();
+          this.completedTaskSet.add(t.taskId);
+        }
+      }
+    }
+
+    this.recordActivityEvent({
+      workerId: 1,
+      animeId,
+      animeTitle,
+      operation,
+      eventType: 'artwork_saved',
+      source: 'Owner Action',
+      step: operation,
+      details
+    });
+    this.saveJobState();
+    this.notifyStateListeners();
   }
 
   public mapTaskTypeToOperation(type: string): string {
@@ -854,34 +1016,60 @@ export class ReusableWorkerJobEngine {
 
     if (worker.currentTaskId) {
       const claim = this.claimedTasks.get(worker.currentTaskId);
-      if (claim) claim.leaseExpiresAt = newExpiry;
+      if (claim && claim.workerId === workerId) {
+        claim.leaseExpiresAt = newExpiry;
+      }
       const task = this.tasksMap.get(worker.currentTaskId);
-      if (task) task.leaseExpiresAt = newExpiry;
+      if (task && task.claimedByWorkerId === workerId) {
+        task.leaseExpiresAt = newExpiry;
+        task.lastHeartbeat = now;
+        task.updatedAt = now;
+      }
     }
 
     if (worker.currentAnimeId) {
       const lease = this.animeLeases.get(worker.currentAnimeId);
-      if (lease) lease.leaseExpiresAt = newExpiry;
+      if (lease && lease.workerId === workerId) lease.leaseExpiresAt = newExpiry;
       const reg = this.liveAnimeRegistry.get(worker.currentAnimeId);
-      if (reg) {
+      if (reg && reg.workerId === workerId) {
         reg.leaseExpiresAt = newExpiry;
         reg.lastHeartbeat = now;
         if (step !== undefined) reg.step = step;
         if (source !== undefined) reg.source = source;
       }
     }
+    this.notifyStateListeners();
   }
 
   public updateWorkerProgress(workerId: number, update: Partial<WorkerInfo>) {
     const worker = this.workerMap.get(workerId);
     if (worker) {
-      if (update.status !== undefined) worker.status = update.status;
+      if (update.status !== undefined) {
+        // Never allow setting IDLE while worker owns an active task
+        if (update.status === 'idle' && worker.currentTaskId) {
+          worker.status = 'working';
+        } else {
+          worker.status = update.status;
+        }
+      }
+      if (update.currentAnimeId !== undefined) worker.currentAnimeId = update.currentAnimeId;
+      if (update.currentAnimeTitle !== undefined) worker.currentAnimeTitle = update.currentAnimeTitle;
+      if (update.seasonName !== undefined) worker.seasonName = update.seasonName;
       if (update.currentStep !== undefined) worker.currentStep = update.currentStep;
       if (update.currentSource !== undefined) worker.currentSource = update.currentSource;
       if (update.operation !== undefined) worker.operation = update.operation;
       if (update.retryCount !== undefined) worker.retryCount = update.retryCount;
       if (update.health !== undefined) worker.health = update.health;
       if (update.lastError !== undefined) worker.lastError = update.lastError;
+      if (worker.currentTaskId) {
+        const task = this.tasksMap.get(worker.currentTaskId);
+        if (task && task.claimedByWorkerId === workerId && task.status !== 'completed' && task.status !== 'failed') {
+          if (update.status === 'waiting') task.status = 'waiting';
+          else if (update.status === 'retrying') task.status = 'retrying';
+          else if (update.status === 'working') task.status = 'running';
+          task.updatedAt = Date.now();
+        }
+      }
       this.heartbeat(workerId, update.currentStep ?? undefined, update.currentSource ?? undefined);
     }
   }
@@ -931,7 +1119,7 @@ export class ReusableWorkerJobEngine {
         const taskId = queue[i];
         const task = this.tasksMap.get(taskId);
 
-        if (!task || task.status !== 'queued') {
+        if (!task || (task.status !== 'queued' && task.status !== 'retrying')) {
           queue.splice(i, 1);
           i--;
           continue;
@@ -989,10 +1177,14 @@ export class ReusableWorkerJobEngine {
     const animeId = task.animeId || task.payload?.id || chosenTaskId;
     const leaseExpiresAt = now + LEASE_DURATION_MS;
 
-    // ATOMIC TASK CLAIM
-    task.status = 'claimed';
+    // ATOMIC TASK CLAIM (QUEUED -> CLAIMING)
+    task.status = 'claiming';
+    task.workerId = workerId;
     task.claimedByWorkerId = workerId;
     task.claimedAt = now;
+    task.startedAt = now;
+    task.updatedAt = now;
+    task.lastHeartbeat = now;
     task.leaseExpiresAt = leaseExpiresAt;
 
     // ATOMIC ANIME LEASE CLAIM
@@ -1027,15 +1219,15 @@ export class ReusableWorkerJobEngine {
       animeId
     });
 
-    // Update worker info
-    worker.status = 'working';
+    // Update worker info (CLAIMING initially; transitions to WORKING on execution)
+    worker.status = 'claiming';
     worker.currentTaskId = chosenTaskId;
     worker.currentAnimeId = animeId;
     worker.currentAnimeTitle = task.title;
-    worker.seasonName = task.seasonId ? `Season ${task.seasonId}` : (task.payload?.season ? `Season ${task.payload.season}` : null);
+    worker.seasonName = task.seasonId ? `Season ${task.seasonId}` : (task.payload?.season ? `Season ${task.payload.season}` : 'Main / All Seasons');
     worker.operation = this.mapTaskTypeToOperation(task.type);
     worker.currentSource = 'Local Catalogue';
-    worker.currentStep = 'Claimed task & initialized';
+    worker.currentStep = 'Claimed task & initialized lease';
     worker.taskStartedAt = now;
     worker.lastHeartbeat = now;
     worker.leaseExpiresAt = leaseExpiresAt;
@@ -1072,6 +1264,7 @@ export class ReusableWorkerJobEngine {
 
     this.lastLog = `[Worker #${workerId}] Claimed: ${task.title}`;
     this.saveJobState();
+    this.notifyStateListeners();
     return task;
   }
 
@@ -1079,6 +1272,19 @@ export class ReusableWorkerJobEngine {
   public completeTask(workerId: number, taskId: string, result: any, isError = false) {
     const now = Date.now();
     const task = this.tasksMap.get(taskId);
+    const activeClaim = this.claimedTasks.get(taskId);
+
+    // Ownership Guard: If task was already recovered by watchdog and claimed by another worker, ignore stale worker completion
+    if (activeClaim && activeClaim.workerId !== workerId) {
+      return;
+    }
+    if (task && task.claimedByWorkerId && task.claimedByWorkerId !== workerId) {
+      return;
+    }
+    if (task && task.status === 'completed') {
+      return;
+    }
+
     const animeId = task?.animeId || task?.payload?.id || taskId;
 
     // 1. Release anime lease, season lease, and live registry
@@ -1093,6 +1299,7 @@ export class ReusableWorkerJobEngine {
     // 3. Update task
     if (task) {
       task.leaseExpiresAt = null;
+      task.updatedAt = now;
       task.result = result;
 
       if (!isError && result) {
@@ -1107,10 +1314,13 @@ export class ReusableWorkerJobEngine {
         if (task.retryCount < task.maxRetries) {
           task.retryCount++;
           task.status = 'retrying';
-          task.retryAfter = now + (task.retryCount * 2000); // 2s, 4s backoff
+          task.retryAfter = now + (task.retryCount * 1500); // 1.5s, 3s backoff
+          task.workerId = null;
           task.claimedByWorkerId = null;
           task.claimedAt = null;
-          this.priorityQueues[task.priority].push(taskId);
+          if (!this.priorityQueues[task.priority].includes(taskId)) {
+            this.priorityQueues[task.priority].push(taskId);
+          }
         } else {
           task.status = 'failed';
           task.completedAt = new Date().toISOString();
@@ -1187,6 +1397,7 @@ export class ReusableWorkerJobEngine {
     }
 
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   // --- Coordinated 50-Worker Processing Pool Loop ---
@@ -1244,7 +1455,11 @@ export class ReusableWorkerJobEngine {
           }, HEARTBEAT_INTERVAL_MS);
 
           try {
-            // 3. Process the task
+            // 3. Process the task (CLAIMING -> RUNNING)
+            task.status = 'running';
+            task.updatedAt = Date.now();
+            worker.status = 'working';
+            this.notifyStateListeners();
             const result = await processor(task, workerId);
             clearInterval(heartbeatTimer);
             this.completeTask(workerId, task.taskId, result, false);
@@ -1305,12 +1520,16 @@ export class ReusableWorkerJobEngine {
     }
 
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   public pauseJob() {
     this.shouldPause = true;
     this.status = 'paused';
     this.lastLog = 'Job paused by owner.';
+    for (const w of this.workerMap.values()) {
+      if (!w.currentTaskId) w.status = 'paused';
+    }
     globalDataStore.flushCatalogueSync();
     globalDataStore.flushRecordsSync();
     this.recordActivityEvent({
@@ -1320,14 +1539,19 @@ export class ReusableWorkerJobEngine {
       details: 'Job execution paused by owner request.'
     });
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   public resumeJob() {
     this.shouldPause = false;
     this.shouldStop = false;
     this.status = 'running';
+    for (const w of this.workerMap.values()) {
+      if (w.status === 'paused' || w.status === 'stopped') w.status = 'idle';
+    }
     this.lastLog = 'Job resumed by owner.';
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   public stopJob() {
@@ -1345,6 +1569,18 @@ export class ReusableWorkerJobEngine {
     }
     this.seasonLeases.clear();
     this.claimedTasks.clear();
+    for (const w of this.workerMap.values()) {
+      w.status = 'stopped';
+      w.currentTaskId = null;
+      w.currentAnimeId = null;
+      w.currentAnimeTitle = null;
+      w.seasonName = null;
+      w.operation = null;
+      w.currentSource = null;
+      w.currentStep = null;
+      w.taskStartedAt = null;
+      w.leaseExpiresAt = null;
+    }
 
     this.lastLog = 'Job stopped by owner.';
     this.recordActivityEvent({
@@ -1354,6 +1590,7 @@ export class ReusableWorkerJobEngine {
       details: 'Job execution stopped by owner request.'
     });
     this.saveJobState();
+    this.notifyStateListeners();
   }
 
   private saveJobHistory() {

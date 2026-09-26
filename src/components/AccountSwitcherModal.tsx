@@ -20,7 +20,8 @@ import {
   removeSavedAccount,
   getAccountAvatar,
   getAccountsDb,
-  saveAccountsDb
+  saveAccountsDb,
+  resolveOwnerUsername
 } from '../utils/userStorage.ts';
 
 interface AccountSwitcherModalProps {
@@ -57,7 +58,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
       if (o && o.email?.trim().toLowerCase() === 'makerapp688@gmail.com') {
         return {
           exists: true,
-          username: o.username || 'Death197',
+          username: resolveOwnerUsername(o.username),
           email: o.email,
           avatar: getAccountAvatar('usr_owner')
         };
@@ -107,10 +108,11 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
         const data = await res.json();
         const db = getAccountsDb();
         if (data.isAuthorized && data.ownerExists && data.owner) {
+          const resolvedUsername = resolveOwnerUsername(data.owner.username);
           db['usr_owner'] = {
             id: 'usr_owner',
-            username: data.owner.username,
-            name: data.owner.username,
+            username: resolvedUsername,
+            name: resolvedUsername,
             email: data.owner.email,
             avatar: getAccountAvatar('usr_owner') || undefined,
             provider: 'email',
@@ -121,7 +123,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
           saveAccountsDb(db);
           setOwnerInfo({
             exists: true,
-            username: data.owner.username,
+            username: resolvedUsername,
             email: data.owner.email,
             avatar: getAccountAvatar('usr_owner')
           });
@@ -322,7 +324,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
                     {/* [Owner Username] {owner} */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-sm font-black text-white tracking-tight truncate">
-                        {ownerInfo.username || 'Owner'}
+                        {resolveOwnerUsername(ownerInfo.username)}
                       </span>
                       <span className="text-[10px] font-mono font-bold text-amber-400 border border-amber-400/70 bg-amber-500/15 px-1.5 py-0.5 rounded-md shadow-xs shadow-amber-500/10 inline-flex items-center gap-1">
                         <Sparkles className="w-2.5 h-2.5 text-amber-400" />

@@ -1,5 +1,71 @@
 [
   {
+    "jobId": "job_1790418066858",
+    "jobType": "artwork_verification",
+    "mode": "artwork_fix",
+    "startedAt": "2026-09-26T10:21:06.858Z",
+    "finishedAt": "2026-09-26T10:21:07.035Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790418030467",
+    "jobType": "artwork_verification",
+    "mode": "artwork_search_again",
+    "startedAt": "2026-09-26T10:20:30.467Z",
+    "finishedAt": "2026-09-26T10:20:30.612Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790418030320",
+    "jobType": "artwork_verification",
+    "mode": "artwork_reverify",
+    "startedAt": "2026-09-26T10:20:30.320Z",
+    "finishedAt": "2026-09-26T10:20:30.463Z",
+    "requestedBatchSize": null,
+    "completedCount": 1,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790417959113",
+    "jobType": "artwork_verification",
+    "mode": "fix_missing",
+    "startedAt": "2026-09-26T10:19:19.113Z",
+    "finishedAt": "2026-09-26T10:20:30.132Z",
+    "requestedBatchSize": null,
+    "completedCount": 11,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790417898381",
+    "jobType": "artwork_verification",
+    "mode": "fix_missing",
+    "startedAt": "2026-09-26T10:18:18.381Z",
+    "finishedAt": "2026-09-26T10:19:18.927Z",
+    "requestedBatchSize": 15,
+    "completedCount": 15,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
+    "jobId": "job_1790414503686",
+    "jobType": "artwork_verification",
+    "mode": "unverified",
+    "startedAt": "2026-09-26T09:21:43.686Z",
+    "finishedAt": "2026-09-26T09:21:44.492Z",
+    "requestedBatchSize": 3,
+    "completedCount": 3,
+    "failedCount": 0,
+    "finalStatus": "completed"
+  },
+  {
     "jobId": "job_1790346393763",
     "jobType": "artwork_verification",
     "mode": "benchmark",

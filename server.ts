@@ -9,6 +9,7 @@ import { createUserAuthRouter } from './server/user-auth.js';
 import { logEmailConfigDiagnostics } from './server/email-service.js';
 
 import { createBugReportsRouter } from './server/bug-reports.js';
+import { globalDataStore } from './server/data-store.ts';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -45,7 +46,10 @@ function loadCatalogue() {
     const statsPath = path.join(process.cwd(), 'server', 'data', 'sync-report.json');
     const fallbackPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
 
-    if (fs.existsSync(dataPath)) {
+    const inMemoryCatalogue = globalDataStore.getAllCatalogueAnime();
+    if (inMemoryCatalogue && inMemoryCatalogue.length > 0) {
+      catalogueCache = inMemoryCatalogue;
+    } else if (fs.existsSync(dataPath)) {
       catalogueCache = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     } else if (fs.existsSync(fallbackPath)) {
       catalogueCache = JSON.parse(fs.readFileSync(fallbackPath, 'utf-8'));
@@ -54,7 +58,6 @@ function loadCatalogue() {
     if (fs.existsSync(statsPath)) {
       statsCache = JSON.parse(fs.readFileSync(statsPath, 'utf-8'));
     }
-    console.log(`[AniVault DB] Loaded ${catalogueCache.length} anime entries into memory.`);
   } catch (err: any) {
     console.error('[AniVault DB] Error loading catalogue:', err.message);
   }

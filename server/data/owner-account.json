@@ -1,0 +1,10 @@
+{
+  "id": "usr_owner",
+  "email": "makerapp688@gmail.com",
+  "username": "Death197",
+  "passwordHash": "test",
+  "salt": "test",
+  "createdAt": "2026-09-26T09:51:06.976Z",
+  "updatedAt": "2026-09-26T09:51:06.976Z",
+  "role": "owner"
+}

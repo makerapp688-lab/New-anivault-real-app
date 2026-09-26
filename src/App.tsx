@@ -397,7 +397,7 @@ export function App() {
                     </span>
                   </div>
                   <h1 className="text-xl md:text-2xl font-black text-white dark:text-white light:text-slate-900 tracking-tight">
-                    Welcome, {account.username || (isGuest ? 'AnimeExplorer' : account.name || 'AnimeExplorer')}!
+                    Welcome, {account.role === 'owner' || account.id === 'usr_owner' ? (account.username && account.username !== 'Owner' ? account.username : 'Death197') : (account.username || (isGuest ? 'AnimeExplorer' : account.name || 'AnimeExplorer'))}!
                   </h1>
                   <p className="text-xs md:text-sm text-slate-300 dark:text-slate-300 light:text-slate-600 max-w-2xl leading-relaxed">
                     Discover authentic Hindi Dubbed and Dual Audio anime. Pressing{' '}

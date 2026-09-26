@@ -1,1 +1,90 @@
-[]
+[
+  {
+    "id": "HIST-1790416301841-5335",
+    "animeId": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
+    "animeTitle": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
+    "previousArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Doraemon-Nobitas-Little-Star-Wars-hindi.webp",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
+    "replacedAt": "2026-09-26T09:51:41.841Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790416300039-1179",
+    "animeId": "anivault_rt_doraemon_all_seasons_episodes",
+    "animeTitle": "Doraemon All Seasons Hindi",
+    "previousArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-All-Seasons-Hindi-Episodes-Download.png",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "replacedAt": "2026-09-26T09:51:40.039Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790416299800-8507",
+    "animeId": "anivault_rt_frieren_beyond_journeys_end",
+    "animeTitle": "Frieren: Beyond Journey's End",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx154587-qQTzQnEJJ3oB.jpg",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+    "replacedAt": "2026-09-26T09:51:39.800Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790416299743-3358",
+    "animeId": "anivault_rt_baki",
+    "animeTitle": "BAKI Season 1",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx97888-tdZ1r7qN1DRs.jpg",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+    "replacedAt": "2026-09-26T09:51:39.743Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790414503636-5493",
+    "animeId": "mal_8247",
+    "animeTitle": "Bleach: Hell Verse",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-a8P2k0v4wL9n.png",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+    "replacedAt": "2026-09-26T09:21:43.636Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790414353444-7455",
+    "animeId": "mal_4835",
+    "animeTitle": "Bleach: Fade to Black",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-k2W0n8vK4p1L.png",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+    "replacedAt": "2026-09-26T09:19:13.444Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790414349650-2908",
+    "animeId": "mal_2889",
+    "animeTitle": "Bleach: The DiamondDust Rebellion",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-q8P0v2k4a7vN.png",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+    "replacedAt": "2026-09-26T09:19:09.650Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  },
+  {
+    "id": "HIST-1790414348416-7409",
+    "animeId": "mal_1686",
+    "animeTitle": "Bleach: Memories of Nobody",
+    "previousArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-j5P3w0k8a2vN.png",
+    "newArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+    "replacedAt": "2026-09-26T09:19:08.416Z",
+    "replacedBy": "auto_verifier",
+    "source": "anilist",
+    "reason": "Automated 50-worker verification replacement"
+  }
+]

@@ -161,6 +161,13 @@ export function setAccountAvatar(accountId: string, avatarDataUrl: string | null
   notifyListeners();
 }
 
+export function resolveOwnerUsername(username?: string): string {
+  if (!username || username.trim() === '' || username.trim() === 'Owner') {
+    return 'Death197';
+  }
+  return username.trim();
+}
+
 /**
  * Gets the current active account. Restores session before render.
  * Guarantees that refreshing or reopening the app keeps the user signed in.
@@ -172,15 +179,19 @@ export function getCurrentAccount(): UserAccount {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.id && parsed.id !== 'guest_user') {
-        const avatar = getAccountAvatar(parsed.id);
+        const isOwner = parsed.id === 'usr_owner' || parsed.role === 'owner';
+        const avatar = getAccountAvatar(isOwner ? 'usr_owner' : parsed.id);
+        const resolvedUsername = isOwner
+          ? resolveOwnerUsername(parsed.username || parsed.name)
+          : (parsed.username || parsed.name || 'AnimeExplorer');
         return {
-          id: parsed.id,
-          username: parsed.username || parsed.name || 'AnimeExplorer',
-          name: parsed.name || parsed.username || 'AnimeExplorer',
+          id: isOwner ? 'usr_owner' : parsed.id,
+          username: resolvedUsername,
+          name: isOwner ? resolvedUsername : (parsed.name || parsed.username || 'AnimeExplorer'),
           email: parsed.email,
           avatar: avatar || undefined,
           provider: parsed.provider,
-          role: parsed.role || 'user',
+          role: isOwner ? 'owner' : (parsed.role || 'user'),
           createdAt: parsed.createdAt || new Date().toISOString()
         };
       }
@@ -194,15 +205,19 @@ export function getCurrentAccount(): UserAccount {
         const db = getAccountsDb();
         if (db[session.accountId]) {
           const rec = db[session.accountId];
-          const avatar = getAccountAvatar(rec.id);
+          const isOwner = rec.id === 'usr_owner' || (rec as any).role === 'owner';
+          const avatar = getAccountAvatar(isOwner ? 'usr_owner' : rec.id);
+          const resolvedUsername = isOwner
+            ? resolveOwnerUsername(rec.username || rec.name)
+            : (rec.username || rec.name || 'AnimeExplorer');
           return {
-            id: rec.id,
-            username: rec.username || rec.name || 'AnimeExplorer',
-            name: rec.name || rec.username,
+            id: isOwner ? 'usr_owner' : rec.id,
+            username: resolvedUsername,
+            name: isOwner ? resolvedUsername : (rec.name || rec.username),
             email: rec.email,
             avatar: avatar || undefined,
             provider: rec.provider,
-            role: (rec as any).role || 'user',
+            role: isOwner ? 'owner' : ((rec as any).role || 'user'),
             createdAt: rec.createdAt
           };
         }
@@ -540,8 +555,17 @@ function saveSession(account: UserAccount) {
       localStorage.setItem(key, avatar);
     }
 
+    const isOwner = account.id === 'usr_owner' || account.role === 'owner';
+    const resolvedUsername = isOwner
+      ? resolveOwnerUsername(account.username || account.name)
+      : (account.username || account.name || 'AnimeExplorer');
+
     const accountWithAvatar: UserAccount = {
       ...account,
+      id: isOwner ? 'usr_owner' : account.id,
+      username: resolvedUsername,
+      name: isOwner ? resolvedUsername : (account.name || account.username || 'AnimeExplorer'),
+      role: isOwner ? 'owner' : (account.role || 'user'),
       avatar
     };
 
@@ -552,19 +576,18 @@ function saveSession(account: UserAccount) {
     ).length;
 
     // Allow saving if it's the Owner, or already in DB, or normal accounts < 3
-    const isOwner = account.id === 'usr_owner' || account.role === 'owner';
-    const alreadyInDb = !!db[account.id];
+    const alreadyInDb = !!db[accountWithAvatar.id];
 
     if (isOwner || alreadyInDb || existingNormalCount < 3) {
-      db[account.id] = {
-        id: account.id,
-        username: account.username || account.name || 'AnimeExplorer',
-        name: account.name || account.username || 'AnimeExplorer',
-        email: account.email,
+      db[accountWithAvatar.id] = {
+        id: accountWithAvatar.id,
+        username: accountWithAvatar.username,
+        name: accountWithAvatar.name || accountWithAvatar.username,
+        email: accountWithAvatar.email,
         avatar,
-        provider: account.provider,
-        role: account.role || 'user',
-        createdAt: account.createdAt || new Date().toISOString(),
+        provider: accountWithAvatar.provider,
+        role: accountWithAvatar.role || 'user',
+        createdAt: accountWithAvatar.createdAt || new Date().toISOString(),
         lastLoginAt: new Date().toISOString()
       };
       saveAccountsDb(db);
@@ -831,14 +854,18 @@ export async function syncWithServerSession(): Promise<UserAccount | null> {
         if (data.user.avatar && !getAccountAvatar(data.user.id)) {
           setAccountAvatar(data.user.id, data.user.avatar);
         }
+        const isOwnerUser = data.user.id === 'usr_owner' || data.user.role === 'owner';
+        const resolvedUsername = isOwnerUser
+          ? resolveOwnerUsername(data.user.username)
+          : data.user.username;
         const serverAcc: UserAccount = {
-          id: data.user.id,
-          username: data.user.username,
-          name: data.user.name || data.user.username,
+          id: isOwnerUser ? 'usr_owner' : data.user.id,
+          username: resolvedUsername,
+          name: isOwnerUser ? resolvedUsername : (data.user.name || data.user.username),
           email: data.user.email,
-          avatar: getAccountAvatar(data.user.id) || data.user.avatar || undefined,
+          avatar: getAccountAvatar(isOwnerUser ? 'usr_owner' : data.user.id) || data.user.avatar || undefined,
           provider: data.user.provider || 'email',
-          role: data.user.role || 'user',
+          role: isOwnerUser ? 'owner' : (data.user.role || 'user'),
           createdAt: data.user.createdAt
         };
         const activeToken = token || data.sessionToken;
@@ -936,10 +963,11 @@ export async function switchActiveAccount(accountId: string): Promise<{
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.owner) {
+          const resolvedUsername = resolveOwnerUsername(data.owner.username);
           const ownerAcc: UserAccount = {
             id: 'usr_owner',
-            username: data.owner.username,
-            name: data.owner.username,
+            username: resolvedUsername,
+            name: resolvedUsername,
             email: data.owner.email,
             avatar: getAccountAvatar('usr_owner') || undefined,
             provider: 'email',

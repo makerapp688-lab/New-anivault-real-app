@@ -99,11 +99,11 @@
     "animeTitle": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
     "status": "verified",
     "confidence": 0.9552238805970149,
-    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/05/Doraemon-Nobitas-Little-Star-Wars-hindi.webp",
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
     "replacedArtworkUrl": null,
     "source": "anilist",
     "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-24T11:42:42.617Z",
+    "lastVerifiedAt": "2026-09-26T10:21:06.975Z",
     "aniListMatch": {
       "id": 2669,
       "title": "Doraemon: Nobita's Little Star Wars",
@@ -113,7 +113,7 @@
       "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2669-IVycnrkH5Sq5.jpg",
       "score": 0.9552238805970149
     },
-    "jikanMatch": null,
+    "anidbMatch": null,
     "candidates": [
       {
         "source": "anilist",
@@ -136,10 +136,9 @@
         "year": 2022
       }
     ],
-    "issue": "Artwork and anime identity successfully verified against trusted databases.",
+    "issue": null,
     "evidence": [
-      "High confidence match established via AniList (96%).",
-      "Current artwork verified usable and matches verified database entry."
+      "Current artwork verified reachable, valid, and non-placeholder."
     ]
   },
   "fast-path-demo": {
@@ -155,6 +154,1764 @@
     "candidates": [],
     "evidence": [
       "Verified instantly via Fast-Path using trusted existing artwork and verified record."
+    ]
+  },
+  "mal_1686": {
+    "animeId": "mal_1686",
+    "animeTitle": "Bleach: Memories of Nobody",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T09:21:41.401Z",
+    "aniListMatch": {
+      "id": 1686,
+      "title": "Bleach the Movie: Memories of Nobody",
+      "englishTitle": "Bleach the Movie: Memories of Nobody",
+      "romajiTitle": "BLEACH: MEMORIES OF NOBODY",
+      "year": 2006,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 1686,
+        "title": "Bleach the Movie: Memories of Nobody",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1686-oZQepxP4SRQ2.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "MOVIE",
+        "year": 2006
+      }
+    ],
+    "issue": "Artwork automatically fixed with verified poster from anilist (100% match).",
+    "evidence": [
+      "Previous poster was missing or broken. Validated & saved anilist poster."
+    ],
+    "isFastPath": true
+  },
+  "mal_2889": {
+    "animeId": "mal_2889",
+    "animeTitle": "Bleach: The DiamondDust Rebellion",
+    "status": "auto_fixed",
+    "confidence": 0.8378378378378378,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T09:21:41.451Z",
+    "aniListMatch": {
+      "id": 2889,
+      "title": "Bleach the Movie: The DiamondDust Rebellion",
+      "englishTitle": "Bleach the Movie: The DiamondDust Rebellion",
+      "romajiTitle": "BLEACH: The DiamondDust Rebellion - Mou Hitotsu no Hyourinmaru",
+      "year": 2007,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+      "score": 0.8378378378378378
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 2889,
+        "title": "Bleach the Movie: The DiamondDust Rebellion",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8378378378378378,
+        "format": "MOVIE",
+        "year": 2007
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2889,
+        "title": "Bleach the Movie: The DiamondDust Rebellion",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2889-AmnSwChuAuGT.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8378378378378378,
+        "format": "MOVIE",
+        "year": 2007
+      }
+    ],
+    "issue": "Artwork automatically fixed with verified poster from anilist (84% match).",
+    "evidence": [
+      "Previous poster was missing or broken. Validated & saved anilist poster."
+    ],
+    "isFastPath": true
+  },
+  "mal_4835": {
+    "animeId": "mal_4835",
+    "animeTitle": "Bleach: Fade to Black",
+    "status": "auto_fixed",
+    "confidence": 0.78,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T09:21:41.500Z",
+    "aniListMatch": {
+      "id": 4835,
+      "title": "Bleach the Movie: Fade to Black",
+      "englishTitle": "Bleach the Movie: Fade to Black",
+      "romajiTitle": "BLEACH: Fade to Black - Kimi no Na wo Yobu",
+      "year": 2008,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+      "score": 0.78
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 4835,
+        "title": "Bleach the Movie: Fade to Black",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "MOVIE",
+        "year": 2008
+      },
+      {
+        "source": "anilist",
+        "sourceId": 4835,
+        "title": "Bleach the Movie: Fade to Black",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx4835-UqbwERH407BB.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "MOVIE",
+        "year": 2008
+      }
+    ],
+    "issue": "Artwork automatically fixed with verified poster from anilist (78% match).",
+    "evidence": [
+      "Previous poster was missing or broken. Validated & saved anilist poster."
+    ],
+    "isFastPath": true
+  },
+  "mal_8247": {
+    "animeId": "mal_8247",
+    "animeTitle": "Bleach: Hell Verse",
+    "status": "auto_fixed",
+    "confidence": 0.7272727272727273,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T09:21:43.636Z",
+    "aniListMatch": {
+      "id": 8247,
+      "title": "Bleach the Movie: Hell Verse",
+      "englishTitle": "Bleach the Movie: Hell Verse",
+      "romajiTitle": "BLEACH: Jigoku-hen",
+      "year": 2010,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+      "score": 0.7272727272727273
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 8247,
+        "title": "Bleach the Movie: Hell Verse",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.7272727272727273,
+        "format": "MOVIE",
+        "year": 2010
+      },
+      {
+        "source": "anilist",
+        "sourceId": 8247,
+        "title": "Bleach the Movie: Hell Verse",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8247-VppsQKlgXoXr.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.7272727272727273,
+        "format": "MOVIE",
+        "year": 2010
+      }
+    ],
+    "issue": "Artwork automatically fixed with verified poster from anilist (73% match).",
+    "evidence": [
+      "Previous poster was missing or broken. Validated & saved anilist poster."
+    ]
+  },
+  "anivault_rt_doraemon_tv_series": {
+    "animeId": "anivault_rt_doraemon_tv_series",
+    "animeTitle": "Doraemon (TV Series)",
+    "status": "verified",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "replacedArtworkUrl": null,
+    "source": "anilist",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-26T09:51:46.671Z",
+    "aniListMatch": {
+      "id": 501,
+      "title": "Doraemon",
+      "englishTitle": "",
+      "romajiTitle": "Doraemon",
+      "year": 1973,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "seasonResults": [
+      {
+        "seasonNumber": 1,
+        "seasonTitle": "Season 1",
+        "artworkUrl": null,
+        "status": "needs_review",
+        "source": "provider",
+        "confidence": 0.375
+      },
+      {
+        "seasonNumber": 2,
+        "seasonTitle": "Season 2",
+        "artworkUrl": null,
+        "status": "needs_review",
+        "source": "provider",
+        "confidence": 0.4864864864864865
+      },
+      {
+        "seasonNumber": 3,
+        "seasonTitle": "Season 3",
+        "artworkUrl": null,
+        "status": "needs_review",
+        "source": "provider",
+        "confidence": 0.36
+      },
+      {
+        "seasonNumber": 4,
+        "seasonTitle": "Season 4",
+        "artworkUrl": null,
+        "status": "not_found"
+      },
+      {
+        "seasonNumber": 5,
+        "seasonTitle": "Season 5",
+        "artworkUrl": null,
+        "status": "needs_review",
+        "source": "provider",
+        "confidence": 0.28205128205128205
+      },
+      {
+        "seasonNumber": 6,
+        "seasonTitle": "Season 6",
+        "artworkUrl": null,
+        "status": "not_found"
+      },
+      {
+        "seasonNumber": 7,
+        "seasonTitle": "Season 7",
+        "artworkUrl": null,
+        "status": "not_found"
+      },
+      {
+        "seasonNumber": 8,
+        "seasonTitle": "Season 8",
+        "artworkUrl": null,
+        "status": "not_found"
+      },
+      {
+        "seasonNumber": 14,
+        "seasonTitle": "Season 14",
+        "artworkUrl": null,
+        "status": "not_found"
+      }
+    ],
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 501,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV",
+        "year": 1973
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2471,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2471-FVQ44eZlRDP2.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV_SHORT",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2634,
+        "title": "Kaettekita Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2634.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "SPECIAL",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2648,
+        "title": "Doraemon: 2112-nen Doraemon Tanjou",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2648.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "MOVIE",
+        "year": 1995
+      }
+    ],
+    "issue": "Artwork verified usable and matches verified database entry.",
+    "evidence": [
+      "Current artwork verified usable and active."
+    ]
+  },
+  "anivault_rt_miraculous_tales_of_ladybug_cat_noir": {
+    "animeId": "anivault_rt_miraculous_tales_of_ladybug_cat_noir",
+    "animeTitle": "Miraculous Tales of Ladybug & Cat Noir",
+    "status": "verified",
+    "confidence": 0.95,
+    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/06/Miraculous-Tales-of-Ladybug-Cat-Noir-Season-5-2.webp",
+    "source": "provider_verified",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-26T09:21:43.998Z",
+    "isFastPath": true,
+    "candidates": [],
+    "evidence": [
+      "Verified instantly via Fast-Path using trusted existing artwork and verified record."
+    ]
+  },
+  "anivault_rt_doraemon_all_seasons_episodes": {
+    "animeId": "anivault_rt_doraemon_all_seasons_episodes",
+    "animeTitle": "Doraemon All Seasons Hindi",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "source": "anilist",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-26T09:51:40.039Z",
+    "aniListMatch": {
+      "id": 501,
+      "title": "Doraemon",
+      "englishTitle": "",
+      "romajiTitle": "Doraemon",
+      "year": 1973,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 501,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV",
+        "year": 1973
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2471,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2471-FVQ44eZlRDP2.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV_SHORT",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2634,
+        "title": "Kaettekita Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2634.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "SPECIAL",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2648,
+        "title": "Doraemon: 2112-nen Doraemon Tanjou",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2648.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "MOVIE",
+        "year": 1995
+      }
+    ],
+    "issue": "Poster upgraded to verified high-resolution asset from anilist.",
+    "evidence": []
+  },
+  "anivault_rt_baki": {
+    "animeId": "anivault_rt_baki",
+    "animeTitle": "BAKI Season 1",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+    "source": "anilist",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-26T09:51:39.743Z",
+    "aniListMatch": {
+      "id": 97888,
+      "title": "BAKI",
+      "englishTitle": "BAKI",
+      "romajiTitle": "Baki",
+      "year": 2018,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 97888,
+        "title": "BAKI",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "ONA",
+        "year": 2018
+      },
+      {
+        "source": "anilist",
+        "sourceId": 176509,
+        "title": "BAKI-DOU: The Invincible Samurai",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176509-GRUa4fzyAM9u.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "ONA",
+        "year": 2026
+      },
+      {
+        "source": "anilist",
+        "sourceId": 87501,
+        "title": "Baki OVA",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/87501-GGhWW6d9NPxV.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "OVA",
+        "year": 2016
+      },
+      {
+        "source": "anilist",
+        "sourceId": 124195,
+        "title": "Baki Hanma",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx124195-5Z1JSrRlbMRe.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "ONA",
+        "year": 2021
+      }
+    ],
+    "issue": "Poster upgraded to verified high-resolution asset from anilist.",
+    "evidence": []
+  },
+  "anivault_rt_frieren_beyond_journeys_end": {
+    "animeId": "anivault_rt_frieren_beyond_journeys_end",
+    "animeTitle": "Frieren: Beyond Journey's End",
+    "status": "auto_fixed",
+    "confidence": 0.9285714285714286,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+    "source": "anilist",
+    "dimensions": "HD (Aspect 3:4)",
+    "lastVerifiedAt": "2026-09-26T09:51:39.800Z",
+    "aniListMatch": {
+      "id": 154587,
+      "title": "Frieren: Beyond Journey’s End",
+      "englishTitle": "Frieren: Beyond Journey’s End",
+      "romajiTitle": "Sousou no Frieren",
+      "year": 2023,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+      "score": 0.9285714285714286
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 154587,
+        "title": "Frieren: Beyond Journey’s End",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.9285714285714286,
+        "format": "TV",
+        "year": 2023
+      },
+      {
+        "source": "anilist",
+        "sourceId": 182255,
+        "title": "Frieren: Beyond Journey’s End Season 2",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182255-butzrqd4I0aC.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8,
+        "format": "TV",
+        "year": 2026
+      },
+      {
+        "source": "anilist",
+        "sourceId": 170068,
+        "title": "Sousou no Frieren: ●● no Mahou",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx170068-ijY3tCP8KoWP.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "ONA",
+        "year": 2023
+      },
+      {
+        "source": "anilist",
+        "sourceId": 189513,
+        "title": "Sousou no Frieren: ●● no Mahou Part 2",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189513-1R9Sryve0K53.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.78,
+        "format": "ONA",
+        "year": 2025
+      }
+    ],
+    "issue": "Poster upgraded to verified high-resolution asset from anilist.",
+    "evidence": []
+  },
+  "anivault_rt_hindi_beyblade_burst_turbo_season_3_hindi_episodes_download_in_hd": {
+    "animeId": "anivault_rt_hindi_beyblade_burst_turbo_season_3_hindi_episodes_download_in_hd",
+    "animeTitle": "Beyblade Burst Turbo",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101115-D0LrlWZtbOeX.png",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101115-D0LrlWZtbOeX.png",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:21.226Z",
+    "aniListMatch": {
+      "id": 101115,
+      "title": "Beyblade Burst Turbo",
+      "englishTitle": "Beyblade Burst Turbo",
+      "romajiTitle": "Beyblade Burst Chouzetsu",
+      "year": 2018,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101115-D0LrlWZtbOeX.png",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 101115,
+        "title": "Beyblade Burst Turbo",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101115-D0LrlWZtbOeX.png",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV",
+        "year": 2018
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (100% match)."
+    ]
+  },
+  "anivault_rt_hindi_beyblade_metal_masters_season_2_hindi_episodes_download_in_hd": {
+    "animeId": "anivault_rt_hindi_beyblade_metal_masters_season_2_hindi_episodes_download_in_hd",
+    "animeTitle": "Beyblade Metal Masters",
+    "status": "auto_fixed",
+    "confidence": 0.9302325581395349,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b8410-fXa60HqVggen.png",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b8410-fXa60HqVggen.png",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:21.296Z",
+    "aniListMatch": {
+      "id": 8410,
+      "title": "Beyblade: Metal Masters",
+      "englishTitle": "Beyblade: Metal Masters",
+      "romajiTitle": "Metal Fight Beyblade: Baku",
+      "year": 2010,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b8410-fXa60HqVggen.png",
+      "score": 0.9302325581395349
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 8410,
+        "title": "Beyblade: Metal Masters",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b8410-fXa60HqVggen.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.9302325581395349,
+        "format": "TV",
+        "year": 2010
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (93% match)."
+    ]
+  },
+  "anivault_rt_hindi_beyblade_burst_rise_season_4_hindi_episodes_watch_download_hd": {
+    "animeId": "anivault_rt_hindi_beyblade_burst_rise_season_4_hindi_episodes_watch_download_hd",
+    "animeTitle": "Beyblade Burst Rise",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108853-ebznx715AJ9x.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108853-ebznx715AJ9x.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:21.339Z",
+    "aniListMatch": {
+      "id": 108853,
+      "title": "Beyblade Burst Rise",
+      "englishTitle": "Beyblade Burst Rise",
+      "romajiTitle": "Beyblade Burst Gachi",
+      "year": 2019,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108853-ebznx715AJ9x.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 108853,
+        "title": "Beyblade Burst Rise",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108853-ebznx715AJ9x.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "ONA",
+        "year": 2019
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (100% match)."
+    ]
+  },
+  "anivault_rt_hindi_idaten_jump_season_1_all_hindi_dubbed_episodes_download_hd": {
+    "animeId": "anivault_rt_hindi_idaten_jump_season_1_all_hindi_dubbed_episodes_download_hd",
+    "animeTitle": "Idaten Jump",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1316-LGJ4cP4Kwltj.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1316-LGJ4cP4Kwltj.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:21.933Z",
+    "aniListMatch": {
+      "id": 1316,
+      "title": "Idaten Jump",
+      "englishTitle": "Idaten Jump",
+      "romajiTitle": "Idaten Jump",
+      "year": 2005,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1316-LGJ4cP4Kwltj.jpg",
+      "score": 1
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 1316,
+        "title": "Idaten Jump",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1316-LGJ4cP4Kwltj.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "format": "TV",
+        "year": 2005
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (100% match)."
+    ]
+  },
+  "anivault_rt_hindi_jing_ju_cats_season_1_hindi_tamil_telugu_episodes_download_hd": {
+    "animeId": "anivault_rt_hindi_jing_ju_cats_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "animeTitle": "Jing Ju Cats",
+    "status": "auto_fixed",
+    "confidence": 0.75,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121199-p3YA6OPNRut6.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121199-p3YA6OPNRut6.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:22.946Z",
+    "aniListMatch": {
+      "id": 121199,
+      "title": "Jing-Ju Cats 2",
+      "englishTitle": "Jing-Ju Cats 2",
+      "romajiTitle": "Jinju Mao: Xinnian de Maoxian",
+      "year": null,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121199-p3YA6OPNRut6.jpg",
+      "score": 0.75
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 121199,
+        "title": "Jing-Ju Cats 2",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121199-p3YA6OPNRut6.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.75,
+        "format": "ONA",
+        "year": null
+      },
+      {
+        "source": "anilist",
+        "sourceId": 121200,
+        "title": "Jing-Ju Cats 3",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121200-56lp7DQcKiOh.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.75,
+        "format": "ONA",
+        "year": null
+      },
+      {
+        "source": "anilist",
+        "sourceId": 121197,
+        "title": "Jing-Ju Cats Part 1",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121197-z5o0xnsg5y99.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.6375,
+        "format": "ONA",
+        "year": null
+      },
+      {
+        "source": "anilist",
+        "sourceId": 121198,
+        "title": "Jing-Ju Cats Part 2",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121198-FRcaiKH1IHZ2.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.6375,
+        "format": "ONA",
+        "year": null
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (75% match)."
+    ]
+  },
+  "anivault_rt_doraemon_the_movie_yeh_bhi_tha_nobita_woh_bhi_tha_nobita": {
+    "animeId": "anivault_rt_doraemon_the_movie_yeh_bhi_tha_nobita_woh_bhi_tha_nobita",
+    "animeTitle": "Doraemon The Movie Yeh Bhi Tha Nobita Woh Bhi Tha Nobita",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:22.987Z",
+    "aniListMatch": {
+      "id": 501,
+      "title": "Doraemon",
+      "englishTitle": "",
+      "romajiTitle": "Doraemon",
+      "year": 1973,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+      "score": 0.92
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 501,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "format": "TV",
+        "year": 1973
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2471,
+        "title": "Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2471-FVQ44eZlRDP2.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "format": "TV_SHORT",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2634,
+        "title": "Kaettekita Doraemon",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2634.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "SPECIAL",
+        "year": 1979
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2648,
+        "title": "Doraemon: 2112-nen Doraemon Tanjou",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2648.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "MOVIE",
+        "year": 1995
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_dragon_ball_z_movie_3_the_tree_of_might_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_dragon_ball_z_movie_3_the_tree_of_might_hindi_download_hd",
+    "animeTitle": "Dragon Ball Z Movie 3 The Tree of Might",
+    "status": "auto_fixed",
+    "confidence": 0.8747540983606558,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/896.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/896.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:23.539Z",
+    "aniListMatch": {
+      "id": 896,
+      "title": "Dragon Ball Z: The Tree of Might",
+      "englishTitle": "Dragon Ball Z: The Tree of Might",
+      "romajiTitle": "Dragon Ball Z: Chikyuu Marugoto Chou Kessen",
+      "year": 1990,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/896.jpg",
+      "score": 0.8747540983606558
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 896,
+        "title": "Dragon Ball Z: The Tree of Might",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/896.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8747540983606558,
+        "format": "MOVIE",
+        "year": 1990
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (87% match)."
+    ]
+  },
+  "anivault_rt_hindi_dragon_ball_z_movie_4_lord_slug_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_dragon_ball_z_movie_4_lord_slug_hindi_download_hd",
+    "animeTitle": "Dragon Ball Z Movie 4 Lord Slug",
+    "status": "auto_fixed",
+    "confidence": 0.8586666666666667,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/897-XgUEvu807MpG.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/897-XgUEvu807MpG.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:24.153Z",
+    "aniListMatch": {
+      "id": 897,
+      "title": "Dragon Ball Z: Lord Slug",
+      "englishTitle": "Dragon Ball Z: Lord Slug",
+      "romajiTitle": "Dragon Ball Z: Super Saiyajin da Son Goku",
+      "year": 1991,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/897-XgUEvu807MpG.jpg",
+      "score": 0.8586666666666667
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 897,
+        "title": "Dragon Ball Z: Lord Slug",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/897-XgUEvu807MpG.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8586666666666667,
+        "format": "MOVIE",
+        "year": 1991
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (86% match)."
+    ]
+  },
+  "anivault_rt_hindi_dragon_ball_z_movie_2_the_worlds_strongest_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_dragon_ball_z_movie_2_the_worlds_strongest_hindi_download_hd",
+    "animeTitle": "Dragon Ball Z Movie 2 The World’s Strongest",
+    "status": "auto_fixed",
+    "confidence": 0.8800000000000001,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/895-GuuZOIRCBHhI.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/895-GuuZOIRCBHhI.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:24.906Z",
+    "aniListMatch": {
+      "id": 895,
+      "title": "Dragon Ball Z: The World's Strongest",
+      "englishTitle": "Dragon Ball Z: The World's Strongest",
+      "romajiTitle": "Dragon Ball Z: Konoyo de Ichiban Tsuyoi Yatsu",
+      "year": 1990,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/895-GuuZOIRCBHhI.jpg",
+      "score": 0.8800000000000001
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 895,
+        "title": "Dragon Ball Z: The World's Strongest",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/895-GuuZOIRCBHhI.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8800000000000001,
+        "format": "MOVIE",
+        "year": 1990
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (88% match)."
+    ]
+  },
+  "anivault_rt_hindi_dragon_ball_super_super_hero_2022_movie_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_dragon_ball_super_super_hero_2022_movie_hindi_download_hd",
+    "animeTitle": "Dragon Ball Super Super Hero 2022 Movie",
+    "status": "auto_fixed",
+    "confidence": 0.8698181818181818,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:25.025Z",
+    "aniListMatch": {
+      "id": 133898,
+      "title": "Dragon Ball Super: SUPER HERO",
+      "englishTitle": "Dragon Ball Super: SUPER HERO",
+      "romajiTitle": "Dragon Ball Super: Super Hero",
+      "year": 2022,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
+      "score": 0.8698181818181818
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 133898,
+        "title": "Dragon Ball Super: SUPER HERO",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.8698181818181818,
+        "format": "MOVIE",
+        "year": 2022
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (87% match)."
+    ]
+  },
+  "anivault_rt_hindi_power_rangers_turbo_season_5_1997_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_power_rangers_turbo_season_5_1997_hindi_download_hd",
+    "animeTitle": "Power Rangers Turbo",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:25.108Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "794",
+        "title": "Power Rangers",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1993
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "49471",
+        "title": "Power Rangers Dino Force Brave",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/266/667307.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_power_rangers_in_space_season_6_1998_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_power_rangers_in_space_season_6_1998_hindi_download_hd",
+    "animeTitle": "Power Rangers In Space",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:25.249Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "794",
+        "title": "Power Rangers",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1993
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "49471",
+        "title": "Power Rangers Dino Force Brave",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/266/667307.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_iron_man_2010_hindi_episodes_download_hd": {
+    "animeId": "anivault_rt_hindi_iron_man_2010_hindi_episodes_download_hd",
+    "animeTitle": "Iron Man 2010 Hindi Episodes",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/6875.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/6875.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:25.793Z",
+    "aniListMatch": {
+      "id": 6875,
+      "title": "Iron Man",
+      "englishTitle": "",
+      "romajiTitle": "Iron Man",
+      "year": 2010,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/6875.jpg",
+      "score": 0.92
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 6875,
+        "title": "Iron Man",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/6875.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "format": "TV",
+        "year": 2010
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2686,
+        "title": "Gigantor",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2686-TuhNXLgXsszW.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.8181818181818182,
+        "format": "TV",
+        "year": 1963
+      },
+      {
+        "source": "anilist",
+        "sourceId": 15847,
+        "title": "Iron Man: Rise of Technovore",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/15847.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "OVA",
+        "year": 2013
+      },
+      {
+        "source": "anilist",
+        "sourceId": 10319,
+        "title": "Tetsujin 28 FX",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/10319.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "TV",
+        "year": 1992
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_ninja_hattori_home_town_movie_hindi_download_hd_remastered": {
+    "animeId": "anivault_rt_hindi_ninja_hattori_home_town_movie_hindi_download_hd_remastered",
+    "animeTitle": "Ninja Hattori Home Town Movie",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/4936.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/4936.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:18:26.137Z",
+    "aniListMatch": {
+      "id": 4936,
+      "title": "Ninja Hattori-kun",
+      "englishTitle": "",
+      "romajiTitle": "Ninja Hattori-kun",
+      "year": 1981,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/4936.jpg",
+      "score": 0.92
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 4936,
+        "title": "Ninja Hattori-kun",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/4936.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "format": "TV_SHORT",
+        "year": 1981
+      },
+      {
+        "source": "anilist",
+        "sourceId": 18845,
+        "title": "Ninja Hattori-kun (2012)",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/18845.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "TV",
+        "year": 2012
+      },
+      {
+        "source": "anilist",
+        "sourceId": 198768,
+        "title": "Ninja Hattori-kun + Perman: Chounouryoku Wars",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b198768-PwKarSkarpNi.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "MOVIE",
+        "year": 1984
+      },
+      {
+        "source": "anilist",
+        "sourceId": 2630,
+        "title": "82 Oshougatsuda yo! Doraemon, Kaibutsu-kun, Ninja Hattori-kun",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2630.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "SPECIAL",
+        "year": 1979
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_pokemon_movie_23_jungle_ke_raaz_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_pokemon_movie_23_jungle_ke_raaz_hindi_download_hd",
+    "animeTitle": "Pokemon Movie 23 Jungle Ke Raaz",
+    "status": "auto_fixed",
+    "confidence": 0.8728205128205129,
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114564-Imh6m5Tejii6.jpg",
+    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114564-Imh6m5Tejii6.jpg",
+    "source": "anilist",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:18.889Z",
+    "aniListMatch": {
+      "id": 114564,
+      "title": "Pokémon the Movie: Secrets of the Jungle",
+      "englishTitle": "Pokémon the Movie: Secrets of the Jungle",
+      "romajiTitle": "Pocket Monsters: Coco",
+      "year": 2020,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114564-Imh6m5Tejii6.jpg",
+      "score": 0.8728205128205129
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "anilist",
+        "sourceId": 114564,
+        "title": "Pokémon the Movie: Secrets of the Jungle",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114564-Imh6m5Tejii6.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.8728205128205129,
+        "format": "MOVIE",
+        "year": 2020
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified anilist poster (87% match)."
+    ]
+  },
+  "anivault_rt_hindi_power_rangers_lost_galaxy_season_7_1999_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_power_rangers_lost_galaxy_season_7_1999_hindi_download_hd",
+    "animeTitle": "Power Rangers Lost Galaxy",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:20.259Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "794",
+        "title": "Power Rangers",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1993
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "49471",
+        "title": "Power Rangers Dino Force Brave",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/266/667307.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_power_rangers_time_force_season_9_2001_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_power_rangers_time_force_season_9_2001_hindi_download_hd",
+    "animeTitle": "Power Rangers Time Force",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:20.520Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "794",
+        "title": "Power Rangers",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1993
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "49471",
+        "title": "Power Rangers Dino Force Brave",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/266/667307.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7307692307692307,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_baby_looney_tunes_season_1_hindi_episodes_download_hd": {
+    "animeId": "anivault_rt_hindi_baby_looney_tunes_season_1_hindi_episodes_download_hd",
+    "animeTitle": "Baby Looney Tunes",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/578/1447062.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/578/1447062.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:22.499Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "18495",
+        "title": "Baby Looney Tunes",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/578/1447062.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "year": 2002
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (100% match)."
+    ]
+  },
+  "anivault_rt_hindi_dc_super_hero_girls_season_1_hindi_episodes_watch_download_hd": {
+    "animeId": "anivault_rt_hindi_dc_super_hero_girls_season_1_hindi_episodes_watch_download_hd",
+    "animeTitle": "Dc Super Hero Girls",
+    "status": "auto_fixed",
+    "confidence": 1,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/378/947185.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/378/947185.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:23.724Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "40884",
+        "title": "DC Super Hero Girls",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/378/947185.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "year": 2019
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "15789",
+        "title": "DC Super Hero Girls",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/56/140312.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 1,
+        "year": 2015
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "38279",
+        "title": "LEGO DC Super Hero Girls",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/164/411723.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7916666666666666,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (100% match)."
+    ]
+  },
+  "anivault_rt_hindi_johnny_test_2021_season_1_hindi_episodes_download_hd": {
+    "animeId": "anivault_rt_hindi_johnny_test_2021_season_1_hindi_episodes_download_hd",
+    "animeTitle": "Johnny Test 2021",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/42/106275.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/42/106275.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:26.247Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "12444",
+        "title": "Johnny Test",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/42/106275.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2005
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "56399",
+        "title": "Johnny Test",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/340/852442.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2021
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_the_powerpuff_girls_movie_2002_hindi_download_hd": {
+    "animeId": "anivault_rt_hindi_the_powerpuff_girls_movie_2002_hindi_download_hd",
+    "animeTitle": "The Powerpuff Girls Movie 2002",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/11/27896.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/11/27896.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:19:26.542Z",
+    "aniListMatch": {
+      "id": 1221,
+      "title": "Powerpuff Girls Z",
+      "englishTitle": "Powerpuff Girls Z",
+      "romajiTitle": "Demashitaa! Powerpuff Girls Z",
+      "year": 2006,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1221-hJK26wo9VEGP.png",
+      "score": 0.7576470588235295
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "1955",
+        "title": "The Powerpuff Girls",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/11/27896.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1998
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "6771",
+        "title": "The Powerpuff Girls",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/60/151357.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2016
+      },
+      {
+        "source": "anilist",
+        "sourceId": 1221,
+        "title": "Powerpuff Girls Z",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1221-hJK26wo9VEGP.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.7576470588235295,
+        "format": "TV",
+        "year": 2006
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_mighty_morphin_power_rangers_once_always_2023_hindi_dubbed_download_hd": {
+    "animeId": "anivault_rt_hindi_mighty_morphin_power_rangers_once_always_2023_hindi_dubbed_download_hd",
+    "animeTitle": "Mighty Morphin Power Rangers Once Always 2023",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:20:27.338Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "794",
+        "title": "Power Rangers",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 1993
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "49471",
+        "title": "Power Rangers Dino Force Brave",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/266/667307.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2017
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_thomas_friends_all_hindi_episodes_download_fhd": {
+    "animeId": "anivault_rt_hindi_thomas_friends_all_hindi_episodes_download_fhd",
+    "animeTitle": "Thomas Friends All Hindi",
+    "status": "auto_fixed",
+    "confidence": 0.9285714285714286,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/24/61753.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/24/61753.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:20:28.057Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "6458",
+        "title": "Thomas & Friends",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/24/61753.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.9285714285714286,
+        "year": 1984
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "54041",
+        "title": "Thomas & Friends: All Engines Go",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/372/931938.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.5909090909090909,
+        "year": 2021
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "93708",
+        "title": "Thomas & Friends: Railway Stories",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/637/1594785.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.5777777777777777,
+        "year": 2026
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "75827",
+        "title": "Thomas & Friends: Big World! Big Adventures!",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/511/1278977.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.4642857142857143,
+        "year": 2018
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (93% match)."
+    ]
+  },
+  "anivault_rt_hindi_winx_club_special_3_the_battle_for_magix_movie_hindi_download_1080p_hd": {
+    "animeId": "anivault_rt_hindi_winx_club_special_3_the_battle_for_magix_movie_hindi_download_1080p_hd",
+    "animeTitle": "Winx Club Special 3 The Battle For Magix Movie",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/273/684918.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/273/684918.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:20:28.453Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "5883",
+        "title": "Winx Club",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/273/684918.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2004
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "87081",
+        "title": "Winx Club: The Magic is Back",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/614/1535087.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2025
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_ben_10_destroy_all_aliens_hindi_dubbed_download_hd": {
+    "animeId": "anivault_rt_hindi_ben_10_destroy_all_aliens_hindi_dubbed_download_hd",
+    "animeTitle": "Ben 10 Destroy All Aliens",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:20:28.591Z",
+    "aniListMatch": null,
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "951",
+        "title": "Ben 10",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2005
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "22084",
+        "title": "Ben 10",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/80/201155.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2016
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "1264",
+        "title": "Ben 10: Omniverse",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/7/18280.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2012
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "1263",
+        "title": "Ben 10: Ultimate Alien",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/7/18277.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2010
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "1301",
+        "title": "Ben 10: Alien Force",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/7/18463.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2008
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
+    ]
+  },
+  "anivault_rt_hindi_tom_and_jerry_shiver_me_whiskers_2006_movie_hindi_dubbed_download_hd": {
+    "animeId": "anivault_rt_hindi_tom_and_jerry_shiver_me_whiskers_2006_movie_hindi_dubbed_download_hd",
+    "animeTitle": "Tom And Jerry Shiver Me Whiskers 2006 Movie",
+    "status": "auto_fixed",
+    "confidence": 0.92,
+    "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/483/1209807.jpg",
+    "replacedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/483/1209807.jpg",
+    "source": "tvmaze",
+    "dimensions": "HD (3:4)",
+    "lastVerifiedAt": "2026-09-26T10:20:30.099Z",
+    "aniListMatch": {
+      "id": 159454,
+      "title": "Tom and Jerry Gokko",
+      "englishTitle": "Tom and Jerry Gokko",
+      "romajiTitle": "Tom to Jerry Gokko",
+      "year": 2022,
+      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx159454-I5i5E5kXDsEY.png",
+      "score": 0.7176
+    },
+    "anidbMatch": null,
+    "candidates": [
+      {
+        "source": "tvmaze",
+        "sourceId": "72278",
+        "title": "Tom and Jerry",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/483/1209807.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.92,
+        "year": 2023
+      },
+      {
+        "source": "anilist",
+        "sourceId": 159454,
+        "title": "Tom and Jerry Gokko",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx159454-I5i5E5kXDsEY.png",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "TV_SHORT",
+        "year": 2022
+      },
+      {
+        "source": "anilist",
+        "sourceId": 206919,
+        "title": "Tom and Jerry: Forbidden Compass",
+        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx206919-IQ3RsJ0wPEsp.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "format": "MOVIE",
+        "year": null
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "7358",
+        "title": "Tom and Jerry Tales",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/27/67824.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2006
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "65489",
+        "title": "Tom and Jerry Gokko",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/432/1081582.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2022
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "4296",
+        "title": "The Tom and Jerry Show",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/20/51195.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2014
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "53694",
+        "title": "Tom and Jerry Special Shorts",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/297/743761.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2021
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "55833",
+        "title": "Tom and Jerry in New York",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/334/837419.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 2021
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "18964",
+        "title": "The Tom and Jerry Comedy Show",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/65/164056.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.7176,
+        "year": 1980
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "4584",
+        "title": "Tom & Jerry Kids Show",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/341/853958.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.46,
+        "year": 1990
+      },
+      {
+        "source": "tvmaze",
+        "sourceId": "18963",
+        "title": "The New Tom & Jerry Show",
+        "imageUrl": "https://static.tvmaze.com/uploads/images/original_untouched/637/1594273.jpg",
+        "aspectRatio": "3:4",
+        "confidence": 0.4205714285714286,
+        "year": 1975
+      }
+    ],
+    "issue": null,
+    "evidence": [
+      "Previous poster was missing or broken. Validated, saved & verified tvmaze poster (92% match)."
     ]
   }
 }

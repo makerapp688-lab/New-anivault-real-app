@@ -98,17 +98,40 @@ function formatElapsed(timestampMs?: number | null): string {
 }
 
 interface ScanState {
+  jobId?: string;
   status: 'idle' | 'running' | 'paused' | 'completed' | 'error';
   totalCount: number;
+  totalTasks?: number;
   processedCount: number;
+  completedTasksCount?: number;
+  failedTasksCount?: number;
+  remainingTasksCount?: number;
+  queuedCount?: number;
+  claimedCount?: number;
+  progressPercent?: number;
   currentIndex: number;
   currentAnimeId: string | null;
   currentAnimeTitle: string | null;
   startedAt: string | null;
   updatedAt: string;
+  stateVersion?: number;
   finishedAt?: string | null;
-  mode?: 'all' | 'unverified' | 'inspect';
+  mode?: 'all' | 'unverified' | 'fix_missing' | 'inspect';
   workerCount?: number;
+  globalStats?: {
+    total: number;
+    verified: number;
+    autoFixed: number;
+    needsReview: number;
+    unableToVerify: number;
+    possibleFake: number;
+    missing: number;
+    unverified: number;
+    pending?: number;
+    completed?: number;
+    failed?: number;
+    historyCount: number;
+  };
   poolConfig?: {
     minWorkers: number;
     maxWorkers: number;
@@ -248,16 +271,18 @@ interface SourceConfig {
   rateLimitPerSecond?: number;
   timeoutMs: number;
   priority: number;
-  status: 'operational' | 'degraded' | 'offline' | 'untested';
+  status: 'operational' | 'testing' | 'rate_limited' | 'temporarily_unavailable' | 'timeout' | 'configuration_error' | 'degraded' | 'offline' | 'disabled' | 'untested';
   lastChecked?: string;
+  lastSuccessfulChecked?: string;
   lastLatencyMs?: number;
   lastError?: string | null;
+  lastMessage?: string | null;
   description: string;
 }
 
 export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
-  // Main Sub-tabs: 'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources'
-  const [subTab, setSubTab] = useState<'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources'>('registry');
+  // Main Sub-tabs: 'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources' | 'watch_order'
+  const [subTab, setSubTab] = useState<'registry' | 'needs_review' | 'workers' | 'fake_issues' | 'history' | 'sources' | 'watch_order'>('registry');
 
   // Dashboard & Scan status
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -278,6 +303,17 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const [fakeIssues, setFakeIssues] = useState<FakeAnimeIssue[]>([]);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const [sourcesList, setSourcesList] = useState<SourceConfig[]>([]);
+
+  // Separate Watch Order Sources System State
+  const [watchOrderSources, setWatchOrderSources] = useState<any[]>([]);
+  const [watchOrderRecords, setWatchOrderRecords] = useState<any[]>([]);
+  const [testingWatchOrderSourceId, setTestingWatchOrderSourceId] = useState<string | null>(null);
+  const [watchOrderSourceTestResult, setWatchOrderSourceTestResult] = useState<Record<string, any>>({});
+  const [watchOrderQuery, setWatchOrderQuery] = useState<string>('');
+  const [resolvingWatchOrder, setResolvingWatchOrder] = useState<boolean>(false);
+  const [validatingFranchiseKey, setValidatingFranchiseKey] = useState<string | null>(null);
+  const [watchOrderFilter, setWatchOrderFilter] = useState<'all' | 'high_confidence' | 'needs_review' | 'validated'>('all');
+  const [watchOrderBannerMessage, setWatchOrderBannerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Inspect All Report Modal / State
   const [inspectReport, setInspectReport] = useState<InspectReport | null>(null);
@@ -341,22 +377,46 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const [sourceTestResult, setSourceTestResult] = useState<Record<string, any>>({});
 
   const pollingRef = useRef<any>(null);
+  const lastStateVersionRef = useRef<number>(0);
 
-  // Safe Monotonic ScanState Updater (Prevents progress numbers from jumping backward)
+  // Safe Monotonic ScanState Updater (Prevents stale responses and backward progress jumps)
   const updateScanStateSafely = (newState: ScanState | null) => {
     if (!newState) return;
     setScanState(prev => {
-      if (!prev) return newState;
-      // If same job run, enforce monotonic non-decreasing processed count
-      if (prev.status === 'running' && newState.status === 'running' && prev.startedAt === newState.startedAt) {
+      if (!prev) {
+        if (newState.stateVersion) lastStateVersionRef.current = newState.stateVersion;
+        return newState;
+      }
+      // If same job run, discard out-of-order stale responses and enforce monotonic progress
+      const sameJob = (prev.jobId && newState.jobId && prev.jobId === newState.jobId) ||
+        (prev.startedAt && newState.startedAt && prev.startedAt === newState.startedAt);
+      if (sameJob) {
+        if (
+          newState.stateVersion &&
+          lastStateVersionRef.current > 0 &&
+          newState.stateVersion < lastStateVersionRef.current
+        ) {
+          return prev;
+        }
+        if (newState.stateVersion) {
+          lastStateVersionRef.current = newState.stateVersion;
+        }
         const safeProcessed = Math.max(prev.processedCount || 0, newState.processedCount || 0);
+        const safeCompleted = Math.max(prev.completedTasksCount || 0, newState.completedTasksCount || 0);
         return {
           ...newState,
-          processedCount: safeProcessed
+          processedCount: safeProcessed,
+          completedTasksCount: safeCompleted
         };
+      }
+      if (newState.stateVersion) {
+        lastStateVersionRef.current = newState.stateVersion;
       }
       return newState;
     });
+    if (newState.globalStats) {
+      setDashboardData((prev: any) => prev ? { ...prev, stats: newState.globalStats } : { stats: newState.globalStats });
+    }
   };
 
   // Lock background body scroll when any overlay/modal is open
@@ -370,25 +430,44 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
   useEffect(() => {
     if (isModalOpen) {
-      const originalOverflow = document.body.style.overflow;
-      const originalTouchAction = document.body.style.touchAction;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      document.documentElement.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.touchAction = originalTouchAction;
+        const ownerModal = document.getElementById('owner-dashboard-modal');
+        if (ownerModal) {
+          document.body.style.overflow = 'hidden';
+          document.documentElement.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = originalBodyOverflow;
+          document.documentElement.style.overflow = originalHtmlOverflow;
+        }
       };
     }
   }, [isModalOpen]);
 
   // Fetch dashboard summary
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (autoReconnectView = false) => {
     try {
       const res = await fetch('/api/owner/artwork-manager/dashboard', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setDashboardData(data);
         updateScanStateSafely(data.scanState);
+        if (data.sources && Array.isArray(data.sources)) {
+          setSourcesList(data.sources);
+        }
+        if (data.watchOrderSources && Array.isArray(data.watchOrderSources)) {
+          setWatchOrderSources(data.watchOrderSources);
+        }
+        if (data.watchOrderRecords && Array.isArray(data.watchOrderRecords)) {
+          setWatchOrderRecords(data.watchOrderRecords);
+        }
+        // Active Job Reconnection: if a verification job is already running when Artwork Manager opens, switch to live progress
+        if (autoReconnectView && data.scanState?.status === 'running') {
+          setSubTab('workers');
+        }
       }
     } catch (err) {
       console.error('Failed to load artwork manager dashboard:', err);
@@ -461,33 +540,170 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     }
   };
 
-  // Initial load
+  // Fetch Watch Order Sources & Records (Separate from Artwork Verification)
+  const fetchWatchOrderData = async () => {
+    try {
+      const res = await fetch('/api/owner/artwork-manager/watch-order/sources', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.sources)) setWatchOrderSources(data.sources);
+        if (Array.isArray(data.records)) setWatchOrderRecords(data.records);
+      }
+    } catch (err) {
+      console.error('Failed to load watch order sources:', err);
+    }
+  };
+
+  const handleTestWatchOrderSource = async (sourceId: string) => {
+    setTestingWatchOrderSourceId(sourceId);
+    try {
+      const res = await fetch(`/api/owner/artwork-manager/watch-order/sources/${sourceId}/test`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      setWatchOrderSourceTestResult(prev => ({ ...prev, [sourceId]: data }));
+      if (Array.isArray(data.sources)) {
+        setWatchOrderSources(data.sources);
+      } else {
+        await fetchWatchOrderData();
+      }
+    } catch (err: any) {
+      setWatchOrderSourceTestResult(prev => ({
+        ...prev,
+        [sourceId]: { success: false, message: err.message }
+      }));
+    } finally {
+      setTestingWatchOrderSourceId(null);
+    }
+  };
+
+  const handleResolveWatchOrder = async (queryOrQueries: string | string[]) => {
+    setResolvingWatchOrder(true);
+    setWatchOrderBannerMessage(null);
+    try {
+      const payload = Array.isArray(queryOrQueries)
+        ? { queries: queryOrQueries }
+        : { query: queryOrQueries };
+      const res = await fetch('/api/owner/artwork-manager/watch-order/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (Array.isArray(data.records)) setWatchOrderRecords(data.records);
+        if (Array.isArray(data.sources)) setWatchOrderSources(data.sources);
+        setWatchOrderBannerMessage({
+          type: 'success',
+          text: Array.isArray(queryOrQueries)
+            ? `Retrieved & compared live watch orders for ${queryOrQueries.join(', ')} across Watchordr and The Anime Order.`
+            : `Retrieved & compared live watch order for "${data.record?.canonicalTitle || queryOrQueries}" (${data.record?.confidenceLabel}).`
+        });
+      } else {
+        setWatchOrderBannerMessage({
+          type: 'error',
+          text: data.error || 'Failed to resolve watch order.'
+        });
+      }
+    } catch (err: any) {
+      setWatchOrderBannerMessage({
+        type: 'error',
+        text: `Error checking watch order: ${err.message}`
+      });
+    } finally {
+      setResolvingWatchOrder(false);
+    }
+  };
+
+  const handleValidateWatchOrder = async (
+    franchiseKey: string,
+    sourceChoice: 'consensus' | 'watchordr' | 'theanimeorder'
+  ) => {
+    setValidatingFranchiseKey(franchiseKey);
+    setWatchOrderBannerMessage(null);
+    try {
+      const res = await fetch('/api/owner/artwork-manager/watch-order/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ franchiseKey, sourceChoice }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (Array.isArray(data.records)) setWatchOrderRecords(data.records);
+        setWatchOrderBannerMessage({
+          type: 'success',
+          text: data.message || 'Watch order validated and linked to catalogue records.'
+        });
+      } else {
+        setWatchOrderBannerMessage({
+          type: 'error',
+          text: data.error || 'Failed to validate watch order.'
+        });
+      }
+    } catch (err: any) {
+      setWatchOrderBannerMessage({
+        type: 'error',
+        text: `Error validating watch order: ${err.message}`
+      });
+    } finally {
+      setValidatingFranchiseKey(null);
+    }
+  };
+
+  // Initial load & real-time SSE stream connection
   useEffect(() => {
-    fetchDashboard();
+    fetchDashboard(true);
     fetchAnimeList(1, 'all', '');
     fetchFakeIssues();
     fetchHistory();
     fetchSources();
+    fetchWatchOrderData();
+
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/api/owner/artwork-manager/stream', { withCredentials: true });
+      es.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          const liveState = parsed.state || parsed.job;
+          if (liveState) {
+            updateScanStateSafely(liveState);
+          }
+        } catch {}
+      };
+    } catch {}
+
+    return () => {
+      if (es) es.close();
+    };
   }, []);
 
-  // Poll scan state when scan is active
+  // Poll scan state when scan is active or when viewing Workers Monitor
   useEffect(() => {
-    if (scanState?.status === 'running') {
+    const shouldPoll = scanState?.status === 'running' || subTab === 'workers' || processingItemIds.length > 0;
+    if (shouldPoll) {
       pollingRef.current = setInterval(async () => {
         try {
           const res = await fetch('/api/owner/artwork-manager/status', { credentials: 'include' });
           if (res.ok) {
             const data = await res.json();
-            updateScanStateSafely(data.state);
-            if (data.state.status !== 'running') {
-              clearInterval(pollingRef.current);
-              fetchDashboard();
-              fetchAnimeList();
-              fetchFakeIssues();
+            const liveState = data.state || data.job;
+            if (liveState) {
+              const wasRunning = scanState?.status === 'running';
+              updateScanStateSafely(liveState);
+              if (wasRunning && liveState.status !== 'running') {
+                fetchDashboard();
+                fetchAnimeList(page, statusFilter, searchQuery);
+                fetchFakeIssues();
+                fetchHistory();
+              }
             }
           }
         } catch {}
-      }, 1500);
+      }, 750);
     } else {
       if (pollingRef.current) clearInterval(pollingRef.current);
     }
@@ -495,7 +711,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [scanState?.status]);
+  }, [scanState?.status, scanState?.jobId, subTab, processingItemIds.length]);
 
   // Handle Search & Filter changes
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -548,11 +764,15 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       });
       const data = await res.json();
       if (data.success) {
-        if (data.state) {
-          setScanState(data.state);
+        const nextState = data.state || data.job;
+        if (nextState) {
+          updateScanStateSafely(nextState);
         }
-        fetchDashboard();
         setBatchModalConfig(null);
+        setShowInspectModal(false);
+        // Immediately open the live verification / progress monitoring screen
+        setSubTab('workers');
+        fetchDashboard();
       } else {
         alert(data.message || 'Failed to start verification.');
       }
@@ -611,9 +831,9 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       const data = await res.json();
       if (data.success) {
         setSelectedReviewIds(prev => prev.filter(id => !animeIds.includes(id)));
-        if (data.scanState) setScanState(data.scanState);
+        if (data.scanState) updateScanStateSafely(data.scanState);
         await fetchDashboard();
-        await fetchAnimeList();
+        await fetchAnimeList(page, statusFilter, searchQuery);
       } else {
         alert(data.error || 'Operation failed.');
       }
@@ -637,9 +857,9 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       const data = await res.json();
       if (data.success) {
         setChosenReplacementModal(null);
-        if (data.scanState) setScanState(data.scanState);
+        if (data.scanState) updateScanStateSafely(data.scanState);
         fetchDashboard();
-        fetchAnimeList();
+        fetchAnimeList(page, statusFilter, searchQuery);
       } else {
         alert(data.error || 'Failed to choose replacement.');
       }
@@ -720,6 +940,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       });
       const data = await res.json();
       if (data.success) {
+        if (data.state || data.job) updateScanStateSafely(data.state || data.job);
         fetchDashboard();
       }
     } catch (err: any) {
@@ -738,6 +959,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       });
       const data = await res.json();
       if (data.success) {
+        if (data.state || data.job) updateScanStateSafely(data.state || data.job);
+        setSubTab('workers');
         fetchDashboard();
       } else {
         alert(data.message || 'Failed to resume.');
@@ -752,10 +975,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
   const handleStopScan = async () => {
     setActionLoading(true);
     try {
-      await fetch('/api/owner/artwork-manager/stop', {
+      const res = await fetch('/api/owner/artwork-manager/stop', {
         method: 'POST',
         credentials: 'include'
       });
+      const data = await res.json();
+      if (data.state || data.job) updateScanStateSafely(data.state || data.job);
       fetchDashboard();
     } catch (err: any) {
       alert(`Error stopping scan: ${err.message}`);
@@ -774,6 +999,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       });
       const data = await res.json();
       if (data.success) {
+        if (data.state || data.job) updateScanStateSafely(data.state || data.job);
         fetchDashboard();
       }
     } catch (err: any) {
@@ -922,6 +1148,10 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     unableToVerify: 0,
     possibleFake: 0,
     missing: 0,
+    unverified: 0,
+    pending: 0,
+    completed: 0,
+    failed: 0,
     historyCount: 0
   };
 
@@ -930,29 +1160,29 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
     : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-100">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in text-slate-100 max-w-full overflow-x-hidden">
       {/* 1. TOP HEADER & PRIMARY ACTION BAR */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/40 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-1.5 max-w-2xl">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5">
+          <div className="space-y-1.5 max-w-2xl min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0">
                 <ImageIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-base sm:text-lg font-black text-white tracking-wide uppercase">
+              <h3 className="text-sm sm:text-lg font-black text-white tracking-wide uppercase">
                 ARTWORK MANAGER
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Automated Catalogue Integrity
               </span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-300 leading-relaxed break-words">
               Automated dual-source verification engine cross-checking AniList and Jikan/MyAnimeList data at scale. Auto-fixes low-res or missing artwork, detects possible fake anime, and secures high-resolution poster assets.
             </p>
           </div>
 
           {/* Primary Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
             {scanState?.status === 'running' ? (
               <>
                 <button
@@ -1083,19 +1313,19 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         {(scanState?.status === 'running' || scanState?.status === 'paused') && (
           <div className="mt-5 pt-4 border-t border-slate-800/80 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
-              <div className="flex items-center gap-2">
-                <span className={`inline-block w-2.5 h-2.5 rounded-full ${scanState.status === 'running' ? 'bg-amber-400 animate-ping' : 'bg-amber-600'}`} />
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${scanState.status === 'running' ? 'bg-amber-400 animate-ping' : 'bg-amber-600'}`} />
                 <span className="font-bold text-white uppercase tracking-wider">
                   {scanState.status === 'running' ? 'Processing Workers...' : 'Verification Paused'}
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-amber-300 border border-slate-700">
                   {scanState.workerCount || 5} Workers Active
                 </span>
-                <span className="text-slate-400 truncate max-w-sm">
+                <span className="text-slate-400 break-words sm:truncate max-w-full sm:max-w-sm">
                   {scanState.currentAnimeTitle ? `[Active: ${scanState.currentAnimeTitle}]` : scanState.lastLog}
                 </span>
               </div>
-              <div className="flex items-center gap-3 font-mono font-bold text-xs">
+              <div className="flex flex-wrap items-center gap-3 font-mono font-bold text-xs">
                 {scanState.estimatedRemainingSeconds !== null && scanState.estimatedRemainingSeconds !== undefined && scanState.status === 'running' && (
                   <span className="text-emerald-400 font-normal">
                     ETA: ~{Math.ceil(scanState.estimatedRemainingSeconds / 60)}m ({scanState.estimatedRemainingSeconds}s)
@@ -1136,65 +1366,83 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2.5">
         {/* Total Anime */}
-        <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catalogue</span>
-          <div className="text-xl font-black text-white">{stats.total}</div>
-          <div className="text-[10px] text-slate-500 flex items-center gap-1">
-            <Layers className="w-3 h-3 text-slate-400" />
-            <span>Total Titles</span>
-          </div>
+        <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total</span>
+          <div className="text-lg font-black text-white font-mono">{stats.total}</div>
+          <div className="text-[9px] text-slate-500">Catalogue Titles</div>
         </div>
 
         {/* Verified */}
-        <div className="p-3.5 bg-slate-950/80 border border-emerald-500/30 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Verified</span>
-          <div className="text-xl font-black text-emerald-400">{stats.verified}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-            <span>High Quality</span>
-          </div>
+        <div className="p-3 bg-slate-950/80 border border-emerald-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Verified</span>
+          <div className="text-lg font-black text-emerald-400 font-mono">{stats.verified}</div>
+          <div className="text-[9px] text-slate-400">Validated Artwork</div>
         </div>
 
         {/* Auto Fixed */}
-        <div className="p-3.5 bg-slate-950/80 border border-cyan-500/30 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Auto-Fixed</span>
-          <div className="text-xl font-black text-cyan-400">{stats.autoFixed}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span>Posters Replaced</span>
-          </div>
+        <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">Auto-Fixed</span>
+          <div className="text-lg font-black text-cyan-400 font-mono">{stats.autoFixed}</div>
+          <div className="text-[9px] text-slate-400">Posters Repaired</div>
         </div>
 
         {/* Needs Review */}
-        <div className="p-3.5 bg-slate-950/80 border border-amber-500/30 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Needs Review</span>
-          <div className="text-xl font-black text-amber-400">{stats.needsReview}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 text-amber-400" />
-            <span>Uncertain / Conflict</span>
-          </div>
+        <div className="p-3 bg-slate-950/80 border border-amber-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Needs Review</span>
+          <div className="text-lg font-black text-amber-400 font-mono">{stats.needsReview}</div>
+          <div className="text-[9px] text-slate-400">Uncertain Match</div>
         </div>
 
         {/* Unable to Verify */}
-        <div className="p-3.5 bg-slate-950/80 border border-blue-500/30 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Unable to Verify</span>
-          <div className="text-xl font-black text-blue-400">{stats.unableToVerify}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
-            <HelpCircle className="w-3 h-3 text-blue-400" />
-            <span>API Fallback/Retry</span>
-          </div>
+        <div className="p-3 bg-slate-950/80 border border-blue-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">Unable to Verify</span>
+          <div className="text-lg font-black text-blue-400 font-mono">{stats.unableToVerify}</div>
+          <div className="text-[9px] text-slate-400">No Source Match</div>
         </div>
 
         {/* Possible Fake */}
-        <div className="p-3.5 bg-slate-950/80 border border-rose-500/40 rounded-xl space-y-1">
-          <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Possible Fake</span>
-          <div className="text-xl font-black text-rose-400">{stats.possibleFake}</div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 text-rose-400" />
-            <span>Zero DB Match</span>
+        <div className="p-3 bg-slate-950/80 border border-rose-500/40 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Possible Fake</span>
+          <div className="text-lg font-black text-rose-400 font-mono">{stats.possibleFake}</div>
+          <div className="text-[9px] text-slate-400">Zero DB Match</div>
+        </div>
+
+        {/* Missing Artwork */}
+        <div className="p-3 bg-slate-950/80 border border-orange-500/40 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider block">Missing Artwork</span>
+          <div className="text-lg font-black text-orange-400 font-mono">{stats.missing}</div>
+          <div className="text-[9px] text-slate-400">Needs Poster</div>
+        </div>
+
+        {/* Pending */}
+        <div className="p-3 bg-slate-950/80 border border-purple-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">Pending</span>
+          <div className="text-lg font-black text-purple-400 font-mono">
+            {scanState?.status === 'running' || scanState?.status === 'paused'
+              ? (scanState.remainingTasksCount ?? stats.pending ?? 0)
+              : (stats.pending ?? Math.max(0, stats.total - stats.verified))}
           </div>
+          <div className="text-[9px] text-slate-400">Awaiting Scan</div>
+        </div>
+
+        {/* Completed */}
+        <div className="p-3 bg-slate-950/80 border border-emerald-500/20 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider block">Completed</span>
+          <div className="text-lg font-black text-emerald-300 font-mono">
+            {scanState?.completedTasksCount ?? stats.completed ?? 0}
+          </div>
+          <div className="text-[9px] text-slate-400">Tasks Finished</div>
+        </div>
+
+        {/* Failed */}
+        <div className="p-3 bg-slate-950/80 border border-rose-500/30 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider block">Failed</span>
+          <div className="text-lg font-black text-rose-300 font-mono">
+            {scanState?.failedTasksCount ?? stats.failed ?? 0}
+          </div>
+          <div className="text-[9px] text-slate-400">Failed Tasks</div>
         </div>
       </div>
 
@@ -1244,8 +1492,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
           }`}
         >
           <Activity className="w-3.5 h-3.5 text-amber-400" />
-          <span>Workers Monitor (5)</span>
-          {scanState?.activeWorkers?.some(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy') && (
+          <span>Workers Monitor ({scanState?.poolConfig?.currentWorkers || scanState?.workerCount || 50})</span>
+          {(scanState?.status === 'running' || scanState?.activeWorkers?.some(w => w.status === 'working' || w.status === 'claiming' || w.status === 'waiting' || w.status === 'retrying' || w.status === 'busy')) && (
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           )}
         </button>
@@ -1296,7 +1544,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             setSubTab('sources');
             fetchSources();
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ml-auto ${
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer sm:ml-auto ${
             subTab === 'sources'
               ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
               : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
@@ -1304,6 +1552,29 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         >
           <Globe className="w-3.5 h-3.5" />
           <span>Artwork Sources</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSubTab('watch_order');
+            fetchWatchOrderData();
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+            subTab === 'watch_order'
+              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+              : 'bg-slate-950 text-cyan-300 hover:text-white border border-cyan-500/40'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Watch Order Sources</span>
+          {watchOrderRecords.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono font-black ${
+              subTab === 'watch_order' ? 'bg-slate-950 text-cyan-300' : 'bg-cyan-500/20 text-cyan-300'
+            }`}>
+              {watchOrderRecords.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1583,7 +1854,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
           </div>
 
           {/* Sub-Filters Chips */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-2 rounded-xl border border-slate-800 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-2 rounded-xl border border-slate-800">
             {[
               { id: 'all', label: 'All Review Items' },
               { id: 'missing_artwork', label: 'Missing Artwork' },
@@ -1597,7 +1868,18 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
               <button
                 key={chip.id}
                 type="button"
-                onClick={() => setReviewSubFilter(chip.id)}
+                onClick={() => {
+                  setReviewSubFilter(chip.id);
+                  if (chip.id === 'missing_artwork') {
+                    handleStatusFilterChange('missing');
+                  } else if (chip.id === 'unable_to_verify') {
+                    handleStatusFilterChange('unable_to_verify');
+                  } else if (chip.id === 'possible_fake') {
+                    handleStatusFilterChange('possible_fake');
+                  } else {
+                    handleStatusFilterChange('needs_review');
+                  }
+                }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase cursor-pointer transition-colors ${
                   reviewSubFilter === chip.id
                     ? 'bg-amber-500 text-slate-950 shadow-sm'
@@ -1610,196 +1892,215 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
           </div>
 
           {/* Review Cards Grid */}
-          {animeList.length > 0 ? (
-            <div className="space-y-3">
-              {animeList.map(anime => {
-                const isSelected = selectedReviewIds.includes(anime.id);
-                return (
-                  <div
-                    key={anime.id}
-                    className={`bg-slate-950/90 border rounded-2xl p-4 transition-all space-y-3 ${
-                      isSelected ? 'border-amber-500 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                      {/* Left: Checkbox + Poster + Info */}
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={e => {
-                            if (e.target.checked) {
-                              setSelectedReviewIds(prev => [...prev, anime.id]);
-                            } else {
-                              setSelectedReviewIds(prev => prev.filter(id => id !== anime.id));
-                            }
-                          }}
-                          className="mt-1.5 w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-amber-500 bg-slate-900 cursor-pointer"
-                        />
+          {(() => {
+            const filteredReviewList = animeList.filter(anime => {
+              const iss = (anime.issue || '').toLowerCase();
+              if (reviewSubFilter === 'temporary_source_failure') {
+                return iss.includes('temporary') || iss.includes('rate-limit') || iss.includes('timeout');
+              }
+              if (reviewSubFilter === 'low_quality') {
+                return iss.includes('low') || iss.includes('small') || iss.includes('resolution');
+              }
+              if (reviewSubFilter === 'sources_disagree') {
+                return iss.includes('disagree') || iss.includes('conflict');
+              }
+              if (reviewSubFilter === 'incorrect_artwork') {
+                return iss.includes('incorrect') || iss.includes('mismatch') || iss.includes('reverted');
+              }
+              return true;
+            });
 
-                        {/* Uncropped Artwork */}
-                        <div className="w-16 h-24 rounded-lg bg-slate-950 border border-slate-800 shrink-0 overflow-hidden relative flex items-center justify-center">
-                          {anime.currentArtworkUrl ? (
-                            <>
-                              <img
-                                src={anime.currentArtworkUrl}
-                                alt=""
-                                aria-hidden="true"
-                                className="absolute inset-0 w-full h-full object-cover opacity-25 blur-sm scale-110 pointer-events-none select-none"
-                              />
-                              <img
-                                src={anime.currentArtworkUrl}
-                                alt={anime.title}
-                                className="relative z-10 max-w-full max-h-full object-contain drop-shadow-sm"
-                              />
-                            </>
-                          ) : (
-                            <div className="text-slate-600 flex flex-col items-center">
-                              <ImageIcon className="w-5 h-5 opacity-40" />
-                              <span className="text-[8px] text-center mt-1">No Poster</span>
+            return filteredReviewList.length > 0 ? (
+              <div className="space-y-3">
+                {filteredReviewList.map(anime => {
+                  const isSelected = selectedReviewIds.includes(anime.id);
+                  return (
+                    <div
+                      key={anime.id}
+                      className={`bg-slate-950/90 border rounded-2xl p-3.5 sm:p-4 transition-all space-y-3 ${
+                        isSelected ? 'border-amber-500 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        {/* Left: Checkbox + Poster + Info */}
+                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedReviewIds(prev => [...prev, anime.id]);
+                              } else {
+                                setSelectedReviewIds(prev => prev.filter(id => id !== anime.id));
+                              }
+                            }}
+                            className="mt-1.5 w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-amber-500 bg-slate-900 cursor-pointer shrink-0"
+                          />
+
+                          {/* Uncropped Artwork */}
+                          <div className="w-14 sm:w-16 h-20 sm:h-24 rounded-lg bg-slate-950 border border-slate-800 shrink-0 overflow-hidden relative flex items-center justify-center">
+                            {anime.currentArtworkUrl ? (
+                              <>
+                                <img
+                                  src={anime.currentArtworkUrl}
+                                  alt=""
+                                  aria-hidden="true"
+                                  className="absolute inset-0 w-full h-full object-cover opacity-25 blur-sm scale-110 pointer-events-none select-none"
+                                />
+                                <img
+                                  src={anime.currentArtworkUrl}
+                                  alt={anime.title}
+                                  className="relative z-10 max-w-full max-h-full object-contain drop-shadow-sm"
+                                />
+                              </>
+                            ) : (
+                              <div className="text-slate-600 flex flex-col items-center">
+                                <ImageIcon className="w-5 h-5 opacity-40" />
+                                <span className="text-[8px] text-center mt-1">No Poster</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Text Metadata */}
+                          <div className="space-y-1.5 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-xs sm:text-sm text-white break-words">{anime.title}</h4>
+                              <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                {anime.verificationStatus.replace('_', ' ')}
+                              </span>
                             </div>
-                          )}
+
+                            <p className="text-[11px] sm:text-xs text-slate-400 font-mono break-words">
+                              ID: {anime.id} • Source: {anime.source}
+                            </p>
+
+                            {/* Reason Description Box */}
+                            <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs text-amber-200/90 space-y-1">
+                              <div className="font-black text-[10px] uppercase text-amber-400 flex items-center gap-1">
+                                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                <span>Reason for Review:</span>
+                              </div>
+                              <p className="text-[11px] font-sans break-words">{anime.issue || 'Requires review before catalog verification.'}</p>
+                            </div>
+
+                            {/* Sources Checked Badges */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
+                              {anime.aniListMatch && (
+                                <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                                  AniList Match: <strong className="text-emerald-400">{Math.round(anime.aniListMatch.score * 100)}%</strong>
+                                </span>
+                              )}
+                              {anime.jikanMatch && (
+                                <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                                  Jikan Match: <strong className="text-emerald-400">{Math.round(anime.jikanMatch.score * 100)}%</strong>
+                                </span>
+                              )}
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono">
+                                Last Checked: {anime.lastVerifiedAt ? new Date(anime.lastVerifiedAt).toLocaleString() : 'Recent'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Text Metadata */}
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-sm text-white break-words">{anime.title}</h4>
-                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                              {anime.verificationStatus.replace('_', ' ')}
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-slate-400 font-mono">
-                            ID: {anime.id} • Source: {anime.source}
-                          </p>
-
-                          {/* Reason Description Box */}
-                          <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs text-amber-200/90 space-y-1">
-                            <div className="font-black text-[10px] uppercase text-amber-400 flex items-center gap-1">
-                              <AlertTriangle className="w-3.5 h-3.5" />
-                              <span>Reason for Review:</span>
-                            </div>
-                            <p className="text-[11px] font-sans">{anime.issue || 'Requires review before catalog verification.'}</p>
-                          </div>
-
-                          {/* Sources Checked Badges */}
-                          <div className="flex flex-wrap items-center gap-2 pt-1">
-                            {anime.aniListMatch && (
-                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
-                                AniList Match: <strong className="text-emerald-400">{Math.round(anime.aniListMatch.score * 100)}%</strong>
-                              </span>
-                            )}
-                            {anime.jikanMatch && (
-                              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-mono">
-                                Jikan Match: <strong className="text-emerald-400">{Math.round(anime.jikanMatch.score * 100)}%</strong>
-                              </span>
-                            )}
-                            <span className="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono">
-                              Last Checked: {anime.lastVerifiedAt ? new Date(anime.lastVerifiedAt).toLocaleString() : 'Recent'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Individual Workspace Actions */}
-                      <div className="flex flex-wrap md:flex-col gap-1.5 shrink-0 justify-end">
-                        {(() => {
-                          const isItemProcessing = processingItemIds.includes(anime.id) || (scanState?.status === 'running' && scanState?.activeWorkers?.some(w => w.currentAnimeId === anime.id));
-                          return (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleBulkAction('reverify', [anime.id])}
-                                disabled={actionLoading || isItemProcessing}
-                                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
-                              >
-                                <RefreshCw className={`w-3 h-3 ${isItemProcessing ? 'animate-spin' : ''}`} />
-                                <span>{isItemProcessing ? 'Processing...' : 'Re-verify'}</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleBulkAction('search-again', [anime.id])}
-                                disabled={actionLoading || isItemProcessing}
-                                className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
-                              >
-                                <Search className={`w-3 h-3 ${isItemProcessing ? 'animate-spin' : ''}`} />
-                                <span>{isItemProcessing ? 'Searching...' : 'Search Again'}</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleBulkAction('fix-artwork', [anime.id])}
-                                disabled={actionLoading || isItemProcessing}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
-                              >
-                                <Sparkles className="w-3 h-3 fill-slate-950" />
-                                <span>{isItemProcessing ? 'Fixing...' : 'Fix Artwork'}</span>
-                              </button>
-
-                              {anime.candidates && anime.candidates.length > 0 && (
+                        {/* Right: Individual Workspace Actions */}
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap md:flex-col gap-1.5 w-full md:w-auto shrink-0 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-900">
+                          {(() => {
+                            const isItemProcessing = processingItemIds.includes(anime.id) || (scanState?.status === 'running' && scanState?.activeWorkers?.some(w => w.currentAnimeId === anime.id));
+                            return (
+                              <>
                                 <button
                                   type="button"
-                                  onClick={() => setChosenReplacementModal({
-                                    open: true,
-                                    animeId: anime.id,
-                                    animeTitle: anime.title,
-                                    candidates: anime.candidates
-                                  })}
+                                  onClick={() => handleBulkAction('reverify', [anime.id])}
                                   disabled={actionLoading || isItemProcessing}
-                                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
                                 >
-                                  <ImageIcon className="w-3 h-3" />
-                                  <span>Choose Candidate</span>
+                                  <RefreshCw className={`w-3 h-3 shrink-0 ${isItemProcessing ? 'animate-spin' : ''}`} />
+                                  <span>{isItemProcessing ? 'Processing...' : 'Re-verify'}</span>
                                 </button>
-                              )}
 
-                              <button
-                                type="button"
-                                onClick={() => handleBulkAction('approve-current', [anime.id])}
-                                disabled={actionLoading || isItemProcessing}
-                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                              >
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                <span>Approve Current</span>
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleBulkAction('search-again', [anime.id])}
+                                  disabled={actionLoading || isItemProcessing}
+                                  className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                                >
+                                  <Search className={`w-3 h-3 shrink-0 ${isItemProcessing ? 'animate-spin' : ''}`} />
+                                  <span>{isItemProcessing ? 'Searching...' : 'Search Again'}</span>
+                                </button>
 
-                              <button
-                                type="button"
-                                onClick={() => handleBulkAction('mark-unable', [anime.id])}
-                                disabled={actionLoading || isItemProcessing}
-                                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold cursor-pointer disabled:opacity-50"
-                              >
-                                Mark Unable
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleBulkAction('fix-artwork', [anime.id])}
+                                  disabled={actionLoading || isItemProcessing}
+                                  className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                                >
+                                  <Sparkles className="w-3 h-3 fill-slate-950 shrink-0" />
+                                  <span>{isItemProcessing ? 'Fixing...' : 'Fix Artwork'}</span>
+                                </button>
 
-                              <button
-                                type="button"
-                                onClick={() => setInspectedAnime(anime)}
-                                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold flex items-center gap-1 border border-slate-800 cursor-pointer"
-                              >
-                                <Eye className="w-3 h-3 text-amber-400" />
-                                <span>Inspect Details</span>
-                              </button>
-                            </>
-                          );
-                        })()}
+                                {anime.candidates && anime.candidates.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setChosenReplacementModal({
+                                      open: true,
+                                      animeId: anime.id,
+                                      animeTitle: anime.title,
+                                      candidates: anime.candidates
+                                    })}
+                                    disabled={actionLoading || isItemProcessing}
+                                    className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black flex items-center justify-center gap-1 cursor-pointer shadow-sm disabled:opacity-50"
+                                  >
+                                    <ImageIcon className="w-3 h-3 shrink-0" />
+                                    <span>Choose Candidate</span>
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleBulkAction('approve-current', [anime.id])}
+                                  disabled={actionLoading || isItemProcessing}
+                                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  <span>Approve Current</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleBulkAction('mark-unable', [anime.id])}
+                                  disabled={actionLoading || isItemProcessing}
+                                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold flex items-center justify-center cursor-pointer disabled:opacity-50"
+                                >
+                                  Mark Unable
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectedAnime(anime)}
+                                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center gap-1 border border-slate-800 cursor-pointer"
+                                >
+                                  <Eye className="w-3 h-3 text-amber-400 shrink-0" />
+                                  <span>Inspect Details</span>
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="py-20 text-center text-slate-500 space-y-2">
-              <CheckCircle2 className="w-10 h-10 text-emerald-400 opacity-60 mx-auto" />
-              <h4 className="font-bold text-sm text-slate-300">Needs Review Queue Clear</h4>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
-                No unresolved anime items require manual attention. Run artwork verification to check for new catalogue updates.
-              </p>
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-20 text-center text-slate-500 space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 opacity-60 mx-auto" />
+                <h4 className="font-bold text-sm text-slate-300">Needs Review Queue Clear</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  No unresolved anime items require manual attention. Run artwork verification to check for new catalogue updates.
+                </p>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -1808,25 +2109,25 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
         <div className="space-y-5">
           {/* Header Banner */}
           <div className="p-4 bg-gradient-to-r from-amber-950/60 via-slate-950 to-slate-950 border border-amber-500/40 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-amber-400" />
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Activity className="w-5 h-5 text-amber-400 shrink-0" />
                 <h3 className="font-black text-sm text-white uppercase tracking-wider">
-                  {scanState?.poolConfig?.currentWorkers || 10}-Worker Execution Pool Monitor
+                  {scanState?.poolConfig?.currentWorkers || 50}-Worker Execution Pool Monitor
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Strict Parallel Execution Pool ({scanState?.poolConfig?.currentWorkers || 10} Workers)
+                  Strict Parallel Execution Pool ({scanState?.poolConfig?.currentWorkers || 50} Workers)
                 </span>
               </div>
-              <p className="text-xs text-slate-300">
-                Authoritative real-time telemetry directly from backend worker job engine. Displays task ownership, current step, source, heartbeats, and execution times across all {scanState?.poolConfig?.currentWorkers || 10} active workers.
+              <p className="text-xs text-slate-300 break-words">
+                Authoritative real-time telemetry directly from backend worker job engine. Displays task ownership, current step, source, heartbeats, and execution times across all {scanState?.poolConfig?.currentWorkers || 50} active workers.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={fetchDashboard}
+                onClick={() => fetchDashboard()}
                 className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
@@ -1835,9 +2136,9 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             </div>
           </div>
 
-          {/* Real Global Summary Totals Bar */}
+          {/* Real Global Summary Totals Bar & Live Verification Progress */}
           {(() => {
-            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || 5;
+            const currentWorkersCount = scanState?.poolConfig?.currentWorkers || scanState?.workerCount || 50;
             const workerIds = Array.from({ length: currentWorkersCount }, (_, i) => i + 1);
 
             const workersList = workerIds.map(id => {
@@ -1853,22 +2154,216 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             });
 
             const workingCount = workersList.filter(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy').length;
+            const waitingCount = workersList.filter(w => w.status === 'waiting').length;
             const idleCount = workersList.filter(w => w.status === 'idle').length;
-            const retryingCount = workersList.filter(w => w.status === 'retrying').length;
-            const errorCount = workersList.filter(w => w.status === 'error').length;
-            const pendingTasks = scanState?.stats?.pending || 0;
-            const completedTasks = scanState?.processedCount || 0;
-            const failedTasks = scanState?.stats?.failed || 0;
+            const retryingCount = workersList.filter(w => w.status === 'retrying' || w.status === 'backing_off').length;
+            const errorCount = workersList.filter(w => w.status === 'error' || w.health === 'stale').length;
+
+            const jobTotal = scanState?.totalTasks ?? scanState?.totalCount ?? 0;
+            const completedTasks = scanState?.completedTasksCount ?? scanState?.processedCount ?? 0;
+            const failedTasks = scanState?.failedTasksCount ?? scanState?.stats?.failed ?? 0;
+            const processedTotal = scanState?.processedCount ?? (completedTasks + failedTasks);
+            const remainingTasks = scanState?.remainingTasksCount ?? Math.max(0, jobTotal - processedTotal);
+            const livePct = jobTotal > 0 ? Math.min(100, Math.round((processedTotal / jobTotal) * 100)) : 0;
+
+            const activeTaskWorkers = workersList.filter(
+              w => (w.status === 'working' || w.status === 'claiming' || w.status === 'waiting' || w.status === 'retrying' || w.status === 'busy') && w.currentAnimeTitle
+            );
 
             return (
               <div className="space-y-4">
+                {/* AUTHORITATIVE LIVE VERIFICATION PROGRESS PANEL */}
+                <div className="p-4 sm:p-5 bg-slate-950/95 border border-amber-500/40 rounded-2xl space-y-4 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${
+                          scanState?.status === 'running'
+                            ? 'bg-emerald-400 animate-ping'
+                            : scanState?.status === 'paused'
+                            ? 'bg-amber-400'
+                            : scanState?.status === 'completed'
+                            ? 'bg-cyan-400'
+                            : 'bg-slate-500'
+                        }`} />
+                        <h4 className="font-black text-sm sm:text-base text-white uppercase tracking-wider">
+                          Artwork Verification — Live Progress
+                        </h4>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                          {(scanState?.mode || 'unverified').replace(/_/g, ' ')}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-slate-900 text-slate-300 border border-slate-700">
+                          Status: {(scanState?.status || 'idle').toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-xs font-mono text-slate-400">
+                        Job: <span className="text-amber-300 font-bold">{scanState?.jobId || 'job_ready'}</span>
+                        {scanState?.startedAt && (
+                          <span className="ml-3 text-slate-500">
+                            Started: {new Date(scanState.startedAt).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {scanState?.status === 'running' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handlePauseScan}
+                            disabled={actionLoading}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50"
+                          >
+                            Pause
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleStopScan}
+                            disabled={actionLoading}
+                            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs cursor-pointer disabled:opacity-50"
+                          >
+                            Stop
+                          </button>
+                        </>
+                      )}
+                      {scanState?.status === 'paused' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleResumeScan}
+                            disabled={actionLoading}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs cursor-pointer disabled:opacity-50"
+                          >
+                            Resume
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleStopScan}
+                            disabled={actionLoading}
+                            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs cursor-pointer disabled:opacity-50"
+                          >
+                            Stop
+                          </button>
+                        </>
+                      )}
+                      {scanState?.status !== 'running' && scanState?.status !== 'paused' && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartScan('unverified')}
+                          disabled={actionLoading}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
+                          <span>Verify Unverified Now</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Progress Counter XX / TOTAL & Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-bold uppercase text-slate-400">Progress:</span>
+                        <span className="text-xl sm:text-2xl font-black font-mono text-white">
+                          {processedTotal} <span className="text-slate-500">/</span> {jobTotal}
+                        </span>
+                        <span className="text-xs font-mono text-amber-400 font-bold">({livePct}%)</span>
+                      </div>
+                      <span className="text-xs font-mono text-cyan-400">
+                        ETA: {scanState?.etaFormatted || (scanState?.status === 'running' ? 'Calculating...' : 'Idle')}
+                      </span>
+                    </div>
+                    <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-500 via-emerald-400 to-cyan-400 transition-all duration-300"
+                        style={{ width: `${livePct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Authoritative Job & Catalogue Counters */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 text-xs">
+                    <div className="p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Total Job</span>
+                      <span className="text-base font-black text-white font-mono">{jobTotal}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-xl">
+                      <span className="text-[10px] text-emerald-400 uppercase font-bold block">Completed</span>
+                      <span className="text-base font-black text-emerald-400 font-mono">{completedTasks}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-cyan-500/30 rounded-xl">
+                      <span className="text-[10px] text-cyan-400 uppercase font-bold block">Remaining</span>
+                      <span className="text-base font-black text-cyan-400 font-mono">{remainingTasks}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-emerald-500/20 rounded-xl">
+                      <span className="text-[10px] text-emerald-300 uppercase font-bold block">Verified</span>
+                      <span className="text-base font-black text-emerald-300 font-mono">{stats.verified}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-blue-500/30 rounded-xl">
+                      <span className="text-[10px] text-blue-400 uppercase font-bold block">Auto-Fixed</span>
+                      <span className="text-base font-black text-blue-400 font-mono">{stats.autoFixed}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-amber-500/30 rounded-xl">
+                      <span className="text-[10px] text-amber-400 uppercase font-bold block">Needs Review</span>
+                      <span className="text-base font-black text-amber-400 font-mono">{stats.needsReview}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-orange-500/30 rounded-xl">
+                      <span className="text-[10px] text-orange-400 uppercase font-bold block">Unable to Verify</span>
+                      <span className="text-base font-black text-orange-400 font-mono">{stats.unableToVerify}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 border border-rose-500/30 rounded-xl">
+                      <span className="text-[10px] text-rose-400 uppercase font-bold block">Failed</span>
+                      <span className="text-base font-black text-rose-400 font-mono">{failedTasks}</span>
+                    </div>
+                  </div>
+
+                  {/* Current Live Worker Activity Stream */}
+                  <div className="p-3 bg-slate-900/70 border border-slate-800 rounded-xl space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+                      <span className="font-bold text-amber-300 uppercase tracking-wider font-mono">
+                        Current Worker Activity ({activeTaskWorkers.length} Active)
+                      </span>
+                      <span className="text-slate-400 font-mono break-words">
+                        Working: {workingCount} • Waiting: {waitingCount} • Retrying: {retryingCount} • Idle: {idleCount} • Error: {errorCount}
+                      </span>
+                    </div>
+                    {activeTaskWorkers.length > 0 ? (
+                      <div className="space-y-1 max-h-36 overflow-y-auto font-mono text-xs">
+                        {activeTaskWorkers.slice(0, 10).map(w => (
+                          <div key={w.workerId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1.5 px-2 rounded bg-slate-950/80 border border-slate-800/80">
+                            <div className="break-words pr-2 min-w-0">
+                              <span className="text-emerald-400 font-bold">Worker {w.workerId}</span>
+                              <span className="text-slate-500 mx-1.5">→</span>
+                              <span className="text-white font-bold">{w.currentAnimeTitle}</span>
+                              <span className="text-slate-500 mx-1.5">→</span>
+                              <span className="text-amber-300">{w.operation || 'Artwork verification'}</span>
+                              {w.currentStep && (
+                                <span className="text-slate-400 ml-1.5 text-[10px]">({w.currentStep})</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-cyan-300 shrink-0 self-start sm:self-center">
+                              {w.status.toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-400 font-mono py-1 break-words">
+                        {scanState?.lastLog || 'All workers idle. Start Verify Unverified or Verify All to process tasks.'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Infrastructure Telemetry & Capacity Controls */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3.5 bg-slate-950/90 border border-slate-800 rounded-xl text-xs">
                   <div className="space-y-1">
                     <span className="text-[10px] text-slate-500 font-bold uppercase block">50-Worker Capable Architecture</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-white font-bold text-sm">
-                        {scanState?.poolConfig?.currentWorkers || 10} Active
+                        {scanState?.poolConfig?.currentWorkers || 50} Active
                       </span>
                       <span className="text-slate-500 text-[10px] font-mono">(Max Capable: 50)</span>
                     </div>
@@ -1883,7 +2378,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                           type="button"
                           onClick={() => handleUpdatePoolConfig(cnt)}
                           className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
-                            (scanState?.poolConfig?.currentWorkers || 10) === cnt
+                            (scanState?.poolConfig?.currentWorkers || 50) === cnt
                               ? 'bg-amber-500 text-slate-950 shadow'
                               : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                           }`}
@@ -1917,6 +2412,12 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                     <div className="text-[9px] text-slate-500">Active workers</div>
                   </div>
 
+                  <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl">
+                    <div className="text-[10px] font-bold text-cyan-400 uppercase">Waiting</div>
+                    <div className="text-lg font-black text-cyan-400 font-mono">{waitingCount}</div>
+                    <div className="text-[9px] text-slate-500">Rate limiter slot</div>
+                  </div>
+
                   <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
                     <div className="text-[10px] font-bold text-slate-400 uppercase">Idle</div>
                     <div className="text-lg font-black text-slate-300 font-mono">{idleCount}</div>
@@ -1933,12 +2434,6 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                     <div className="text-[10px] font-bold text-rose-400 uppercase">Errors</div>
                     <div className="text-lg font-black text-rose-400 font-mono">{errorCount}</div>
                     <div className="text-[9px] text-slate-500">Worker errors</div>
-                  </div>
-
-                  <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl">
-                    <div className="text-[10px] font-bold text-cyan-400 uppercase">Pending Tasks</div>
-                    <div className="text-lg font-black text-cyan-400 font-mono">{pendingTasks}</div>
-                    <div className="text-[9px] text-slate-500">In queue</div>
                   </div>
 
                   <div className="p-3 bg-slate-950/80 border border-blue-500/30 rounded-xl">
@@ -1958,7 +2453,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-bold text-slate-500 uppercase font-mono mr-1">Filter Workers:</span>
-                    {['all', 'working', 'idle', 'retrying', 'error', 'stalled', 'stopped'].map(st => (
+                    {['all', 'working', 'claiming', 'waiting', 'retrying', 'idle', 'paused', 'error', 'stopped'].map(st => (
                       <button
                         key={st}
                         type="button"
@@ -2003,13 +2498,16 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
             });
 
             const filteredWorkers = allWorkerObjects.filter(w => {
+              const effectiveStatus = (w.currentTaskId && w.status === 'idle') ? 'working' : w.status;
               if (workerStatusFilter === 'all') return true;
-              if (workerStatusFilter === 'working') return w.status === 'working' || w.status === 'claiming' || w.status === 'busy';
-              if (workerStatusFilter === 'idle') return w.status === 'idle';
-              if (workerStatusFilter === 'retrying') return w.status === 'retrying';
-              if (workerStatusFilter === 'error') return w.status === 'error';
-              if (workerStatusFilter === 'stalled') return (w.status as string) === 'stalled';
-              if (workerStatusFilter === 'stopped') return w.status === 'stopped' || w.status === 'paused';
+              if (workerStatusFilter === 'working') return effectiveStatus === 'working' || effectiveStatus === 'busy';
+              if (workerStatusFilter === 'claiming') return effectiveStatus === 'claiming';
+              if (workerStatusFilter === 'waiting') return effectiveStatus === 'waiting';
+              if (workerStatusFilter === 'idle') return effectiveStatus === 'idle' && !w.currentTaskId;
+              if (workerStatusFilter === 'retrying') return effectiveStatus === 'retrying' || effectiveStatus === 'backing_off';
+              if (workerStatusFilter === 'paused') return effectiveStatus === 'paused';
+              if (workerStatusFilter === 'error') return effectiveStatus === 'error' || w.health === 'stale';
+              if (workerStatusFilter === 'stopped') return effectiveStatus === 'stopped';
               return true;
             });
 
@@ -2100,10 +2598,20 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedWorkers.map(worker => {
                     const id = worker.workerId;
-                    const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
-                    const isRetrying = worker.status === 'retrying';
-                    const isError = worker.status === 'error';
-                    const isPaused = worker.status === 'paused';
+                    const hasActiveTask = Boolean(worker.currentTaskId);
+                    const rawStatus = hasActiveTask && worker.status === 'idle' ? 'working' : worker.status;
+                    const normalizedStatus =
+                      rawStatus === 'busy'
+                        ? 'WORKING'
+                        : rawStatus === 'backing_off'
+                        ? 'RETRYING'
+                        : rawStatus.toUpperCase();
+                    const isWorking = normalizedStatus === 'WORKING' || normalizedStatus === 'CLAIMING';
+                    const isWaiting = normalizedStatus === 'WAITING';
+                    const isRetrying = normalizedStatus === 'RETRYING';
+                    const isError = normalizedStatus === 'ERROR' || worker.health === 'stale';
+                    const isPaused = normalizedStatus === 'PAUSED' || normalizedStatus === 'STOPPED';
+                    const healthStatus = (worker.health || (isError ? 'error' : 'healthy')).toUpperCase();
 
                     return (
                       <div
@@ -2112,6 +2620,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                         className={`p-4 rounded-xl border transition-all space-y-3 relative overflow-hidden cursor-pointer group hover:scale-[1.01] ${
                           isWorking
                             ? 'bg-slate-950/90 border-emerald-500/50 hover:border-emerald-400 shadow-lg shadow-emerald-950/20'
+                            : isWaiting
+                            ? 'bg-slate-950/90 border-cyan-500/50 hover:border-cyan-400'
                             : isRetrying
                             ? 'bg-slate-950/90 border-amber-500/50 hover:border-amber-400'
                             : isError
@@ -2121,26 +2631,30 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                             : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                         }`}
                       >
-                        {/* Worker Card Top Header */}
-                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                        {/* Worker Card Top Header: Worker ID & Status */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
                           <div className="flex items-center gap-2">
                             <div className={`p-1.5 rounded-lg text-xs font-black font-mono border ${
                               isWorking
                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : isWaiting
+                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                                 : 'bg-slate-800 text-slate-300 border-slate-700'
                             }`}>
                               Worker #{id}
                             </div>
                             <span className="text-xs font-black text-white uppercase tracking-wider">
-                              Worker {id}
+                              ID: W-{id}
                             </span>
                           </div>
 
-                          {/* Status Badge */}
+                          {/* Real Backend Status Badge: IDLE, CLAIMING, WORKING, RETRYING, WAITING, PAUSED, ERROR, STOPPED */}
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border ${
                               isWorking
                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
+                                : isWaiting
+                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                                 : isRetrying
                                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                                 : isError
@@ -2151,71 +2665,72 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                             }`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${
-                              isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
+                              isWorking ? 'bg-emerald-400 animate-ping' : isWaiting ? 'bg-cyan-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
                             }`} />
-                            <span>{isWorking ? 'WORKING' : worker.status.toUpperCase()}</span>
+                            <span>{normalizedStatus}</span>
                           </span>
                         </div>
 
-                        {/* Worker Card Body Details */}
-                        {isWorking || isRetrying || isError ? (
-                          <div className="space-y-2 text-xs">
-                            <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1.5">
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Anime</div>
-                              <div className="font-bold text-white text-sm break-words">
-                                {worker.currentAnimeTitle || 'Anime Task In Progress'}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-mono">
-                                {worker.currentAnimeId && <span>ID: {worker.currentAnimeId}</span>}
-                                {worker.seasonName && <span className="text-amber-300">• {worker.seasonName}</span>}
-                              </div>
+                        {/* Worker Card Body: All 11 Required Real Telemetry Fields */}
+                        <div className="space-y-2 text-xs">
+                          <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1">
+                            <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <span>Anime</span>
+                              <span className="font-mono text-amber-300">
+                                Season: {worker.seasonName || (hasActiveTask ? 'Main / All Seasons' : '—')}
+                              </span>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Task ID</span>
-                                <span className="text-slate-200 truncate block">{worker.currentTaskId || `task-${id}`}</span>
-                              </div>
-
-                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Operation</span>
-                                <span className="text-amber-300 font-bold block">{worker.operation || 'Verify Artwork'}</span>
-                              </div>
-
-                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Source</span>
-                                <span className="text-cyan-300 block truncate">{worker.currentSource || 'AniList'}</span>
-                              </div>
-
-                              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block font-sans">Started / Spent</span>
-                                <span className="text-emerald-400 block">{formatElapsed(worker.taskStartedAt)}</span>
-                              </div>
+                            <div className="font-bold text-white text-xs break-words">
+                              {worker.currentAnimeTitle || (hasActiveTask ? 'Processing Anime Task' : 'No Active Anime')}
                             </div>
-
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
-                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Processing Step</span>
-                              <span className="text-slate-200 text-[11px] block">{worker.currentStep || 'Executing task verification pipeline...'}</span>
+                            <div className="text-[10px] text-slate-400 font-mono break-all">
+                              Anime ID: {worker.currentAnimeId || '—'}
                             </div>
-
-                            {worker.lastError && (
-                              <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-[10px] text-rose-300">
-                                <strong>Error:</strong> {worker.lastError}
-                              </div>
-                            )}
                           </div>
-                        ) : (
-                          <div className="py-6 text-center text-slate-500 space-y-1 bg-slate-900/30 rounded-lg border border-slate-800/40">
-                            <Clock className="w-5 h-5 opacity-40 mx-auto text-slate-400" />
-                            <p className="text-xs font-bold text-slate-400">IDLE</p>
-                            <p className="text-[10px] text-slate-500">No task currently claimed</p>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10px] font-mono">
+                            <div className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-800 min-w-0">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Task</span>
+                              <span className="text-slate-200 break-all block">{worker.currentTaskId || 'None'}</span>
+                            </div>
+
+                            <div className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-800 min-w-0">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Operation</span>
+                              <span className="text-amber-300 font-bold block break-words">{worker.operation || (hasActiveTask ? 'Verify Artwork' : 'Idle')}</span>
+                            </div>
+
+                            <div className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-800 min-w-0">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Source</span>
+                              <span className="text-cyan-300 block break-words">{worker.currentSource || (hasActiveTask ? 'AniList' : '—')}</span>
+                            </div>
+
+                            <div className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-800 min-w-0">
+                              <span className="text-[9px] text-slate-500 uppercase block font-sans">Retry Count &amp; Health</span>
+                              <span className="text-slate-200 block break-words">
+                                Retries: <strong className="text-amber-300">{worker.retryCount ?? 0}</strong> •{' '}
+                                <strong className={healthStatus === 'HEALTHY' ? 'text-emerald-400' : 'text-rose-400'}>{healthStatus}</strong>
+                              </span>
+                            </div>
                           </div>
-                        )}
+
+                          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 space-y-0.5">
+                            <span className="text-[9px] text-slate-500 uppercase block font-sans">Current Step</span>
+                            <span className="text-slate-200 text-[11px] block break-words">
+                              {worker.currentStep || (hasActiveTask ? 'Executing verification pipeline...' : 'Idle — awaiting queued task')}
+                            </span>
+                          </div>
+
+                          {worker.lastError && (
+                            <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-[10px] text-rose-300">
+                              <strong>Error:</strong> {worker.lastError}
+                            </div>
+                          )}
+                        </div>
 
                         {/* Card Footer Metrics */}
-                        <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-400 font-mono">
                           <span>Heartbeat: {formatTimeAgo(worker.lastHeartbeat)}</span>
-                          <span className="text-amber-400 font-sans font-bold group-hover:underline">View Worker Details →</span>
+                          <span className="text-amber-400 font-sans font-bold group-hover:underline">Inspect Worker →</span>
                         </div>
                       </div>
                     );
@@ -2381,8 +2896,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
       {/* --- WORKER DETAIL MODAL / DRAWER --- */}
       {selectedWorkerId !== null && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overscroll-contain">
+          <div className="p-4 sm:p-6 bg-slate-950 border border-slate-800 rounded-2xl max-w-2xl w-full space-y-4 sm:space-y-5 shadow-2xl max-h-[90dvh] overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y">
             {(() => {
               const worker = scanState?.activeWorkers?.find(w => w.workerId === selectedWorkerId) || {
                 workerId: selectedWorkerId,
@@ -2393,8 +2908,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                 health: 'healthy' as const
               };
 
-              const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'busy';
-              const isRetrying = worker.status === 'retrying';
+              const isWorking = worker.status === 'working' || worker.status === 'claiming' || worker.status === 'waiting' || worker.status === 'busy';
+              const isRetrying = worker.status === 'retrying' || worker.status === 'backing_off';
               const isError = worker.status === 'error';
 
               const workerEvents = (scanState?.activityEvents || []).filter(e => e.workerId === selectedWorkerId);
@@ -2441,7 +2956,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                           isWorking ? 'bg-emerald-400 animate-ping' : isRetrying ? 'bg-amber-400' : isError ? 'bg-rose-400' : 'bg-slate-500'
                         }`} />
                         <span className="font-black text-sm text-white uppercase tracking-wider">
-                          Status: {isWorking ? 'WORKING' : worker.status.toUpperCase()}
+                          Status: {(worker.currentTaskId && worker.status === 'idle') ? 'WORKING' : worker.status.toUpperCase()}
                         </span>
                       </div>
                       <span className="text-xs font-mono text-slate-400">
@@ -2449,24 +2964,22 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                       </span>
                     </div>
 
-                    {isWorking ? (
-                      <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800">
-                        <div className="font-bold text-amber-300 text-sm">{worker.currentAnimeTitle}</div>
-                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-300">
-                          <div><span className="text-slate-500">Task ID:</span> {worker.currentTaskId}</div>
-                          <div><span className="text-slate-500">Operation:</span> {worker.operation}</div>
-                          <div><span className="text-slate-500">Source:</span> {worker.currentSource}</div>
-                          <div><span className="text-slate-500">Spent:</span> {formatElapsed(worker.taskStartedAt)}</div>
-                        </div>
-                        <div className="p-2 rounded-lg bg-slate-950 text-slate-300 text-xs">
-                          <strong>Step:</strong> {worker.currentStep}
-                        </div>
+                    <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800">
+                      <div className="font-bold text-amber-300 text-sm break-words">{worker.currentAnimeTitle || 'No Active Anime'}</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono text-slate-300">
+                        <div><span className="text-slate-500">Worker ID:</span> #{worker.workerId}</div>
+                        <div className="break-all"><span className="text-slate-500">Current Task:</span> {worker.currentTaskId || 'None'}</div>
+                        <div className="break-all"><span className="text-slate-500">Anime ID:</span> {worker.currentAnimeId || '—'}</div>
+                        <div className="break-words"><span className="text-slate-500">Season:</span> {worker.seasonName || 'Main / All Seasons'}</div>
+                        <div className="break-words"><span className="text-slate-500">Operation:</span> {worker.operation || 'Idle'}</div>
+                        <div className="break-words"><span className="text-slate-500">Source:</span> {worker.currentSource || '—'}</div>
+                        <div><span className="text-slate-500">Retry Count:</span> {worker.retryCount ?? 0}</div>
+                        <div><span className="text-slate-500">Health:</span> {(worker.health || 'healthy').toUpperCase()}</div>
                       </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">
-                        Worker is currently idle awaiting tasks from the priority queue.
-                      </p>
-                    )}
+                      <div className="p-2 rounded-lg bg-slate-950 text-slate-300 text-xs break-words">
+                        <strong>Current Step:</strong> {worker.currentStep || 'Awaiting task from shared coordinator queue'}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Worker Metrics Summary */}
@@ -2729,100 +3242,897 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       {/* --- TAB 5: SOURCE CONFIGURATION (Owner Only) --- */}
       {subTab === 'sources' && (
         <div className="space-y-4">
-          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-1">
-            <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase">
-              <Shield className="w-4 h-4" />
-              <span>Owner Artwork Source Configuration</span>
+          <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase">
+                <Shield className="w-4 h-4" />
+                <span>Owner Artwork Source Configuration</span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Configure endpoints, rate limits, and connectivity for trusted anime artwork providers. Watch Order determination is managed in the separate Watch Order Sources tab.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Configure endpoints, rate limits, and connectivity for trusted anime artwork providers. Additional providers can be added in the backend without changing the core verifier.
-            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSubTab('watch_order');
+                fetchWatchOrderData();
+              }}
+              className="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Open Watch Order Sources →</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sourcesList.map(source => (
-              <div
-                key={source.id}
-                className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 relative overflow-hidden"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-sm text-white">{source.name}</h4>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-slate-800 text-slate-300">
-                        {source.type}
-                      </span>
+            {sourcesList.map(source => {
+              const isTestingThis = testingSourceId === source.id;
+              const displayStatus = isTestingThis ? 'testing' : (source.status || 'untested');
+              const statusLabel = displayStatus.replace(/_/g, ' ');
+              const persistedMessage = sourceTestResult[source.id]?.message || source.lastMessage || null;
+              const persistedError = sourceTestResult[source.id]?.success === false
+                ? sourceTestResult[source.id]?.message
+                : source.lastError || null;
+
+              return (
+                <div
+                  key={source.id}
+                  className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 relative overflow-hidden"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm text-white">{source.name}</h4>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-slate-800 text-slate-300">
+                          {source.type}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400">{source.description}</p>
                     </div>
-                    <p className="text-[10px] text-slate-400">{source.description}</p>
-                  </div>
 
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
-                      source.status === 'operational'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : source.status === 'degraded'
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                    }`}
-                  >
-                    {source.status}
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 text-xs bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 font-mono text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Endpoint:</span>
-                    <span className="text-slate-300 truncate max-w-[200px]">{source.endpoint}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Rate Limit:</span>
-                    <span className="text-slate-300">
-                      {source.rateLimitPerSecond ? `${source.rateLimitPerSecond}/sec` : `${source.rateLimitPerMinute}/min`}
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase shrink-0 border ${
+                        displayStatus === 'operational'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : displayStatus === 'testing'
+                          ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 animate-pulse'
+                          : displayStatus === 'rate_limited' || displayStatus === 'timeout' || displayStatus === 'degraded'
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                          : displayStatus === 'temporarily_unavailable'
+                          ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
+                          : displayStatus === 'disabled'
+                          ? 'bg-slate-900 text-slate-500 border-slate-800'
+                          : displayStatus === 'untested'
+                          ? 'bg-slate-800/80 text-slate-300 border-slate-700'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      }`}
+                    >
+                      {statusLabel}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Timeout:</span>
-                    <span className="text-slate-300">{source.timeoutMs}ms</span>
+
+                  <div className="space-y-1.5 text-xs bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 font-mono text-[11px]">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">Endpoint:</span>
+                      <span className="text-slate-300 truncate max-w-[220px]">{source.endpoint}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Rate Limit:</span>
+                      <span className="text-slate-300">
+                        {source.rateLimitPerSecond ? `${source.rateLimitPerSecond}/sec` : `${source.rateLimitPerMinute}/min`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Timeout:</span>
+                      <span className="text-slate-300">{source.timeoutMs}ms</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Last Tested:</span>
+                      <span className="text-slate-300">
+                        {source.lastChecked
+                          ? `${new Date(source.lastChecked).toLocaleString()}${source.lastLatencyMs ? ` (${source.lastLatencyMs}ms)` : ''}`
+                          : 'Never tested'}
+                      </span>
+                    </div>
+                    {source.lastSuccessfulChecked && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Last Successful:</span>
+                        <span className="text-emerald-400">
+                          {new Date(source.lastSuccessfulChecked).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(persistedMessage || persistedError) && (
+                    <div
+                      className={`p-2.5 rounded text-[11px] border ${
+                        displayStatus === 'operational' && !persistedError
+                          ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
+                          : displayStatus === 'disabled'
+                          ? 'bg-slate-900 border-slate-800 text-slate-400'
+                          : 'bg-rose-950/40 border-rose-800 text-rose-300'
+                      }`}
+                    >
+                      {persistedError || persistedMessage}
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-900 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleTestSource(source.id)}
+                      disabled={isTestingThis || !source.enabled || source.status === 'disabled'}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isTestingThis ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Zap className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isTestingThis ? 'Testing...' : 'Test Connection'}</span>
+                    </button>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-                {sourceTestResult[source.id] && (
-                  <div
-                    className={`p-2.5 rounded text-[11px] border ${
-                      sourceTestResult[source.id].success
-                        ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
-                        : 'bg-rose-950/40 border-rose-800 text-rose-300'
+      {/* --- TAB 6: WATCH ORDER SOURCES SYSTEM (Separate from Artwork Verification) --- */}
+      {subTab === 'watch_order' && (
+        <div className="space-y-6">
+          {/* Top Architecture & Safety Banner */}
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-cyan-950/60 via-slate-950 to-slate-950 border border-cyan-500/40 rounded-2xl space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-cyan-300 text-xs sm:text-sm font-black uppercase tracking-wider">
+                <Layers className="w-4 h-4 text-cyan-400" />
+                <span>Watch Order Sources — Dual-Source Franchise Verification</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-200 border border-cyan-500/30">
+                  Isolated from Artwork Pipeline
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchWatchOrderData}
+                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Refresh Watch Orders</span>
+              </button>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Determines canonical franchise watch orders by querying and cross-comparing{' '}
+              <strong className="text-white">Watchordr (https://watchordr.com/)</strong> and{' '}
+              <strong className="text-white">The Anime Order (https://theanimeorder.com/)</strong>. Automatically detects TV seasons, canon theatrical movies, OVAs, specials, recap/compilation films, and alternate versions. Catalogue records are <strong className="text-amber-300">never modified automatically</strong> until explicitly validated by the Owner.
+            </p>
+          </div>
+
+          {/* 1. WATCH ORDER SOURCES CONNECTIVITY CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {watchOrderSources.map(source => {
+              const isTestingThis = testingWatchOrderSourceId === source.id;
+              const displayStatus = isTestingThis ? 'testing' : (source.status || 'untested');
+              const statusLabel = displayStatus.replace(/_/g, ' ');
+              const persistedMessage =
+                watchOrderSourceTestResult[source.id]?.message || source.lastMessage || null;
+              const persistedError =
+                watchOrderSourceTestResult[source.id]?.success === false
+                  ? watchOrderSourceTestResult[source.id]?.message
+                  : source.lastError || null;
+
+              return (
+                <div
+                  key={source.id}
+                  className="p-4 sm:p-5 bg-slate-950/90 border border-slate-800 hover:border-cyan-500/40 rounded-2xl space-y-3.5 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-sm text-white">{source.name}</h4>
+                        <a
+                          href={source.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 hover:underline flex items-center gap-1"
+                        >
+                          <span>{source.websiteUrl}</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">{source.description}</p>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase shrink-0 border ${
+                        displayStatus === 'operational'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                          : displayStatus === 'testing'
+                          ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 animate-pulse'
+                          : displayStatus === 'untested'
+                          ? 'bg-slate-800 text-slate-300 border-slate-700'
+                          : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                      }`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 bg-slate-900/80 p-3 rounded-xl border border-slate-800/80 font-mono text-[11px]">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">Website URL:</span>
+                      <span className="text-cyan-300 truncate">{source.websiteUrl}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">robots.txt &amp; Access Rules:</span>
+                      <span className="text-emerald-400">
+                        {source.robotsAllowed !== false ? 'Verified & Respected' : 'Restricted'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">Polite Rate Limit:</span>
+                      <span className="text-slate-300">
+                        {source.rateLimitPerSecond}/sec • {source.rateLimitPerMinute}/min (Timeout {source.timeoutMs}ms)
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">Indexed Franchises:</span>
+                      <span className="text-amber-300 font-bold">
+                        {source.indexedFranchiseCount ? `${source.indexedFranchiseCount} Guides` : 'Click Test Connection'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-500">Last Checked:</span>
+                      <span className="text-slate-300">
+                        {source.lastChecked
+                          ? `${new Date(source.lastChecked).toLocaleString()}${
+                              source.lastLatencyMs ? ` (${source.lastLatencyMs}ms)` : ''
+                            }`
+                          : 'Never tested'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {(persistedMessage || persistedError) && (
+                    <div
+                      className={`p-2.5 rounded-lg text-[11px] border ${
+                        displayStatus === 'operational' && !persistedError
+                          ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300'
+                          : 'bg-rose-950/40 border-rose-800/80 text-rose-300'
+                      }`}
+                    >
+                      {persistedError || persistedMessage}
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-900 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      Source Priority #{source.priority}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleTestWatchOrderSource(source.id)}
+                      disabled={isTestingThis}
+                      className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-500/15"
+                    >
+                      {isTestingThis ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Zap className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isTestingThis ? 'Testing Live Source...' : 'Test Connection'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 2. FRANCHISE LOOKUP & BENCHMARK TEST BAR */}
+          <div className="p-4 sm:p-5 bg-slate-950/90 border border-slate-800 rounded-2xl space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div>
+                <h4 className="font-black text-xs sm:text-sm text-white uppercase tracking-wider flex items-center gap-2">
+                  <Search className="w-4 h-4 text-cyan-400" />
+                  <span>Compare Franchise Watch Order Across Both Sources</span>
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Matches exact franchise by title, alternate/romaji titles, release year, seasons, and AniList IDs. Never invents a watch order.
+                </p>
+              </div>
+
+              {/* Quick Benchmark Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase text-slate-400 mr-1">Quick Test:</span>
+                {['Demon Slayer', 'Jujutsu Kaisen', 'Naruto', 'Attack on Titan'].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={resolvingWatchOrder}
+                    onClick={() => {
+                      setWatchOrderQuery(preset);
+                      handleResolveWatchOrder(preset);
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-[11px] font-bold text-slate-200 hover:text-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
+                  >
+                    {preset}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={resolvingWatchOrder}
+                  onClick={() =>
+                    handleResolveWatchOrder(['Demon Slayer', 'Jujutsu Kaisen', 'Naruto', 'Attack on Titan'])
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[11px] font-black text-amber-300 cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Compare All 4</span>
+                </button>
+              </div>
+            </div>
+
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (watchOrderQuery.trim()) {
+                  handleResolveWatchOrder(watchOrderQuery.trim());
+                }
+              }}
+              className="flex flex-col sm:flex-row gap-2.5"
+            >
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-2.5" />
+                <input
+                  type="text"
+                  value={watchOrderQuery}
+                  onChange={e => setWatchOrderQuery(e.target.value)}
+                  placeholder="Enter franchise title (e.g. Demon Slayer, Jujutsu Kaisen, Naruto, Attack on Titan, Steins;Gate)..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={resolvingWatchOrder || !watchOrderQuery.trim()}
+                className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0 shadow-lg shadow-cyan-500/20"
+              >
+                {resolvingWatchOrder ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Layers className="w-3.5 h-3.5" />
+                )}
+                <span>{resolvingWatchOrder ? 'Fetching Live Sources...' : 'Check & Compare Sources'}</span>
+              </button>
+            </form>
+
+            {watchOrderBannerMessage && (
+              <div
+                className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between gap-2 ${
+                  watchOrderBannerMessage.type === 'success'
+                    ? 'bg-emerald-950/40 border-emerald-700/70 text-emerald-300'
+                    : 'bg-rose-950/40 border-rose-700/70 text-rose-300'
+                }`}
+              >
+                <span>{watchOrderBannerMessage.text}</span>
+                <button
+                  type="button"
+                  onClick={() => setWatchOrderBannerMessage(null)}
+                  className="text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 3. STORED WATCH ORDER COMPARISON RESULTS */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h4 className="font-black text-xs sm:text-sm text-white uppercase tracking-wider">
+                  Stored Franchise Watch-Order Records ({watchOrderRecords.length})
+                </h4>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                {[
+                  { id: 'all', label: 'All Franchises', count: watchOrderRecords.length },
+                  {
+                    id: 'high_confidence',
+                    label: 'High Confidence',
+                    count: watchOrderRecords.filter(r => r.status === 'high_confidence').length
+                  },
+                  {
+                    id: 'needs_review',
+                    label: 'Needs Review',
+                    count: watchOrderRecords.filter(r => r.status === 'needs_review').length
+                  },
+                  {
+                    id: 'validated',
+                    label: 'Validated',
+                    count: watchOrderRecords.filter(r => r.status === 'validated').length
+                  }
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setWatchOrderFilter(f.id as any)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap cursor-pointer transition-colors flex items-center gap-1.5 ${
+                      watchOrderFilter === f.id
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'text-slate-400 hover:text-white bg-slate-900/60'
                     }`}
                   >
-                    {sourceTestResult[source.id].message}
-                  </div>
-                )}
-
-                <div className="pt-2 border-t border-slate-900 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => handleTestSource(source.id)}
-                    disabled={testingSourceId === source.id}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    {testingSourceId === source.id ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Zap className="w-3.5 h-3.5" />
-                    )}
-                    <span>Test Connection</span>
+                    <span>{f.label}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                        watchOrderFilter === f.id ? 'bg-slate-950 text-cyan-300' : 'bg-slate-800 text-slate-300'
+                      }`}
+                    >
+                      {f.count}
+                    </span>
                   </button>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {(() => {
+              const filteredRecords = watchOrderRecords.filter(r => {
+                if (watchOrderFilter === 'all') return true;
+                return r.status === watchOrderFilter;
+              });
+
+              if (filteredRecords.length === 0) {
+                return (
+                  <div className="py-16 text-center bg-slate-950/60 border border-slate-800 rounded-2xl space-y-2">
+                    <Layers className="w-8 h-8 text-cyan-400 opacity-40 mx-auto" />
+                    <p className="text-xs text-slate-400">No franchise watch-order records match the selected filter.</p>
+                    <p className="text-[11px] text-slate-500">
+                      Use the Quick Test buttons above (Demon Slayer, Jujutsu Kaisen, Naruto, Attack on Titan) to compare live sources.
+                    </p>
+                  </div>
+                );
+              }
+
+              const renderCategoryBadge = (entry: any) => {
+                if (entry.category === 'recap_movie' || entry.isRecapOrCompilation) {
+                  return (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      Recap / Compilation Movie
+                    </span>
+                  );
+                }
+                if (entry.category === 'alternate_version' || entry.isAlternateVersion) {
+                  return (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      Alternate Version ({entry.rawFormat})
+                    </span>
+                  );
+                }
+                if (entry.category === 'ova') {
+                  return (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                      OVA
+                    </span>
+                  );
+                }
+                if (entry.category === 'special') {
+                  return (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                      Special
+                    </span>
+                  );
+                }
+                if (entry.category === 'movie') {
+                  return (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      Movie
+                    </span>
+                  );
+                }
+                return (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    Season ({entry.rawFormat})
+                  </span>
+                );
+              };
+
+              return (
+                <div className="space-y-5">
+                  {filteredRecords.map(rec => {
+                    const isValidating = validatingFranchiseKey === rec.franchiseKey;
+                    const isHighConfidence = rec.status === 'high_confidence' || rec.sourcesAgree;
+                    const isValidated = rec.status === 'validated';
+
+                    return (
+                      <div
+                        key={rec.id}
+                        className="bg-slate-950/95 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl"
+                      >
+                        {/* Franchise Card Header */}
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base sm:text-lg font-black text-white">{rec.canonicalTitle}</h3>
+
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border flex items-center gap-1 ${
+                                  isValidated
+                                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                                    : isHighConfidence
+                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                    : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                }`}
+                              >
+                                {isValidated ? (
+                                  <CheckCircle2 className="w-3 h-3" />
+                                ) : isHighConfidence ? (
+                                  <Check className="w-3 h-3" />
+                                ) : (
+                                  <AlertTriangle className="w-3 h-3" />
+                                )}
+                                <span>
+                                  {rec.confidenceLabel} ({rec.confidenceScore}%)
+                                </span>
+                              </span>
+
+                              {rec.appliedToCatalogue ? (
+                                <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/60">
+                                  Validated &amp; Linked to Catalogue ({rec.matchedCatalogueItems?.length || 0} items)
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-400 border border-slate-800">
+                                  Catalogue Unmodified (Awaiting Owner Validation)
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-[11px] text-slate-400 font-mono flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <span>
+                                Alternate Titles: {rec.alternateTitles?.slice(0, 4).join(' • ') || rec.canonicalTitle}
+                              </span>
+                              <span>•</span>
+                              <span>Last Checked: {new Date(rec.lastCheckedAt).toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          {/* Owner Validation & Re-check Controls */}
+                          <div className="flex flex-wrap items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              disabled={resolvingWatchOrder}
+                              onClick={() => handleResolveWatchOrder(rec.queryTitle || rec.canonicalTitle)}
+                              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            >
+                              <RefreshCw className={`w-3.5 h-3.5 ${resolvingWatchOrder ? 'animate-spin' : ''}`} />
+                              <span>Re-Check</span>
+                            </button>
+
+                            {rec.watchordr?.found && (
+                              <button
+                                type="button"
+                                disabled={isValidating}
+                                onClick={() => handleValidateWatchOrder(rec.franchiseKey, 'watchordr')}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-500/15"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>
+                                  {rec.sourcesAgree ? 'Validate Agreed Order' : 'Validate Watchordr Order'}
+                                </span>
+                              </button>
+                            )}
+
+                            {rec.theAnimeOrder?.found && (
+                              <button
+                                type="button"
+                                disabled={isValidating}
+                                onClick={() => handleValidateWatchOrder(rec.franchiseKey, 'theanimeorder')}
+                                className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-500/15"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Validate The Anime Order</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Entry Classification Breakdown & Matched Catalogue Items */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center">
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-emerald-400 uppercase block">Seasons</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.seasons ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-cyan-400 uppercase block">Canon Movies</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.movies ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-purple-400 uppercase block">OVAs</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.ovas ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-indigo-400 uppercase block">Specials</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.specials ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-rose-400 uppercase block">Recap Movies</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.recapMovies ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-amber-400 uppercase block">Alternate Ver.</span>
+                            <span className="text-sm font-black text-white font-mono">
+                              {rec.entryBreakdown?.alternateVersions ?? 0}
+                            </span>
+                          </div>
+                          <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Catalogue Matches</span>
+                            <span className="text-sm font-black text-amber-300 font-mono">
+                              {rec.matchedCatalogueItems?.length ?? 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Agreement & Discrepancy Analysis Box */}
+                        <div
+                          className={`p-3.5 rounded-xl border space-y-1.5 text-xs ${
+                            rec.sourcesAgree
+                              ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-200'
+                              : 'bg-amber-950/25 border-amber-500/30 text-amber-200'
+                          }`}
+                        >
+                          <div className="font-black uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                            {rec.sourcesAgree ? (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Dual-Source Agreement Confirmed (High Confidence)</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                                <span>Source Discrepancy Detected — Needs Owner Review</span>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-slate-200 leading-relaxed">{rec.agreementSummary}</p>
+                          {rec.discrepancies && rec.discrepancies.length > 0 && (
+                            <ul className="list-disc list-inside text-[11px] text-slate-300 space-y-0.5 pt-1">
+                              {rec.discrepancies.map((d: string, idx: number) => (
+                                <li key={idx}>{d}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* Side-by-Side Source Results Comparison */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {/* Column 1: Watchordr */}
+                          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-3">
+                            <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2.5">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-xs text-white uppercase">
+                                    1. Watchordr
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-800 text-slate-300">
+                                    {rec.watchordr?.found ? `${rec.watchordr.entries.length} Entries` : 'Not Indexed'}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                  Matched Title: <strong className="text-slate-200">{rec.watchordr?.matchedTitle || '—'}</strong>
+                                </div>
+                              </div>
+                              {rec.watchordr?.sourceUrl && (
+                                <a
+                                  href={rec.watchordr.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[10px] font-mono text-cyan-300 hover:underline flex items-center gap-1 shrink-0"
+                                >
+                                  <span>Source URL</span>
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              )}
+                            </div>
+
+                            {rec.watchordr?.found ? (
+                              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                                {rec.watchordr.entries.map((entry: any) => (
+                                  <div
+                                    key={entry.step}
+                                    className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800/90 flex items-start gap-2.5 text-xs"
+                                  >
+                                    <span className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono font-black text-[11px] flex items-center justify-center shrink-0">
+                                      {entry.step}
+                                    </span>
+
+                                    {entry.posterUrl && (
+                                      <img
+                                        src={entry.posterUrl}
+                                        alt={entry.title}
+                                        className="w-9 h-13 object-cover rounded border border-slate-800 shrink-0"
+                                      />
+                                    )}
+
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <div className="font-bold text-white leading-snug break-words">
+                                        {entry.title}
+                                      </div>
+
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        {renderCategoryBadge(entry)}
+                                        {entry.releaseDateText && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                                            {entry.releaseDateText}
+                                          </span>
+                                        )}
+                                        {entry.episodes && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                                            {entry.episodes} ep{entry.episodes > 1 ? 's' : ''}
+                                          </span>
+                                        )}
+                                        {entry.anilistId && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-cyan-300 border border-slate-800">
+                                            AL #{entry.anilistId}
+                                          </span>
+                                        )}
+                                        {entry.isSkippable && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                            Skippable
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {entry.warning && (
+                                        <p className="text-[10px] text-amber-300 bg-amber-950/40 border border-amber-800/50 px-2 py-1 rounded">
+                                          {entry.warning}
+                                        </p>
+                                      )}
+                                      {entry.matchedCatalogueTitle && (
+                                        <div className="text-[10px] font-mono text-emerald-400">
+                                          ✓ Matched in Anivex Catalogue: {entry.matchedCatalogueTitle}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="py-10 text-center text-xs text-slate-400 space-y-1">
+                                <AlertCircle className="w-6 h-6 text-amber-400/70 mx-auto" />
+                                <p>{rec.watchordr?.error || 'Franchise not indexed on Watchordr.'}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Column 2: The Anime Order */}
+                          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-3">
+                            <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2.5">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-xs text-white uppercase">
+                                    2. The Anime Order
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-800 text-slate-300">
+                                    {rec.theAnimeOrder?.found
+                                      ? `${rec.theAnimeOrder.entries.length} Entries`
+                                      : 'Not Indexed'}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                  Matched Title:{' '}
+                                  <strong className="text-slate-200">{rec.theAnimeOrder?.matchedTitle || '—'}</strong>
+                                </div>
+                              </div>
+                              {rec.theAnimeOrder?.sourceUrl && (
+                                <a
+                                  href={rec.theAnimeOrder.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[10px] font-mono text-cyan-300 hover:underline flex items-center gap-1 shrink-0"
+                                >
+                                  <span>Source URL</span>
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              )}
+                            </div>
+
+                            {rec.theAnimeOrder?.found ? (
+                              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                                {rec.theAnimeOrder.entries.map((entry: any) => (
+                                  <div
+                                    key={entry.step}
+                                    className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800/90 flex items-start gap-2.5 text-xs"
+                                  >
+                                    <span className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-black text-[11px] flex items-center justify-center shrink-0">
+                                      {entry.step}
+                                    </span>
+
+                                    {entry.posterUrl && (
+                                      <img
+                                        src={entry.posterUrl}
+                                        alt={entry.title}
+                                        className="w-9 h-13 object-cover rounded border border-slate-800 shrink-0"
+                                      />
+                                    )}
+
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <div className="font-bold text-white leading-snug break-words">
+                                        {entry.title}
+                                      </div>
+                                      {entry.alternateTitle && entry.alternateTitle !== entry.title && (
+                                        <div className="text-[10px] text-slate-400 font-mono truncate">
+                                          {entry.alternateTitle}
+                                        </div>
+                                      )}
+
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        {renderCategoryBadge(entry)}
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                                          {entry.releaseYear || 'TBA'}
+                                        </span>
+                                        {entry.episodes && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                                            {entry.episodes} ep{entry.episodes > 1 ? 's' : ''}
+                                          </span>
+                                        )}
+                                        {entry.anilistId && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-cyan-300 border border-slate-800">
+                                            AL #{entry.anilistId}
+                                          </span>
+                                        )}
+                                        {entry.isUnreleased && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-800 text-slate-400 border border-slate-700">
+                                            Unreleased
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {entry.note && (
+                                        <p className="text-[10px] text-slate-400 italic">{entry.note}</p>
+                                      )}
+                                      {entry.matchedCatalogueTitle && (
+                                        <div className="text-[10px] font-mono text-emerald-400">
+                                          ✓ Matched in Anivex Catalogue: {entry.matchedCatalogueTitle}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="py-10 text-center text-xs text-slate-400 space-y-1">
+                                <AlertCircle className="w-6 h-6 text-amber-400/70 mx-auto" />
+                                <p>{rec.theAnimeOrder?.error || 'Franchise not indexed on The Anime Order.'}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
 
       {/* 5. DETAILED INSPECTION DRAWER / MODAL */}
       {inspectedAnime && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[85vh] overflow-y-auto p-5 sm:p-6 space-y-5 shadow-2xl animate-fade-in relative">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overscroll-contain">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90dvh] overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y p-4 sm:p-6 space-y-5 shadow-2xl animate-fade-in relative">
             <button
               type="button"
               onClick={() => setInspectedAnime(null)}
@@ -2956,8 +4266,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
       )}
       {/* 5. INSPECT ALL MODAL REPORT */}
       {showInspectModal && inspectReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200 overscroll-contain">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden touch-pan-y">
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-3">
@@ -3127,8 +4437,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
       {/* BATCH SELECTION MODAL */}
       {batchModalConfig?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in overscroll-contain overflow-hidden touch-none">
-          <div className="relative w-full max-w-md bg-slate-950 border-2 border-amber-500/50 rounded-2xl shadow-2xl p-5 space-y-5 text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm animate-fade-in overscroll-contain overflow-hidden">
+          <div className="relative w-full max-w-md bg-slate-950 border-2 border-amber-500/50 rounded-2xl shadow-2xl p-4 sm:p-5 space-y-5 text-slate-100 max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-xl border ${
@@ -3249,8 +4559,8 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
 
       {/* CHOOSE REPLACEMENT CANDIDATE MODAL */}
       {chosenReplacementModal?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-slate-950 border-2 border-purple-500/50 rounded-2xl shadow-2xl p-5 space-y-4 text-slate-100 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-sm animate-fade-in overscroll-contain">
+          <div className="relative w-full max-w-2xl bg-slate-950 border-2 border-purple-500/50 rounded-2xl shadow-2xl p-4 sm:p-5 space-y-4 text-slate-100 max-h-[90dvh] flex flex-col overflow-hidden touch-pan-y">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-purple-400" />

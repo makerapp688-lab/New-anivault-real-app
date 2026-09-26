@@ -33,7 +33,7 @@ import {
   Eye,
   FileText
 } from 'lucide-react';
-import { getAccountAvatar } from '../utils/userStorage.ts';
+import { getAccountAvatar, resolveOwnerUsername } from '../utils/userStorage.ts';
 import { Anime } from '../types.ts';
 import { ArtworkManager } from './ArtworkManager.tsx';
 
@@ -557,9 +557,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
   if (!isOpen) return null;
 
-  const ownerInfo = statsData?.owner || {
-    username: 'Owner',
-    email: 'makerapp688@gmail.com',
+  const ownerInfo = {
+    username: resolveOwnerUsername(statsData?.owner?.username),
+    email: statsData?.owner?.email || 'makerapp688@gmail.com',
     role: 'owner'
   };
 
@@ -567,35 +567,30 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in overscroll-contain overflow-hidden touch-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-1.5 sm:p-4 bg-black/90 backdrop-blur-sm animate-fade-in overscroll-contain overflow-hidden"
       id="owner-dashboard-modal"
-      onTouchMove={(e) => {
-        if (e.target === e.currentTarget) {
-          e.preventDefault();
-        }
-      }}
     >
-      <div className="relative w-full max-w-6xl bg-slate-950 border-2 border-amber-500/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[95vh] sm:h-[90vh] text-slate-100 touch-auto">
+      <div className="relative w-full max-w-6xl bg-slate-950 border-2 border-amber-500/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[96dvh] sm:h-[90vh] max-w-full text-slate-100 touch-pan-y">
         {/* Header (BLACK & GOLD) */}
-        <div className="flex items-center justify-between border-b border-amber-500/30 p-5 shrink-0 bg-black">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10">
-              <Shield className="w-6 h-6" />
+        <div className="flex items-center justify-between border-b border-amber-500/30 p-3.5 sm:p-5 shrink-0 bg-black gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10 shrink-0">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                <span>OWNER COMMAND CENTER</span>
-                <span className="text-[10px] uppercase font-mono tracking-widest px-2 py-0.5 rounded bg-amber-500/15 border border-amber-400/40 text-amber-300">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-xl font-black tracking-tight text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="truncate">OWNER COMMAND CENTER</span>
+                <span className="text-[9px] sm:text-[10px] uppercase font-mono tracking-widest px-1.5 sm:px-2 py-0.5 rounded bg-amber-500/15 border border-amber-400/40 text-amber-300 shrink-0">
                   v2.5 ADMIN
                 </span>
               </h2>
-              <p className="text-xs text-amber-300/80">Anivex Core System, Catalogue &amp; Security Controller</p>
+              <p className="text-[11px] sm:text-xs text-amber-300/80 truncate">Anivex Core System, Catalogue &amp; Security Controller</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors cursor-pointer"
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -694,7 +689,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
         </div>
 
         {/* Tab Content Panel (Scrollable body area) */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-950/40">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-3 sm:p-6 space-y-5 sm:space-y-6 bg-slate-950/40">
           {loading && activeTab === 'overview' && (
             <div className="flex flex-col items-center justify-center py-20 space-y-3">
               <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
@@ -1434,7 +1429,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                       <div key={user.id} className="p-3.5 bg-slate-950 border border-slate-800 hover:border-slate-700/80 rounded-xl text-xs flex justify-between items-center gap-4 transition-all">
                         <div className="space-y-1 truncate pr-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-slate-200">{user.username || 'No Username'}</span>
+                            <span className="font-bold text-slate-200">{isUserOwner ? resolveOwnerUsername(user.username) : (user.username || 'No Username')}</span>
                             <span className={`px-2 py-0.2 rounded text-[9px] font-mono font-bold ${
                               isUserOwner
                                 ? 'bg-amber-500/10 text-amber-400 border border-amber-400/30'

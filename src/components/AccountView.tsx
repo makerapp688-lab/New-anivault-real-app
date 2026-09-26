@@ -42,7 +42,8 @@ import {
   setSessionAccount,
   getSavedAccounts,
   switchActiveAccount,
-  getAccountAvatar
+  getAccountAvatar,
+  resolveOwnerUsername
 } from '../utils/userStorage.ts';
 import { ThemeMode, UserAccount } from '../types.ts';
 import { AnivexLogo } from './AnivexLogo.tsx';
@@ -91,7 +92,9 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
   const [newBugCount, setNewBugCount] = useState<number>(0);
 
   const isOwner = account.role === 'owner' || account.id === 'usr_owner';
-  const ownerUsername = isOwner ? (account.username || ownerSession?.owner?.username || 'Owner') : '';
+  const ownerUsername = isOwner
+    ? resolveOwnerUsername(account.username || ownerSession?.owner?.username)
+    : '';
   const currentAvatarUrl = isOwner ? getAccountAvatar('usr_owner') : (isGuest || account.id === 'guest_user' ? null : getAccountAvatar(account.id));
 
   useEffect(() => {
@@ -239,7 +242,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-lg border border-slate-700 bg-transparent shrink-0">
                   <img
                     src={currentAvatarUrl}
-                    alt={isOwner ? (ownerUsername || 'Owner') : (account.username || 'User')}
+                    alt={isOwner ? ownerUsername : (account.username || 'User')}
                     className="w-full h-full rounded-full object-cover"
                   />
                 </div>
@@ -305,12 +308,10 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 )}
               </div>
 
-              {/* Personalized Welcome line for Normal Users */}
-              {!isOwner && (
-                <div className="text-xs font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">
-                  Welcome, <span className="font-semibold text-rose-400 dark:text-rose-400 light:text-rose-600">{account.username || account.name || 'AnimeExplorer'}</span>
-                </div>
-              )}
+              {/* Personalized Welcome line */}
+              <div className="text-xs font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">
+                Welcome, <span className={`font-semibold ${isOwner ? 'text-amber-400' : 'text-rose-400 dark:text-rose-400 light:text-rose-600'}`}>{isOwner ? ownerUsername : (account.username || account.name || 'AnimeExplorer')}</span>
+              </div>
 
               <div className="flex items-center gap-2 flex-wrap pt-0.5">
                 <span
@@ -462,8 +463,11 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 <Shield className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white tracking-wide uppercase">
-                  OWNER ADMINISTRATION
+                <h3 className="text-base sm:text-lg font-black text-white tracking-wide uppercase flex items-center gap-2 flex-wrap">
+                  <span>OWNER ADMINISTRATION</span>
+                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/30 normal-case">
+                    {ownerUsername}
+                  </span>
                 </h3>
                 <p className="text-xs text-amber-300/80">
                   Authorized Owner system entry points &amp; security command center
@@ -819,7 +823,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             <div className="space-y-1">
               <div className="text-xs font-bold text-white dark:text-white light:text-slate-900 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-amber-400" />
-                <span>Owner Session Active</span>
+                <span>Signed in as {ownerUsername} (Owner Session Active)</span>
               </div>
               <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600">
                 Ending your Owner session returns Anivex to guest mode on this device.
@@ -1068,13 +1072,15 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         isOpen={isOwnerLoginOpen}
         onClose={() => setIsOwnerLoginOpen(false)}
         onLoginSuccess={(owner) => {
-          setOwnerSession({ authenticated: true, owner });
+          const resolvedUsername = resolveOwnerUsername(owner.username);
+          const normalizedOwner = { ...owner, username: resolvedUsername };
+          setOwnerSession({ authenticated: true, owner: normalizedOwner });
           setIsOwnerLoginOpen(false);
           const ownerToken = localStorage.getItem('anivault_owner_session_token') || undefined;
           setSessionAccount({
             id: 'usr_owner',
-            username: owner.username,
-            name: owner.username,
+            username: resolvedUsername,
+            name: resolvedUsername,
             email: owner.email,
             provider: 'email',
             role: 'owner',
@@ -1107,7 +1113,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         isOpen={isProfilePhotoModalOpen}
         onClose={() => setIsProfilePhotoModalOpen(false)}
         accountId={isOwner ? 'usr_owner' : account.id}
-        username={isOwner ? (ownerUsername || 'Owner') : (account.username || 'AnimeExplorer')}
+        username={isOwner ? ownerUsername : (account.username || 'AnimeExplorer')}
         isOwner={Boolean(isOwner)}
         currentAvatar={currentAvatarUrl}
         onAvatarUpdated={() => {

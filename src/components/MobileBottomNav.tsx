@@ -100,8 +100,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <User className="w-5 h-5" />
             );
           })()}
-          <span className="text-[10px] mt-0.5 max-w-[50px] truncate">
-            {account.role === 'owner' ? 'Owner' : account.username || (isGuest ? 'Guest' : 'Account')}
+          <span className="text-[10px] mt-0.5 max-w-[64px] truncate">
+            {account.role === 'owner' || account.id === 'usr_owner'
+              ? (account.username && account.username !== 'Owner' ? account.username : 'Death197')
+              : account.username || (isGuest ? 'Guest' : 'Account')}
           </span>
         </button>
       </div>
