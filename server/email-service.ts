@@ -309,7 +309,7 @@ export async function sendVerificationEmail(
   const plainTextContent = 
 `Anivex
 
-Here’s your account verification code
+Here’s your new account verification code
 
 Use the verification code below to verify your Anivex account:
 
@@ -324,8 +324,7 @@ If you didn’t request this verification code, you can safely ignore this email
 © Anivex
 This is an automated message. Please do not reply to this email.`;
 
-  // Production-grade responsive HTML email template matching Anivex branding.
-  // Uses pure CSS/HTML table layout with 0 external localhost URLs or binary attachments for maximum deliverability & inbox placement.
+  // Clean HTML email template matching the verified deliverable structure (no localhost URLs, no bot headers)
   const htmlContent = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -344,16 +343,20 @@ This is an automated message. Please do not reply to this email.`;
               <td align="center" style="padding: 36px 32px 20px; text-align: center;">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
                   <tr>
-                    <td align="center" style="padding-bottom: 12px; text-align: center;">
-                      <div style="width: 64px; height: 64px; line-height: 64px; border-radius: 16px; background: linear-gradient(135deg, #e11d48, #be123c); border: 1px solid #f43f5e; color: #ffffff; font-size: 26px; font-weight: 900; text-align: center; margin: 0 auto;">
-                        AX
-                      </div>
+                    <td align="center" style="padding-bottom: 12px;">
+                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
+                        <tr>
+                          <td align="center" style="width: 56px; height: 56px; background-color: #e11d48; border-radius: 14px; text-align: center; vertical-align: middle; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);">
+                            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 30px; font-weight: 900; color: #ffffff; line-height: 56px; display: block;">A</span>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                   <tr>
                     <td align="center">
-                      <div style="font-size: 24px; font-weight: 900; letter-spacing: 1px; color: #ffffff; line-height: 1.2; text-transform: uppercase;">
-                        ANI<span style="color: #f43f5e;">VEX</span>
+                      <div style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.2;">
+                        Ani<span style="color: #f43f5e;">vex</span>
                       </div>
                     </td>
                   </tr>
@@ -365,7 +368,7 @@ This is an automated message. Please do not reply to this email.`;
             <tr>
               <td align="center" style="padding: 6px 32px 32px; text-align: center;">
                 <h1 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.3px; line-height: 1.35;">
-                  Here’s your account verification code
+                  Here’s your new account verification
                 </h1>
                 
                 <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
@@ -419,13 +422,9 @@ This is an automated message. Please do not reply to this email.`;
     const info = await transporter.sendMail({
       from,
       to: cleanRecipient,
-      subject: `${subjectTitle} (${code})`,
+      subject: subjectTitle,
       text: plainTextContent,
-      html: htmlContent,
-      headers: {
-        'X-Entity-Ref-ID': crypto.randomUUID(),
-        'Auto-Submitted': 'auto-generated'
-      }
+      html: htmlContent
     });
 
     if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {

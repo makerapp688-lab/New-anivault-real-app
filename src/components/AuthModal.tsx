@@ -298,7 +298,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         setAuthSuccess(data.message || 'Verification code sent to your email.');
         setRegisterStep('verify');
-        setResendCooldown(60);
+        setResendCooldown(30);
       } else {
         // Real Login
         const res = await fetch('/api/auth/login', {
@@ -313,6 +313,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || 'Login failed. Please check your credentials.');
+        }
+
+        if (data.requiresVerification) {
+          if (data.email) {
+            setEmailInput(data.email);
+          }
+          setAuthSuccess(data.message || 'Verification code sent to your email.');
+          setRegisterStep('verify');
+          setResendCooldown(30);
+          return;
         }
 
         const user = data.user;
@@ -415,7 +425,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error(data.error || 'Failed to resend code.');
       }
       setAuthSuccess('New verification code sent to your email.');
-      setResendCooldown(60);
+      setResendCooldown(30);
     } catch (err: any) {
       setAuthError(err.message);
     } finally {

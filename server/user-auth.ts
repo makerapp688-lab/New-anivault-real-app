@@ -245,12 +245,12 @@ function saveUserSessions() {
 
 loadUsersData();
 
-// Clean up expired temp verifications periodically
+// Clean up stale temp verifications older than 24 hours periodically
 setInterval(() => {
   const now = Date.now();
   let changedTemp = false;
   for (const [key, v] of Object.entries(tempVerificationsCache)) {
-    if (v.expiresAt < now) {
+    if (v.expiresAt + 24 * 60 * 60 * 1000 < now) {
       delete tempVerificationsCache[key];
       changedTemp = true;
     }
@@ -597,8 +597,8 @@ export function createUserAuthRouter() {
       const existingPending = tempVerificationsCache[normalizedEmail];
       const now = Date.now();
       if (existingPending && existingPending.expiresAt > now) {
-        if (now - existingPending.lastResendAt < 45000) {
-          const waitSec = Math.ceil((45000 - (now - existingPending.lastResendAt)) / 1000);
+        if (now - existingPending.lastResendAt < 15000) {
+          const waitSec = Math.ceil((15000 - (now - existingPending.lastResendAt)) / 1000);
           res.status(429).json({
             error: `Please wait ${waitSec} seconds before requesting a new verification code.`,
             code: 'RATE_LIMITED'
@@ -685,8 +685,8 @@ export function createUserAuthRouter() {
       }
 
       const now = Date.now();
-      if (now > tempRec.expiresAt) {
-        delete tempVerificationsCache[normalizedEmail];
+      if (now > tempRec.expiresAt || !tempRec.codeHash) {
+        tempRec.codeHash = '';
         saveTempVerifications();
         res.status(400).json({
           error: 'This code has expired. Request a new code.'
@@ -695,7 +695,7 @@ export function createUserAuthRouter() {
       }
 
       if (tempRec.attempts >= 5) {
-        delete tempVerificationsCache[normalizedEmail];
+        tempRec.codeHash = '';
         saveTempVerifications();
         res.status(429).json({
           error: 'Too many incorrect attempts. Please request a new verification code.'
@@ -708,7 +708,7 @@ export function createUserAuthRouter() {
         tempRec.attempts += 1;
         saveTempVerifications();
         if (tempRec.attempts >= 5) {
-          delete tempVerificationsCache[normalizedEmail];
+          tempRec.codeHash = '';
           saveTempVerifications();
           res.status(429).json({
             error: 'Too many incorrect attempts. Please request a new verification code.'
@@ -818,15 +818,15 @@ export function createUserAuthRouter() {
       }
 
       const now = Date.now();
-      if (tempRec.resendCount >= 5) {
+      if (tempRec.resendCount >= 10) {
         res.status(429).json({
           error: 'Maximum code resend limit reached for this session. Please start registration over.'
         });
         return;
       }
 
-      if (now - tempRec.lastResendAt < 45000) {
-        const waitSec = Math.ceil((45000 - (now - tempRec.lastResendAt)) / 1000);
+      if (now - tempRec.lastResendAt < 15000) {
+        const waitSec = Math.ceil((15000 - (now - tempRec.lastResendAt)) / 1000);
         res.status(429).json({
           error: `Please wait ${waitSec} seconds before requesting another code.`,
           code: 'RATE_LIMITED'
@@ -926,6 +926,51 @@ export function createUserAuthRouter() {
       }
 
       if (!user) {
+        // Check if there is a pending registration in tempVerificationsCache for this email or username
+        const rawIdentifier = (typeof email === 'string' && email.trim()) || (typeof username === 'string' && username.trim()) || '';
+        const normIdentifier = rawIdentifier.toLowerCase();
+        const pendingRec =
+          tempVerificationsCache[normIdentifier] ||
+          Object.values(tempVerificationsCache).find(
+            t => normalizeUsername(t.username) === normalizeUsername(rawIdentifier)
+          );
+
+        if (pendingRec && verifyPassword(password, pendingRec.passwordHash, pendingRec.salt)) {
+          const now = Date.now();
+          const { code, codeHash } = generateVerificationCode();
+          pendingRec.codeHash = codeHash;
+          pendingRec.expiresAt = now + 10 * 60 * 1000;
+          pendingRec.attempts = 0;
+          pendingRec.resendCount = (pendingRec.resendCount || 0) + 1;
+          pendingRec.lastResendAt = now;
+          tempVerificationsCache[pendingRec.email] = pendingRec;
+          saveTempVerifications();
+
+          try {
+            const origin = req.protocol + '://' + req.get('host');
+            await sendVerificationEmail(
+              pendingRec.email,
+              code,
+              'Verify your Anivex account',
+              origin
+            );
+          } catch (mailErr: any) {
+            res.status(503).json({
+              error: mailErr.message || 'Verification email could not be sent. Please try again.',
+              code: 'EMAIL_SEND_FAILED'
+            });
+            return;
+          }
+
+          res.json({
+            requiresVerification: true,
+            email: pendingRec.email,
+            username: pendingRec.username,
+            message: 'Verification code sent to your email. Please enter the 6-digit code to verify your account.'
+          });
+          return;
+        }
+
         res.status(401).json({ error: 'Invalid email, username, or password.' });
         return;
       }
