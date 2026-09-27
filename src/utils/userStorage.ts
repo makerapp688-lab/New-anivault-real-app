@@ -954,9 +954,19 @@ export async function switchActiveAccount(accountId: string): Promise<{
   // 1. Handle switching to Owner account
   if (accountId === 'usr_owner') {
     try {
+      const ownerToken =
+        localStorage.getItem('anivault_owner_session_token') ||
+        getClientCookie('anivault_owner_session') ||
+        getSavedSessionTokens()['usr_owner'];
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (ownerToken) {
+        headers['Authorization'] = `Bearer ${ownerToken}`;
+        headers['x-anivault-owner-session'] = ownerToken;
+      }
+
       const res = await fetch('/api/owner/switch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include'
       });
 
@@ -994,29 +1004,22 @@ export async function switchActiveAccount(accountId: string): Promise<{
   // 2. Handle switching to Normal user account
   try {
     const ownerToken = localStorage.getItem('anivault_owner_session_token') || getClientCookie('anivault_owner_session');
+    const savedUserToken = getSavedSessionTokens()[accountId];
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (ownerToken) {
       headers['x-anivault-owner-session'] = ownerToken;
       headers['Authorization'] = `Bearer ${ownerToken}`;
     }
-
-    const db = getAccountsDb();
-    const localRec = db[accountId];
+    if (savedUserToken) {
+      headers['x-anivault-user-session'] = savedUserToken;
+    }
 
     const res = await fetch('/api/auth/switch', {
       method: 'POST',
       headers,
       body: JSON.stringify({
         accountId,
-        account: localRec ? {
-          id: localRec.id,
-          username: localRec.username,
-          name: localRec.name,
-          email: localRec.email,
-          provider: localRec.provider,
-          role: 'user',
-          createdAt: localRec.createdAt
-        } : undefined
+        sessionToken: savedUserToken
       }),
       credentials: 'include'
     });
@@ -1043,47 +1046,17 @@ export async function switchActiveAccount(accountId: string): Promise<{
       }
     }
 
-    // Local fallback from accounts DB
-    if (localRec) {
-      const localAcc: UserAccount = {
-        id: localRec.id,
-        username: localRec.username,
-        name: localRec.name || localRec.username,
-        email: localRec.email,
-        avatar: getAccountAvatar(localRec.id) || localRec.avatar || undefined,
-        provider: localRec.provider,
-        role: (localRec as any).role || 'user',
-        createdAt: localRec.createdAt
-      };
-      setSessionAccount(localAcc, undefined);
-      return { success: true, account: localAcc };
+    const errData = await res.json().catch(() => ({}));
+    if (res.status === 404) {
+      removeSavedAccount(accountId);
     }
 
     return {
       success: false,
       requireLogin: true,
-      error: 'Account not found. Please sign in.'
+      error: errData.error || 'Account session expired or not found. Please sign in.'
     };
   } catch (err) {
-    localStorage.removeItem('anivault_owner_session_token');
-    deleteClientCookie('anivault_owner_session');
-
-    const db = getAccountsDb();
-    if (db[accountId]) {
-      const rec = db[accountId];
-      const localAcc: UserAccount = {
-        id: rec.id,
-        username: rec.username,
-        name: rec.name || rec.username,
-        email: rec.email,
-        avatar: getAccountAvatar(rec.id) || rec.avatar || undefined,
-        provider: rec.provider,
-        role: (rec as any).role || 'user',
-        createdAt: rec.createdAt
-      };
-      setSessionAccount(localAcc, undefined);
-      return { success: true, account: localAcc };
-    }
     return { success: false, error: 'Network error. Could not switch account.' };
   }
 }

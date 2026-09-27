@@ -127,7 +127,19 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
             email: data.owner.email,
             avatar: getAccountAvatar('usr_owner')
           });
+        } else if (data.ownerExists && db['usr_owner']) {
+          const o = db['usr_owner'];
+          setOwnerInfo({
+            exists: true,
+            username: resolveOwnerUsername(o.username),
+            email: o.email,
+            avatar: getAccountAvatar('usr_owner')
+          });
         } else {
+          if (!data.ownerExists && db['usr_owner']) {
+            delete db['usr_owner'];
+            saveAccountsDb(db);
+          }
           setOwnerInfo({ exists: false });
         }
       } else {

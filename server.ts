@@ -290,8 +290,8 @@ app.get('/api/anime/:id', (req, res) => {
   res.json(item);
 });
 
-// Trigger Catalogue Sync
-app.post('/api/sync', async (req, res) => {
+// Trigger Catalogue Sync (Owner-only)
+app.post('/api/sync', authenticateSession, requireOwner, async (req, res) => {
   if (isSyncing) {
     res.json({ status: 'already_syncing', message: syncMessage });
     return;

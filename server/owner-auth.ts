@@ -127,19 +127,95 @@ function verifyPassword(password: string, hash: string, salt: string): boolean {
   }
 }
 
-// Load / Save Owner Account
+function isValidCredentialHex(value: unknown, minHexLength: number): boolean {
+  return (
+    typeof value === 'string' &&
+    value.length >= minHexLength &&
+    value.toLowerCase() !== 'test' &&
+    /^[0-9a-f]+$/i.test(value)
+  );
+}
+
+let runtimeEnvOwnerCache: {
+  fingerprint: string;
+  account: OwnerAccount;
+} | null = null;
+
+// Load / Save Owner Account from runtime storage or environment configuration
 export function getOwnerAccount(): OwnerAccount | null {
   try {
     if (fs.existsSync(OWNER_ACCOUNT_PATH)) {
       const data = fs.readFileSync(OWNER_ACCOUNT_PATH, 'utf-8');
       const parsed = JSON.parse(data);
       if (parsed && parsed.email) {
+        const normalizedEmail = String(parsed.email).trim().toLowerCase();
+        // Reject fake/test credentials or unauthorized emails
+        if (
+          !isEmailAuthorizedOwner(normalizedEmail) ||
+          !isValidCredentialHex(parsed.passwordHash, 64) ||
+          !isValidCredentialHex(parsed.salt, 16)
+        ) {
+          try {
+            fs.unlinkSync(OWNER_ACCOUNT_PATH);
+          } catch {}
+          return null;
+        }
         if (!parsed.id) parsed.id = 'usr_owner';
-        parsed.email = parsed.email.trim().toLowerCase();
+        parsed.email = normalizedEmail;
         if (!parsed.username || parsed.username.trim() === '' || parsed.username.trim() === 'Owner') {
           parsed.username = 'Death197';
         }
+        parsed.role = 'owner';
         return parsed;
+      }
+    }
+
+    // Optional runtime environment configuration fallback
+    const envHash = process.env.OWNER_PASSWORD_HASH?.trim();
+    const envSalt = process.env.OWNER_PASSWORD_SALT?.trim();
+    const envPlainPassword =
+      process.env.OWNER_PASSWORD ||
+      (!isValidCredentialHex(envHash, 64) || !isValidCredentialHex(envSalt, 16) ? envHash : undefined);
+    const envEmail = (process.env.OWNER_EMAIL || 'makerapp688@gmail.com').trim().toLowerCase();
+    const envUsername = (process.env.OWNER_USERNAME || 'Death197').trim() || 'Death197';
+
+    if (isEmailAuthorizedOwner(envEmail)) {
+      if (isValidCredentialHex(envHash, 64) && isValidCredentialHex(envSalt, 16)) {
+        const now = new Date(0).toISOString();
+        return {
+          id: 'usr_owner',
+          email: envEmail,
+          username: envUsername,
+          passwordHash: envHash!,
+          salt: envSalt!,
+          createdAt: now,
+          updatedAt: now,
+          role: 'owner'
+        };
+      }
+      if (envPlainPassword && envPlainPassword.trim().length > 0 && envPlainPassword.trim().toLowerCase() !== 'test') {
+        const fingerprint = crypto
+          .createHash('sha256')
+          .update(`${envEmail}|${envUsername}|${envPlainPassword}`)
+          .digest('hex');
+        if (!runtimeEnvOwnerCache || runtimeEnvOwnerCache.fingerprint !== fingerprint) {
+          const { hash, salt } = hashPassword(envPlainPassword);
+          const now = new Date(0).toISOString();
+          runtimeEnvOwnerCache = {
+            fingerprint,
+            account: {
+              id: 'usr_owner',
+              email: envEmail,
+              username: envUsername,
+              passwordHash: hash,
+              salt,
+              createdAt: now,
+              updatedAt: now,
+              role: 'owner'
+            }
+          };
+        }
+        return { ...runtimeEnvOwnerCache.account };
       }
     }
   } catch (err) {
@@ -163,39 +239,47 @@ export function saveOwnerAccount(account: OwnerAccount): void {
 
 export function validateOwnerSession(sessionId: string): { id: string; email: string; username: string; role: 'owner'; createdAt: string } | null {
   try {
+    if (!sessionId || typeof sessionId !== 'string') return null;
     loadSessions();
-    let session = activeSessions.get(sessionId);
-    if (session && session.revoked) {
+    const session = activeSessions.get(sessionId);
+    if (!session || session.revoked || session.expiresAt < Date.now()) {
+      if (session && session.expiresAt < Date.now()) {
+        activeSessions.delete(sessionId);
+        saveSessions();
+      }
       return null;
     }
-    if (!session || session.expiresAt < Date.now()) {
-      // Decode cryptographic token fallback
+
+    // Verify cryptographic token signature if signed token format
+    if (sessionId.includes('.')) {
       const decoded = verifyAndDecodeSessionToken(sessionId);
-      if (decoded && decoded.role === 'owner') {
-        session = {
-          sessionId,
-          email: decoded.email.trim().toLowerCase(),
-          username: decoded.username,
-          role: 'owner',
-          createdAt: decoded.expiresAt - 30 * 24 * 60 * 60 * 1000,
-          expiresAt: decoded.expiresAt
-        };
-        activeSessions.set(sessionId, session);
+      if (!decoded || decoded.role !== 'owner') {
+        activeSessions.delete(sessionId);
         saveSessions();
-      } else {
         return null;
       }
     }
 
     const owner = getOwnerAccount();
     if (!owner) {
+      activeSessions.delete(sessionId);
+      saveSessions();
       return null;
     }
 
     const sessionEmail = session.email ? session.email.trim().toLowerCase() : '';
     const ownerEmail = owner.email ? owner.email.trim().toLowerCase() : '';
 
-    if (ownerEmail !== sessionEmail || owner.role !== 'owner') {
+    if (ownerEmail !== sessionEmail || owner.role !== 'owner' || !isEmailAuthorizedOwner(ownerEmail)) {
+      activeSessions.delete(sessionId);
+      saveSessions();
+      return null;
+    }
+
+    const ownerCreatedMs = Date.parse(owner.createdAt);
+    if (!isNaN(ownerCreatedMs) && session.createdAt + 5000 < ownerCreatedMs) {
+      activeSessions.delete(sessionId);
+      saveSessions();
       return null;
     }
 
@@ -384,41 +468,10 @@ export function isEmailAuthorizedOwner(email: string | undefined | null): boolea
 }
 
 /**
- * Checks the currently logged-in user's Google account email.
- * Inspects Google Cloud Run / Identity headers, client-passed headers, query overrides,
- * or runtime environment variables.
+ * Google OAuth is not configured on this server.
+ * Never trust client-controlled headers, query parameters, SMTP variables, or fallback Owner records.
  */
-export function getGoogleAccountEmail(req?: Request): string | null {
-  if (req) {
-    const rawHeader = 
-      (req.headers['x-goog-authenticated-user-email'] as string) ||
-      (req.headers['x-goog-user-email'] as string) ||
-      (req.headers['x-google-email'] as string) ||
-      (req.headers['x-anivault-google-email'] as string) ||
-      (req.headers['x-user-email'] as string) ||
-      (req.headers['x-forwarded-email'] as string) ||
-      (req.headers['x-auth-request-email'] as string) ||
-      (typeof req.query?.googleEmail === 'string' ? req.query.googleEmail : null);
-
-    if (rawHeader) {
-      const email = rawHeader.replace(/^accounts\.google\.com:/i, '').trim().toLowerCase();
-      if (email && email.includes('@')) {
-        return email;
-      }
-    }
-  }
-
-  // Fallback to Google environment user email configured in runtime container
-  const envEmail = process.env.GOOGLE_USER_EMAIL || process.env.SMTP_USER || process.env.SMTP_FROM;
-  if (envEmail && envEmail.includes('@')) {
-    return envEmail.trim().toLowerCase();
-  }
-
-  const owner = getOwnerAccount();
-  if (owner && owner.email) {
-    return owner.email.trim().toLowerCase();
-  }
-
+export function getGoogleAccountEmail(_req?: Request): string | null {
   return null;
 }
 
@@ -427,42 +480,35 @@ export function getSessionEmail(req: Request): string | null {
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
   
-  // 1. Try Owner Session
+  // 1. Try Owner Session (must be validated against authoritative server-side session store)
   const ownerHeader = req.headers['x-anivault-owner-session'] as string;
-  const ownerSessionId = cookies['anivault_owner_session'] || ownerHeader || (bearerToken && bearerToken.startsWith('owner_') ? bearerToken : null);
+  const ownerSessionId = cookies['anivault_owner_session'] || ownerHeader || bearerToken;
   
   if (ownerSessionId) {
-    const ownerSession = activeSessions.get(ownerSessionId);
-    if (ownerSession && !ownerSession.revoked && ownerSession.expiresAt > Date.now()) {
-      return ownerSession.email;
-    }
-    const decodedOwner = verifyAndDecodeSessionToken(ownerSessionId);
-    if (decodedOwner && decodedOwner.role === 'owner') {
-      return decodedOwner.email;
+    const validatedOwner = validateOwnerSession(ownerSessionId);
+    if (validatedOwner) {
+      return validatedOwner.email;
     }
   }
   
-  // 2. Try User Session
+  // 2. Try User Session (must exist in authoritative users-sessions.json and users-accounts.json)
   const userHeader = req.headers['x-anivault-user-session'] as string;
   const userSessionId = cookies['anivault_user_session'] || userHeader || bearerToken;
   
   if (userSessionId) {
     try {
       const sessionsPath = path.join(process.cwd(), 'server', 'data', 'users-sessions.json');
-      if (fs.existsSync(sessionsPath)) {
+      const usersPath = path.join(process.cwd(), 'server', 'data', 'users-accounts.json');
+      if (fs.existsSync(sessionsPath) && fs.existsSync(usersPath)) {
         const list: any[] = JSON.parse(fs.readFileSync(sessionsPath, 'utf-8'));
+        const users: Record<string, any> = JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
         const matched = list.find(s => s.sessionId === userSessionId && !s.revoked && s.expiresAt > Date.now());
-        if (matched) {
-          return matched.email;
+        if (matched && matched.userId && users[matched.userId] && !users[matched.userId].disabled) {
+          return users[matched.userId].email;
         }
       }
     } catch (err) {
       console.error('[OwnerAuth] Error loading user sessions from disk:', err);
-    }
-    
-    const decodedUser = verifyAndDecodeSessionToken(userSessionId);
-    if (decodedUser && decodedUser.role === 'user') {
-      return decodedUser.email;
     }
   }
   
@@ -519,30 +565,21 @@ export function authenticateSession(req: Request, res: Response, next: NextFunct
     return next();
   }
 
-  let session = activeSessions.get(sessionId);
-  if (session && session.revoked) {
+  const session = activeSessions.get(sessionId);
+  if (!session || session.revoked || session.expiresAt < Date.now()) {
+    if (session && session.expiresAt < Date.now()) {
+      activeSessions.delete(sessionId);
+      saveSessions();
+    }
     (req as any).ownerSession = null;
     return next();
   }
-  if (!session || session.expiresAt < Date.now()) {
-    // Decode cryptographic token fallback
+
+  if (sessionId.includes('.')) {
     const decoded = verifyAndDecodeSessionToken(sessionId);
-    if (decoded && decoded.role === 'owner') {
-      session = {
-        sessionId,
-        email: decoded.email,
-        username: decoded.username,
-        role: 'owner',
-        createdAt: decoded.expiresAt - 30 * 24 * 60 * 60 * 1000,
-        expiresAt: decoded.expiresAt
-      };
-      activeSessions.set(sessionId, session);
+    if (!decoded || decoded.role !== 'owner') {
+      activeSessions.delete(sessionId);
       saveSessions();
-    } else {
-      if (sessionId) {
-        activeSessions.delete(sessionId);
-        saveSessions();
-      }
       (req as any).ownerSession = null;
       return next();
     }
@@ -555,6 +592,14 @@ export function authenticateSession(req: Request, res: Response, next: NextFunct
     owner.email.trim().toLowerCase() !== session.email.trim().toLowerCase() ||
     !isEmailAuthorizedOwner(owner.email)
   ) {
+    activeSessions.delete(sessionId);
+    saveSessions();
+    (req as any).ownerSession = null;
+    return next();
+  }
+
+  const ownerCreatedMs = Date.parse(owner.createdAt);
+  if (!isNaN(ownerCreatedMs) && session.createdAt + 5000 < ownerCreatedMs) {
     activeSessions.delete(sessionId);
     saveSessions();
     (req as any).ownerSession = null;
@@ -598,7 +643,7 @@ export function createOwnerRouter(): express.Router {
   const router = express.Router();
 
   // 0a. Owner-Only Email Service Configuration Status (No secret values returned)
-  router.get('/email-status', (req: Request, res: Response) => {
+  router.get('/email-status', authenticateSession, requireOwner, (req: Request, res: Response) => {
     const status = getEmailConfigStatus();
     const secretsDiag = checkServerSecretsDiagnostic();
     res.json({
@@ -614,9 +659,9 @@ export function createOwnerRouter(): express.Router {
   });
 
   // 0b. Owner-Only Real Email Transport Diagnostic Test
-  router.post('/email-test', async (req: Request, res: Response) => {
+  router.post('/email-test', authenticateSession, requireOwner, async (req: Request, res: Response) => {
     try {
-      const { recipient } = req.body;
+      const { recipient } = req.body || {};
       const testRecipient = typeof recipient === 'string' && recipient.trim() ? recipient.trim() : undefined;
       const result = await testEmailTransport(testRecipient);
       res.status(result.success ? 200 : 503).json(result);
@@ -825,6 +870,9 @@ export function createOwnerRouter(): express.Router {
       saveOwnerAccount(newOwner);
       saveTempSetup(null);
 
+      // Invalidate any stale sessions from prior setups
+      activeSessions.clear();
+
       const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
       const sessionId = generateSignedSessionToken('usr_owner', newOwner.email, newOwner.username, 'owner', 'email', sessionExpires);
       const sessionData: SessionData = {
@@ -1009,30 +1057,26 @@ export function createOwnerRouter(): express.Router {
   router.get('/session', authenticateSession, (req: Request, res: Response) => {
     const session = (req as any).ownerSession;
     const owner = getOwnerAccount();
-    
-    // Check currently logged-in user's Google account email
-    const googleEmail = getGoogleAccountEmail(req);
-    const isGoogleAuthorized = Boolean(googleEmail && isEmailAuthorizedOwner(googleEmail));
 
-    const currentEmail = getSessionEmail(req) || googleEmail;
-    const isAuthorized = isGoogleAuthorized || isEmailAuthorizedOwner(currentEmail);
-    
     const isOwnerSessionActive = Boolean(
       session &&
+      session.role === 'owner' &&
       session.email &&
+      owner &&
+      owner.email.trim().toLowerCase() === session.email.trim().toLowerCase() &&
       isEmailAuthorizedOwner(session.email)
     );
-    
+
     const ownerExists = Boolean(owner && owner.email && isEmailAuthorizedOwner(owner.email));
 
     res.json({
       authenticated: isOwnerSessionActive,
-      isAuthorized: isAuthorized,
-      googleEmail: googleEmail,
-      isGoogleAuthorized: isGoogleAuthorized,
+      isAuthorized: isOwnerSessionActive,
+      googleEmail: null,
+      isGoogleAuthorized: false,
       ownerExists: ownerExists,
       sessionToken: isOwnerSessionActive && session ? session.sessionId : undefined,
-      owner: isAuthorized && owner ? {
+      owner: isOwnerSessionActive && owner ? {
         email: owner.email,
         username: owner.username,
         role: 'owner'
@@ -1172,31 +1216,10 @@ export function createOwnerRouter(): express.Router {
     }
   });
 
-  // 9. Switch to Owner account (requires authenticated owner session, authorized Google account, or password verification)
+  // 9. Switch to Owner account (strictly requires an active verified Owner session or valid Owner password)
   router.post('/switch', authenticateSession, async (req: Request, res: Response) => {
     const owner = getOwnerAccount();
     if (!owner) {
-      res.status(404).json({ error: 'Owner account does not exist. Please setup Owner first.' });
-      return;
-    }
-
-    const session = (req as any).ownerSession;
-    const { password } = req.body || {};
-
-    // Check if caller's Google account email is authorized (makerapp688@gmail.com)
-    const googleEmail = getGoogleAccountEmail(req);
-    const isGoogleAuthorized = Boolean(googleEmail && isEmailAuthorizedOwner(googleEmail));
-
-    // Check if caller already has a valid owner session
-    const hasValidSession = session && session.role === 'owner' && session.email?.trim().toLowerCase() === owner.email.trim().toLowerCase() && isEmailAuthorizedOwner(session.email);
-
-    // Or check if valid password provided
-    let passwordValid = false;
-    if (!hasValidSession && password && typeof password === 'string' && owner.passwordHash && owner.salt) {
-      passwordValid = verifyPassword(password, owner.passwordHash, owner.salt);
-    }
-
-    if (!isGoogleAuthorized && !hasValidSession && !passwordValid) {
       res.status(401).json({
         error: 'Owner authentication required.',
         requireOwnerLogin: true
@@ -1204,14 +1227,42 @@ export function createOwnerRouter(): express.Router {
       return;
     }
 
+    const session = (req as any).ownerSession;
+    const { password } = req.body || {};
+
+    // Check if caller already has a valid authenticated server-side Owner session
+    const hasValidSession = Boolean(
+      session &&
+      session.role === 'owner' &&
+      session.email?.trim().toLowerCase() === owner.email.trim().toLowerCase() &&
+      isEmailAuthorizedOwner(session.email)
+    );
+
+    // Or check if valid Owner password was explicitly provided and verified
+    let passwordValid = false;
+    if (!hasValidSession && password && typeof password === 'string' && owner.passwordHash && owner.salt) {
+      passwordValid = verifyPassword(password, owner.passwordHash, owner.salt);
+    }
+
+    if (!hasValidSession && !passwordValid) {
+      const statusCode = (req as any).isNormalUserRequest && !password ? 403 : 401;
+      res.status(statusCode).json({
+        error: 'Owner authentication required.',
+        requireOwnerLogin: true
+      });
+      return;
+    }
+
     const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const sessionId = (hasValidSession && session.sessionId) ? session.sessionId : generateSignedSessionToken('usr_owner', owner.email, owner.username, 'owner', 'email', sessionExpires);
+    const sessionId = (hasValidSession && session.sessionId)
+      ? session.sessionId
+      : generateSignedSessionToken('usr_owner', owner.email, owner.username, 'owner', 'email', sessionExpires);
     const sessionData: SessionData = {
       sessionId,
       email: owner.email,
       username: owner.username,
       role: 'owner',
-      createdAt: Date.now(),
+      createdAt: hasValidSession && session.createdAt ? session.createdAt : Date.now(),
       expiresAt: sessionExpires
     };
 

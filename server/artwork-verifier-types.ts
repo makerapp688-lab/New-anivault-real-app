@@ -22,7 +22,7 @@ export interface SeasonArtworkResult {
   seasonNumber: number;
   seasonTitle: string;
   artworkUrl?: string | null;
-  status: 'verified' | 'auto_fixed' | 'needs_review' | 'not_found';
+  status: 'verified' | 'auto_fixed' | 'needs_review' | 'not_found' | 'fallback_main';
   source?: string;
   confidence?: number;
 }
@@ -107,7 +107,7 @@ export interface ArtworkHistoryEntry {
   previousArtworkUrl: string;
   newArtworkUrl: string;
   replacedAt: string;
-  replacedBy: 'auto_verifier' | 'owner';
+  replacedBy: 'auto_verifier' | 'owner' | string;
   source: string;
   reason: string;
   seasonNumber?: number;

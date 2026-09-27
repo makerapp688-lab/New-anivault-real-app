@@ -75,7 +75,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [chosenUsername, setChosenUsername] = useState(currentAccount.username || 'AnimeExplorer');
+  const [chosenUsername, setChosenUsername] = useState(
+    isGuest && currentAccount.username && currentAccount.username.toLowerCase() !== 'death197'
+      ? currentAccount.username
+      : 'AnimeExplorer'
+  );
+  const [hasEditedUsername, setHasEditedUsername] = useState(false);
   
   // Live username uniqueness validation state
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'invalid'>('idle');
@@ -138,18 +143,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (data.available) {
           setUsernameStatus('available');
           setUsernameMessage('Username is available');
+        } else if (!hasEditedUsername && data.suggestedUsername) {
+          setChosenUsername(data.suggestedUsername);
+          setUsernameStatus('available');
+          setUsernameMessage('Username is available');
         } else {
           setUsernameStatus('unavailable');
           setUsernameMessage(data.reason || 'Username already taken');
         }
       } catch {
-        setUsernameStatus('unavailable');
-        setUsernameMessage('Network error checking username');
+        setUsernameStatus('idle');
+        setUsernameMessage(null);
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
-  }, [isOpen, authMode, registerStep, chosenUsername, emailInput]);
+  }, [isOpen, authMode, registerStep, chosenUsername, hasEditedUsername]);
 
   useEffect(() => {
     let timer: any;
@@ -167,6 +176,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setRegisterStep('form');
       setVerificationCode('');
       setShowPassword(false);
+      setHasEditedUsername(false);
+      const freshAcc = getCurrentAccount();
+      const freshIsGuest = freshAcc.provider === 'guest';
+      setChosenUsername(
+        freshIsGuest && freshAcc.username && freshAcc.username.toLowerCase() !== 'death197'
+          ? freshAcc.username
+          : 'AnimeExplorer'
+      );
       if (initialMode) {
         setAuthMode(initialMode);
       }
@@ -251,7 +268,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     if (authMode === 'register') {
-      if (usernameStatus !== 'available') {
+      if (usernameStatus === 'unavailable' || usernameStatus === 'invalid') {
         setAuthError(usernameMessage || 'Please choose an available username before registering.');
         return;
       }
@@ -582,15 +599,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
 
             {!isGuest && (
-              <button
-                type="button"
-                id="btn-logout-account"
-                onClick={handleLogout}
-                className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 light:bg-slate-200 light:hover:bg-slate-300 text-rose-400 hover:text-rose-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out (Return to Guest Mode)</span>
-              </button>
+              <div className="space-y-2">
+                {activeView !== 'email' && (
+                  <button
+                    type="button"
+                    id="btn-add-another-account"
+                    onClick={() => {
+                      setAuthMode('register');
+                      setActiveView('email');
+                      setRegisterStep('form');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Create or Sign In to Another Account</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  id="btn-logout-account"
+                  onClick={handleLogout}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 light:bg-slate-200 light:hover:bg-slate-300 text-rose-400 hover:text-rose-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out (Return to Guest Mode)</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -637,8 +673,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* Sign In & Registration Section for Guests */}
-          {isGuest && !showMigratePrompt && (
+          {/* Sign In & Registration Section */}
+          {(isGuest || activeView === 'email' || registerStep === 'verify') && !showMigratePrompt && (
             <div className="space-y-4">
               <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center">
                 Sign In or Register
@@ -715,6 +751,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             id="input-auth-name"
                             value={chosenUsername}
                             onChange={e => {
+                              setHasEditedUsername(true);
                               setChosenUsername(e.target.value);
                               setAuthError(null);
                             }}
@@ -817,7 +854,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <button
                       type="submit"
                       id="btn-auth-submit"
-                      disabled={loading || (authMode === 'register' && usernameStatus !== 'available')}
+                      disabled={loading || (authMode === 'register' && (usernameStatus === 'unavailable' || usernameStatus === 'invalid'))}
                       className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
@@ -826,9 +863,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         <>
                           <span>
                             {authMode === 'register'
-                              ? usernameStatus === 'checking'
-                                ? 'Checking Username...'
-                                : usernameStatus === 'unavailable'
+                              ? usernameStatus === 'unavailable'
                                 ? 'Username Unavailable'
                                 : usernameStatus === 'invalid'
                                 ? 'Enter Valid Username'

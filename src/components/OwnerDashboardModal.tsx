@@ -190,7 +190,16 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
   const fetchEmailStatus = async () => {
     try {
-      const res = await fetch('/api/owner/email-status');
+      const token = localStorage.getItem('anivault_owner_session_token') || '';
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-anivault-owner-session'] = token;
+      }
+      const res = await fetch('/api/owner/email-status', {
+        headers,
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setEmailStatus(data);
@@ -292,24 +301,6 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
           return token;
         }
       }
-    }
-
-    try {
-      const switchRes = await fetch('/api/owner/switch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({})
-      });
-      if (switchRes.ok) {
-        const switchData = await switchRes.json();
-        if (switchData.sessionToken) {
-          localStorage.setItem('anivault_owner_session_token', switchData.sessionToken);
-          return switchData.sessionToken;
-        }
-      }
-    } catch {
-      // Quiet fallback
     }
 
     return token;
@@ -533,9 +524,16 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
     setTestingEmail(true);
     setTestResult(null);
     try {
+      const token = localStorage.getItem('anivault_owner_session_token') || '';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-anivault-owner-session'] = token;
+      }
       const res = await fetch('/api/owner/email-test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ recipient: testRecipient.trim() || undefined })
       });
       const data = await res.json();

@@ -172,6 +172,20 @@ function resolveFromAddress(smtpUser: string): string {
   return `"Anivex" <${smtpUser}>`;
 }
 
+function sanitizeSmtpError(err: any): string {
+  const rawMsg = String(err?.response || err?.message || 'Unknown SMTP error');
+  const rawPass = (process.env.SMTP_PASS || '').trim().replace(/^["']|["']$/g, '');
+  const strippedPass = rawPass.replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '');
+  let safe = rawMsg;
+  if (rawPass && rawPass.length > 2) {
+    safe = safe.split(rawPass).join('[REDACTED]');
+  }
+  if (strippedPass && strippedPass.length > 2) {
+    safe = safe.split(strippedPass).join('[REDACTED]');
+  }
+  return safe.slice(0, 240);
+}
+
 export async function testEmailTransport(testRecipient?: string): Promise<{
   success: boolean;
   step: string;
@@ -198,8 +212,8 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
     };
   }
 
-  const host = process.env.SMTP_HOST!.trim();
-  const port = parseInt(process.env.SMTP_PORT || '587', 10) || 587;
+  const host = process.env.SMTP_HOST!.trim().replace(/^["']|["']$/g, '');
+  const port = parseInt((process.env.SMTP_PORT || '587').trim().replace(/^["']|["']$/g, ''), 10) || 587;
 
   try {
     console.log(`[EMAIL_DIAGNOSTIC] EMAIL_TRANSPORT_TEST_STARTED: host=${host}, port=${port}`);
@@ -220,16 +234,16 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
         html: '<div style="font-family:sans-serif;padding:20px;background:#0b0f19;color:#fff;border-radius:8px;">Anivex email transport test successful.</div>'
       });
 
-      if (info.rejected && info.rejected.length > 0) {
-        console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: provider rejected recipient count=${info.rejected.length}`);
+      if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {
+        console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: provider rejected recipient count=${info.rejected?.length || 0}`);
         return {
           success: false,
           step: 'EMAIL_REJECTED',
-          error: 'Email provider rejected the message.'
+          error: 'Email provider rejected the recipient address.'
         };
       }
 
-      console.log(`[EMAIL_DIAGNOSTIC] EMAIL_ACCEPTED: messageId=${info.messageId}`);
+      console.log(`[EMAIL_DIAGNOSTIC] EMAIL_ACCEPTED: messageId=${info.messageId}, response=${info.response || 'OK'}`);
     }
 
     return {
@@ -237,20 +251,21 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
       step: 'EMAIL_ACCEPTED'
     };
   } catch (err: any) {
+    const safeDetail = sanitizeSmtpError(err);
     if (err.code === 'EAUTH' || (err.response && err.response.includes('535'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP_AUTH_FAILED: ${err.message}`);
-      return { success: false, step: 'SMTP_AUTH_FAILED', error: 'Email service authentication failed.' };
+      console.error(`[EMAIL_DIAGNOSTIC] SMTP_AUTH_FAILED: ${safeDetail}`);
+      return { success: false, step: 'SMTP_AUTH_FAILED', error: `Email service authentication failed (${err.code || '535'}: ${safeDetail})` };
     }
     if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.code === 'ESOCKET' || err.code === 'ENOTFOUND' || err.code === 'EDNS') {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP_CONNECTION_FAILED: ${err.message}`);
-      return { success: false, step: 'SMTP_CONNECTION_FAILED', error: 'Email service connection failed.' };
+      console.error(`[EMAIL_DIAGNOSTIC] SMTP_CONNECTION_FAILED: ${safeDetail}`);
+      return { success: false, step: 'SMTP_CONNECTION_FAILED', error: `Email service connection to ${host}:${port} failed (${err.code || 'NETWORK_ERROR'}: ${safeDetail})` };
     }
     if (err.code === 'EENVELOPE' || (err.response && err.response.includes('550'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: ${err.message}`);
-      return { success: false, step: 'EMAIL_REJECTED', error: 'Email provider rejected the message.' };
+      console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: ${safeDetail}`);
+      return { success: false, step: 'EMAIL_REJECTED', error: `Email provider rejected the message (${safeDetail})` };
     }
-    console.error(`[EMAIL_DIAGNOSTIC] EMAIL_SEND_FAILED: ${err.message}`);
-    return { success: false, step: 'EMAIL_SEND_FAILED', error: 'Email delivery failed.' };
+    console.error(`[EMAIL_DIAGNOSTIC] EMAIL_SEND_FAILED: ${safeDetail}`);
+    return { success: false, step: 'EMAIL_SEND_FAILED', error: `Email delivery failed (${safeDetail})` };
   }
 }
 
@@ -263,12 +278,13 @@ export async function sendVerificationEmail(
   toEmail: string,
   code: string,
   subjectTitle: string = 'Verify your Anivex account',
-  origin?: string
+  _origin?: string
 ): Promise<{ success: boolean; messageId?: string }> {
   const status = getEmailConfigStatus();
   if (!status.configured) {
-    console.error(`[EMAIL_DIAGNOSTIC] Missing SMTP configuration: ${status.missing.join(', ')}`);
-    throw new Error('Email service is not configured.');
+    const msg = `Email service is not configured. Missing: ${status.missing.join(', ')}`;
+    console.error(`[EMAIL_DIAGNOSTIC] ${msg}`);
+    throw new Error(msg);
   }
 
   const transporter = createEmailTransporter();
@@ -279,24 +295,21 @@ export async function sendVerificationEmail(
 
   const smtpUser = process.env.SMTP_USER!.trim().replace(/^["']|["']$/g, '');
   const from = resolveFromAddress(smtpUser);
-  const host = process.env.SMTP_HOST!.trim();
-  const port = parseInt(process.env.SMTP_PORT || '587', 10) || 587;
+  const host = process.env.SMTP_HOST!.trim().replace(/^["']|["']$/g, '');
+  const port = parseInt((process.env.SMTP_PORT || '587').trim().replace(/^["']|["']$/g, ''), 10) || 587;
   const userDomain = smtpUser.includes('@') ? '@' + smtpUser.split('@')[1] : 'smtp_host';
 
-  const recipientDomain = toEmail.includes('@') ? '@' + toEmail.split('@')[1] : 'recipient';
+  const cleanRecipient = toEmail.trim().toLowerCase();
+  const recipientDomain = cleanRecipient.includes('@') ? '@' + cleanRecipient.split('@')[1] : 'recipient';
   console.log(`[EMAIL_DIAGNOSTIC] Email send started: recipientDomain=${recipientDomain}`);
   console.log(`[EMAIL_DIAGNOSTIC] SMTP connection: host=${host}, port=${port}`);
   console.log(`[EMAIL_DIAGNOSTIC] SMTP authentication: authenticated as userDomain=${userDomain}`);
-
-  const defaultOrigin = 'https://ais-dev-322j3l47s5gpvjmutvfsiy-349368822796.asia-east1.run.app';
-  const cleanOrigin = (origin || defaultOrigin).trim().replace(/\/+$/, '');
-  const logoUrl = `${cleanOrigin}/anivex-logo.jpg`;
 
   // Plain text fallback
   const plainTextContent = 
 `Anivex
 
-Here’s your new account verification code
+Here’s your account verification code
 
 Use the verification code below to verify your Anivex account:
 
@@ -311,8 +324,8 @@ If you didn’t request this verification code, you can safely ignore this email
 © Anivex
 This is an automated message. Please do not reply to this email.`;
 
-  // Production-grade responsive HTML email template matching AniVault branding.
-  // Uses pure CSS/HTML table layout with 0 binary attachments for maximum deliverability & inbox placement.
+  // Production-grade responsive HTML email template matching Anivex branding.
+  // Uses pure CSS/HTML table layout with 0 external localhost URLs or binary attachments for maximum deliverability & inbox placement.
   const htmlContent = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -332,13 +345,15 @@ This is an automated message. Please do not reply to this email.`;
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
                   <tr>
                     <td align="center" style="padding-bottom: 12px; text-align: center;">
-                      <img src="${logoUrl}" alt="ANIVEX" width="140" height="140" style="display: block; margin: 0 auto; width: 140px; height: 140px; border-radius: 16px; border: 1px solid #1e293b; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);" />
+                      <div style="width: 64px; height: 64px; line-height: 64px; border-radius: 16px; background: linear-gradient(135deg, #e11d48, #be123c); border: 1px solid #f43f5e; color: #ffffff; font-size: 26px; font-weight: 900; text-align: center; margin: 0 auto;">
+                        AX
+                      </div>
                     </td>
                   </tr>
                   <tr>
                     <td align="center">
                       <div style="font-size: 24px; font-weight: 900; letter-spacing: 1px; color: #ffffff; line-height: 1.2; text-transform: uppercase;">
-                        ANI<span style="color: #3b82f6;">VEX</span>
+                        ANI<span style="color: #f43f5e;">VEX</span>
                       </div>
                     </td>
                   </tr>
@@ -350,7 +365,7 @@ This is an automated message. Please do not reply to this email.`;
             <tr>
               <td align="center" style="padding: 6px 32px 32px; text-align: center;">
                 <h1 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.3px; line-height: 1.35;">
-                  Here’s your new account verification
+                  Here’s your account verification code
                 </h1>
                 
                 <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
@@ -400,42 +415,46 @@ This is an automated message. Please do not reply to this email.`;
 </html>`;
 
   try {
-    console.log(`[EMAIL_DIAGNOSTIC] SMTP send attempt: recipientDomain=${recipientDomain}`);
+    console.log(`[EMAIL_DIAGNOSTIC] SMTP send attempt: recipientDomain=${recipientDomain}, subject="${subjectTitle}"`);
     const info = await transporter.sendMail({
       from,
-      to: toEmail,
-      subject: subjectTitle,
+      to: cleanRecipient,
+      subject: `${subjectTitle} (${code})`,
       text: plainTextContent,
-      html: htmlContent
+      html: htmlContent,
+      headers: {
+        'X-Entity-Ref-ID': crypto.randomUUID(),
+        'Auto-Submitted': 'auto-generated'
+      }
     });
 
-    if (info.rejected && info.rejected.length > 0) {
-      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: count=${info.rejected.length}`);
-      console.error('[EMAIL_DIAGNOSTIC] Invalid recipient: recipient was rejected by the mail server');
-      throw new Error('Email provider rejected the message.');
+    if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {
+      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: rejectedCount=${info.rejected?.length || 0}, acceptedCount=${info.accepted?.length || 0}`);
+      throw new Error('Email provider rejected the recipient address.');
     }
 
-    console.log(`[EMAIL_DIAGNOSTIC] SMTP/provider acceptance: messageId=${info.messageId}`);
+    console.log(`[EMAIL_DIAGNOSTIC] SMTP/provider acceptance: messageId=${info.messageId}, response=${info.response || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (err: any) {
+    const safeDetail = sanitizeSmtpError(err);
     if (err.code === 'EAUTH' || (err.response && err.response.includes('535'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP authentication failed: ${err.message}`);
-      throw new Error('Email service authentication failed.');
+      console.error(`[EMAIL_DIAGNOSTIC] SMTP authentication failed: ${safeDetail}`);
+      throw new Error(`Email service authentication failed (${err.code || '535'}: ${safeDetail})`);
     }
     if (err.code === 'EENVELOPE' || (err.response && err.response.includes('550')) || (err.message && err.message.includes('Email provider rejected'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: ${err.message}`);
-      throw new Error('Email provider rejected the message.');
+      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: ${safeDetail}`);
+      throw new Error(`Email provider rejected the message (${safeDetail})`);
     }
     if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.code === 'ESOCKET' || err.code === 'ENOTFOUND' || err.code === 'EDNS') {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP connection failed: ${err.message}`);
-      throw new Error('Email service connection failed.');
+      console.error(`[EMAIL_DIAGNOSTIC] SMTP connection failed: ${safeDetail}`);
+      throw new Error(`Email service connection to ${host}:${port} failed (${err.code || 'NETWORK_ERROR'}: ${safeDetail})`);
     }
     if (err.message && (err.message.includes('authentication') || err.message.includes('connection') || err.message.includes('configured'))) {
       throw err;
     }
 
-    console.error(`[EMAIL_DIAGNOSTIC] SMTP connection failed: ${err.message}`);
-    throw new Error('Email delivery failed.');
+    console.error(`[EMAIL_DIAGNOSTIC] SMTP send failed: ${safeDetail}`);
+    throw new Error(`Email delivery failed (${safeDetail})`);
   }
 }
 

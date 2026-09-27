@@ -286,7 +286,13 @@ export function App() {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      const res = await fetch('/api/sync', { method: 'POST' });
+      const token = localStorage.getItem('anivault_owner_session_token') || '';
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-anivault-owner-session'] = token;
+      }
+      const res = await fetch('/api/sync', { method: 'POST', headers, credentials: 'include' });
       if (res.ok) {
         const interval = setInterval(async () => {
           try {

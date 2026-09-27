@@ -9,7 +9,7 @@ import {
   testEmailTransport,
   checkServerSecretsDiagnostic
 } from './email-service.js';
-import { validateOwnerSession, revokeOwnerSession } from './owner-auth.js';
+import { validateOwnerSession, revokeOwnerSession, authenticateSession, requireOwner } from './owner-auth.js';
 import { getSessionSecret } from './session-secret.js';
 
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
@@ -115,14 +115,13 @@ export function isUsernameAvailable(
     return { available: false, reason: 'Username must contain at least 2 alphanumeric characters.' };
   }
 
-  if (RESERVED_USERNAMES.has(norm)) {
+  if (RESERVED_USERNAMES.has(norm) || norm === 'death197') {
     return { available: false, reason: 'This username is reserved by Anivex.' };
   }
 
   // Check against permanent user accounts
   for (const user of Object.values(usersCache)) {
     if (excludeUserId && user.id === excludeUserId) continue;
-    if (excludeEmail && user.email.toLowerCase() === excludeEmail.toLowerCase()) continue;
 
     if (user.username.trim().toLowerCase() === clean.toLowerCase() || normalizeUsername(user.username) === norm) {
       return { available: false, reason: 'This username is already taken. Please choose another.' };
@@ -345,20 +344,80 @@ function reloadUserSessionsFromDisk() {
   try {
     if (fs.existsSync(USERS_ACCOUNTS_PATH)) {
       usersCache = JSON.parse(fs.readFileSync(USERS_ACCOUNTS_PATH, 'utf-8'));
+      for (const user of Object.values(usersCache)) {
+        if (user && user.email) {
+          user.email = user.email.trim().toLowerCase();
+        }
+      }
+    } else {
+      usersCache = {};
+    }
+    if (fs.existsSync(USERS_TEMP_VERIFICATIONS_PATH)) {
+      tempVerificationsCache = JSON.parse(fs.readFileSync(USERS_TEMP_VERIFICATIONS_PATH, 'utf-8'));
+    } else {
+      tempVerificationsCache = {};
     }
     if (fs.existsSync(USERS_SESSIONS_PATH)) {
       const list: UserSession[] = JSON.parse(fs.readFileSync(USERS_SESSIONS_PATH, 'utf-8'));
       const now = Date.now();
       activeUserSessions.clear();
       for (const s of list) {
-        if (!s.revoked && s.expiresAt > now) {
+        if (s.expiresAt > now) {
           activeUserSessions.set(s.sessionId, s);
         }
       }
+    } else {
+      activeUserSessions.clear();
     }
   } catch (err: any) {
     console.error('[UserAuth DB] Error reloading session state from disk:', err.message);
   }
+}
+
+export function validateUserSessionToken(sessionId: string | undefined | null): { session: UserSession; user: UserRecord } | null {
+  if (!sessionId || typeof sessionId !== 'string') return null;
+  reloadUserSessionsFromDisk();
+
+  const session = activeUserSessions.get(sessionId);
+  if (!session || session.revoked || session.expiresAt < Date.now()) {
+    if (session && session.expiresAt < Date.now()) {
+      activeUserSessions.delete(sessionId);
+      saveUserSessions();
+    }
+    return null;
+  }
+
+  if (sessionId.includes('.')) {
+    const decoded = verifyAndDecodeSessionToken(sessionId);
+    if (!decoded || decoded.role !== 'user' || decoded.userId !== session.userId) {
+      activeUserSessions.delete(sessionId);
+      saveUserSessions();
+      return null;
+    }
+  }
+
+  const user = usersCache[session.userId];
+  // Never recreate a missing or deleted account from a session token
+  if (!user || !user.isVerified || (user as any).disabled || user.id === 'usr_owner' || (user.role as string) === 'owner') {
+    activeUserSessions.delete(sessionId);
+    saveUserSessions();
+    return null;
+  }
+
+  if (user.email.trim().toLowerCase() !== session.email.trim().toLowerCase()) {
+    activeUserSessions.delete(sessionId);
+    saveUserSessions();
+    return null;
+  }
+
+  const userCreatedMs = Date.parse(user.createdAt);
+  if (!isNaN(userCreatedMs) && session.createdAt + 5000 < userCreatedMs) {
+    activeUserSessions.delete(sessionId);
+    saveUserSessions();
+    return null;
+  }
+
+  return { session, user };
 }
 
 function sanitizeUser(u: UserRecord) {
@@ -417,8 +476,8 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 1a2. AI Studio Server Secrets Diagnostic (Reports ONLY 'configured' | 'missing' - never secrets)
-  router.get('/email-status', (req: Request, res: Response) => {
+  // 1a2. AI Studio Server Secrets Diagnostic (Owner-Only; reports ONLY 'configured' | 'missing' - never secrets)
+  router.get('/email-status', authenticateSession, requireOwner, (req: Request, res: Response) => {
     const secretsDiag = checkServerSecretsDiagnostic();
     const configStatus = getEmailConfigStatus();
     res.json({
@@ -428,8 +487,8 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 1b. Controlled Email Transport Diagnostic Test
-  router.get('/email-diagnostic', async (req: Request, res: Response) => {
+  // 1b. Controlled Email Transport Diagnostic Test (Owner-Only)
+  router.get('/email-diagnostic', authenticateSession, requireOwner, async (req: Request, res: Response) => {
     try {
       const emailStatus = getEmailConfigStatus();
       const testRecipient = typeof req.query.to === 'string' ? req.query.to.trim() : undefined;
@@ -447,20 +506,24 @@ export function createUserAuthRouter() {
 
   // 1c. Live Username Availability Check
   router.get('/check-username', (req: Request, res: Response) => {
+    reloadUserSessionsFromDisk();
     const rawUsername = typeof req.query.username === 'string' ? req.query.username : '';
     const excludeUserId = typeof req.query.excludeUserId === 'string' ? req.query.excludeUserId : undefined;
     const excludeEmail = typeof req.query.excludeEmail === 'string' ? req.query.excludeEmail : undefined;
     const result = isUsernameAvailable(rawUsername, excludeUserId, excludeEmail);
+    const suggestedUsername = !result.available ? generateUniqueUsername(rawUsername || 'AnimeExplorer') : undefined;
     res.json({
       available: result.available,
       username: rawUsername.trim(),
-      reason: result.reason
+      reason: result.reason,
+      suggestedUsername
     });
   });
 
   // 2. Normal User Registration - Step 1: Init with Email, Username, Password
   router.post('/register-init', async (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { email, username, password } = req.body;
 
       // 1. Email validation
@@ -534,8 +597,8 @@ export function createUserAuthRouter() {
       const existingPending = tempVerificationsCache[normalizedEmail];
       const now = Date.now();
       if (existingPending && existingPending.expiresAt > now) {
-        if (now - existingPending.lastResendAt < 60000) {
-          const waitSec = Math.ceil((60000 - (now - existingPending.lastResendAt)) / 1000);
+        if (now - existingPending.lastResendAt < 45000) {
+          const waitSec = Math.ceil((45000 - (now - existingPending.lastResendAt)) / 1000);
           res.status(429).json({
             error: `Please wait ${waitSec} seconds before requesting a new verification code.`,
             code: 'RATE_LIMITED'
@@ -603,6 +666,7 @@ export function createUserAuthRouter() {
   // 3. Normal User Registration - Step 2: Verify Code and Activate Account
   router.post('/register-verify', async (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { email, code } = req.body;
 
       if (!email || !code || typeof email !== 'string' || typeof code !== 'string') {
@@ -728,6 +792,7 @@ export function createUserAuthRouter() {
   // 4. Resend Verification Code
   const handleResend = async (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { email } = req.body;
       if (!email || typeof email !== 'string') {
         res.status(400).json({ error: 'Email address is required.' });
@@ -760,8 +825,8 @@ export function createUserAuthRouter() {
         return;
       }
 
-      if (now - tempRec.lastResendAt < 60000) {
-        const waitSec = Math.ceil((60000 - (now - tempRec.lastResendAt)) / 1000);
+      if (now - tempRec.lastResendAt < 45000) {
+        const waitSec = Math.ceil((45000 - (now - tempRec.lastResendAt)) / 1000);
         res.status(429).json({
           error: `Please wait ${waitSec} seconds before requesting another code.`,
           code: 'RATE_LIMITED'
@@ -814,6 +879,7 @@ export function createUserAuthRouter() {
   // 5. Normal User Login
   router.post('/login', async (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { email, password, username, accountId } = req.body;
 
       if ((!email && !username && !accountId) || !password || typeof password !== 'string') {
@@ -861,6 +927,11 @@ export function createUserAuthRouter() {
 
       if (!user) {
         res.status(401).json({ error: 'Invalid email, username, or password.' });
+        return;
+      }
+
+      if ((user as any).disabled) {
+        res.status(403).json({ error: 'This account has been disabled by the administrator.' });
         return;
       }
 
@@ -932,36 +1003,18 @@ export function createUserAuthRouter() {
 
     // Prioritize user session if client explicitly provided user header
     if (userHeader) {
-      reloadUserSessionsFromDisk();
-      let session = activeUserSessions.get(userHeader);
-      if (!session || session.revoked || session.expiresAt < Date.now()) {
-        const decoded = verifyAndDecodeSessionToken(userHeader);
-        if (decoded && decoded.role === 'user') {
-          session = {
-            sessionId: userHeader,
-            userId: decoded.userId,
-            email: decoded.email,
-            username: decoded.username,
-            provider: decoded.provider,
-            role: 'user',
-            createdAt: decoded.expiresAt - 30 * 24 * 60 * 60 * 1000,
-            expiresAt: decoded.expiresAt
-          };
-          activeUserSessions.set(userHeader, session);
-          saveUserSessions();
-        }
+      const validated = validateUserSessionToken(userHeader);
+      if (validated) {
+        res.json({
+          authenticated: true,
+          user: sanitizeUser(validated.user),
+          sessionToken: validated.session.sessionId
+        });
+        return;
       }
-      if (session && !session.revoked && session.expiresAt > Date.now()) {
-        const user = usersCache[session.userId];
-        if (user) {
-          res.json({
-            authenticated: true,
-            user: sanitizeUser(user),
-            sessionToken: session.sessionId
-          });
-          return;
-        }
-      }
+      setSessionCookie(res, 'anivault_user_session', '', 0, req);
+      res.json({ authenticated: false });
+      return;
     }
 
     // 1. Check Owner session if owner session ID provided or present
@@ -992,84 +1045,42 @@ export function createUserAuthRouter() {
       return;
     }
 
-    // Always reload from disk to ensure persistent storage is the absolute source of truth
-    reloadUserSessionsFromDisk();
-
-    let session = activeUserSessions.get(sessionId);
-    if (!session || session.revoked || session.expiresAt < Date.now()) {
-      // Decode cryptographic token fallback
-      const decoded = verifyAndDecodeSessionToken(sessionId);
-      if (decoded && decoded.role === 'user') {
-        session = {
-          sessionId,
-          userId: decoded.userId,
-          email: decoded.email,
-          username: decoded.username,
-          provider: decoded.provider,
-          role: 'user',
-          createdAt: decoded.expiresAt - 30 * 24 * 60 * 60 * 1000,
-          expiresAt: decoded.expiresAt
-        };
-        activeUserSessions.set(sessionId, session);
-        saveUserSessions();
-      } else {
-        // Fallback check: could sessionId be an owner session ID?
-        const ownerAcc = validateOwnerSession(sessionId);
-        if (ownerAcc) {
-          res.json({
-            authenticated: true,
-            user: {
-              id: ownerAcc.id,
-              email: ownerAcc.email,
-              username: ownerAcc.username,
-              name: ownerAcc.username,
-              provider: 'email',
-              isVerified: true,
-              role: 'owner',
-              createdAt: ownerAcc.createdAt
-            }
-          });
-          return;
-        }
-
-        if (session) {
-          activeUserSessions.delete(sessionId);
-          saveUserSessions();
-        }
-        res.json({ authenticated: false });
-        return;
-      }
+    const validatedUser = validateUserSessionToken(sessionId);
+    if (validatedUser) {
+      res.json({
+        authenticated: true,
+        user: sanitizeUser(validatedUser.user),
+        sessionToken: validatedUser.session.sessionId
+      });
+      return;
     }
 
-    // Load account record from permanent account storage
-    const cleanSessionEmail = session.email ? session.email.trim().toLowerCase() : '';
-    let user = usersCache[session.userId] || Object.values(usersCache).find(u => u.email && u.email.trim().toLowerCase() === cleanSessionEmail);
-    if (!user) {
-      const isoNow = new Date().toISOString();
-      user = {
-        id: session.userId,
-        email: session.email,
-        username: session.username,
-        name: session.username,
-        provider: 'email',
-        isVerified: true,
-        role: 'user',
-        createdAt: isoNow,
-        updatedAt: isoNow,
-        lastLoginAt: isoNow
-      };
-      usersCache[session.userId] = user;
-      saveUsers();
+    // Fallback check: could sessionId be a valid owner session ID?
+    const ownerAcc = validateOwnerSession(sessionId);
+    if (ownerAcc) {
+      res.json({
+        authenticated: true,
+        user: {
+          id: ownerAcc.id,
+          email: ownerAcc.email,
+          username: ownerAcc.username,
+          name: ownerAcc.username,
+          provider: 'email',
+          isVerified: true,
+          role: 'owner',
+          createdAt: ownerAcc.createdAt
+        }
+      });
+      return;
     }
 
-    res.json({
-      authenticated: true,
-      user: sanitizeUser(user)
-    });
+    setSessionCookie(res, 'anivault_user_session', '', 0, req);
+    res.json({ authenticated: false });
   });
 
   // 7. Normal User Logout
   router.post('/logout', (req: Request, res: Response) => {
+    reloadUserSessionsFromDisk();
     const cookies = parseCookies(req);
     const authHeader = req.headers.authorization;
     const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
@@ -1099,17 +1110,13 @@ export function createUserAuthRouter() {
       return;
     }
 
-    const session = activeUserSessions.get(sessionId);
-    if (!session || session.expiresAt < Date.now()) {
-      res.status(401).json({ error: 'Session expired.' });
+    const validated = validateUserSessionToken(sessionId);
+    if (!validated) {
+      res.status(401).json({ error: 'Session expired or invalid.' });
       return;
     }
 
-    const user = usersCache[session.userId];
-    if (!user) {
-      res.status(404).json({ error: 'User account not found.' });
-      return;
-    }
+    const { session, user } = validated;
 
     const { username } = req.body;
     if (!username || typeof username !== 'string') {
@@ -1152,17 +1159,13 @@ export function createUserAuthRouter() {
       return;
     }
 
-    const session = activeUserSessions.get(sessionId);
-    if (!session || session.expiresAt < Date.now()) {
-      res.status(401).json({ error: 'Session expired.' });
+    const validated = validateUserSessionToken(sessionId);
+    if (!validated) {
+      res.status(401).json({ error: 'Session expired or invalid.' });
       return;
     }
 
-    const user = usersCache[session.userId];
-    if (!user) {
-      res.status(404).json({ error: 'User record not found.' });
-      return;
-    }
+    const { user } = validated;
 
     const { avatar } = req.body;
     if (avatar) {
@@ -1206,42 +1209,80 @@ export function createUserAuthRouter() {
 
   // 10. Switch to Normal User Account
   router.post('/switch', (req: Request, res: Response) => {
-    const { accountId, account } = req.body;
-    if (!accountId) {
+    const { accountId, sessionToken } = req.body || {};
+    if (!accountId || typeof accountId !== 'string') {
       res.status(400).json({ error: 'Account ID is required.' });
       return;
     }
 
-    loadUsersData();
-    let user = usersCache[accountId] || Object.values(usersCache).find(u => u.id === accountId);
-    if (!user && account && account.id === accountId) {
-      if (account.id !== 'usr_owner' && account.role !== 'owner') {
-        user = {
-          id: account.id,
-          email: (account.email || '').trim().toLowerCase(),
-          username: account.username || 'AnimeExplorer',
-          provider: account.provider || 'email',
-          isVerified: true,
-          role: 'user',
-          createdAt: account.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          lastLoginAt: new Date().toISOString()
-        };
-        usersCache[user.id] = user;
-        saveUsers();
+    if (accountId === 'usr_owner') {
+      res.status(403).json({ error: 'Cannot switch to Owner account via normal user switch endpoint.' });
+      return;
+    }
+
+    reloadUserSessionsFromDisk();
+    const user = usersCache[accountId];
+
+    // Never recreate a missing or deleted account from client-supplied account data
+    if (!user || !user.isVerified || user.id === 'usr_owner' || (user.role as string) === 'owner') {
+      res.status(404).json({ error: 'Account not found. Please sign in.', requireLogin: true });
+      return;
+    }
+
+    if ((user as any).disabled) {
+      res.status(403).json({ error: 'This account has been disabled by the administrator.', requireLogin: true });
+      return;
+    }
+
+    // Verify that the target account has an active, non-revoked session on the server
+    // or that the caller presented a valid session token for this account
+    const cookies = parseCookies(req);
+    const userHeader = req.headers['x-anivault-user-session'] as string;
+    const ownerHeader = req.headers['x-anivault-owner-session'] as string;
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+
+    const candidateUserToken =
+      (typeof sessionToken === 'string' && sessionToken.trim()) ||
+      userHeader ||
+      cookies.anivault_user_session ||
+      bearerToken;
+
+    let authorizedToSwitch = false;
+    let existingValidSession: UserSession | undefined;
+
+    if (candidateUserToken) {
+      const validated = validateUserSessionToken(candidateUserToken);
+      if (validated && validated.user.id === user.id) {
+        authorizedToSwitch = true;
+        existingValidSession = validated.session;
       }
     }
 
-    if (!user) {
-      res.status(404).json({ error: 'Account not found.' });
+    if (!authorizedToSwitch) {
+      // Check if there is an active server-side session for this userId (e.g. multi-account switcher on same device)
+      const now = Date.now();
+      for (const s of activeUserSessions.values()) {
+        if (s.userId === user.id && !s.revoked && s.expiresAt > now) {
+          const userCreatedMs = Date.parse(user.createdAt);
+          if (isNaN(userCreatedMs) || s.createdAt + 5000 >= userCreatedMs) {
+            authorizedToSwitch = true;
+            existingValidSession = s;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!authorizedToSwitch) {
+      res.status(401).json({
+        error: 'Session expired or not found for this account. Please sign in.',
+        requireLogin: true
+      });
       return;
     }
 
     // End active Owner session/context immediately
-    const cookies = parseCookies(req);
-    const ownerHeader = req.headers['x-anivault-owner-session'] as string;
-    const authHeader = req.headers.authorization;
-    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
     const ownerSessionId = cookies.anivault_owner_session || ownerHeader || (bearerToken && bearerToken.startsWith('owner_') ? bearerToken : null);
     if (ownerSessionId) {
       revokeOwnerSession(ownerSessionId);
@@ -1249,7 +1290,9 @@ export function createUserAuthRouter() {
     setSessionCookie(res, 'anivault_owner_session', '', 0, req);
 
     const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const sessionId = generateSignedSessionToken(user.id, user.email, user.username, 'user', user.provider || 'email', sessionExpires);
+    const sessionId = existingValidSession
+      ? existingValidSession.sessionId
+      : generateSignedSessionToken(user.id, user.email, user.username, 'user', user.provider || 'email', sessionExpires);
     const sessionData: UserSession = {
       sessionId,
       userId: user.id,
@@ -1257,7 +1300,7 @@ export function createUserAuthRouter() {
       username: user.username,
       provider: user.provider,
       role: 'user',
-      createdAt: Date.now(),
+      createdAt: existingValidSession ? existingValidSession.createdAt : Date.now(),
       expiresAt: sessionExpires
     };
 
@@ -1277,6 +1320,7 @@ export function createUserAuthRouter() {
   // 11. Delete Account - Step 1: Request Deletion OTP
   router.post('/delete-account-init', async (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { accountId, email } = req.body;
       let user: UserRecord | undefined;
 
@@ -1294,8 +1338,8 @@ export function createUserAuthRouter() {
         const userHeader = req.headers['x-anivault-user-session'] as string;
         const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
         if (sessionId) {
-          const session = activeUserSessions.get(sessionId);
-          if (session) user = usersCache[session.userId];
+          const validated = validateUserSessionToken(sessionId);
+          if (validated) user = validated.user;
         }
       }
 
@@ -1454,6 +1498,7 @@ export function createUserAuthRouter() {
   // 14. Delete Account - Step 4: Final Confirmation & Complete Removal
   router.post('/delete-account-confirm', (req: Request, res: Response) => {
     try {
+      reloadUserSessionsFromDisk();
       const { accountId, deletionToken } = req.body;
       if (!accountId || !deletionToken) {
         res.status(400).json({ error: 'Account ID and deletion token are required.' });
@@ -1482,7 +1527,7 @@ export function createUserAuthRouter() {
       delete usersCache[accountId];
       saveUsers();
 
-      // 2. Remove all active sessions for this user
+      // 2. Remove all active sessions for this user immediately
       for (const [sessionId, session] of activeUserSessions.entries()) {
         if (session.userId === accountId) {
           activeUserSessions.delete(sessionId);
