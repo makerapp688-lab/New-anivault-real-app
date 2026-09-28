@@ -1,7 +1,10 @@
 {
-  "totalChecked": 108,
-  "statusesCorrected": 0,
-  "typesCorrected": 1,
-  "episodeCountsUpdated": 4,
-  "corrections": []
+  "timestamp": "2026-09-28T07:30:15.367Z",
+  "totalSeries": 848,
+  "completedCount": 841,
+  "ongoingCount": 7,
+  "upcomingCount": 0,
+  "changedCount": 0,
+  "completeEpisodeListsCount": 594,
+  "partialEpisodeListsCount": 254
 }

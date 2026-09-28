@@ -62,8 +62,11 @@ class AuthoritativeDataStore {
   private totalDbReads = 0;
   private totalDbWrites = 0;
   private lastDbLatencyMs = 0;
+  private isTestEnv = false;
 
   constructor() {
+    const argv1 = process.argv[1] || '';
+    this.isTestEnv = Boolean(argv1.includes('/test/') || argv1.endsWith('.test.ts'));
     this.initStores();
   }
 
@@ -225,7 +228,7 @@ class AuthoritativeDataStore {
   }
 
   public flushCatalogueSync() {
-    if (!this.isCatalogueDirty) return;
+    if (!this.isCatalogueDirty || this.isTestEnv) return;
     const startTime = Date.now();
     try {
       const array = Array.from(this.catalogueMap.values());
@@ -272,7 +275,7 @@ class AuthoritativeDataStore {
   }
 
   public flushRecordsSync() {
-    if (!this.isRecordsDirty) return;
+    if (!this.isRecordsDirty || this.isTestEnv) return;
     const startTime = Date.now();
     try {
       const obj: Record<string, ArtworkVerificationResult> = {};
@@ -300,7 +303,7 @@ class AuthoritativeDataStore {
   }
 
   private scheduleHistoryFlush() {
-    if (this.historyFlushTimer) return;
+    if (this.historyFlushTimer || this.isTestEnv) return;
     this.historyFlushTimer = setTimeout(() => {
       this.historyFlushTimer = null;
       if (this.isHistoryDirty) {
@@ -327,7 +330,7 @@ class AuthoritativeDataStore {
   }
 
   private scheduleFakeIssuesFlush() {
-    if (this.fakeIssuesFlushTimer) return;
+    if (this.fakeIssuesFlushTimer || this.isTestEnv) return;
     this.fakeIssuesFlushTimer = setTimeout(() => {
       this.fakeIssuesFlushTimer = null;
       if (this.isFakeIssuesDirty) {

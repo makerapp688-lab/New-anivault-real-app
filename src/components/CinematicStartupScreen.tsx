@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { zenimePrimaryLogo, zenimeCinematicLogo } from './AnivexLogo.tsx';
 
 // Eagerly preload both permanent built-in Zenime logo assets into browser memory on module evaluation
@@ -42,6 +43,11 @@ export const CinematicStartupScreen: React.FC<CinematicStartupScreenProps> = ({
 }) => {
   const [phase, setPhase] = useState<IntroPhase>('particles');
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  // Muted by default to respect browser autoplay policies and maintain a non-intrusive premium feel
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(true);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
+  const hasPlayedAudioRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -51,6 +57,79 @@ export const CinematicStartupScreen: React.FC<CinematicStartupScreenProps> = ({
     mq.addEventListener?.('change', handler);
     return () => mq.removeEventListener?.('change', handler);
   }, []);
+
+  // Subtle synthesized crystalline harmonic pad (plays once per mount, muted by default)
+  const triggerCinematicAudioOnce = useCallback((startMuted: boolean) => {
+    if (typeof window === 'undefined' || hasPlayedAudioRef.current) return;
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+
+    try {
+      const ctx = new AudioCtx();
+      audioCtxRef.current = ctx;
+
+      const masterGain = ctx.createGain();
+      // Start at 0 gain when muted by default so it never violates autoplay expectations
+      masterGain.gain.setValueAtTime(startMuted ? 0.0001 : 0.08, ctx.currentTime);
+      masterGain.connect(ctx.destination);
+      masterGainRef.current = masterGain;
+
+      // Ethereal Fmaj9/Dmin11 anime-inspired crystalline chord frequencies (Hz)
+      const frequencies = [220.0, 329.63, 392.0, 493.88, 659.25];
+      const now = ctx.currentTime;
+
+      frequencies.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const noteGain = ctx.createGain();
+        osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.35);
+
+        noteGain.gain.setValueAtTime(0.0001, now);
+        noteGain.gain.linearRampToValueAtTime(0.18 / frequencies.length, now + 1.8 + idx * 0.4);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 9.4);
+
+        osc.connect(noteGain);
+        noteGain.connect(masterGain);
+        osc.start(now + idx * 0.25);
+        osc.stop(now + 9.6);
+      });
+
+      hasPlayedAudioRef.current = true;
+    } catch {
+      // Gracefully respect browser autoplay restrictions without console noise
+    }
+  }, []);
+
+  useEffect(() => {
+    triggerCinematicAudioOnce(true);
+    return () => {
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, [triggerCinematicAudioOnce]);
+
+  const handleToggleAudio = async () => {
+    const nextMuted = !isAudioMuted;
+    setIsAudioMuted(nextMuted);
+
+    try {
+      if (!hasPlayedAudioRef.current || !audioCtxRef.current) {
+        hasPlayedAudioRef.current = false;
+        triggerCinematicAudioOnce(nextMuted);
+      }
+      const ctx = audioCtxRef.current;
+      const gain = masterGainRef.current;
+      if (ctx && ctx.state === 'suspended' && !nextMuted) {
+        await ctx.resume().catch(() => {});
+      }
+      if (gain && ctx) {
+        gain.gain.setTargetAtTime(nextMuted ? 0.0001 : 0.08, ctx.currentTime, 0.12);
+      }
+    } catch {
+      // Ignore autoplay policy rejections
+    }
+  };
 
   // Choreographed 10-second timeline:
   // 0–2s: Dark screen with subtle moving light particles ('particles')
@@ -180,8 +259,28 @@ export const CinematicStartupScreen: React.FC<CinematicStartupScreenProps> = ({
         />
       </div>
 
-      {/* Top subtle spacer */}
-      <div className="h-12 shrink-0" />
+      {/* Top bar with subtle muted-by-default cinematic audio toggle */}
+      <div className="relative z-10 w-full flex items-center justify-end px-6 pt-5 h-12 shrink-0">
+        <button
+          type="button"
+          id="zenime-startup-audio-toggle"
+          onClick={handleToggleAudio}
+          aria-label={isAudioMuted ? 'Unmute startup audio' : 'Mute startup audio'}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/75 border border-sky-500/25 hover:border-sky-400/50 text-[11px] font-medium text-slate-300 hover:text-white transition-all cursor-pointer"
+        >
+          {isAudioMuted ? (
+            <>
+              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+              <span>Audio Muted</span>
+            </>
+          ) : (
+            <>
+              <Volume2 className="w-3.5 h-3.5 text-sky-400" />
+              <span className="text-sky-300">Audio On</span>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Center Stage: Choreographed Dual-Logo Reveal & Transition */}
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 w-full max-w-3xl px-6">

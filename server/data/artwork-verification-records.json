@@ -1,99 +1,4 @@
 {
-  "test-naruto": {
-    "animeId": "test-naruto",
-    "animeTitle": "Naruto",
-    "status": "auto_fixed",
-    "confidence": 1,
-    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
-    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
-    "source": "anilist",
-    "dimensions": "HD (3:4)",
-    "lastVerifiedAt": "2026-09-24T11:39:09.005Z",
-    "aniListMatch": {
-      "id": 20,
-      "title": "Naruto",
-      "englishTitle": "Naruto",
-      "romajiTitle": "NARUTO",
-      "year": 2002,
-      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
-      "score": 1
-    },
-    "jikanMatch": null,
-    "candidates": [
-      {
-        "source": "anilist",
-        "sourceId": 20,
-        "title": "Naruto",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 1,
-        "format": "TV",
-        "year": 2002
-      },
-      {
-        "source": "anilist",
-        "sourceId": 10075,
-        "title": "NARUTO×UT",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/10075.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.75,
-        "format": "OVA",
-        "year": 2011
-      },
-      {
-        "source": "anilist",
-        "sourceId": 162561,
-        "title": "NARUTO (2026)",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx162561-Uk4eZAwcmcWk.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.75,
-        "format": "TV",
-        "year": null
-      }
-    ],
-    "issue": "Artwork automatically fixed using verified high-resolution asset from anilist.",
-    "evidence": [
-      "High confidence match established via AniList (100%).",
-      "Previous artwork was missing or unverified. Replaced with anilist verified poster."
-    ]
-  },
-  "fake-test-01": {
-    "animeId": "fake-test-01",
-    "animeTitle": "Xyzzqwk Nonexistent Mystery Movie 99999",
-    "status": "needs_review",
-    "confidence": 0,
-    "currentArtworkUrl": "https://example.com/broken.jpg",
-    "replacedArtworkUrl": null,
-    "source": "provider",
-    "dimensions": "HD (3:4)",
-    "lastVerifiedAt": "2026-09-24T11:39:14.481Z",
-    "aniListMatch": null,
-    "jikanMatch": null,
-    "candidates": [],
-    "issue": "Uncertain or conflicting match (Confidence: 0%). Manual review recommended.",
-    "evidence": [
-      "AniList score: 0%. Jikan score: 0%."
-    ]
-  },
-  "fake-test-02": {
-    "animeId": "fake-test-02",
-    "animeTitle": "Zzzzzqqq Unknown Nonexistent Phantom Series 987654",
-    "status": "possible_fake",
-    "confidence": 0,
-    "currentArtworkUrl": "https://example.com/broken.jpg",
-    "replacedArtworkUrl": null,
-    "source": "provider",
-    "dimensions": "HD (3:4)",
-    "lastVerifiedAt": "2026-09-24T11:39:23.524Z",
-    "aniListMatch": null,
-    "jikanMatch": null,
-    "candidates": [],
-    "issue": "Strong evidence of missing or unverifiable anime identity across all trusted sources.",
-    "evidence": [
-      "Queried titles: \"Zzzzzqqq Unknown Nonexistent Phantom Series 987654\". Zero database matches found on AniList and Jikan.",
-      "Source provider: RareToon India (https://raretoonsindia.rtx/fake-dead-link)"
-    ]
-  },
   "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake": {
     "animeId": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
     "animeTitle": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
@@ -146,21 +51,6 @@
     "attempts": 5,
     "retries": 0,
     "isFastPath": true
-  },
-  "fast-path-demo": {
-    "animeId": "fast-path-demo",
-    "animeTitle": "Fullmetal Alchemist: Brotherhood",
-    "status": "verified",
-    "confidence": 0.95,
-    "currentArtworkUrl": "https://images.example.com/fma-verified.jpg",
-    "source": "anilist",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-26T13:04:39.639Z",
-    "isFastPath": true,
-    "candidates": [],
-    "evidence": [
-      "Verified instantly via Fast-Path using trusted existing artwork and verified record."
-    ]
   },
   "mal_1686": {
     "animeId": "mal_1686",
@@ -627,156 +517,6 @@
       "thetvdb"
     ],
     "attempts": 5,
-    "retries": 0
-  },
-  "anivault_rt_doraemon_all_seasons_episodes": {
-    "animeId": "anivault_rt_doraemon_all_seasons_episodes",
-    "animeTitle": "Doraemon All Seasons Hindi",
-    "status": "verified",
-    "confidence": 1,
-    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
-    "replacedArtworkUrl": null,
-    "source": "anilist",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T13:52:45.066Z",
-    "aniListMatch": {
-      "id": 501,
-      "title": "Doraemon",
-      "englishTitle": "",
-      "romajiTitle": "Doraemon",
-      "year": 1973,
-      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
-      "score": 1
-    },
-    "anidbMatch": null,
-    "candidates": [
-      {
-        "source": "anilist",
-        "sourceId": 501,
-        "title": "Doraemon",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/501.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 1,
-        "format": "TV",
-        "year": 1973
-      },
-      {
-        "source": "anilist",
-        "sourceId": 2471,
-        "title": "Doraemon",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2471-FVQ44eZlRDP2.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 1,
-        "format": "TV_SHORT",
-        "year": 1979
-      },
-      {
-        "source": "anilist",
-        "sourceId": 2634,
-        "title": "Kaettekita Doraemon",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2634.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.78,
-        "format": "SPECIAL",
-        "year": 1979
-      },
-      {
-        "source": "anilist",
-        "sourceId": 2648,
-        "title": "Doraemon: 2112-nen Doraemon Tanjou",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/2648.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.78,
-        "format": "MOVIE",
-        "year": 1995
-      }
-    ],
-    "issue": null,
-    "evidence": [
-      "Current artwork verified reachable, valid, and non-placeholder."
-    ],
-    "isFastPath": true,
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "anilist"
-    ],
-    "attempts": 5,
-    "retries": 0
-  },
-  "anivault_rt_baki": {
-    "animeId": "anivault_rt_baki",
-    "animeTitle": "BAKI Season 1",
-    "status": "verified",
-    "confidence": 1,
-    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
-    "replacedArtworkUrl": null,
-    "source": "anilist",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:46.262Z",
-    "aniListMatch": {
-      "id": 97888,
-      "title": "BAKI",
-      "englishTitle": "BAKI",
-      "romajiTitle": "Baki",
-      "year": 2018,
-      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
-      "score": 1
-    },
-    "anidbMatch": null,
-    "candidates": [
-      {
-        "source": "anilist",
-        "sourceId": 97888,
-        "title": "BAKI",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97888-tdZ1r7qN1DRs.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 1,
-        "format": "ONA",
-        "year": 2018
-      },
-      {
-        "source": "anilist",
-        "sourceId": 176509,
-        "title": "BAKI-DOU: The Invincible Samurai",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176509-GRUa4fzyAM9u.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.78,
-        "format": "ONA",
-        "year": 2026
-      },
-      {
-        "source": "anilist",
-        "sourceId": 87501,
-        "title": "Baki OVA",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/87501-GGhWW6d9NPxV.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.78,
-        "format": "OVA",
-        "year": 2016
-      },
-      {
-        "source": "anilist",
-        "sourceId": 124195,
-        "title": "Baki Hanma",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx124195-5Z1JSrRlbMRe.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.78,
-        "format": "ONA",
-        "year": 2021
-      }
-    ],
-    "issue": null,
-    "evidence": [
-      "Current artwork verified reachable, valid, and non-placeholder."
-    ],
-    "isFastPath": true,
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "anilist"
-    ],
-    "attempts": 4,
     "retries": 0
   },
   "anivault_rt_frieren_beyond_journeys_end": {
@@ -1297,51 +1037,6 @@
     "issue": null,
     "evidence": [
       "Previous poster was missing or broken. Validated, saved & verified anilist poster (88% match)."
-    ],
-    "isFastPath": true,
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "anilist"
-    ],
-    "attempts": 3,
-    "retries": 0
-  },
-  "anivault_rt_hindi_dragon_ball_super_super_hero_2022_movie_hindi_download_hd": {
-    "animeId": "anivault_rt_hindi_dragon_ball_super_super_hero_2022_movie_hindi_download_hd",
-    "animeTitle": "Dragon Ball Super Super Hero 2022 Movie",
-    "status": "auto_fixed",
-    "confidence": 0.8698181818181818,
-    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
-    "replacedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
-    "source": "anilist",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:50.569Z",
-    "aniListMatch": {
-      "id": 133898,
-      "title": "Dragon Ball Super: SUPER HERO",
-      "englishTitle": "Dragon Ball Super: SUPER HERO",
-      "romajiTitle": "Dragon Ball Super: Super Hero",
-      "year": 2022,
-      "coverUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
-      "score": 0.8698181818181818
-    },
-    "anidbMatch": null,
-    "candidates": [
-      {
-        "source": "anilist",
-        "sourceId": 133898,
-        "title": "Dragon Ball Super: SUPER HERO",
-        "imageUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
-        "aspectRatio": "3:4",
-        "confidence": 0.8698181818181818,
-        "format": "MOVIE",
-        "year": 2022
-      }
-    ],
-    "issue": null,
-    "evidence": [
-      "Previous poster was missing or broken. Validated, saved & verified anilist poster (87% match)."
     ],
     "isFastPath": true,
     "sourcesChecked": [
@@ -3258,32 +2953,6 @@
     "attempts": 4,
     "retries": 0
   },
-  "anivault_rt_your_name_2016_movie": {
-    "animeId": "anivault_rt_your_name_2016_movie",
-    "animeTitle": "Your Name (2016) Movie",
-    "status": "verified",
-    "confidence": 0.95,
-    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2026/03/Your-Name.webp",
-    "replacedArtworkUrl": null,
-    "source": "provider",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:46.923Z",
-    "aniListMatch": null,
-    "anidbMatch": null,
-    "candidates": [],
-    "issue": null,
-    "evidence": [
-      "Current artwork verified reachable, valid, and non-placeholder."
-    ],
-    "isFastPath": true,
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "provider"
-    ],
-    "attempts": 4,
-    "retries": 0
-  },
   "anivault_rt_shin_chan_movie_villain_aur_dulhan": {
     "animeId": "anivault_rt_shin_chan_movie_villain_aur_dulhan",
     "animeTitle": "Shin Chan Movie Villain Aur Dulhan",
@@ -4706,7 +4375,7 @@
   },
   "anivault_rt_doraemon_nobita_and_the_steel_troops_hd": {
     "animeId": "anivault_rt_doraemon_nobita_and_the_steel_troops_hd",
-    "animeTitle": "Doraemon Nobita And The Steel Troops Download Hindi Dubbed 720P",
+    "animeTitle": "Doraemon Nobita And The Steel Troops Download",
     "status": "verified",
     "confidence": 0.95,
     "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2024/04/Doraemon-Nobita-And-The-Steel-Troops-Download-Hindi-Dubbed.jpg",
@@ -4877,7 +4546,7 @@
   },
   "anivault_rt_doraemon_the_movie_nobita_aur_jadooi_tapu": {
     "animeId": "anivault_rt_doraemon_the_movie_nobita_aur_jadooi_tapu",
-    "animeTitle": "Doraemon The Movie Nobita Aur Jadooi Tapu Download Hindi Dubbed 720p",
+    "animeTitle": "Doraemon The Movie Nobita Aur Jadooi Tapu Download",
     "status": "verified",
     "confidence": 0.95,
     "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/05/Doraemon-The-Movie-Nobita-Aur-Jadooi-Tapu-Hindi.webp",
@@ -9671,42 +9340,6 @@
     "attempts": 4,
     "retries": 0
   },
-  "anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas": {
-    "animeId": "anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas",
-    "animeTitle": "Shin Chan Movie Action Kamen vs Higure Rakshas",
-    "status": "verified",
-    "confidence": 0.95,
-    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image.jpg",
-    "replacedArtworkUrl": null,
-    "source": "thetvdb",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:47.165Z",
-    "aniListMatch": null,
-    "anidbMatch": null,
-    "candidates": [
-      {
-        "source": "thetvdb",
-        "sourceId": "5307",
-        "title": "Crayon Shin-chan Movie 01: Action Kamen vs. Haigure Maou",
-        "imageUrl": "https://media.kitsu.app/anime/poster_images/5307/original.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.74,
-        "year": 1993
-      }
-    ],
-    "issue": null,
-    "evidence": [
-      "Current artwork verified reachable, valid, and non-placeholder."
-    ],
-    "isFastPath": true,
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "thetvdb"
-    ],
-    "attempts": 4,
-    "retries": 0
-  },
   "anivault_rt_shin_chan_movie_the_spy_hindi": {
     "animeId": "anivault_rt_shin_chan_movie_the_spy_hindi",
     "animeTitle": "Shin Chan Movie The Spy",
@@ -10853,29 +10486,6 @@
     "attempts": 5,
     "retries": 0
   },
-  "anivault_rt_suzume_no_tojimari_2022_english_subbed_download": {
-    "animeId": "anivault_rt_suzume_no_tojimari_2022_english_subbed_download",
-    "animeTitle": "Suzume no Tojimari (2022) English Subbed Download [480p/720p/1080p]",
-    "status": "verified",
-    "confidence": 0.95,
-    "currentArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/04/Suzume-no-Tojimari-1.jpg",
-    "source": "provider_verified",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:47.811Z",
-    "isFastPath": true,
-    "candidates": [],
-    "issue": null,
-    "evidence": [
-      "Validated existing poster URL (provider_verified) is reachable, loads cleanly, and is non-placeholder."
-    ],
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "provider_verified"
-    ],
-    "attempts": 5,
-    "retries": 0
-  },
   "anivault_rt_spider_man_across_the_spider_verse_hindi": {
     "animeId": "anivault_rt_spider_man_across_the_spider_verse_hindi",
     "animeTitle": "Spider Man: Across the Spider Verse",
@@ -11526,29 +11136,6 @@
     "source": "anilist",
     "dimensions": "HD (Aspect 3:4)",
     "lastVerifiedAt": "2026-09-27T08:26:47.969Z",
-    "isFastPath": true,
-    "candidates": [],
-    "issue": null,
-    "evidence": [
-      "Validated existing poster URL (anilist) is reachable, loads cleanly, and is non-placeholder."
-    ],
-    "sourcesChecked": [
-      "Local Catalogue",
-      "HTTP Image Validator",
-      "anilist"
-    ],
-    "attempts": 4,
-    "retries": 0
-  },
-  "anivault_rt_when_they_cry": {
-    "animeId": "anivault_rt_when_they_cry",
-    "animeTitle": "When They Cry",
-    "status": "verified",
-    "confidence": 0.95,
-    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx934-wjMlVEl4CWwg.jpg",
-    "source": "anilist",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:47.942Z",
     "isFastPath": true,
     "candidates": [],
     "issue": null,
@@ -22148,7 +21735,7 @@
     "animeTitle": "Dragon Ball Super: Super Hero",
     "status": "auto_fixed",
     "confidence": 1,
-    "currentArtworkUrl": "https://media.kitsu.app/anime/44544/poster_image/68de073cc9c11f569ae7d2741e8dc67e.jpg",
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx133898-KdQ7fWTG06n4.png",
     "replacedArtworkUrl": "https://media.kitsu.app/anime/44544/poster_image/68de073cc9c11f569ae7d2741e8dc67e.jpg",
     "source": "thetvdb",
     "dimensions": "HD (Aspect 3:4)",
@@ -26871,7 +26458,7 @@
   },
   "anivault_rt_hindi_kochikame_the_movie_hindi_subbed_download_in_hd": {
     "animeId": "anivault_rt_hindi_kochikame_the_movie_hindi_subbed_download_in_hd",
-    "animeTitle": "Kochikame The Movie Hindi Subbed Download in HD",
+    "animeTitle": "Kochikame The Movie",
     "status": "auto_fixed",
     "confidence": 0.85,
     "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/2632/original.jpg",
@@ -27643,7 +27230,7 @@
   },
   "anivault_rt_hindi_dragon_ball_z_movie_10_broly_second_coming_hindi_watch_download_fhd": {
     "animeId": "anivault_rt_hindi_dragon_ball_z_movie_10_broly_second_coming_hindi_watch_download_fhd",
-    "animeTitle": "Dragon Ball Z Movie 10 Broly – Second Coming Hindi Watch Download FHD",
+    "animeTitle": "Dragon Ball Z Movie 10 Broly – Second Coming",
     "status": "auto_fixed",
     "confidence": 0.9195402298850575,
     "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/803/original.jpg",
@@ -27767,7 +27354,7 @@
   },
   "anivault_rt_hindi_dragon_ball_z_movie_9_bojack_unbound_hindi_download_hd": {
     "animeId": "anivault_rt_hindi_dragon_ball_z_movie_9_bojack_unbound_hindi_download_hd",
-    "animeTitle": "Dragon Ball Z Movie 9 Bojack Unbound Hindi Watch Download (OLD CN DUB)",
+    "animeTitle": "Dragon Ball Z Movie 9 Bojack Unbound",
     "status": "auto_fixed",
     "confidence": 0.9166666666666666,
     "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/802/original.jpg",
@@ -28487,7 +28074,7 @@
   },
   "anivault_rt_hindi_phineas_and_ferb_star_wars_movie_hindi_tamil_telugu_download_fhd": {
     "animeId": "anivault_rt_hindi_phineas_and_ferb_star_wars_movie_hindi_tamil_telugu_download_fhd",
-    "animeTitle": "Phineas and Ferb Star Wars Movie Hindi – Tamil – Telugu Download FHD",
+    "animeTitle": "Phineas and Ferb Star Wars Movie",
     "status": "auto_fixed",
     "confidence": 0.92,
     "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/595/1489325.jpg",
@@ -28710,7 +28297,7 @@
   },
   "anivault_rt_hindi_big_hero_6_baymax_returns_2017_movie_hindi_tamil_download_in_hd": {
     "animeId": "anivault_rt_hindi_big_hero_6_baymax_returns_2017_movie_hindi_tamil_download_in_hd",
-    "animeTitle": "Big Hero 6 Baymax Returns 2017 Movie Hindi – Tamil Download in HD",
+    "animeTitle": "Big Hero 6 Baymax Returns 2017 Movie Hindi",
     "status": "auto_fixed",
     "confidence": 0.85,
     "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/41927/original.jpg",
@@ -28782,7 +28369,7 @@
   },
   "anivault_rt_hindi_phineas_and_ferb_movie_across_the_2nd_dimension_hindi_tamil_telugu_download_fhd": {
     "animeId": "anivault_rt_hindi_phineas_and_ferb_movie_across_the_2nd_dimension_hindi_tamil_telugu_download_fhd",
-    "animeTitle": "Phineas And Ferb Movie Across the 2nd Dimension Hindi – Tamil – Telugu Download FHD",
+    "animeTitle": "Phineas And Ferb Movie Across the 2nd Dimension",
     "status": "auto_fixed",
     "confidence": 0.92,
     "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/595/1489325.jpg",
@@ -34294,40 +33881,6 @@
     "retries": 0,
     "isFastPath": true
   },
-  "anivault_rt_hindi_johnny_test_2021_season_2_hindi_episodes_download_hd": {
-    "animeId": "anivault_rt_hindi_johnny_test_2021_season_2_hindi_episodes_download_hd",
-    "animeTitle": "Johnny Test (2022)",
-    "status": "auto_fixed",
-    "confidence": 0.85,
-    "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/9983/original.jpg",
-    "replacedArtworkUrl": "https://media.kitsu.app/anime/poster_images/9983/original.jpg",
-    "source": "thetvdb",
-    "dimensions": "HD (Aspect 3:4)",
-    "lastVerifiedAt": "2026-09-27T08:26:51.217Z",
-    "aniListMatch": null,
-    "anidbMatch": null,
-    "candidates": [
-      {
-        "source": "thetvdb",
-        "sourceId": "9983",
-        "title": "Johnny Cypher",
-        "imageUrl": "https://media.kitsu.app/anime/poster_images/9983/original.jpg",
-        "aspectRatio": "3:4",
-        "confidence": 0.5018181818181818,
-        "year": 1968
-      }
-    ],
-    "issue": null,
-    "evidence": [
-      "Previous poster was missing or broken. Validated, saved & verified thetvdb poster (50% match)."
-    ],
-    "sourcesChecked": [
-      "TheTVDB"
-    ],
-    "attempts": 4,
-    "retries": 0,
-    "isFastPath": true
-  },
   "anivault_rt_hindi_avatar_aang_the_last_airbender_2026_movie_hindi_dubbed_download_480p_720p_1080p_2160p_4k": {
     "animeId": "anivault_rt_hindi_avatar_aang_the_last_airbender_2026_movie_hindi_dubbed_download_480p_720p_1080p_2160p_4k",
     "animeTitle": "Avatar Aang: The Last Airbender (2026) Movie English Dubbed",
@@ -34652,7 +34205,7 @@
   },
   "anivault_rt_hindi_ben_10_omniverse_all_episodes_hindi_tamil_telugu_download_hd": {
     "animeId": "anivault_rt_hindi_ben_10_omniverse_all_episodes_hindi_tamil_telugu_download_hd",
-    "animeTitle": "Ben 10 Omniverse All Episodes Hindi – Tamil – Telugu",
+    "animeTitle": "Ben 10 Omniverse",
     "status": "auto_fixed",
     "confidence": 0.9032258064516129,
     "currentArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/7/18280.jpg",
@@ -34821,7 +34374,7 @@
     "animeTitle": "Higurashi: When They Cry",
     "status": "auto_fixed",
     "confidence": 0.85,
-    "currentArtworkUrl": "https://media.kitsu.app/anime/poster_images/42935/original.jpg",
+    "currentArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx934-wjMlVEl4CWwg.jpg",
     "replacedArtworkUrl": "https://media.kitsu.app/anime/poster_images/42935/original.jpg",
     "source": "thetvdb",
     "dimensions": "HD (Aspect 3:4)",

@@ -24,11 +24,17 @@ export interface Episode {
   canonicalUrl: string;
 }
 
+export type EpisodeListStatus = 'complete' | 'partial' | 'empty';
+
 export interface Season {
   seasonNumber: number;
   title: string;
   canonicalUrl: string;
   episodeCount: number;
+  authoritativeEpisodeCount?: number;
+  importedEpisodeCount?: number;
+  isEpisodeListComplete?: boolean;
+  episodeListStatus?: EpisodeListStatus;
   episodes: Episode[];
 }
 
@@ -48,6 +54,10 @@ export interface Anime {
   artwork: Artwork;
   bannerArtwork?: string | null;
   totalEpisodes?: number;
+  authoritativeTotalEpisodes?: number;
+  importedEpisodesCount?: number;
+  isEpisodeListComplete?: boolean;
+  episodeListStatus?: EpisodeListStatus;
   totalSeasons?: number;
   seasonsCount?: number;
   runtime?: string | null;
@@ -64,6 +74,9 @@ export interface Anime {
     raretoonIndia: RareToonProviderInfo;
   };
   seasons?: Season[];
+  storyDetails?: string | null;
+  relatedAnime?: string[];
+  franchiseRelationships?: string[];
 }
 
 export interface CatalogueStats {

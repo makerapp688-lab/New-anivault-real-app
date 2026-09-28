@@ -218,7 +218,7 @@ export const AnimeDetailsModal: React.FC<AnimeDetailsModalProps> = ({
                 )}
               </div>
 
-              {/* MANDATORY REQUIREMENT 1: EPISODE COUNTS (WHOLE ANIME + CURRENT SEASON) */}
+              {/* MANDATORY REQUIREMENT 1: EPISODE COUNTS (AUTHORITATIVE + IMPORTED RECORDS + COMPLETENESS) */}
               <div className="p-3.5 bg-slate-950/80 dark:bg-slate-950/80 light:bg-slate-100 border border-slate-800 dark:border-slate-800 light:border-slate-300 rounded-xl space-y-2">
                 <div className="flex items-center justify-between text-xs border-b border-slate-800 dark:border-slate-800 light:border-slate-200 pb-2">
                   <span className="text-slate-400 dark:text-slate-400 light:text-slate-600 font-medium">Whole Anime:</span>
@@ -243,6 +243,32 @@ export const AnimeDetailsModal: React.FC<AnimeDetailsModalProps> = ({
                     )}
                   </span>
                 </div>
+
+                {activeSeason && currentSeasonEpisodes !== null && (
+                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-800/70 dark:border-slate-800/70 light:border-slate-200">
+                    <span className="text-slate-400 dark:text-slate-400 light:text-slate-600">Imported Records:</span>
+                    {(() => {
+                      const importedCount = activeSeason.importedEpisodeCount ?? (activeSeason.episodes ? activeSeason.episodes.length : 0);
+                      const isComplete = activeSeason.isEpisodeListComplete ?? (importedCount >= currentSeasonEpisodes && currentSeasonEpisodes > 0);
+                      return (
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <span className="text-slate-300 dark:text-slate-300 light:text-slate-700">
+                            {importedCount} of {currentSeasonEpisodes} imported
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              isComplete
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            }`}
+                          >
+                            {isComplete ? 'Complete List' : 'Partial List'}
+                          </span>
+                        </span>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Active Provider Status */}

@@ -1375,14 +1375,7 @@ export function createOwnerRouter(): express.Router {
   // 1. Dashboard Overview Stats
   router.get('/admin-stats', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      const fallbackPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
-      let catalogue: any[] = [];
-      if (fs.existsSync(dataPath)) {
-        catalogue = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-      } else if (fs.existsSync(fallbackPath)) {
-        catalogue = JSON.parse(fs.readFileSync(fallbackPath, 'utf-8'));
-      }
+      const catalogue: any[] = globalDataStore.getAllCatalogueAnime();
 
       // Bug reports count
       const bugPath = path.join(process.cwd(), 'server', 'data', 'bug-reports.json');
@@ -1399,11 +1392,15 @@ export function createOwnerRouter(): express.Router {
       }
       const userCount = Object.keys(users).length;
 
-      // Artwork stats from authoritative computeGlobalCatalogueStats
+      // Artwork & Information stats from authoritative stores
       const authoritativeArtStats = computeGlobalCatalogueStats();
+      const authoritativeInfoStats = infoManager.computeGlobalStats();
+      const workerSnapshot = globalWorkerJobEngine.getSnapshot();
+
       const verifiedArtwork = authoritativeArtStats.verified;
       const unverifiedArtwork = authoritativeArtStats.unverified;
       const missingArtwork = authoritativeArtStats.missing;
+      const needsReviewArtwork = authoritativeArtStats.needsReview;
 
       // Audit logs (recent activities)
       const auditLogs = loadAuditLogs();
@@ -1438,14 +1435,31 @@ export function createOwnerRouter(): express.Router {
           role: 'owner'
         },
         catalogueCount: catalogue.length,
+        totalSeasons: authoritativeInfoStats.totalSeasons,
+        totalAuthoritativeEpisodes: authoritativeInfoStats.totalAuthoritativeEpisodes,
+        totalImportedEpisodes: authoritativeInfoStats.totalImportedEpisodes,
         userCount,
         bugReportsCount: bugReports.length,
         newBugReportsCount: bugReports.filter(r => r.status === 'New').length,
         artworkStats: {
           verified: verifiedArtwork,
+          needsReview: needsReviewArtwork,
           unverified: unverifiedArtwork,
           missing: missingArtwork,
           total: catalogue.length
+        },
+        infoStats: authoritativeInfoStats,
+        workerStates: {
+          status: workerSnapshot.status,
+          workerCount: workerSnapshot.workerCount,
+          architectureCapacity: workerSnapshot.architectureCapacity,
+          totalTasks: workerSnapshot.totalTasks,
+          queuedCount: workerSnapshot.queuedCount,
+          claimedCount: workerSnapshot.claimedCount,
+          retryingCount: workerSnapshot.retryingCount,
+          completedCount: workerSnapshot.completedCount,
+          failedCount: workerSnapshot.failedCount,
+          processedCount: workerSnapshot.processedCount
         },
         recentActivity: auditLogs.slice(0, 20),
         systemHealth: 'Healthy',
@@ -1540,64 +1554,30 @@ export function createOwnerRouter(): express.Router {
   router.post('/catalogue/:id/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const updatedData = req.body;
+      const updatedData = req.body || {};
 
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      if (!fs.existsSync(dataPath)) {
-        res.status(404).json({ error: 'Catalogue file not found.' });
-        return;
-      }
-
-      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-      const index = catalogue.findIndex(a => a.id === id);
-
-      if (index === -1) {
+      const existing = globalDataStore.getCatalogueAnime(id);
+      if (!existing) {
         res.status(404).json({ error: `Anime with ID '${id}' not found.` });
         return;
       }
 
-      const original = catalogue[index];
-      
-      const merged = {
-        ...original,
-        title: typeof updatedData.title === 'string' ? updatedData.title.trim() : original.title,
-        alternateTitle: typeof updatedData.alternateTitle === 'string' ? updatedData.alternateTitle.trim() : original.alternateTitle,
-        type: ['TV', 'Movie'].includes(updatedData.type) ? updatedData.type : original.type,
-        status: ['Completed', 'Ongoing'].includes(updatedData.status) ? updatedData.status : original.status,
-        releaseYear: typeof updatedData.releaseYear === 'number' ? updatedData.releaseYear : (updatedData.releaseYear ? parseInt(updatedData.releaseYear) : original.releaseYear),
-        synopsis: typeof updatedData.synopsis === 'string' ? updatedData.synopsis.trim() : original.synopsis,
-        genres: Array.isArray(updatedData.genres) ? updatedData.genres : original.genres,
-        totalEpisodes: typeof updatedData.totalEpisodes === 'number' ? updatedData.totalEpisodes : (updatedData.totalEpisodes ? parseInt(updatedData.totalEpisodes) : original.totalEpisodes),
-        seasons: Array.isArray(updatedData.seasons) ? updatedData.seasons : original.seasons,
-        languages: Array.isArray(updatedData.languages) ? updatedData.languages : original.languages,
-        providers: {
-          ...original.providers,
-          raretoonIndia: {
-            ...original.providers?.raretoonIndia,
-            providerAnimeId: updatedData.providerAnimeId !== undefined ? updatedData.providerAnimeId : original.providers?.raretoonIndia?.providerAnimeId,
-            dubLanguage: updatedData.dubLanguage !== undefined ? updatedData.dubLanguage : original.providers?.raretoonIndia?.dubLanguage
-          }
-        }
-      };
-
-      catalogue[index] = merged;
-      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
-
-      // Write to fallback public folder as well to ensure total system synchronization
-      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
-      if (fs.existsSync(publicPath)) {
-        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
-      }
-
-      logAdminAction(
-        `Update Anime: "${merged.title}"`,
-        (req as any).ownerSession.email,
-        'success',
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.applyMetadataUpdate(
         id,
-        `Changes: Status=${merged.status}, ReleaseYear=${merged.releaseYear}, Type=${merged.type}`
+        updatedData,
+        email,
+        'Updated via Owner Catalogue Editor',
+        'Owner Catalogue Editor',
+        'verified'
       );
 
-      res.json({ success: true, message: 'Anime updated successfully.', anime: merged });
+      if (!result.success) {
+        res.status(400).json({ error: result.error || 'Failed to update anime record.' });
+        return;
+      }
+
+      res.json({ success: true, message: 'Anime updated successfully.', anime: result.anime });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to update anime record.' });
     }
@@ -1607,29 +1587,19 @@ export function createOwnerRouter(): express.Router {
   router.post('/catalogue/:id/delete', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const dataPath = path.join(process.cwd(), 'server', 'data', 'anivault-catalogue.json');
-      if (!fs.existsSync(dataPath)) {
-        res.status(404).json({ error: 'Catalogue file not found.' });
-        return;
-      }
-
-      const catalogue: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-      const index = catalogue.findIndex(a => a.id === id);
-
-      if (index === -1) {
+      const existing = globalDataStore.getCatalogueAnime(id);
+      if (!existing) {
         res.status(404).json({ error: `Anime with ID '${id}' not found.` });
         return;
       }
 
-      const deletedTitle = catalogue[index].title;
-      catalogue.splice(index, 1);
-
-      fs.writeFileSync(dataPath, JSON.stringify(catalogue, null, 2), 'utf-8');
-
-      const publicPath = path.join(process.cwd(), 'src', 'data', 'anivault-catalogue.json');
-      if (fs.existsSync(publicPath)) {
-        fs.writeFileSync(publicPath, JSON.stringify(catalogue, null, 2), 'utf-8');
+      const deletedTitle = existing.title;
+      const ok = globalDataStore.deleteCatalogueAnime(id);
+      if (!ok) {
+        res.status(500).json({ error: 'Failed to delete anime record.' });
+        return;
       }
+      globalDataStore.flushCatalogueSync();
 
       logAdminAction(
         `Delete Anime: "${deletedTitle}"`,

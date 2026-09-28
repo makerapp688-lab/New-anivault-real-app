@@ -7,7 +7,7 @@
   "startedAt": "2026-09-27T13:52:44.221Z",
   "updatedAt": "2026-09-27T13:52:45.234Z",
   "finishedAt": "2026-09-27T13:52:45.230Z",
-  "totalTasks": 8,
+  "totalTasks": 9,
   "queuedCount": 0,
   "claimedCount": 0,
   "completedCount": 9,
@@ -17,7 +17,7 @@
   "progressPercent": 100,
   "lastLog": "Job complete! Processed 9/8 tasks.",
   "workerCount": 50,
-  "architectureCapacity": 80,
+  "architectureCapacity": 70,
   "busyWorkers": 0,
   "busyArtworkWorkers": 0,
   "busyInfoWorkers": 0,
@@ -25,7 +25,7 @@
   "unhealthyWorkers": 0,
   "poolConfig": {
     "minWorkers": 1,
-    "maxWorkers": 80,
+    "maxWorkers": 50,
     "currentWorkers": 50,
     "concurrencyLimit": 50
   },

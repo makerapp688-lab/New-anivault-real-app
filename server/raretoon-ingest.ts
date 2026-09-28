@@ -357,9 +357,15 @@ export async function runIngestion(): Promise<IngestionReport> {
 
   console.log(`[RareToon Ingest] Existing baseline catalogue size: ${existingCatalogue.length} anime.`);
 
-  // Index existing catalogue by ID, canonical URL, and normalized title
+  // Index existing catalogue by ID, normalized canonical URL, providerAnimeId, and normalized title
+  const normalizeUrlKey = (u?: string | null): string => {
+    if (!u) return '';
+    return u.trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+  };
+
   const catalogueById = new Map<string, Anime>();
   const catalogueByUrl = new Map<string, Anime>();
+  const catalogueByProviderId = new Map<string, Anime>();
   const catalogueByNormTitle = new Map<string, Anime>();
 
   for (const item of existingCatalogue) {
@@ -367,14 +373,83 @@ export async function runIngestion(): Promise<IngestionReport> {
     if (item.title) catalogueByNormTitle.set(normalizeTitleForMatch(item.title), item);
     if (item.alternateTitle) catalogueByNormTitle.set(normalizeTitleForMatch(item.alternateTitle), item);
     if (item.providers?.raretoonIndia?.canonicalUrl) {
-      catalogueByUrl.set(item.providers.raretoonIndia.canonicalUrl, item);
+      const uk = normalizeUrlKey(item.providers.raretoonIndia.canonicalUrl);
+      if (uk && uk !== 'rareanimes.mov') catalogueByUrl.set(uk, item);
+    }
+    if (item.providers?.raretoonIndia?.providerAnimeId) {
+      catalogueByProviderId.set(item.providers.raretoonIndia.providerAnimeId.trim().toLowerCase(), item);
     }
     if (Array.isArray(item.seasons)) {
       for (const s of item.seasons) {
-        if (s.canonicalUrl) catalogueByUrl.set(s.canonicalUrl, item);
+        if (s.canonicalUrl) {
+          const sk = normalizeUrlKey(s.canonicalUrl);
+          if (sk && sk !== 'rareanimes.mov') catalogueByUrl.set(sk, item);
+        }
       }
     }
   }
+
+  const syncAnimeEpisodeIntegrity = (anime: Anime) => {
+    const seasons = Array.isArray(anime.seasons) ? anime.seasons : [];
+    let sumAuth = 0;
+    let sumImported = 0;
+    let allComplete = seasons.length > 0;
+
+    for (const s of seasons) {
+      const eps = Array.isArray(s.episodes) ? s.episodes : [];
+      s.episodes = eps;
+      const importedCount = eps.length;
+      const declaredAuth =
+        typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0
+          ? s.authoritativeEpisodeCount
+          : typeof s.episodeCount === 'number' && s.episodeCount > 0
+          ? s.episodeCount
+          : anime.type === 'Movie'
+          ? 1
+          : Math.max(1, importedCount);
+      const authCount = Math.max(declaredAuth, importedCount);
+      const isComplete = authCount > 0 && importedCount >= authCount;
+      const listStatus = importedCount === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+
+      s.episodeCount = authCount;
+      s.authoritativeEpisodeCount = authCount;
+      s.importedEpisodeCount = importedCount;
+      s.isEpisodeListComplete = isComplete;
+      s.episodeListStatus = listStatus;
+
+      sumAuth += authCount;
+      sumImported += importedCount;
+      if (!isComplete) allComplete = false;
+    }
+
+    const declaredAnimeTotal =
+      typeof anime.authoritativeTotalEpisodes === 'number' && anime.authoritativeTotalEpisodes > 0
+        ? anime.authoritativeTotalEpisodes
+        : typeof anime.totalEpisodes === 'number' && anime.totalEpisodes > 0
+        ? anime.totalEpisodes
+        : sumAuth;
+    const finalAuthTotal = Math.max(declaredAnimeTotal, sumAuth, sumImported);
+    if (seasons.length === 1 && seasons[0].episodeCount < finalAuthTotal) {
+      seasons[0].episodeCount = finalAuthTotal;
+      seasons[0].authoritativeEpisodeCount = finalAuthTotal;
+      seasons[0].isEpisodeListComplete = seasons[0].importedEpisodeCount! >= finalAuthTotal;
+      seasons[0].episodeListStatus =
+        seasons[0].importedEpisodeCount === 0
+          ? 'empty'
+          : seasons[0].isEpisodeListComplete
+          ? 'complete'
+          : 'partial';
+      allComplete = Boolean(seasons[0].isEpisodeListComplete);
+    }
+
+    anime.totalEpisodes = finalAuthTotal;
+    anime.authoritativeTotalEpisodes = finalAuthTotal;
+    anime.importedEpisodesCount = sumImported;
+    anime.isEpisodeListComplete = allComplete && finalAuthTotal > 0 && sumImported >= finalAuthTotal;
+    anime.episodeListStatus =
+      sumImported === 0 ? 'empty' : anime.isEpisodeListComplete ? 'complete' : 'partial';
+    anime.totalSeasons = seasons.length;
+  };
 
   let animeAdded = 0;
   let animeUpdated = 0;
@@ -387,6 +462,8 @@ export async function runIngestion(): Promise<IngestionReport> {
     const pathSlug = raw.canonicalUrl.replace(/https?:\/\/(?:www\.)?rareanimes\.mov\//, '').replace(/\/$/, '');
     const cleanTitle = cleanDisplayTitle(raw.title || pathSlug.replace(/-/g, ' '));
     const normTitle = normalizeTitleForMatch(cleanTitle);
+    const urlKey = normalizeUrlKey(raw.canonicalUrl);
+    const slugKey = pathSlug.trim().toLowerCase();
 
     // Season extraction
     let seasonNum = 1;
@@ -396,6 +473,16 @@ export async function runIngestion(): Promise<IngestionReport> {
     }
 
     const isMovie = pathSlug.includes('movie') || (raw.title || '').toLowerCase().includes('movie');
+
+    // Extract declared episode count from title/description if explicitly stated; never invent episode records
+    let declaredEpCount = isMovie ? 1 : 12;
+    const epRangeMatch = ((raw.title || '') + ' ' + (raw.description || '')).match(/(?:episodes?\s*(?:1\s*[-–to]+\s*)?|all\s+)(\d{1,3})\s*episodes?/i);
+    if (epRangeMatch) {
+      const parsedEp = parseInt(epRangeMatch[1], 10);
+      if (parsedEp > 0 && parsedEp <= 500) {
+        declaredEpCount = parsedEp;
+      }
+    }
 
     // Year extraction
     let year: number | undefined = undefined;
@@ -407,8 +494,11 @@ export async function runIngestion(): Promise<IngestionReport> {
     // Audio format
     const audio = detectAudio((raw.title || '') + ' ' + (raw.description || ''));
 
-    // Match existing anime
-    let targetAnime: Anime | undefined = catalogueByUrl.get(raw.canonicalUrl) || catalogueByNormTitle.get(normTitle);
+    // Match existing anime using strong identity evidence (URL, providerAnimeId, normalized title)
+    let targetAnime: Anime | undefined =
+      (urlKey ? catalogueByUrl.get(urlKey) : undefined) ||
+      (slugKey ? catalogueByProviderId.get(slugKey) : undefined) ||
+      catalogueByNormTitle.get(normTitle);
 
     if (targetAnime) {
       // UPDATE EXISTING ANIME SAFELY
@@ -443,19 +533,26 @@ export async function runIngestion(): Promise<IngestionReport> {
           existingSeason.canonicalUrl = raw.canonicalUrl;
         }
       } else {
-        // Add new season
+        // Add new season with explicit separation of authoritative count vs imported records
+        const importedEpisodes = [
+          { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
+        ];
+        const isComplete = importedEpisodes.length >= declaredEpCount;
         targetAnime.seasons.push({
           seasonNumber: seasonNum,
           title: `Season ${seasonNum}`,
           canonicalUrl: raw.canonicalUrl,
-          episodeCount: isMovie ? 1 : 12,
-          episodes: [
-            { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
-          ]
+          episodeCount: declaredEpCount,
+          authoritativeEpisodeCount: declaredEpCount,
+          importedEpisodeCount: importedEpisodes.length,
+          isEpisodeListComplete: isComplete,
+          episodeListStatus: isComplete ? 'complete' : 'partial',
+          episodes: importedEpisodes
         });
-        episodesAdded += (isMovie ? 1 : 12);
+        episodesAdded += importedEpisodes.length;
         targetAnime.seasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
       }
+      syncAnimeEpisodeIntegrity(targetAnime);
     } else {
       // NEW ANIME DISCOVERED
       const autoId = `anivault_rt_${pathSlug.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
@@ -463,6 +560,10 @@ export async function runIngestion(): Promise<IngestionReport> {
 
       const genres = determineGenres(pathSlug, cleanTitle, raw.description);
       const romaji = getRomaji(pathSlug);
+      const importedEpisodes = [
+        { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
+      ];
+      const isComplete = importedEpisodes.length >= declaredEpCount;
 
       const newAnime: Anime = {
         id: autoId,
@@ -495,20 +596,33 @@ export async function runIngestion(): Promise<IngestionReport> {
             seasonNumber: seasonNum,
             title: isMovie ? 'Movie' : `Season ${seasonNum}`,
             canonicalUrl: raw.canonicalUrl,
-            episodeCount: isMovie ? 1 : 12,
-            episodes: [
-              { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
-            ]
+            episodeCount: declaredEpCount,
+            authoritativeEpisodeCount: declaredEpCount,
+            importedEpisodeCount: importedEpisodes.length,
+            isEpisodeListComplete: isComplete,
+            episodeListStatus: isComplete ? 'complete' : 'partial',
+            episodes: importedEpisodes
           }
-        ]
+        ],
+        totalEpisodes: declaredEpCount,
+        authoritativeTotalEpisodes: declaredEpCount,
+        importedEpisodesCount: importedEpisodes.length,
+        isEpisodeListComplete: isComplete,
+        episodeListStatus: isComplete ? 'complete' : 'partial',
+        totalSeasons: 1
       };
 
       catalogueById.set(newAnime.id, newAnime);
       catalogueByNormTitle.set(normTitle, newAnime);
-      catalogueByUrl.set(raw.canonicalUrl, newAnime);
+      if (urlKey) catalogueByUrl.set(urlKey, newAnime);
+      if (slugKey) catalogueByProviderId.set(slugKey, newAnime);
       animeAdded++;
-      episodesAdded += (isMovie ? 1 : 12);
+      episodesAdded += importedEpisodes.length;
     }
+  }
+
+  for (const anime of catalogueById.values()) {
+    syncAnimeEpisodeIntegrity(anime);
   }
 
   const finalCatalogue = Array.from(catalogueById.values());

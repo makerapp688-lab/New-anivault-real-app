@@ -1,8 +1,8 @@
 [
   {
     "id": "INFO-HIST-1790517164956-4426",
-    "animeId": "anivault_rt_doraemon_all_seasons_episodes",
-    "animeTitle": "Doraemon All Seasons Hindi",
+    "animeId": "anivault_rt_doraemon_tv_series",
+    "animeTitle": "Doraemon (TV Series)",
     "updatedAt": "2026-09-27T13:52:44.956Z",
     "updatedBy": "makerapp688@gmail.com",
     "source": "AniList (99% match)",
@@ -6706,100 +6706,6 @@
       "franchiseRelationships": [],
       "providerAnimeId": "hindi/jackie-chan-adventures-season-1-hindi-episodes-hd",
       "canonicalUrl": "https://www.rareanimes.mov/hindi/jackie-chan-adventures-season-4-hindi-episodes-download-hd/"
-    }
-  },
-  {
-    "id": "INFO-HIST-1790516568692-1914",
-    "animeId": "anivault_rt_hindi_johnny_test_2021_season_2_hindi_episodes_download_hd",
-    "animeTitle": "Johnny Test (2022)",
-    "updatedAt": "2026-09-27T13:42:48.692Z",
-    "updatedBy": "makerapp688@gmail.com",
-    "source": "High-Confidence Fix All",
-    "reason": "Fix All High-Confidence metadata resolution",
-    "changedFields": [
-      "totalEpisodes"
-    ],
-    "previousSnapshot": {
-      "title": "Johnny Test (2022)",
-      "alternateTitle": null,
-      "japaneseTitle": null,
-      "type": "TV",
-      "status": "Completed",
-      "releaseYear": 2021,
-      "releaseDate": null,
-      "totalSeasons": 1,
-      "totalEpisodes": 1,
-      "seasons": [
-        {
-          "seasonNumber": 2,
-          "title": "Season 2",
-          "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/",
-          "episodeCount": 12,
-          "episodes": [
-            {
-              "episodeNumber": 1,
-              "title": "Episode 1",
-              "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/"
-            }
-          ]
-        }
-      ],
-      "genres": [
-        "Comedy"
-      ],
-      "languages": [
-        "Hindi",
-        "English",
-        "Japanese"
-      ],
-      "dubLanguage": "Dual Audio {Hindi + English}",
-      "synopsis": "✅ Download Johnny Test Season 2 Dual Audio {Hindi} Complete All Episodes WEB-DL HD In 480p & 720p & 1080p of each mp4 file is 80MB. It is a Cartoon Network Series and based on Animation, Comedy…",
-      "storyDetails": null,
-      "relatedAnime": [],
-      "franchiseRelationships": [],
-      "providerAnimeId": "hindi/johnny-test-2021-season-2-hindi-episodes-download-hd",
-      "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/"
-    },
-    "newSnapshot": {
-      "title": "Johnny Test (2022)",
-      "alternateTitle": null,
-      "japaneseTitle": null,
-      "type": "TV",
-      "status": "Completed",
-      "releaseYear": 2021,
-      "releaseDate": null,
-      "totalSeasons": 1,
-      "totalEpisodes": 12,
-      "seasons": [
-        {
-          "seasonNumber": 2,
-          "title": "Season 2",
-          "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/",
-          "episodeCount": 12,
-          "episodes": [
-            {
-              "episodeNumber": 1,
-              "title": "Episode 1",
-              "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/"
-            }
-          ]
-        }
-      ],
-      "genres": [
-        "Comedy"
-      ],
-      "languages": [
-        "Hindi",
-        "English",
-        "Japanese"
-      ],
-      "dubLanguage": "Dual Audio {Hindi + English}",
-      "synopsis": "✅ Download Johnny Test Season 2 Dual Audio {Hindi} Complete All Episodes WEB-DL HD In 480p & 720p & 1080p of each mp4 file is 80MB. It is a Cartoon Network Series and based on Animation, Comedy…",
-      "storyDetails": null,
-      "relatedAnime": [],
-      "franchiseRelationships": [],
-      "providerAnimeId": "hindi/johnny-test-2021-season-2-hindi-episodes-download-hd",
-      "canonicalUrl": "https://www.rareanimes.mov/hindi/johnny-test-2021-season-2-hindi-episodes-download-hd/"
     }
   },
   {
@@ -40937,8 +40843,8 @@
   },
   {
     "id": "INFO-HIST-1790516559499-3892",
-    "animeId": "anivault_rt_when_they_cry",
-    "animeTitle": "When They Cry",
+    "animeId": "mal_934",
+    "animeTitle": "Higurashi: When They Cry",
     "updatedAt": "2026-09-27T13:42:39.500Z",
     "updatedBy": "makerapp688@gmail.com",
     "source": "TVMaze",
@@ -51897,8 +51803,8 @@
   },
   {
     "id": "INFO-HIST-1790516557921-2801",
-    "animeId": "anivault_rt_suzume_no_tojimari_2022_english_subbed_download",
-    "animeTitle": "Suzume no Tojimari (2022)",
+    "animeId": "mal_50594",
+    "animeTitle": "Suzume",
     "updatedAt": "2026-09-27T13:42:37.921Z",
     "updatedBy": "makerapp688@gmail.com",
     "source": "High-Confidence Fix All",
@@ -56059,8 +55965,8 @@
   },
   {
     "id": "INFO-HIST-1790516557113-9341",
-    "animeId": "anivault_rt_baki",
-    "animeTitle": "BAKI Season 1",
+    "animeId": "anivault_rt_baki_2",
+    "animeTitle": "BAKI",
     "updatedAt": "2026-09-27T13:42:37.113Z",
     "updatedBy": "makerapp688@gmail.com",
     "source": "High-Confidence Fix All",
@@ -56754,8 +56660,8 @@
   },
   {
     "id": "INFO-HIST-1790516557000-8181",
-    "animeId": "anivault_rt_doraemon_all_seasons_episodes",
-    "animeTitle": "Doraemon All Seasons Hindi",
+    "animeId": "anivault_rt_doraemon_tv_series",
+    "animeTitle": "Doraemon (TV Series)",
     "updatedAt": "2026-09-27T13:42:37.000Z",
     "updatedBy": "makerapp688@gmail.com",
     "source": "High-Confidence Fix All",

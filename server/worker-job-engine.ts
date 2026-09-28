@@ -7,7 +7,7 @@ export type TaskPriority = 'HIGH' | 'MEDIUM' | 'NORMAL' | 'LOW';
 export type WorkerJobSystem = 'ARTWORK_VERIFICATION' | 'INFORMATION_VERIFICATION';
 
 export const DEFAULT_PRODUCTION_WORKERS = 50;
-export const MAX_INFRASTRUCTURE_WORKERS = 80;
+export const MAX_INFRASTRUCTURE_WORKERS = 70;
 
 export interface WorkerPoolConfig {
   minWorkers: number;
@@ -326,11 +326,11 @@ export class ReusableWorkerJobEngine {
   // Activity events (Persisted)
   private activityEvents: WorkerActivityEvent[] = [];
 
-  // Active Production 50-Worker Engine Pool Configuration (Scalable to 80+ workers without redesign)
+  // Active Production 50-Worker Engine Pool Configuration (Maximum infrastructure capacity: 70)
   private poolConfig: WorkerPoolConfig = {
     minWorkers: 1,
-    maxWorkers: MAX_INFRASTRUCTURE_WORKERS,
-    currentWorkers: DEFAULT_PRODUCTION_WORKERS, // Practical active 50 server-side workers, architecture supports >=80
+    maxWorkers: DEFAULT_PRODUCTION_WORKERS,
+    currentWorkers: DEFAULT_PRODUCTION_WORKERS, // Production worker count: 50 (never start more than 50 production workers)
     concurrencyLimit: DEFAULT_PRODUCTION_WORKERS
   };
 
@@ -388,11 +388,18 @@ export class ReusableWorkerJobEngine {
   // Live SSE / state change subscribers
   private stateListeners = new Set<() => void>();
   private notifyTimer: NodeJS.Timeout | null = null;
+  private isIsolatedTestInstance = false;
 
-  constructor() {
+  constructor(options?: { isolated?: boolean }) {
+    const argv1 = process.argv[1] || '';
+    this.isIsolatedTestInstance = Boolean(
+      options?.isolated || argv1.includes('/test/') || argv1.endsWith('.test.ts')
+    );
     this.initWorkers();
-    this.loadJobState();
-    this.loadActivityEvents();
+    if (!this.isIsolatedTestInstance) {
+      this.loadJobState();
+      this.loadActivityEvents();
+    }
   }
 
   public onStateChange(listener: () => void): () => void {
@@ -437,9 +444,9 @@ export class ReusableWorkerJobEngine {
 
   public setWorkerPoolConfig(config: Partial<WorkerPoolConfig>): WorkerPoolConfig {
     const minWorkers = Math.max(1, config.minWorkers ?? this.poolConfig.minWorkers);
-    const maxWorkers = Math.max(minWorkers, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.maxWorkers ?? MAX_INFRASTRUCTURE_WORKERS));
-    const currentWorkers = Math.min(maxWorkers, Math.max(minWorkers, config.currentWorkers ?? this.poolConfig.currentWorkers));
-    const concurrencyLimit = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.concurrencyLimit ?? currentWorkers));
+    const maxWorkers = Math.max(minWorkers, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.maxWorkers ?? this.poolConfig.maxWorkers));
+    const currentWorkers = Math.min(DEFAULT_PRODUCTION_WORKERS, maxWorkers, Math.max(minWorkers, config.currentWorkers ?? this.poolConfig.currentWorkers));
+    const concurrencyLimit = Math.max(1, Math.min(DEFAULT_PRODUCTION_WORKERS, config.concurrencyLimit ?? currentWorkers));
 
     this.poolConfig = { minWorkers, maxWorkers, currentWorkers, concurrencyLimit };
     this.initWorkers();
@@ -500,6 +507,7 @@ export class ReusableWorkerJobEngine {
   }
 
   private saveActivityEvents(immediate = false) {
+    if (this.isIsolatedTestInstance || this.mode === 'benchmark') return;
     if (!immediate) {
       if (this.saveEventsTimer) return;
       this.saveEventsTimer = setTimeout(() => {
@@ -580,70 +588,71 @@ export class ReusableWorkerJobEngine {
           this.completedTaskSet = new Set(saved.completedTaskIds.filter((id: string) => !id.includes('bench-anime-')));
         }
         if (Array.isArray(saved.failedTaskIds)) {
-          this.failedTaskSet = new Set(saved.failedTaskIds.filter((id: string) => !id.includes('bench-anime-')));
+          this.failedTaskSet = new Set(
+            saved.failedTaskIds.filter((id: string) => !id.includes('bench-anime-') && !this.completedTaskSet.has(id))
+          );
         }
         if (saved.poolConfig && typeof saved.poolConfig.currentWorkers === 'number') {
-          this.poolConfig.currentWorkers = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, saved.poolConfig.currentWorkers));
-          this.poolConfig.maxWorkers = MAX_INFRASTRUCTURE_WORKERS;
-          this.poolConfig.concurrencyLimit = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, saved.poolConfig.concurrencyLimit || this.poolConfig.currentWorkers));
+          this.poolConfig.currentWorkers = Math.max(1, Math.min(DEFAULT_PRODUCTION_WORKERS, saved.poolConfig.currentWorkers));
+          this.poolConfig.maxWorkers = DEFAULT_PRODUCTION_WORKERS;
+          this.poolConfig.concurrencyLimit = Math.max(1, Math.min(DEFAULT_PRODUCTION_WORKERS, saved.poolConfig.concurrencyLimit || this.poolConfig.currentWorkers));
         }
 
-        // Restore remaining unfinished tasks if server restarted during an active or paused job
+        // Restore tasksMap so completedTaskSet, failedTaskSet, and remainingTasks are 100% consistent
         this.tasksMap.clear();
         this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
         this.queuedTaskIds.clear();
         const now = Date.now();
 
-        if (Array.isArray(saved.remainingTasks) && saved.remainingTasks.length > 0 && (saved.status === 'running' || saved.status === 'paused')) {
-          // 1. Re-populate completed task stubs so totalTasks and progressPercent remain authoritative
-          for (const cId of this.completedTaskSet) {
-            const parsed = parseTaskId(cId);
-            const aId = parsed.animeId || cId;
-            const sys = inferJobSystemFromTaskType(parsed.type);
-            this.tasksMap.set(cId, {
-              taskId: cId,
-              jobId: this.jobId,
-              jobSystem: sys,
-              animeId: aId,
-              title: aId,
-              type: parsed.type.toLowerCase(),
-              payload: { id: aId },
-              priority: 'MEDIUM',
-              status: 'completed',
-              workerId: null,
-              claimedByWorkerId: null,
-              enqueuedAt: now,
-              updatedAt: now,
-              completedAt: saved.updatedAt || new Date().toISOString(),
-              retryCount: 0,
-              maxRetries: 2
-            });
-          }
-          for (const fId of this.failedTaskSet) {
-            const parsed = parseTaskId(fId);
-            const aId = parsed.animeId || fId;
-            const sys = inferJobSystemFromTaskType(parsed.type);
-            this.tasksMap.set(fId, {
-              taskId: fId,
-              jobId: this.jobId,
-              jobSystem: sys,
-              animeId: aId,
-              title: aId,
-              type: parsed.type.toLowerCase(),
-              payload: { id: aId },
-              priority: 'MEDIUM',
-              status: 'failed',
-              workerId: null,
-              claimedByWorkerId: null,
-              enqueuedAt: now,
-              updatedAt: now,
-              completedAt: saved.updatedAt || new Date().toISOString(),
-              retryCount: 2,
-              maxRetries: 2
-            });
-          }
+        for (const cId of this.completedTaskSet) {
+          const parsed = parseTaskId(cId);
+          const aId = parsed.animeId || cId;
+          const sys = inferJobSystemFromTaskType(parsed.type);
+          this.tasksMap.set(cId, {
+            taskId: cId,
+            jobId: this.jobId,
+            jobSystem: sys,
+            animeId: aId,
+            title: aId,
+            type: parsed.type.toLowerCase(),
+            payload: { id: aId },
+            priority: 'MEDIUM',
+            status: 'completed',
+            workerId: null,
+            claimedByWorkerId: null,
+            enqueuedAt: now,
+            updatedAt: now,
+            completedAt: saved.updatedAt || new Date().toISOString(),
+            retryCount: 0,
+            maxRetries: 2
+          });
+        }
+        for (const fId of this.failedTaskSet) {
+          const parsed = parseTaskId(fId);
+          const aId = parsed.animeId || fId;
+          const sys = inferJobSystemFromTaskType(parsed.type);
+          this.tasksMap.set(fId, {
+            taskId: fId,
+            jobId: this.jobId,
+            jobSystem: sys,
+            animeId: aId,
+            title: aId,
+            type: parsed.type.toLowerCase(),
+            payload: { id: aId },
+            priority: 'MEDIUM',
+            status: 'failed',
+            workerId: null,
+            claimedByWorkerId: null,
+            enqueuedAt: now,
+            updatedAt: now,
+            completedAt: saved.updatedAt || new Date().toISOString(),
+            retryCount: 2,
+            maxRetries: 2
+          });
+        }
 
-          // 2. Re-enqueue unfinished tasks safely
+        if (Array.isArray(saved.remainingTasks) && saved.remainingTasks.length > 0 && (saved.status === 'running' || saved.status === 'paused')) {
+          // Re-enqueue unfinished tasks safely
           for (const rt of saved.remainingTasks) {
             if (!rt || !rt.taskId || this.completedTaskSet.has(rt.taskId) || this.failedTaskSet.has(rt.taskId)) {
               continue;
@@ -707,7 +716,7 @@ export class ReusableWorkerJobEngine {
   }
 
   public saveJobState(immediate = false) {
-    if (this.mode === 'benchmark') return;
+    if (this.isIsolatedTestInstance || this.mode === 'benchmark') return;
     if (!immediate && this.isProcessing) {
       if (this.saveStateTimer) return;
       this.saveStateTimer = setTimeout(() => {
@@ -1136,7 +1145,7 @@ export class ReusableWorkerJobEngine {
       progressPercent,
       lastLog: sysMeta?.lastLog || this.lastLog,
       workerCount: this.poolConfig.currentWorkers,
-      architectureCapacity: this.poolConfig.maxWorkers || MAX_INFRASTRUCTURE_WORKERS,
+      architectureCapacity: MAX_INFRASTRUCTURE_WORKERS,
       busyWorkers: filterSystem
         ? (filterSystem === 'INFORMATION_VERIFICATION' ? busyInfoWorkers : busyArtworkWorkers)
         : activeCount,
@@ -1221,6 +1230,22 @@ export class ReusableWorkerJobEngine {
       }
     }
 
+    // Purge any orphaned IDs in completedTaskSet / failedTaskSet not present in tasksMap or belonging to targetSystem
+    for (const cId of Array.from(this.completedTaskSet)) {
+      const t = this.tasksMap.get(cId);
+      const sys = t ? (t.jobSystem || inferJobSystemFromTaskType(t.type)) : inferJobSystemFromTaskType(parseTaskId(cId).type);
+      if (!t || sys === targetSystem) {
+        this.completedTaskSet.delete(cId);
+      }
+    }
+    for (const fId of Array.from(this.failedTaskSet)) {
+      const t = this.tasksMap.get(fId);
+      const sys = t ? (t.jobSystem || inferJobSystemFromTaskType(t.type)) : inferJobSystemFromTaskType(parseTaskId(fId).type);
+      if (!t || sys === targetSystem || this.completedTaskSet.has(fId)) {
+        this.failedTaskSet.delete(fId);
+      }
+    }
+
     for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
       this.priorityQueues[prio] = this.priorityQueues[prio].filter(tId => {
         const t = this.tasksMap.get(tId);
@@ -1256,6 +1281,8 @@ export class ReusableWorkerJobEngine {
         continue;
       }
       seenTaskIds.add(deterministicId);
+      this.completedTaskSet.delete(deterministicId);
+      this.failedTaskSet.delete(deterministicId);
 
       const task: JobTask<T> = {
         taskId: deterministicId,
@@ -2074,7 +2101,8 @@ export class ReusableWorkerJobEngine {
       this.systemMeta.ARTWORK_VERIFICATION.finishedAt = fin;
       this.systemMeta.INFORMATION_VERIFICATION.status = 'completed';
       this.systemMeta.INFORMATION_VERIFICATION.finishedAt = fin;
-      this.lastLog = `Job complete! Processed ${this.completedTaskSet.size}/${this.tasksMap.size} tasks.`;
+      const snap = this.getSnapshot();
+      this.lastLog = `Job complete! Processed ${snap.processedCount}/${snap.totalTasks} tasks (${snap.completedCount} completed, ${snap.failedCount} failed).`;
       this.saveJobHistory();
     }
 
@@ -2283,21 +2311,36 @@ export class ReusableWorkerJobEngine {
   }
 
   private saveJobHistory() {
+    if (this.isIsolatedTestInstance || this.mode === 'benchmark') return;
     try {
-      let history: JobHistoryRecord[] = [];
+      let history: any[] = [];
       if (fs.existsSync(JOB_HISTORY_PATH)) {
         history = JSON.parse(fs.readFileSync(JOB_HISTORY_PATH, 'utf-8'));
       }
+      const targetSys: WorkerJobSystem =
+        this.jobType && this.jobType.includes('info')
+          ? 'INFORMATION_VERIFICATION'
+          : 'ARTWORK_VERIFICATION';
+      const sysSnap = this.getSnapshot(targetSys);
+      const totalTasks = sysSnap.totalTasks > 0 ? sysSnap.totalTasks : this.tasksMap.size;
+      const completedCount = Math.min(totalTasks, sysSnap.totalTasks > 0 ? sysSnap.completedCount : this.completedTaskSet.size);
+      const failedCount = Math.min(Math.max(0, totalTasks - completedCount), sysSnap.totalTasks > 0 ? sysSnap.failedCount : this.failedTaskSet.size);
+      const processedCount = completedCount + failedCount;
+
       history.unshift({
         jobId: this.jobId,
         jobType: this.jobType,
         mode: this.mode,
+        status: this.status,
         startedAt: this.startedAt || new Date().toISOString(),
         finishedAt: this.finishedAt || new Date().toISOString(),
         requestedBatchSize: this.batchLimit,
-        completedCount: this.completedTaskSet.size,
-        failedCount: this.failedTaskSet.size,
-        finalStatus: this.status
+        totalTasks,
+        completedCount,
+        failedCount,
+        processedCount,
+        finalStatus: this.status,
+        summary: `Processed ${processedCount}/${totalTasks} tasks (${completedCount} completed, ${failedCount} failed)`
       });
       if (history.length > 50) history = history.slice(0, 50);
       fs.writeFileSync(JOB_HISTORY_PATH, JSON.stringify(history, null, 2), 'utf-8');

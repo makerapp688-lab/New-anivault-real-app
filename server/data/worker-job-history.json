@@ -8,7 +8,10 @@
     "requestedBatchSize": 4,
     "completedCount": 9,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 9,
+    "processedCount": 9,
+    "summary": "Processed 9/9 tasks (9 completed, 0 failed)"
   },
   {
     "jobId": "job_info_1790516798633",
@@ -19,7 +22,10 @@
     "requestedBatchSize": 4,
     "completedCount": 1,
     "failedCount": 4,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 5,
+    "processedCount": 5,
+    "summary": "Processed 5/5 tasks (1 completed, 4 failed)"
   },
   {
     "jobId": "job_1790497631024",
@@ -30,7 +36,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790497605996",
@@ -41,7 +50,10 @@
     "requestedBatchSize": null,
     "completedCount": 856,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 856,
+    "processedCount": 856,
+    "summary": "Processed 856/856 tasks (856 completed, 0 failed)"
   },
   {
     "jobId": "job_1790486399305",
@@ -52,7 +64,10 @@
     "requestedBatchSize": null,
     "completedCount": 856,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 856,
+    "processedCount": 856,
+    "summary": "Processed 856/856 tasks (856 completed, 0 failed)"
   },
   {
     "jobId": "job_1790438822472",
@@ -63,7 +78,10 @@
     "requestedBatchSize": 5,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790438773892",
@@ -74,7 +92,10 @@
     "requestedBatchSize": 5,
     "completedCount": 5,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 5,
+    "processedCount": 5,
+    "summary": "Processed 5/5 tasks (5 completed, 0 failed)"
   },
   {
     "jobId": "job_1790438770693",
@@ -85,7 +106,10 @@
     "requestedBatchSize": 5,
     "completedCount": 5,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 5,
+    "processedCount": 5,
+    "summary": "Processed 5/5 tasks (5 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437910161",
@@ -96,7 +120,10 @@
     "requestedBatchSize": null,
     "completedCount": 856,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 856,
+    "processedCount": 856,
+    "summary": "Processed 856/856 tasks (856 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437870307",
@@ -107,7 +134,10 @@
     "requestedBatchSize": null,
     "completedCount": 67,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 67,
+    "processedCount": 67,
+    "summary": "Processed 67/67 tasks (67 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437860919",
@@ -118,7 +148,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437858998",
@@ -129,7 +162,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437848421",
@@ -140,7 +176,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437811740",
@@ -151,7 +190,10 @@
     "requestedBatchSize": null,
     "completedCount": 212,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 212,
+    "processedCount": 212,
+    "summary": "Processed 212/212 tasks (212 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437436652",
@@ -162,7 +204,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437436389",
@@ -173,7 +218,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437436228",
@@ -184,7 +232,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437431094",
@@ -195,7 +246,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437369692",
@@ -206,7 +260,10 @@
     "requestedBatchSize": 20,
     "completedCount": 20,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 20,
+    "processedCount": 20,
+    "summary": "Processed 20/20 tasks (20 completed, 0 failed)"
   },
   {
     "jobId": "job_1790437362446",
@@ -217,18 +274,10 @@
     "requestedBatchSize": 8,
     "completedCount": 8,
     "failedCount": 0,
-    "finalStatus": "completed"
-  },
-  {
-    "jobId": "job_1790427879648",
-    "jobType": "artwork_verification",
-    "mode": "benchmark",
-    "startedAt": "2026-09-26T13:04:39.648Z",
-    "finishedAt": "2026-09-26T13:04:39.764Z",
-    "requestedBatchSize": null,
-    "completedCount": 150,
-    "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 8,
+    "processedCount": 8,
+    "summary": "Processed 8/8 tasks (8 completed, 0 failed)"
   },
   {
     "jobId": "job_1790427823778",
@@ -239,7 +288,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 1,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 2,
+    "processedCount": 2,
+    "summary": "Processed 2/2 tasks (1 completed, 1 failed)"
   },
   {
     "jobId": "job_1790427823705",
@@ -250,7 +302,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790426491779",
@@ -261,7 +316,10 @@
     "requestedBatchSize": 60,
     "completedCount": 60,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 60,
+    "processedCount": 60,
+    "summary": "Processed 60/60 tasks (60 completed, 0 failed)"
   },
   {
     "jobId": "job_1790418066858",
@@ -272,7 +330,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790418030467",
@@ -283,7 +344,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790418030320",
@@ -294,7 +358,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790417959113",
@@ -305,7 +372,10 @@
     "requestedBatchSize": null,
     "completedCount": 11,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 11,
+    "processedCount": 11,
+    "summary": "Processed 11/11 tasks (11 completed, 0 failed)"
   },
   {
     "jobId": "job_1790417898381",
@@ -316,7 +386,10 @@
     "requestedBatchSize": 15,
     "completedCount": 15,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 15,
+    "processedCount": 15,
+    "summary": "Processed 15/15 tasks (15 completed, 0 failed)"
   },
   {
     "jobId": "job_1790414503686",
@@ -327,18 +400,10 @@
     "requestedBatchSize": 3,
     "completedCount": 3,
     "failedCount": 0,
-    "finalStatus": "completed"
-  },
-  {
-    "jobId": "job_1790346393763",
-    "jobType": "artwork_verification",
-    "mode": "benchmark",
-    "startedAt": "2026-09-25T14:26:33.763Z",
-    "finishedAt": "2026-09-25T14:26:34.511Z",
-    "requestedBatchSize": null,
-    "completedCount": 150,
-    "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 3,
+    "processedCount": 3,
+    "summary": "Processed 3/3 tasks (3 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346389487",
@@ -349,7 +414,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346389008",
@@ -360,7 +428,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346373259",
@@ -371,7 +442,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346372788",
@@ -382,7 +456,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346320639",
@@ -393,7 +470,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346320174",
@@ -404,18 +484,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
-  },
-  {
-    "jobId": "job_1790346311408",
-    "jobType": "artwork_verification",
-    "mode": "benchmark",
-    "startedAt": "2026-09-25T14:25:11.408Z",
-    "finishedAt": "2026-09-25T14:25:12.127Z",
-    "requestedBatchSize": null,
-    "completedCount": 150,
-    "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346215643",
@@ -426,7 +498,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790346215172",
@@ -437,7 +512,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790345621533",
@@ -448,7 +526,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790345621059",
@@ -459,7 +540,10 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   },
   {
     "jobId": "job_1790345583654",
@@ -470,7 +554,10 @@
     "requestedBatchSize": null,
     "completedCount": 1,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 1,
+    "processedCount": 1,
+    "summary": "Processed 1/1 tasks (1 completed, 0 failed)"
   },
   {
     "jobId": "job_1790345583275",
@@ -481,6 +568,9 @@
     "requestedBatchSize": null,
     "completedCount": 100,
     "failedCount": 0,
-    "finalStatus": "completed"
+    "finalStatus": "completed",
+    "totalTasks": 100,
+    "processedCount": 100,
+    "summary": "Processed 100/100 tasks (100 completed, 0 failed)"
   }
 ]

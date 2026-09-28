@@ -162,6 +162,9 @@ export interface InfoHistoryEntry {
 
 export interface InfoManagerStats {
   total: number;
+  totalSeasons: number;
+  totalAuthoritativeEpisodes: number;
+  totalImportedEpisodes: number;
   verified: number;
   correct: number;
   autoFixed: number;
@@ -169,6 +172,7 @@ export interface InfoManagerStats {
   conflicts: number;
   duplicates: number;
   suspectedFake: number;
+  confirmedFake: number;
   missingInfo: number;
   episodeMismatch: number;
   unverified: number;
@@ -294,8 +298,11 @@ class InformationManagerEngine {
   private pauseRequested = false;
   private isLoopActive = false;
   private saveRecordsTimer: NodeJS.Timeout | null = null;
+  private isTestEnv = false;
 
   constructor() {
+    const argv1 = process.argv[1] || '';
+    this.isTestEnv = Boolean(argv1.includes('/test/') || argv1.endsWith('.test.ts'));
     this.loadFromDisk();
     this.repairFalsePositivesOnStartup();
     globalWorkerJobEngine.registerSystemProcessor('INFORMATION_VERIFICATION', async (task, workerId) => {
@@ -390,6 +397,7 @@ class InformationManagerEngine {
   }
 
   private saveRecordsToDisk(immediate = false) {
+    if (this.isTestEnv) return;
     if (!immediate) {
       if (this.saveRecordsTimer) return;
       this.saveRecordsTimer = setTimeout(() => {
@@ -416,6 +424,7 @@ class InformationManagerEngine {
   }
 
   private saveHistoryToDisk() {
+    if (this.isTestEnv) return;
     try {
       fs.writeFileSync(INFO_HISTORY_PATH, JSON.stringify(this.historyList, null, 2), 'utf-8');
     } catch (err: any) {
@@ -465,13 +474,32 @@ class InformationManagerEngine {
       return { classification: 'not_duplicate', confidence: 0.1, evidence: 'Different numbered installment/season' };
     }
 
-    const urlA = (a.providers?.raretoonIndia?.canonicalUrl || a.canonicalProviderUrl || '').trim().toLowerCase().replace(/\/+$/, '');
-    const urlB = (b.providers?.raretoonIndia?.canonicalUrl || b.canonicalProviderUrl || '').trim().toLowerCase().replace(/\/+$/, '');
+    const urlA = (a.providers?.raretoonIndia?.canonicalUrl || a.canonicalProviderUrl || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\/(www\.)?/, '')
+      .replace(/^raretoonindia\.in/, 'rareanimes.mov')
+      .replace(/\/+$/, '');
+    const urlB = (b.providers?.raretoonIndia?.canonicalUrl || b.canonicalProviderUrl || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\/(www\.)?/, '')
+      .replace(/^raretoonindia\.in/, 'rareanimes.mov')
+      .replace(/\/+$/, '');
+    const isValidSpecificUrl = (u: string) =>
+      Boolean(u && u !== 'rareanimes.mov' && u !== 'rareanimes.mov/home' && !u.endsWith('/home'));
+
     const provA = (a.providers?.raretoonIndia?.providerAnimeId || '').trim().toLowerCase();
     const provB = (b.providers?.raretoonIndia?.providerAnimeId || '').trim().toLowerCase();
+    const isValidSpecificProv = (p: string) => Boolean(p && !p.startsWith('mal_'));
 
-    const sameUrl = Boolean(urlA && urlB && urlA === urlB);
-    const sameProv = Boolean(provA && provB && provA === provB);
+    const sameUrl = isValidSpecificUrl(urlA) && isValidSpecificUrl(urlB) && urlA === urlB;
+    const sameProv = isValidSpecificProv(provA) && isValidSpecificProv(provB) && provA === provB;
+    const sameExternalId = Boolean(
+      (a.malId && b.malId && Number(a.malId) === Number(b.malId)) ||
+      (a.aniListId && b.aniListId && Number(a.aniListId) === Number(b.aniListId))
+    );
+
     const normA = normalizeDuplicateIdentityTitle(a.title || '');
     const normB = normalizeDuplicateIdentityTitle(b.title || '');
     const cleanA = cleanAnimeTitle(a.title || '').cleaned.toLowerCase().trim();
@@ -479,24 +507,32 @@ class InformationManagerEngine {
     const sameYear = Boolean(a.releaseYear && b.releaseYear && Math.abs(Number(a.releaseYear) - Number(b.releaseYear)) <= 1);
     const yearConflict = Boolean(a.releaseYear && b.releaseYear && Math.abs(Number(a.releaseYear) - Number(b.releaseYear)) >= 3);
 
-    if (yearConflict && !sameUrl && !sameProv) {
+    if (yearConflict && !sameUrl && !sameProv && !sameExternalId) {
       return { classification: 'not_duplicate', confidence: 0.2, evidence: `Distinct release years (${a.releaseYear} vs ${b.releaseYear})` };
     }
 
-    if ((sameUrl || sameProv) && (normA === normB || cleanA === cleanB)) {
+    if (sameUrl || sameProv) {
+      return {
+        classification: 'confirmed_duplicate',
+        confidence: 0.98,
+        evidence: `Confirmed duplicate: Matches "${b.title}" [${b.id}] with identical RareToon provider mapping (${sameUrl ? urlA : provA}) and format (${a.type}).`
+      };
+    }
+
+    if (sameExternalId && !seasonMatchA && !seasonMatchB && sameYear) {
       return {
         classification: 'confirmed_duplicate',
         confidence: 0.96,
-        evidence: `Confirmed duplicate: Matches "${b.title}" [${b.id}] with identical RareToon provider mapping (${provA || urlA}) and format (${a.type}).`
+        evidence: `Confirmed duplicate: Matches "${b.title}" [${b.id}] with identical external MAL/AniList ID, year (${a.releaseYear}), and format (${a.type}).`
       };
     }
 
     if (normA && normA === normB && !seasonMatchA && !seasonMatchB) {
-      if (sameUrl || sameProv || sameYear) {
+      if (sameYear) {
         return {
           classification: 'likely_duplicate',
           confidence: 0.88,
-          evidence: `Likely duplicate: Matches "${b.title}" [${b.id}] — identical normalized title, same format (${a.type})${sameYear ? `, release year (${a.releaseYear})` : ''}.`
+          evidence: `Likely duplicate: Matches "${b.title}" [${b.id}] — identical normalized title, same format (${a.type}), and release year (${a.releaseYear}).`
         };
       }
       return {
@@ -511,26 +547,68 @@ class InformationManagerEngine {
 
   /**
    * Build multi-signal duplicate index across the entire catalogue
+   * Uses strong identity evidence:
+   * 1. Same RareToon canonical URL
+   * 2. Same RareToon provider ID / slug
+   * 3. Same MAL / AniList ID
+   * 4. Normalized identity title + year + type
    */
   public buildDuplicateIndex(catalogue: any[]): Map<string, string[]> {
     const byIdentityTitle = new Map<string, any[]>();
     const byProviderId = new Map<string, any[]>();
+    const byCanonicalUrl = new Map<string, any[]>();
+    const byExternalId = new Map<string, any[]>();
+
+    const normalizeUrlForIndex = (u?: string | null) => {
+      if (!u || typeof u !== 'string') return '';
+      const clean = u
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\/(www\.)?/, '')
+        .replace(/^raretoonindia\.in/, 'rareanimes.mov')
+        .replace(/\/+$/, '');
+      if (!clean || clean === 'rareanimes.mov' || clean === 'rareanimes.mov/home' || clean.endsWith('/home')) return '';
+      return clean;
+    };
 
     for (const anime of catalogue) {
       if (!anime || !anime.id) continue;
-      const norm = normalizeDuplicateIdentityTitle(anime.title || '');
-      if (norm.length >= 2) {
-        const list = byIdentityTitle.get(norm) || [];
-        list.push(anime);
-        byIdentityTitle.set(norm, list);
+      for (const rawTitle of [anime.title, anime.alternateTitle]) {
+        if (!rawTitle) continue;
+        const norm = normalizeDuplicateIdentityTitle(rawTitle);
+        if (norm.length >= 2) {
+          const list = byIdentityTitle.get(norm) || [];
+          list.push(anime);
+          byIdentityTitle.set(norm, list);
+        }
       }
 
       const provId = anime.providers?.raretoonIndia?.providerAnimeId;
-      if (provId && typeof provId === 'string' && provId.trim()) {
+      if (provId && typeof provId === 'string' && provId.trim() && !provId.trim().toLowerCase().startsWith('mal_')) {
         const key = provId.trim().toLowerCase();
         const list = byProviderId.get(key) || [];
         list.push(anime);
         byProviderId.set(key, list);
+      }
+
+      const canonUrl = normalizeUrlForIndex(anime.providers?.raretoonIndia?.canonicalUrl || anime.canonicalProviderUrl);
+      if (canonUrl) {
+        const list = byCanonicalUrl.get(canonUrl) || [];
+        list.push(anime);
+        byCanonicalUrl.set(canonUrl, list);
+      }
+
+      if (anime.malId) {
+        const key = `mal:${anime.malId}`;
+        const list = byExternalId.get(key) || [];
+        list.push(anime);
+        byExternalId.set(key, list);
+      }
+      if (anime.aniListId) {
+        const key = `al:${anime.aniListId}`;
+        const list = byExternalId.get(key) || [];
+        list.push(anime);
+        byExternalId.set(key, list);
       }
     }
 
@@ -538,13 +616,36 @@ class InformationManagerEngine {
     for (const anime of catalogue) {
       if (!anime || !anime.id) continue;
       const candidatePeers = new Map<string, any>();
-      const norm = normalizeDuplicateIdentityTitle(anime.title || '');
-      for (const peer of byIdentityTitle.get(norm) || []) {
-        if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
+
+      for (const rawTitle of [anime.title, anime.alternateTitle]) {
+        if (!rawTitle) continue;
+        const norm = normalizeDuplicateIdentityTitle(rawTitle);
+        for (const peer of byIdentityTitle.get(norm) || []) {
+          if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
+        }
       }
+
       const provId = anime.providers?.raretoonIndia?.providerAnimeId;
-      if (provId && typeof provId === 'string' && provId.trim()) {
+      if (provId && typeof provId === 'string' && provId.trim() && !provId.trim().toLowerCase().startsWith('mal_')) {
         for (const peer of byProviderId.get(provId.trim().toLowerCase()) || []) {
+          if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
+        }
+      }
+
+      const canonUrl = normalizeUrlForIndex(anime.providers?.raretoonIndia?.canonicalUrl || anime.canonicalProviderUrl);
+      if (canonUrl) {
+        for (const peer of byCanonicalUrl.get(canonUrl) || []) {
+          if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
+        }
+      }
+
+      if (anime.malId) {
+        for (const peer of byExternalId.get(`mal:${anime.malId}`) || []) {
+          if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
+        }
+      }
+      if (anime.aniListId) {
+        for (const peer of byExternalId.get(`al:${anime.aniListId}`) || []) {
           if (peer.id !== anime.id) candidatePeers.set(peer.id, peer);
         }
       }
@@ -716,18 +817,26 @@ class InformationManagerEngine {
     }
 
     // 5. Season-Specific Episode Counts Check
-    // Note: Many seasons have declared episodeCount > 1 while episodes[] contains 1 sample/landing entry.
-    // Only flag discrepancy if both sCount <= 0 and epListLen <= 0, OR if epListLen > 1 and sCount > 0 and sCount !== epListLen.
+    // Strictly separate:
+    // A. authoritative episode count (s.authoritativeEpisodeCount || s.episodeCount)
+    // B. imported episode records (s.importedEpisodeCount ?? s.episodes.length)
+    // C. whether the episode list is complete (isEpisodeListComplete)
+    // Only flag discrepancy if authoritative count <= 0 and imported count <= 0, OR if imported count exceeds declared authoritative count.
     let sumSeasonEpisodes = 0;
     const brokenSeasons: string[] = [];
     for (const s of seasonsArr) {
       const epListLen = Array.isArray(s.episodes) ? s.episodes.length : 0;
-      const sCount = typeof s.episodeCount === 'number' && s.episodeCount > 0 ? s.episodeCount : epListLen;
+      const sCount =
+        typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0
+          ? s.authoritativeEpisodeCount
+          : typeof s.episodeCount === 'number' && s.episodeCount > 0
+          ? s.episodeCount
+          : epListLen;
       sumSeasonEpisodes += sCount > 0 ? sCount : epListLen;
       if (sCount <= 0 && epListLen <= 0) {
         brokenSeasons.push(`Season ${s.seasonNumber || '?'}`);
-      } else if (epListLen > 1 && s.episodeCount && s.episodeCount !== epListLen) {
-        brokenSeasons.push(`Season ${s.seasonNumber} (declared ${s.episodeCount} vs ${epListLen} episodes)`);
+      } else if (epListLen > sCount) {
+        brokenSeasons.push(`Season ${s.seasonNumber} (declared ${sCount} < ${epListLen} imported episodes)`);
       }
     }
     if (brokenSeasons.length > 0) {
@@ -1078,15 +1187,43 @@ class InformationManagerEngine {
     } else {
       const hasMissing = Object.values(checkedFields).some(v => v === 'missing');
       const hasMismatch = Object.values(checkedFields).some(v => v === 'mismatch');
-      if (hasMismatch) {
+      const hasWeakCandidateOnly = Boolean(candidates.length > 0 && topCandidate && topCandidate.confidence < 0.75);
+      const hasStrongCandidateAgreement = Boolean(candidates.length > 0 && topCandidate && topCandidate.confidence >= 0.75);
+      const hasVerifiedExternalId = Boolean(anime.malId || anime.aniListId || anime.anilistId);
+
+      if (hasWeakCandidateOnly && !hasVerifiedExternalId) {
+        discrepancies.push({
+          field: 'title',
+          label: 'Insufficient External Evidence',
+          severity: 'low',
+          currentValue: anime.title,
+          suggestedValue: topCandidate.title,
+          source: topCandidate.source,
+          message: `Only a weak candidate match (${Math.round(topCandidate.confidence * 100)}%) was returned by ${topCandidate.source}. Needs Owner review before marking Verified.`
+        });
+      }
+
+      if (hasMismatch || (hasWeakCandidateOnly && !hasVerifiedExternalId)) {
         status = 'needs_review';
         statusLabel = 'Needs Review';
       } else if (hasMissing) {
         status = 'missing_info';
         statusLabel = 'Missing Information';
-      } else if (candidates.length > 0 || Boolean((anime as any)._externalSourcesQueried)) {
+      } else if (hasStrongCandidateAgreement || (Boolean((anime as any)._externalSourcesQueried) && hasVerifiedExternalId)) {
         status = 'verified';
         statusLabel = 'Verified';
+      } else if (Boolean((anime as any)._externalSourcesQueried) && candidates.length === 0 && !hasVerifiedExternalId) {
+        discrepancies.push({
+          field: 'title',
+          label: 'Insufficient External Evidence',
+          severity: 'low',
+          currentValue: anime.title,
+          suggestedValue: anime.title,
+          source: 'External Metadata Verifier',
+          message: 'No external candidate matches returned to corroborate metadata. Queued for Needs Review.'
+        });
+        status = 'needs_review';
+        statusLabel = 'Needs Review';
       } else {
         status = 'correct';
         statusLabel = 'Correct';
@@ -1318,6 +1455,9 @@ class InformationManagerEngine {
     const catalogue = globalDataStore.getAllCatalogueAnime();
     const duplicateMap = this.buildDuplicateIndex(catalogue);
 
+    let totalSeasons = 0;
+    let totalAuthoritativeEpisodes = 0;
+    let totalImportedEpisodes = 0;
     let verified = 0;
     let correct = 0;
     let autoFixed = 0;
@@ -1325,11 +1465,26 @@ class InformationManagerEngine {
     let conflicts = 0;
     let duplicates = 0;
     let suspectedFake = 0;
+    let confirmedFake = 0;
     let missingInfo = 0;
     let episodeMismatch = 0;
     let unverified = 0;
 
+    for (const h of this.historyList) {
+      if (h.source === 'Owner Confirmed Fake Deletion' || h.reason?.includes('Confirmed Fake')) {
+        confirmedFake++;
+      }
+    }
+
     for (const anime of catalogue) {
+      const seasonsArr = Array.isArray(anime.seasons) ? anime.seasons : [];
+      totalSeasons += seasonsArr.length || anime.totalSeasons || 1;
+      totalAuthoritativeEpisodes += Number(anime.authoritativeTotalEpisodes ?? anime.totalEpisodes ?? 0);
+      totalImportedEpisodes += Number(
+        anime.importedEpisodesCount ??
+          seasonsArr.reduce((acc: number, s: any) => acc + (Array.isArray(s.episodes) ? s.episodes.length : 0), 0)
+      );
+
       const rec = this.recordsMap.get(anime.id);
       const hasDup = (duplicateMap.get(anime.id) || []).length > 0;
       if (hasDup) duplicates++;
@@ -1376,6 +1531,9 @@ class InformationManagerEngine {
 
     return {
       total: catalogue.length,
+      totalSeasons,
+      totalAuthoritativeEpisodes,
+      totalImportedEpisodes,
       verified,
       correct,
       autoFixed,
@@ -1383,6 +1541,7 @@ class InformationManagerEngine {
       conflicts,
       duplicates,
       suspectedFake,
+      confirmedFake,
       missingInfo,
       episodeMismatch,
       unverified,
@@ -1566,6 +1725,7 @@ class InformationManagerEngine {
     }
 
     // 3. Synchronize totalSeasons and non-destructive season episode counts
+    // NEVER reduce authoritative episodeCount to episodes.length when episodes[] is a partial list!
     const seasonsArr = Array.isArray(anime.seasons) ? anime.seasons : [];
     if (seasonsArr.length > 0 && anime.totalSeasons !== seasonsArr.length) {
       updates.totalSeasons = seasonsArr.length;
@@ -1574,10 +1734,31 @@ class InformationManagerEngine {
       let seasonsChanged = false;
       const fixedSeasons = seasonsArr.map((s: any) => {
         const epLen = Array.isArray(s.episodes) ? s.episodes.length : 0;
-        // Only sync episodeCount to epLen if epLen > 1 (or if episodeCount was 0/missing)
-        if ((epLen > 1 && s.episodeCount !== epLen) || ((!s.episodeCount || s.episodeCount <= 0) && epLen > 0)) {
+        const currentAuth =
+          typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0
+            ? s.authoritativeEpisodeCount
+            : typeof s.episodeCount === 'number' && s.episodeCount > 0
+            ? s.episodeCount
+            : Math.max(1, epLen);
+        const nextAuth = Math.max(currentAuth, epLen);
+        const isComplete = nextAuth > 0 && epLen >= nextAuth;
+        const listStatus = epLen === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+        if (
+          s.episodeCount !== nextAuth ||
+          s.authoritativeEpisodeCount !== nextAuth ||
+          s.importedEpisodeCount !== epLen ||
+          s.isEpisodeListComplete !== isComplete ||
+          s.episodeListStatus !== listStatus
+        ) {
           seasonsChanged = true;
-          return { ...s, episodeCount: epLen };
+          return {
+            ...s,
+            episodeCount: nextAuth,
+            authoritativeEpisodeCount: nextAuth,
+            importedEpisodeCount: epLen,
+            isEpisodeListComplete: isComplete,
+            episodeListStatus: listStatus
+          };
         }
         return s;
       });
@@ -1611,14 +1792,24 @@ class InformationManagerEngine {
     }
 
     // 5. High-confidence Airing Status resolution (when no cross-source conflict)
+    // Completed/Ongoing status must be cross-checked: do NOT let one single conflicting source overwrite an established Completed/Ongoing status!
     const currentYear = new Date().getFullYear();
     if (!hasHighConfidenceSourceConflict) {
       if (anime.status === 'Ongoing' && anime.type === 'Movie' && anime.releaseYear && anime.releaseYear < currentYear) {
         updates.status = 'Completed';
-      } else if (top && top.confidence >= 0.85 && top.status && anime.status !== top.status) {
-        updates.status = top.status;
       } else if (!['Completed', 'Ongoing', 'Upcoming'].includes(anime.status)) {
         updates.status = top?.status || 'Completed';
+      } else if (
+        top &&
+        second &&
+        top.source !== second.source &&
+        top.confidence >= 0.85 &&
+        second.confidence >= 0.85 &&
+        top.status &&
+        top.status === second.status &&
+        anime.status !== top.status
+      ) {
+        updates.status = top.status;
       }
     }
 
@@ -1838,6 +2029,7 @@ class InformationManagerEngine {
         const te = parseInt(String(updates.totalEpisodes), 10);
         if (!isNaN(te) && te >= 0 && te !== item.totalEpisodes) {
           item.totalEpisodes = te;
+          item.authoritativeTotalEpisodes = te;
           changedFields.push('totalEpisodes');
         }
       }
@@ -1846,6 +2038,30 @@ class InformationManagerEngine {
         item.totalSeasons = updates.seasons.length;
         item.seasonsCount = updates.seasons.length;
         changedFields.push('seasons');
+      }
+      if (Array.isArray(item.seasons)) {
+        let sumAuth = 0;
+        let sumImp = 0;
+        let allComp = item.seasons.length > 0;
+        for (const s of item.seasons) {
+          const imp = Array.isArray(s.episodes) ? s.episodes.length : 0;
+          const auth = Math.max(s.authoritativeEpisodeCount || s.episodeCount || 1, imp);
+          const comp = auth > 0 && imp >= auth;
+          s.episodeCount = auth;
+          s.authoritativeEpisodeCount = auth;
+          s.importedEpisodeCount = imp;
+          s.isEpisodeListComplete = comp;
+          s.episodeListStatus = imp === 0 ? 'empty' : comp ? 'complete' : 'partial';
+          sumAuth += auth;
+          sumImp += imp;
+          if (!comp) allComp = false;
+        }
+        const finalAuth = Math.max(item.totalEpisodes || 0, sumAuth);
+        item.totalEpisodes = finalAuth;
+        item.authoritativeTotalEpisodes = finalAuth;
+        item.importedEpisodesCount = sumImp;
+        item.isEpisodeListComplete = allComp && finalAuth > 0 && sumImp >= finalAuth;
+        item.episodeListStatus = sumImp === 0 ? 'empty' : item.isEpisodeListComplete ? 'complete' : 'partial';
       }
       if (Array.isArray(updates.genres)) {
         const cleanGenres = updates.genres.map((g: any) => String(g).trim()).filter(Boolean);
@@ -2067,6 +2283,51 @@ class InformationManagerEngine {
 
     if (action === 'confirm_delete') {
       const title = anime.title;
+      const existingRec = this.recordsMap.get(animeId);
+      const fakeReason = existingRec?.suspectedFakeReason || 'Owner confirmed strong evidence of fake/non-existent anime';
+      const historyEntry: InfoHistoryEntry = {
+        id: `INFO-HIST-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        animeId,
+        animeTitle: title,
+        updatedAt: new Date().toISOString(),
+        updatedBy: operatorEmail,
+        source: 'Owner Confirmed Fake Deletion',
+        reason: `Confirmed Fake Anime removed by Owner (${fakeReason})`,
+        changedFields: ['deleted_confirmed_fake'],
+        previousSnapshot: {
+          title: anime.title,
+          alternateTitle: anime.alternateTitle || null,
+          japaneseTitle: anime.japaneseTitle || null,
+          type: anime.type,
+          status: anime.status,
+          releaseYear: anime.releaseYear,
+          releaseDate: anime.releaseDate || null,
+          totalSeasons: anime.totalSeasons ?? 1,
+          totalEpisodes: anime.totalEpisodes || 0,
+          seasons: anime.seasons ? JSON.parse(JSON.stringify(anime.seasons)) : [],
+          genres: Array.isArray(anime.genres) ? [...anime.genres] : [],
+          languages: Array.isArray(anime.languages) ? [...anime.languages] : [],
+          dubLanguage: anime.providers?.raretoonIndia?.dubLanguage || '',
+          synopsis: anime.synopsis || '',
+          storyDetails: anime.storyDetails || null,
+          relatedAnime: Array.isArray(anime.relatedAnime) ? [...anime.relatedAnime] : [],
+          franchiseRelationships: Array.isArray(anime.franchiseRelationships) ? [...anime.franchiseRelationships] : [],
+          providerAnimeId: anime.providers?.raretoonIndia?.providerAnimeId || '',
+          canonicalUrl: anime.providers?.raretoonIndia?.canonicalUrl || ''
+        },
+        newSnapshot: {
+          title: `[CONFIRMED FAKE REMOVED] ${title}`,
+          alternateTitle: null,
+          type: anime.type,
+          status: 'Removed (Confirmed Fake)',
+          releaseYear: anime.releaseYear || 0,
+          genres: [],
+          synopsis: fakeReason
+        }
+      };
+      this.historyList.unshift(historyEntry);
+      this.saveHistoryToDisk();
+
       const ok = globalDataStore.deleteCatalogueAnime(animeId);
       if (!ok) {
         return { success: false, error: 'Failed to delete confirmed fake anime entry.' };
@@ -2078,7 +2339,7 @@ class InformationManagerEngine {
         operatorEmail,
         'success',
         animeId,
-        `Owner confirmed and deleted fake/non-existent entry ${animeId}`
+        `Owner confirmed and deleted fake/non-existent entry ${animeId} (${fakeReason})`
       );
       return {
         success: true,
