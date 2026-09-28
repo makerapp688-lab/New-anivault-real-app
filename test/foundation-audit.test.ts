@@ -260,7 +260,93 @@ async function runFoundationAuditTests() {
   const evalFake = infoManager.evaluateAnimeMetadata(fakeCandidateAnime, [], dummyCatMap, []);
   assert.strictEqual(evalFake.status, 'suspected_fake', 'Invalid/unmatched anime without canonical URL must be flagged as suspected_fake');
   assert.ok(evalFake.suspectedFakeStrongEvidence, 'Strong evidence flag must be set');
-  console.log('✓ PASS: Complete, partial, multi-season, conflicting metadata, weak-candidate insufficient evidence, and suspected fake workflows verified.');
+  assert.ok(evalFake.confidence <= 0.25, 'Suspected fake must have low real confidence (<= 0.25)');
+
+  // Case 6: Season numbering validation (duplicate or non-positive seasonNumber)
+  const badSeasonNumAnime = {
+    ...completeAnime,
+    id: 'test-bad-season-num',
+    totalSeasons: 2,
+    totalEpisodes: 24,
+    seasons: [
+      { seasonNumber: 1, episodeCount: 12, authoritativeEpisodeCount: 12, importedEpisodeCount: 1, episodes: [{ episodeNumber: 1 }] },
+      { seasonNumber: 1, episodeCount: 12, authoritativeEpisodeCount: 12, importedEpisodeCount: 1, episodes: [{ episodeNumber: 1 }] }
+    ]
+  };
+  const evalBadSeasonNum = infoManager.evaluateAnimeMetadata(badSeasonNumAnime, [], dummyCatMap, []);
+  assert.strictEqual(evalBadSeasonNum.checkedFields.seasonsCount, 'mismatch', 'Duplicate seasonNumber must be flagged in seasonsCount check');
+
+  // Case 7: Never invent missing metadata (no fake genres, no boilerplate synopsis, no guessed 2020 year)
+  const missingFieldsAnime = {
+    ...completeAnime,
+    id: 'test-no-invented-data',
+    releaseYear: 0,
+    genres: [],
+    synopsis: ''
+  };
+  const evalNoInvent = infoManager.evaluateAnimeMetadata(missingFieldsAnime, [], dummyCatMap, []);
+  const genreDisc = evalNoInvent.discrepancies.find(d => d.field === 'genres');
+  const synDisc = evalNoInvent.discrepancies.find(d => d.field === 'synopsis');
+  const yrDisc = evalNoInvent.discrepancies.find(d => d.field === 'releaseYear');
+  assert.strictEqual(genreDisc?.suggestedValue, null, 'Must not invent default genres when no source provides them');
+  assert.strictEqual(synDisc?.suggestedValue, null, 'Must not invent boilerplate synopsis when no source provides one');
+  assert.strictEqual(yrDisc?.suggestedValue, null, 'Must not guess year 2020 when no source provides releaseYear');
+
+  // Case 8: Owner actions (Mark Needs Review, Reject, Approve, Confirm Fake)
+  const revMarkRes = infoManager.resolveReviewItem('anivault_rt_haikyu', 'mark_needs_review', 'Owner', 'Test manual review flag');
+  assert.ok(revMarkRes.success && revMarkRes.record?.status === 'needs_review', 'mark_needs_review must set status to needs_review');
+  const revRejectRes = infoManager.resolveReviewItem('anivault_rt_haikyu', 'reject_suggestions', 'Owner');
+  assert.ok(revRejectRes.success && revRejectRes.record?.status === 'verified', 'reject_suggestions must keep catalogue data and mark verified');
+
+  // Case 9: Needs Review Logic Rules (Optional metadata non-failure, 1-char anime "K", Remake year protection, Structured Review Queue Reasons)
+  const optionalMissingAnime = {
+    ...completeAnime,
+    id: 'test-optional-missing',
+    alternateTitle: null,
+    japaneseTitle: null,
+    languages: [],
+    relatedAnime: [],
+    franchiseRelationships: []
+  };
+  const evalOptionalMissing = infoManager.evaluateAnimeMetadata(optionalMissingAnime, [], dummyCatMap, [
+    {
+      source: 'AniList',
+      confidence: 0.95,
+      title: 'Your Name',
+      alternateTitle: 'Kimi no Na wa.',
+      japaneseTitle: '君の名は。',
+      status: 'Completed',
+      releaseYear: 2016,
+      type: 'Movie',
+      totalEpisodes: 1,
+      franchiseRelationships: ['SIDE STORY: Weathering With You (Movie)']
+    }
+  ]);
+  assert.strictEqual(evalOptionalMissing.status, 'verified', 'Missing optional metadata must NEVER mark the anime Needs Review');
+  assert.strictEqual(evalOptionalMissing.discrepancies.length, 0, 'Missing optional metadata must not create blocking discrepancies');
+
+  // Valid 1-character anime title "K" must be Verified/Correct, never Suspected Fake
+  const kAnime = globalDataStore.getCatalogueAnime('anivault_rt_k');
+  assert.ok(kAnime, 'Anime "K" (anivault_rt_k) must exist in catalogue');
+  const evalK = infoManager.getRecord('anivault_rt_k');
+  assert.ok(evalK && (evalK.status === 'verified' || evalK.status === 'correct'), `1-character anime "K" must be verified/correct, got ${evalK?.status}`);
+
+  // Remake year protection: Doraemon Nobita's Little Star Wars (2021 Remake) must not be flagged against 1985 original
+  const doraemonRemakeRec = infoManager.getRecord('anivault_rt_doraemon_nobitas_little_star_wars_2021_remake');
+  assert.ok(
+    doraemonRemakeRec && (doraemonRemakeRec.status === 'verified' || doraemonRemakeRec.status === 'correct'),
+    `Doraemon 2021 Remake must not be sent to Needs Review over 1985 original year, got ${doraemonRemakeRec?.status}`
+  );
+
+  // Structured Review Queue Reasons must include field, currentValue, proposedValue, evidence, sources, confidence, reasonForReview
+  assert.ok(
+    Array.isArray(evalWeakCandidate.reviewQueueReasons) && evalWeakCandidate.reviewQueueReasons.length > 0,
+    'Needs Review item must populate structured reviewQueueReasons'
+  );
+  const firstReason = evalWeakCandidate.reviewQueueReasons![0];
+  assert.ok(firstReason.field && firstReason.evidence && Array.isArray(firstReason.sources) && typeof firstReason.confidence === 'number' && firstReason.reasonForReview, 'Review queue reason must contain field, currentValue, proposedValue, evidence, sources, confidence, and reasonForReview');
+
+  console.log('✓ PASS: Complete, partial, multi-season, conflicting metadata, weak-candidate insufficient evidence, real confidence, season numbering, no-invented-data, optional metadata non-failure, and Owner review actions verified.');
 
   // ---------------------------------------------------------------------------
   // PHASE 2.3: WORKER POOL LIMITS, MATHEMATICAL CONSISTENCY & CROSS-SYSTEM SAFETY

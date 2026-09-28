@@ -489,7 +489,7 @@ export const InformationManager: React.FC = () => {
     }
   };
 
-  const handleResolveFake = async (animeId: string, action: 'dismiss' | 'confirm_delete') => {
+  const handleResolveFake = async (animeId: string, action: 'dismiss' | 'confirm_fake' | 'confirm_delete') => {
     setActionBusyId(`fake_${animeId}`);
     setBannerMessage(null);
     try {
@@ -585,7 +585,7 @@ export const InformationManager: React.FC = () => {
 
   const handleResolveReviewItem = async (
     animeId: string,
-    action: 'approve_suggestions' | 'mark_verified' | 'reject_suggestions' | 'skip_ignore'
+    action: 'approve_suggestions' | 'mark_verified' | 'reject_suggestions' | 'skip_ignore' | 'mark_needs_review'
   ) => {
     setActionBusyId(`res_rev_${animeId}_${action}`);
     setBannerMessage(null);
@@ -621,6 +621,13 @@ export const InformationManager: React.FC = () => {
   const renderStatusBadge = (item: any) => {
     const rec = item.infoRecord;
     const hasDup = (item.duplicateIds?.length || 0) > 0 || rec?.status === 'duplicate';
+    if (rec?.status === 'confirmed_fake') {
+      return (
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-600/30 text-red-200 border border-red-500/60">
+          CONFIRMED FAKE
+        </span>
+      );
+    }
     if (rec?.status === 'suspected_fake' || rec?.checkedFields?.suspectedFake === 'mismatch') {
       return (
         <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-500/20 text-red-300 border border-red-500/40">
@@ -1272,9 +1279,20 @@ export const InformationManager: React.FC = () => {
                         <span>•</span>
                         <span>Seasons: {item.computedSeasonsCount || 0}</span>
                         <span>•</span>
-                        <span>Episodes: {item.totalEpisodes || 0}</span>
-                        <span>•</span>
-                        <span>Genres: {Array.isArray(item.genres) ? item.genres.length : 0}</span>
+                        <span>
+                          Episodes: {item.authoritativeTotalEpisodes ?? item.totalEpisodes ?? 0}{' '}
+                          <span className="text-slate-500">
+                            ({item.importedEpisodesCount ?? 0} imported · {item.isEpisodeListComplete ? 'Complete' : 'Partial'})
+                          </span>
+                        </span>
+                        {rec?.confidence !== undefined && (
+                          <>
+                            <span>•</span>
+                            <span className="font-mono text-sky-300">
+                              Conf: {Math.round(Number(rec.confidence || 0) * 100)}%
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       {discrepanciesCount > 0 && (
@@ -1359,6 +1377,16 @@ export const InformationManager: React.FC = () => {
 
                     <button
                       type="button"
+                      onClick={() => handleResolveReviewItem(selectedAnime.id, 'mark_needs_review')}
+                      disabled={actionBusyId === `res_rev_${selectedAnime.id}_mark_needs_review`}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>Mark Needs Review</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => handleResolveReviewItem(selectedAnime.id, 'skip_ignore')}
                       disabled={actionBusyId === `res_rev_${selectedAnime.id}_skip_ignore`}
                       className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
@@ -1367,6 +1395,51 @@ export const InformationManager: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Evidence & Confidence Telemetry Strip */}
+                {selectedAnime.infoRecord && (
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-[11px]">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono font-bold text-sky-300">
+                          Confidence: {Math.round(Number(selectedAnime.infoRecord.confidence || 0) * 100)}%
+                        </span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-300">
+                          Primary Source: <strong className="text-white">{selectedAnime.infoRecord.source || 'Catalogue Audit'}</strong>
+                        </span>
+                        {selectedAnime.infoRecord.attemptCount ? (
+                          <>
+                            <span className="text-slate-600">•</span>
+                            <span className="font-mono text-slate-400">
+                              Attempts: {selectedAnime.infoRecord.attemptCount}
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                        {(selectedAnime.aniListId || selectedAnime.infoRecord.externalIds?.aniListId) && (
+                          <span className="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                            AniList #{selectedAnime.aniListId || selectedAnime.infoRecord.externalIds?.aniListId}
+                          </span>
+                        )}
+                        {(selectedAnime.malId || selectedAnime.infoRecord.externalIds?.malId) && (
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                            MAL #{selectedAnime.malId || selectedAnime.infoRecord.externalIds?.malId}
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">
+                          Auth Ep: {selectedAnime.authoritativeTotalEpisodes ?? selectedAnime.totalEpisodes ?? 0} | Imported: {selectedAnime.importedEpisodesCount ?? 0} ({selectedAnime.isEpisodeListComplete ? 'Complete' : 'Partial'})
+                        </span>
+                      </div>
+                    </div>
+                    {selectedAnime.infoRecord.decisionReason && (
+                      <div className="text-[11px] text-slate-400">
+                        <strong className="text-slate-300">Decision Evidence:</strong> {selectedAnime.infoRecord.decisionReason}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Detected Discrepancies / Issues Box */}
                 {selectedAnime.infoRecord?.discrepancies?.length > 0 && (
@@ -1429,12 +1502,18 @@ export const InformationManager: React.FC = () => {
 
                 {/* Suspected Fake / Non-Existent Anime Review Panel */}
                 {(selectedAnime.infoRecord?.status === 'suspected_fake' ||
+                  selectedAnime.infoRecord?.status === 'confirmed_fake' ||
+                  selectedAnime.infoRecord?.checkedFields?.suspectedFake === 'mismatch' ||
                   selectedAnime.infoRecord?.checkedFields?.suspectedFake === 'issue') && (
                   <div className="p-3.5 rounded-xl bg-red-950/35 border border-red-500/40 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="text-[11px] font-black uppercase text-red-300 flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4 text-red-400" />
-                        <span>Suspected Fake / Needs Review</span>
+                        <span>
+                          {selectedAnime.infoRecord?.status === 'confirmed_fake'
+                            ? 'Confirmed Fake Anime'
+                            : 'Suspected Fake / Needs Review'}
+                        </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <button
@@ -1446,6 +1525,17 @@ export const InformationManager: React.FC = () => {
                           <ShieldCheck className="w-3 h-3" />
                           <span>Confirm Valid Anime (Keep)</span>
                         </button>
+                        {selectedAnime.infoRecord?.status !== 'confirmed_fake' && (
+                          <button
+                            type="button"
+                            onClick={() => handleResolveFake(selectedAnime.id, 'confirm_fake')}
+                            disabled={actionBusyId === `fake_${selectedAnime.id}`}
+                            className="px-2.5 py-1 rounded-lg bg-amber-950 hover:bg-amber-900 text-amber-200 border border-amber-600/60 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Mark Confirmed Fake</span>
+                          </button>
+                        )}
                         {confirmDeleteFakeId !== selectedAnime.id ? (
                           <button
                             type="button"

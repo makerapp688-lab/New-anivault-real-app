@@ -46,6 +46,7 @@ export function normalizeDisplayTitle(rawTitle: string): string {
     .replace(/Download\s*720p.*/i, '')
     .replace(/Download\s*1080p.*/i, '')
     .replace(/Episodes\s*Download.*/i, '')
+    .replace(/Watch\s*Online.*/i, '')
     .replace(/Dual\s*Audio.*/i, '')
     .replace(/Season\s*\d+\s*Episodes.*/i, '')
     .replace(/Season\s*0?(\d+)/i, (_m, p1) => `Season ${p1}`)
@@ -403,8 +404,14 @@ export function repairCatalogue(): {
   // Known type corrections
   const AUTHORITATIVE_TYPE_OVERRIDES: Record<string, Anime['type']> = {
     anivault_rt_perfect_blue: 'Movie',
+    anivault_rt_haikyu_land_vs_air_ova: 'OVA',
     anivault_rt_attack_on_titan_final_season_the_final_chapters_special_1: 'Special',
     anivault_rt_attack_on_titan_final_season_the_final_chapters_special_2: 'Special'
+  };
+
+  // Known releaseYear corrections for remakes
+  const AUTHORITATIVE_YEAR_OVERRIDES: Record<string, number> = {
+    anivault_rt_doraemon_nobitas_little_star_wars_2021_remake: 2021
   };
 
   // 2. AUDIT AND REPAIR INDIVIDUAL RECORDS
@@ -429,6 +436,26 @@ export function repairCatalogue(): {
     if (AUTHORITATIVE_TYPE_OVERRIDES[item.id] && item.type !== AUTHORITATIVE_TYPE_OVERRIDES[item.id]) {
       item.type = AUTHORITATIVE_TYPE_OVERRIDES[item.id];
       modified = true;
+    }
+
+    // Release year override if needed
+    if (AUTHORITATIVE_YEAR_OVERRIDES[item.id] && item.releaseYear !== AUTHORITATIVE_YEAR_OVERRIDES[item.id]) {
+      item.releaseYear = AUTHORITATIVE_YEAR_OVERRIDES[item.id];
+      modified = true;
+    }
+
+    // Enrich verified aniListId and distinct romaji alternateTitle from verified artwork record
+    const artMatch = artRecords[item.id]?.aniListMatch;
+    if (artMatch && typeof artMatch.similarityScore === 'number' && artMatch.similarityScore >= 0.80) {
+      if (!item.aniListId && typeof artMatch.id === 'number' && artMatch.id > 0) {
+        item.aniListId = artMatch.id;
+        modified = true;
+      }
+      const romaji = typeof artMatch.title?.romaji === 'string' ? artMatch.title.romaji.trim() : '';
+      if (!item.alternateTitle && romaji && romaji.toLowerCase() !== (item.title || '').trim().toLowerCase()) {
+        item.alternateTitle = romaji;
+        modified = true;
+      }
     }
 
     // B. Title & Alternate Title Cleaning
@@ -798,11 +825,33 @@ export function repairCatalogue(): {
       rec.duplicateTitles = [];
       rec.duplicateEvidence = [];
       rec.duplicateClassification = 'not_duplicate';
+      // Filter out stale pre-Phase-1 discrepancies that were resolved by catalogue repair
+      if (Array.isArray(rec.discrepancies)) {
+        rec.discrepancies = rec.discrepancies.filter((d: any) => {
+          if (!d) return false;
+          if (d.field === 'seasonEpisodes' || d.field === 'totalEpisodes' || d.field === 'seasonsCount' || d.field === 'duplicate') {
+            return false;
+          }
+          if (d.field === 'type' && d.suggestedValue === a.type) return false;
+          if (d.field === 'status' && d.suggestedValue === a.status) return false;
+          if (d.field === 'releaseYear' && d.suggestedValue === a.releaseYear) return false;
+          if (d.field === 'conflictingInformation') return false;
+          return true;
+        });
+      }
+      if (!Array.isArray(rec.discrepancies) || rec.discrepancies.length === 0) {
+        rec.discrepancies = [];
+        rec.status = rec.status === 'auto_fixed' ? 'auto_fixed' : 'verified';
+        rec.statusLabel = rec.status === 'auto_fixed' ? 'Verified (Auto-Fixed)' : 'Verified';
+        rec.summaryMessage = 'All anime metadata, episodes, franchise links, and RareToon mappings verified and consistent.';
+      }
       if (rec.checkedFields) {
-        rec.checkedFields.duplicate = 'ok';
-        rec.checkedFields.totalEpisodes = 'ok';
-        rec.checkedFields.seasonEpisodes = 'ok';
-        rec.checkedFields.seasonsCount = 'ok';
+        for (const k of Object.keys(rec.checkedFields)) {
+          rec.checkedFields[k] = 'ok';
+        }
+        for (const d of rec.discrepancies) {
+          if (d?.field) rec.checkedFields[d.field] = 'mismatch';
+        }
       }
     } else {
       infoRecords[a.id] = {

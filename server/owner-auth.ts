@@ -3214,7 +3214,11 @@ export function createOwnerRouter(): express.Router {
             return item.duplicateIds.length > 0 || rec?.status === 'duplicate';
           }
           if (filter === 'suspected_fake') {
-            return rec?.status === 'suspected_fake' || rec?.checkedFields?.suspectedFake === 'mismatch';
+            return (
+              rec?.status === 'suspected_fake' ||
+              rec?.status === 'confirmed_fake' ||
+              rec?.checkedFields?.suspectedFake === 'mismatch'
+            );
           }
           if (filter === 'conflict') {
             return rec?.status === 'conflict' || rec?.checkedFields?.conflictingInformation === 'mismatch';
@@ -3225,6 +3229,7 @@ export function createOwnerRouter(): express.Router {
               rec?.status === 'conflict' ||
               rec?.status === 'duplicate' ||
               rec?.status === 'suspected_fake' ||
+              rec?.status === 'confirmed_fake' ||
               (rec?.discrepancies?.length || 0) > 0
             );
           }
@@ -3234,8 +3239,7 @@ export function createOwnerRouter(): express.Router {
               !item.synopsis ||
               item.synopsis.trim().length < 30 ||
               !Array.isArray(item.genres) ||
-              item.genres.length === 0 ||
-              !item.alternateTitle
+              item.genres.length === 0
             );
           }
           if (filter === 'episode_mismatch') {
@@ -3485,7 +3489,13 @@ export function createOwnerRouter(): express.Router {
   router.post('/info-manager/anime/:id/resolve-fake', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const action = req.body?.action === 'confirm_delete' ? 'confirm_delete' : 'dismiss';
+      const rawAction = req.body?.action;
+      const action: 'dismiss' | 'confirm_fake' | 'confirm_delete' =
+        rawAction === 'confirm_delete'
+          ? 'confirm_delete'
+          : rawAction === 'confirm_fake'
+            ? 'confirm_fake'
+            : 'dismiss';
       const email = (req as any).ownerSession?.email || 'Owner';
       const result = infoManager.resolveSuspectedFake(id, action, email);
       if (!result.success) {
@@ -3547,14 +3557,15 @@ export function createOwnerRouter(): express.Router {
     try {
       const { id } = req.params;
       const rawAction = req.body?.action;
-      const action: 'approve_suggestions' | 'mark_verified' | 'reject_suggestions' | 'skip_ignore' =
+      const action: 'approve_suggestions' | 'mark_verified' | 'reject_suggestions' | 'skip_ignore' | 'mark_needs_review' =
         rawAction === 'approve_suggestions' ||
         rawAction === 'reject_suggestions' ||
-        rawAction === 'skip_ignore'
+        rawAction === 'skip_ignore' ||
+        rawAction === 'mark_needs_review'
           ? rawAction
           : 'mark_verified';
       const email = (req as any).ownerSession?.email || 'Owner';
-      const result = infoManager.resolveReviewItem(id, action, email);
+      const result = infoManager.resolveReviewItem(id, action, email, req.body?.reason);
       if (!result.success) {
         res.status(400).json({ error: result.error || 'Failed to resolve review item.' });
         return;

@@ -1,5 +1,111 @@
 [
   {
+    "id": "INFO-HIST-1790588221927-6674",
+    "animeId": "anivault_rt_hindi_haikyu_ova_episodes_hindi_dubbed_download_hd",
+    "animeTitle": "Haikyu!! OVA Episodes",
+    "updatedAt": "2026-09-28T09:37:01.927Z",
+    "updatedBy": "Owner",
+    "source": "Internal Consistency Verifier",
+    "reason": "High-confidence worker verification & auto-repair (type)",
+    "changedFields": [
+      "type"
+    ],
+    "previousSnapshot": {
+      "title": "Haikyu!! OVA Episodes",
+      "alternateTitle": "Haikyuu!!",
+      "japaneseTitle": null,
+      "type": "TV",
+      "status": "Completed",
+      "releaseYear": 2021,
+      "releaseDate": null,
+      "totalSeasons": 1,
+      "totalEpisodes": 12,
+      "seasons": [
+        {
+          "seasonNumber": 1,
+          "title": "Season 1",
+          "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/",
+          "episodeCount": 12,
+          "episodes": [
+            {
+              "episodeNumber": 1,
+              "title": "Episode 1",
+              "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/"
+            }
+          ],
+          "authoritativeEpisodeCount": 12,
+          "importedEpisodeCount": 1,
+          "isEpisodeListComplete": false,
+          "episodeListStatus": "partial"
+        }
+      ],
+      "genres": [
+        "Sports",
+        "Comedy",
+        "Drama"
+      ],
+      "languages": [
+        "Hindi",
+        "English",
+        "Japanese"
+      ],
+      "dubLanguage": "Dual Audio {Hindi + English}",
+      "synopsis": "Watch Haikyu!! OVA Episodes in high quality Hindi dubbing and dual audio on RareAnimes with complete streaming options.",
+      "storyDetails": null,
+      "relatedAnime": [],
+      "franchiseRelationships": [],
+      "providerAnimeId": "hindi/haikyu-ova-episodes-hindi-dubbed-download-hd",
+      "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/"
+    },
+    "newSnapshot": {
+      "title": "Haikyu!! OVA Episodes",
+      "alternateTitle": "Haikyuu!!",
+      "japaneseTitle": null,
+      "type": "OVA",
+      "status": "Completed",
+      "releaseYear": 2021,
+      "releaseDate": null,
+      "totalSeasons": 1,
+      "totalEpisodes": 12,
+      "seasons": [
+        {
+          "seasonNumber": 1,
+          "title": "Season 1",
+          "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/",
+          "episodeCount": 12,
+          "episodes": [
+            {
+              "episodeNumber": 1,
+              "title": "Episode 1",
+              "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/"
+            }
+          ],
+          "authoritativeEpisodeCount": 12,
+          "importedEpisodeCount": 1,
+          "isEpisodeListComplete": false,
+          "episodeListStatus": "partial"
+        }
+      ],
+      "genres": [
+        "Sports",
+        "Comedy",
+        "Drama"
+      ],
+      "languages": [
+        "Hindi",
+        "English",
+        "Japanese"
+      ],
+      "dubLanguage": "Dual Audio {Hindi + English}",
+      "synopsis": "Watch Haikyu!! OVA Episodes in high quality Hindi dubbing and dual audio on RareAnimes with complete streaming options.",
+      "storyDetails": null,
+      "relatedAnime": [],
+      "franchiseRelationships": [],
+      "providerAnimeId": "hindi/haikyu-ova-episodes-hindi-dubbed-download-hd",
+      "canonicalUrl": "https://www.rareanimes.mov/hindi/haikyu-ova-episodes-hindi-dubbed-download-hd/"
+    }
+  },
+  {
     "id": "INFO-HIST-1790517164956-4426",
     "animeId": "anivault_rt_doraemon_tv_series",
     "animeTitle": "Doraemon (TV Series)",
