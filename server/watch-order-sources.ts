@@ -125,7 +125,7 @@ const DATA_DIR = path.join(process.cwd(), 'server', 'data');
 const WATCH_ORDER_SOURCES_CONFIG_PATH = path.join(DATA_DIR, 'watch-order-sources-config.json');
 const WATCH_ORDER_RECORDS_PATH = path.join(DATA_DIR, 'watch-order-records.json');
 
-const USER_AGENT = 'Mozilla/5.0 (compatible; AnivexWatchOrderEngine/1.0; +https://anivex.app)';
+const USER_AGENT = 'Mozilla/5.0 (compatible; ZenimeWatchOrderEngine/1.0; +https://zenime.app)';
 
 const DEFAULT_WATCH_ORDER_SOURCES: WatchOrderSourceConfig[] = [
   {
@@ -304,7 +304,7 @@ export async function checkRobotsTxtCompliance(
       const val = rest.join(':').trim();
       if (key.toLowerCase() === 'user-agent') {
         currentAgent = val;
-      } else if (key.toLowerCase() === 'disallow' && (currentAgent === '*' || currentAgent.toLowerCase().includes('anivex'))) {
+      } else if (key.toLowerCase() === 'disallow' && (currentAgent === '*' || currentAgent.toLowerCase().includes('zenime') || currentAgent.toLowerCase().includes('anivex'))) {
         if (val) disallowedPaths.push(val);
       }
     }
@@ -548,6 +548,19 @@ export async function testWatchOrderSourceConnectivity(sourceId: string): Promis
       latencyMs: 0,
       message: `Unknown watch-order source ID: ${sourceId}`,
       status: 'offline'
+    };
+  }
+
+  const configuredSources = getWatchOrderSourcesConfig();
+  const configuredSource = configuredSources.find(s => s.id === sourceId);
+  if (configuredSource && !configuredSource.enabled) {
+    configuredSource.status = 'disabled';
+    saveWatchOrderSourcesConfig(configuredSources);
+    return {
+      success: false,
+      latencyMs: 0,
+      message: `Source "${configuredSource.name}" is DISABLED.`,
+      status: 'disabled'
     };
   }
 

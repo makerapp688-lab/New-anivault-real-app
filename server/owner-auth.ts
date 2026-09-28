@@ -3,19 +3,24 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { getSessionSecret } from './session-secret.js';
+import { logAdminAction, loadAuditLogs } from './audit-logger.js';
 import {
   getEmailConfigStatus,
-  generateVerificationCode,
-  sendVerificationEmail,
-  testEmailTransport,
-  checkServerSecretsDiagnostic
+  checkServerSecretsDiagnostic,
+  testEmailTransport
 } from './email-service.js';
-import { logAdminAction, loadAuditLogs } from './audit-logger.js';
+import {
+  normalizeAndValidateEmail,
+  issueOwnerOtp,
+  resendOwnerOtp,
+  verifyAndConsumeOwnerOtp
+} from './email-verification.js';
 import {
   getArtworkSourcesConfig,
   saveArtworkSourcesConfig,
   testSourceConnectivity
 } from './artwork-sources.js';
+import { hasConfiguredTmdbApiKey } from './source-gateway.js';
 import {
   getWatchOrderSourcesConfig,
   saveWatchOrderSourcesConfig,
@@ -47,14 +52,19 @@ import {
   markCatalogueAnimeVerified
 } from './artwork-verifier.js';
 import { artworkScanner, computeGlobalCatalogueStats } from './artwork-scanner.js';
-import { globalWorkerJobEngine, createDeterministicTaskId } from './worker-job-engine.js';
+import { infoManager } from './info-manager.js';
+import {
+  globalWorkerJobEngine,
+  createDeterministicTaskId,
+  HEARTBEAT_INTERVAL_MS,
+  LEASE_DURATION_MS
+} from './worker-job-engine.js';
 import { globalDataStore } from './data-store.js';
 
 // Data file paths
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
 const OWNER_ACCOUNT_PATH = path.join(DATA_DIR, 'owner-account.json');
-const TEMP_SETUP_PATH = path.join(DATA_DIR, 'owner-setup-temp.json');
-const TEMP_EMAIL_CHANGE_PATH = path.join(DATA_DIR, 'owner-email-change-temp.json');
+const OWNER_DELETED_STATE_PATH = path.join(DATA_DIR, 'owner-account-deleted.json');
 const SESSIONS_PATH = path.join(DATA_DIR, 'owner-sessions.json');
 
 // Ensure data dir exists
@@ -72,26 +82,6 @@ export interface OwnerAccount {
   createdAt: string;
   updatedAt: string;
   role: 'owner';
-}
-
-export interface TempSetup {
-  email: string;
-  username: string;
-  passwordHash: string;
-  salt: string;
-  codeHash: string;
-  expiresAt: number;
-  attempts: number;
-  resendCount: number;
-  lastResendAt: number;
-}
-
-export interface TempEmailChange {
-  ownerEmail: string;
-  newEmail: string;
-  codeHash: string;
-  expiresAt: number;
-  attempts: number;
 }
 
 export interface SessionData {
@@ -162,61 +152,85 @@ export function getOwnerAccount(): OwnerAccount | null {
         }
         if (!parsed.id) parsed.id = 'usr_owner';
         parsed.email = normalizedEmail;
+        const configuredUsername = (process.env.OWNER_USERNAME || 'Death197').trim().replace(/^["']|["']$/g, '').trim() || 'Death197';
         if (!parsed.username || parsed.username.trim() === '' || parsed.username.trim() === 'Owner') {
-          parsed.username = 'Death197';
+          parsed.username = configuredUsername;
         }
         parsed.role = 'owner';
+
+        const configuredPassword = (process.env.OWNER_PASSWORD || '').trim().replace(/^["']|["']$/g, '').trim();
+        if (
+          parsed.managedByEnv &&
+          configuredPassword &&
+          configuredPassword.toLowerCase() !== 'test' &&
+          !/^(YOUR_OWNER_PASSWORD_HERE|MY_OWNER_PASSWORD|CHANGE_ME)$/i.test(configuredPassword)
+        ) {
+          let changed = false;
+          if (parsed.username !== configuredUsername) {
+            parsed.username = configuredUsername;
+            changed = true;
+          }
+          if (!verifyPassword(configuredPassword, parsed.passwordHash, parsed.salt)) {
+            const { hash, salt } = hashPassword(configuredPassword);
+            parsed.passwordHash = hash;
+            parsed.salt = salt;
+            parsed.updatedAt = new Date().toISOString();
+            changed = true;
+          }
+          if (changed) {
+            saveOwnerAccount(parsed);
+          }
+        }
+
         return parsed;
       }
     }
 
-    // Optional runtime environment configuration fallback
-    const envHash = process.env.OWNER_PASSWORD_HASH?.trim();
-    const envSalt = process.env.OWNER_PASSWORD_SALT?.trim();
-    const envPlainPassword =
-      process.env.OWNER_PASSWORD ||
-      (!isValidCredentialHex(envHash, 64) || !isValidCredentialHex(envSalt, 16) ? envHash : undefined);
-    const envEmail = (process.env.OWNER_EMAIL || 'makerapp688@gmail.com').trim().toLowerCase();
-    const envUsername = (process.env.OWNER_USERNAME || 'Death197').trim() || 'Death197';
+    // Do NOT auto-recreate a new Owner account if the Owner account was explicitly deleted/reset
+    if (fs.existsSync(OWNER_DELETED_STATE_PATH)) {
+      runtimeEnvOwnerCache = null;
+      return null;
+    }
 
-    if (isEmailAuthorizedOwner(envEmail)) {
-      if (isValidCredentialHex(envHash, 64) && isValidCredentialHex(envSalt, 16)) {
+    // Server-side generation and storage of Owner password hash & salt from OWNER_PASSWORD
+    const envPlainPassword = (process.env.OWNER_PASSWORD || '').trim().replace(/^["']|["']$/g, '').trim();
+    const envEmail = getAuthorizedOwnerEmail();
+    const envUsername = (process.env.OWNER_USERNAME || 'Death197').trim().replace(/^["']|["']$/g, '').trim() || 'Death197';
+
+    if (
+      isEmailAuthorizedOwner(envEmail) &&
+      envPlainPassword &&
+      envPlainPassword.length > 0 &&
+      envPlainPassword.toLowerCase() !== 'test' &&
+      !/^(YOUR_OWNER_PASSWORD_HERE|MY_OWNER_PASSWORD|CHANGE_ME)$/i.test(envPlainPassword)
+    ) {
+      const fingerprint = crypto
+        .createHash('sha256')
+        .update(`${envEmail}|${envUsername}|${envPlainPassword}`)
+        .digest('hex');
+      if (!runtimeEnvOwnerCache || runtimeEnvOwnerCache.fingerprint !== fingerprint) {
+        const { hash, salt } = hashPassword(envPlainPassword);
         const now = new Date(0).toISOString();
-        return {
+        const generatedAccount: OwnerAccount & { managedByEnv?: boolean } = {
           id: 'usr_owner',
           email: envEmail,
           username: envUsername,
-          passwordHash: envHash!,
-          salt: envSalt!,
+          passwordHash: hash,
+          salt,
           createdAt: now,
           updatedAt: now,
-          role: 'owner'
+          role: 'owner',
+          managedByEnv: true
+        };
+        try {
+          saveOwnerAccount(generatedAccount);
+        } catch {}
+        runtimeEnvOwnerCache = {
+          fingerprint,
+          account: generatedAccount
         };
       }
-      if (envPlainPassword && envPlainPassword.trim().length > 0 && envPlainPassword.trim().toLowerCase() !== 'test') {
-        const fingerprint = crypto
-          .createHash('sha256')
-          .update(`${envEmail}|${envUsername}|${envPlainPassword}`)
-          .digest('hex');
-        if (!runtimeEnvOwnerCache || runtimeEnvOwnerCache.fingerprint !== fingerprint) {
-          const { hash, salt } = hashPassword(envPlainPassword);
-          const now = new Date(0).toISOString();
-          runtimeEnvOwnerCache = {
-            fingerprint,
-            account: {
-              id: 'usr_owner',
-              email: envEmail,
-              username: envUsername,
-              passwordHash: hash,
-              salt,
-              createdAt: now,
-              updatedAt: now,
-              role: 'owner'
-            }
-          };
-        }
-        return { ...runtimeEnvOwnerCache.account };
-      }
+      return { ...runtimeEnvOwnerCache.account };
     }
   } catch (err) {
     console.error('[OwnerAuth] Error reading owner account:', err);
@@ -233,6 +247,11 @@ export function saveOwnerAccount(account: OwnerAccount): void {
   }
   if (account.email) {
     account.email = account.email.trim().toLowerCase();
+  }
+  if (fs.existsSync(OWNER_DELETED_STATE_PATH)) {
+    try {
+      fs.unlinkSync(OWNER_DELETED_STATE_PATH);
+    } catch {}
   }
   fs.writeFileSync(OWNER_ACCOUNT_PATH, JSON.stringify(account, null, 2), 'utf-8');
 }
@@ -293,52 +312,6 @@ export function validateOwnerSession(sessionId: string): { id: string; email: st
   } catch (err) {
     console.error('[OwnerAuth] Error in validateOwnerSession:', err);
     return null;
-  }
-}
-
-// Load / Save Temp Setup
-export function getTempSetup(): TempSetup | null {
-  try {
-    if (fs.existsSync(TEMP_SETUP_PATH)) {
-      const data = fs.readFileSync(TEMP_SETUP_PATH, 'utf-8');
-      return JSON.parse(data);
-    }
-  } catch (err) {
-    console.error('[OwnerAuth] Error reading temp setup:', err);
-  }
-  return null;
-}
-
-export function saveTempSetup(setup: TempSetup | null): void {
-  if (!setup) {
-    if (fs.existsSync(TEMP_SETUP_PATH)) {
-      fs.unlinkSync(TEMP_SETUP_PATH);
-    }
-  } else {
-    fs.writeFileSync(TEMP_SETUP_PATH, JSON.stringify(setup, null, 2), 'utf-8');
-  }
-}
-
-// Load / Save Temp Email Change
-export function getTempEmailChange(): TempEmailChange | null {
-  try {
-    if (fs.existsSync(TEMP_EMAIL_CHANGE_PATH)) {
-      const data = fs.readFileSync(TEMP_EMAIL_CHANGE_PATH, 'utf-8');
-      return JSON.parse(data);
-    }
-  } catch (err) {
-    console.error('[OwnerAuth] Error reading temp email change:', err);
-  }
-  return null;
-}
-
-export function saveTempEmailChange(change: TempEmailChange | null): void {
-  if (!change) {
-    if (fs.existsSync(TEMP_EMAIL_CHANGE_PATH)) {
-      fs.unlinkSync(TEMP_EMAIL_CHANGE_PATH);
-    }
-  } else {
-    fs.writeFileSync(TEMP_EMAIL_CHANGE_PATH, JSON.stringify(change, null, 2), 'utf-8');
   }
 }
 
@@ -460,11 +433,19 @@ export function verifyAndDecodeSessionToken(token: string): { userId: string; em
   }
 }
 
-// Middleware: Authenticate Session
+// Authoritative Owner email resolution from OWNER_EMAIL environment variable
+export function getAuthorizedOwnerEmail(): string {
+  const raw = (process.env.OWNER_EMAIL || '').trim().replace(/^["']|["']$/g, '').trim().toLowerCase();
+  if (raw && raw.includes('@') && !/^(my_|your_|placeholder|change_me)/i.test(raw)) {
+    return raw;
+  }
+  return 'makerapp688@gmail.com';
+}
+
 export function isEmailAuthorizedOwner(email: string | undefined | null): boolean {
-  if (!email) return false;
+  if (!email || typeof email !== 'string') return false;
   const cleanEmail = email.trim().toLowerCase();
-  return cleanEmail === 'makerapp688@gmail.com';
+  return cleanEmail === getAuthorizedOwnerEmail();
 }
 
 /**
@@ -620,7 +601,7 @@ export function requireOwner(req: Request, res: Response, next: NextFunction): v
       res.status(403).json({ error: 'Forbidden: Access denied. Only the authenticated Owner account can access this resource.' });
       return;
     }
-    res.status(401).json({ error: 'Unauthorized: Authentication session required for Anivex Owner access.' });
+    res.status(401).json({ error: 'Unauthorized: Authentication session required for Zenime Owner access.' });
     return;
   }
 
@@ -642,40 +623,48 @@ export function requireOwner(req: Request, res: Response, next: NextFunction): v
 export function createOwnerRouter(): express.Router {
   const router = express.Router();
 
-  // 0a. Owner-Only Email Service Configuration Status (No secret values returned)
-  router.get('/email-status', authenticateSession, requireOwner, (req: Request, res: Response) => {
+  // 0. Owner Email Service Status & Test Endpoints
+  router.get('/email-status', authenticateSession, requireOwner, (_req: Request, res: Response) => {
     const status = getEmailConfigStatus();
     const secretsDiag = checkServerSecretsDiagnostic();
     res.json({
-      configured: status.configured,
-      missing: status.missing,
-      hostConfigured: status.hostConfigured,
-      userConfigured: status.userConfigured,
-      passConfigured: status.passConfigured,
-      fromConfigured: status.fromConfigured,
-      diagnostic: secretsDiag,
-      ...secretsDiag
+      ...status,
+      secrets: secretsDiag
     });
   });
 
-  // 0b. Owner-Only Real Email Transport Diagnostic Test
   router.post('/email-test', authenticateSession, requireOwner, async (req: Request, res: Response) => {
     try {
-      const { recipient } = req.body || {};
-      const testRecipient = typeof recipient === 'string' && recipient.trim() ? recipient.trim() : undefined;
+      const testRecipient = typeof req.body?.to === 'string' ? req.body.to.trim() : undefined;
       const result = await testEmailTransport(testRecipient);
       res.status(result.success ? 200 : 503).json(result);
     } catch (err: any) {
-      res.status(500).json({ success: false, step: 'SERVER_ERROR', error: err.message });
+      res.status(500).json({ success: false, error: err.message || 'Email transport test failed.' });
     }
   });
 
-  // 1. Setup Init (Email, Password, Username)
-  router.post('/setup-init', async (req: Request, res: Response) => {
+  // 1. Setup / Create Owner Account — Step 1: Validate & Send 6-Digit OTP to Configured OWNER_EMAIL
+  const handleOwnerSetupInit = async (req: Request, res: Response) => {
     try {
-      const { email, password, username } = req.body;
+      const { email, password, username } = req.body || {};
 
-      // 1. Username validation
+      // 1. Email validation & strict Owner authorization check FIRST
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Valid email address is required.' });
+        return;
+      }
+      const normalizedEmail = emailCheck.normalizedEmail;
+
+      if (!isEmailAuthorizedOwner(normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
+        });
+        return;
+      }
+
+      // 2. Username validation
       if (!username || typeof username !== 'string') {
         res.status(400).json({ error: 'Owner username is required.' });
         return;
@@ -689,186 +678,102 @@ export function createOwnerRouter(): express.Router {
         return;
       }
 
-      // 2. Email validation
-      if (!email || typeof email !== 'string') {
-        res.status(400).json({ error: 'Valid email address is required.' });
-        return;
-      }
-      const normalizedEmail = email.trim().toLowerCase();
-      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-      if (!emailRegex.test(normalizedEmail)) {
-        res.status(400).json({ error: 'Please enter a valid email address (e.g. user@gmail.com).' });
-        return;
-      }
-
-      // Check strictly authorized owner email
-      if (!isEmailAuthorizedOwner(normalizedEmail)) {
-        saveTempSetup(null);
-        res.status(400).json({
-          error: 'Only the authorized Owner email can create an ANIVEX Owner account.',
-          code: 'NOT_AUTHORIZED_OWNER'
-        });
-        return;
-      }
-
       // 3. Password validation
       if (!password || typeof password !== 'string' || password.length < 8) {
         res.status(400).json({ error: 'Password must be at least 8 characters long.' });
         return;
       }
 
-      const existingOwner = getOwnerAccount();
-
-      if (existingOwner) {
-        saveTempSetup(null);
-        res.status(400).json({
-          error: 'Permanent Anivex Owner account already exists. Setup rejected.',
-          code: 'OWNER_ALREADY_EXISTS'
-        });
-        return;
-      }
-
-      // Check email service configuration status
-      const emailStatus = getEmailConfigStatus();
-      if (!emailStatus.configured) {
-        res.status(503).json({
-          error: 'Email service is not configured. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in server environment secrets.',
-          code: 'EMAIL_NOT_CONFIGURED',
-          missing: emailStatus.missing,
-          hostConfigured: emailStatus.hostConfigured,
-          userConfigured: emailStatus.userConfigured,
-          passConfigured: emailStatus.passConfigured,
-          fromConfigured: emailStatus.fromConfigured
-        });
-        return;
-      }
-
-      const existingTemp = getTempSetup();
-      const now = Date.now();
-      if (existingTemp && existingTemp.email === normalizedEmail && existingTemp.expiresAt > now) {
-        if (now - existingTemp.lastResendAt < 60000) {
-          const waitSec = Math.ceil((60000 - (now - existingTemp.lastResendAt)) / 1000);
-          res.status(429).json({
-            error: `Please wait ${waitSec} seconds before requesting another verification code.`,
-            code: 'RATE_LIMITED'
+      if (fs.existsSync(OWNER_ACCOUNT_PATH)) {
+        const existingOwner = getOwnerAccount();
+        if (existingOwner && !(existingOwner as any).managedByEnv) {
+          res.status(400).json({
+            error: 'Permanent Zenime Owner account already exists. Setup rejected.',
+            code: 'OWNER_ALREADY_EXISTS'
           });
           return;
         }
       }
 
       const { hash: passwordHash, salt } = hashPassword(password);
-      const { code, codeHash } = generateVerificationCode();
-      const recipientDomain = normalizedEmail.includes('@') ? '@' + normalizedEmail.split('@')[1] : 'recipient';
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_GENERATED: true, length=6, domain=${recipientDomain} (OWNER_SETUP)`);
 
-      const tempSetup: TempSetup = {
+      const otpResult = await issueOwnerOtp({
+        purpose: 'owner_setup',
         email: normalizedEmail,
-        username: cleanUsername,
-        passwordHash,
-        salt,
-        codeHash,
-        expiresAt: now + 10 * 60 * 1000,
-        attempts: 0,
-        resendCount: existingTemp && existingTemp.email === normalizedEmail ? existingTemp.resendCount + 1 : 1,
-        lastResendAt: now
-      };
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        payload: {
+          email: normalizedEmail,
+          username: cleanUsername,
+          passwordHash,
+          salt
+        },
+        subject: 'Verify your Zenime Owner account setup',
+        heading: 'Verify Zenime Owner Setup',
+        description: `Use this 6-digit verification code to verify ${normalizedEmail} and complete setup of the permanent Zenime Owner account (${cleanUsername}).`
+      });
 
-      saveTempSetup(tempSetup);
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, domain=${recipientDomain}, expiresAt=+10m (OWNER_SETUP)`);
+      res.json({
+        success: true,
+        requiresVerification: true,
+        email: otpResult.normalizedEmail,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: 'A 6-digit verification code has been sent to your authorized Owner email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        error: err.message || 'Internal server error during owner setup.',
+        code: err.code
+      });
+    }
+  };
 
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(normalizedEmail, code, 'Verify your Anivex account', origin);
-      } catch (mailErr: any) {
-        console.error('[OwnerSetupInit] Failed to send email:', mailErr.message);
-        saveTempSetup(null);
-        const safeError = mailErr.message || 'Email delivery failed.';
-        res.status(503).json({
-          error: safeError,
-          code: 'EMAIL_SEND_FAILED'
+  router.post('/setup', handleOwnerSetupInit);
+  router.post('/setup-init', handleOwnerSetupInit);
+
+  // 2. Owner Setup — Step 2: Verify 6-Digit OTP & Create Permanent Owner Account
+  router.post('/setup-verify', async (req: Request, res: Response) => {
+    try {
+      const { email, code } = req.body || {};
+
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Email address is required.' });
+        return;
+      }
+      if (!isEmailAuthorizedOwner(emailCheck.normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
         });
         return;
       }
 
-      res.json({
-        success: true,
-        message: 'Verification code sent to email. Please verify within 10 minutes.'
+      const verified = verifyAndConsumeOwnerOtp<{
+        email: string;
+        username: string;
+        passwordHash: string;
+        salt: string;
+      }>({
+        purpose: 'owner_setup',
+        email: emailCheck.normalizedEmail,
+        code,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner
       });
-    } catch (err: any) {
-      console.error('[OwnerSetupInit Error]', err);
-      res.status(500).json({ error: err.message || 'Internal server error during owner setup initialization.' });
-    }
-  });
-
-  // 2. Setup Verify
-  router.post('/setup-verify', async (req: Request, res: Response) => {
-    try {
-      const { email, code } = req.body;
-
-      if (!email || !code) {
-        res.status(400).json({ error: 'Email and verification code are required.' });
-        return;
-      }
-
-      const normalizedEmail = email.trim().toLowerCase();
-      const temp = getTempSetup();
-
-      if (!temp || temp.email !== normalizedEmail) {
-        res.status(400).json({ error: 'No active setup attempt found for this email. Please initiate setup again.' });
-        return;
-      }
-
-      if (Date.now() > temp.expiresAt) {
-        saveTempSetup(null);
-        res.status(400).json({ error: 'This code has expired. Request a new code.' });
-        return;
-      }
-
-      if (temp.attempts >= 5) {
-        saveTempSetup(null);
-        res.status(429).json({ error: 'Too many incorrect attempts. Please request a new verification code.' });
-        return;
-      }
-
-      const testCodeHash = crypto.createHash('sha256').update(code.trim()).digest('hex');
-      if (testCodeHash !== temp.codeHash) {
-        temp.attempts += 1;
-        saveTempSetup(temp);
-        if (temp.attempts >= 5) {
-          saveTempSetup(null);
-          res.status(429).json({ error: 'Too many incorrect attempts. Please request a new verification code.' });
-          return;
-        }
-        res.status(400).json({ error: 'Incorrect verification code.' });
-        return;
-      }
-
-      if (!isEmailAuthorizedOwner(temp.email)) {
-        saveTempSetup(null);
-        res.status(400).json({ error: 'Not authorized for Owner account.' });
-        return;
-      }
-
-      const existingOwner = getOwnerAccount();
-      if (existingOwner) {
-        saveTempSetup(null);
-        res.status(400).json({ error: 'Permanent Owner account already exists. Setup rejected.' });
-        return;
-      }
 
       const now = new Date().toISOString();
       const newOwner: OwnerAccount = {
-        email: temp.email,
-        username: temp.username,
-        passwordHash: temp.passwordHash,
-        salt: temp.salt,
+        id: 'usr_owner',
+        email: verified.normalizedEmail,
+        username: verified.payload.username,
+        passwordHash: verified.payload.passwordHash,
+        salt: verified.payload.salt,
         createdAt: now,
         updatedAt: now,
         role: 'owner'
       };
 
       saveOwnerAccount(newOwner);
-      saveTempSetup(null);
 
       // Invalidate any stale sessions from prior setups
       activeSessions.clear();
@@ -891,113 +796,92 @@ export function createOwnerRouter(): express.Router {
 
       res.json({
         success: true,
-        message: 'Email verified successfully. Permanent Owner account created.',
+        message: 'Email verified successfully. Permanent Zenime Owner account created.',
         owner: { email: newOwner.email, username: newOwner.username, role: newOwner.role },
         sessionToken: sessionId
       });
     } catch (err: any) {
-      console.error('[OwnerSetupVerify Error]', err);
-      res.status(500).json({ error: err.message || 'Internal server error during setup verification.' });
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Owner setup verification failed.',
+        code: err.code
+      });
     }
   });
 
-  // 2b. Owner Setup Resend Code
+  // 2b. Owner Setup — Resend 6-Digit OTP
   router.post('/setup-resend', async (req: Request, res: Response) => {
     try {
-      const { email } = req.body;
-      const normalizedEmail = (email || '').trim().toLowerCase();
-      const tempSetup = getTempSetup();
-
-      if (!tempSetup || tempSetup.email !== normalizedEmail) {
-        res.status(400).json({
-          error: 'No active setup session found for this email. Please restart owner setup.'
+      const { email } = req.body || {};
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Email address is required.' });
+        return;
+      }
+      if (!isEmailAuthorizedOwner(emailCheck.normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
         });
         return;
       }
 
-      const emailStatus = getEmailConfigStatus();
-      if (!emailStatus.configured) {
-        res.status(503).json({
-          error: 'Email service is not configured. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in server environment secrets.',
-          code: 'EMAIL_NOT_CONFIGURED',
-          missing: emailStatus.missing,
-          hostConfigured: emailStatus.hostConfigured,
-          userConfigured: emailStatus.userConfigured,
-          passConfigured: emailStatus.passConfigured,
-          fromConfigured: emailStatus.fromConfigured
-        });
-        return;
-      }
-
-      const now = Date.now();
-      if (tempSetup.resendCount >= 5) {
-        res.status(429).json({
-          error: 'Maximum code resend limit reached for this session. Please restart owner setup.'
-        });
-        return;
-      }
-
-      if (now - tempSetup.lastResendAt < 60000) {
-        const waitSec = Math.ceil((60000 - (now - tempSetup.lastResendAt)) / 1000);
-        res.status(429).json({
-          error: `Please wait ${waitSec} seconds before requesting another verification code.`,
-          code: 'RATE_LIMITED'
-        });
-        return;
-      }
-
-      // Invalidate previous OTP and generate a new secure 6-digit OTP
-      const { code, codeHash } = generateVerificationCode();
-      const recipientDomain = normalizedEmail.includes('@') ? '@' + normalizedEmail.split('@')[1] : 'recipient';
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_GENERATED: true, length=6, domain=${recipientDomain} (OWNER_RESEND)`);
-      tempSetup.codeHash = codeHash;
-      tempSetup.expiresAt = now + 10 * 60 * 1000;
-      tempSetup.attempts = 0;
-      tempSetup.resendCount += 1;
-      tempSetup.lastResendAt = now;
-      saveTempSetup(tempSetup);
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, domain=${recipientDomain}, resendCount=${tempSetup.resendCount} (OWNER_RESEND)`);
-
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(
-          normalizedEmail,
-          code,
-          'Verify your Anivex account',
-          origin
-        );
-      } catch (mailErr: any) {
-        console.error('[OwnerSetupResend] Failed to send email:', mailErr.message);
-        const safeError = mailErr.message || 'Email delivery failed.';
-        res.status(503).json({
-          error: safeError,
-          code: 'EMAIL_SEND_FAILED'
-        });
-        return;
-      }
+      const result = await resendOwnerOtp({
+        purpose: 'owner_setup',
+        email: emailCheck.normalizedEmail,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        subject: 'Verify your Zenime Owner account setup (New Code)',
+        heading: 'Verify Zenime Owner Setup',
+        description: 'A new 6-digit verification code was requested for your Zenime Owner setup. Any previous code is now invalid.'
+      });
 
       res.json({
         success: true,
-        message: 'A fresh verification code has been sent to your email.'
+        email: result.normalizedEmail,
+        cooldownSeconds: result.cooldownSeconds,
+        message: 'A new 6-digit verification code has been sent to your Owner email.'
       });
     } catch (err: any) {
-      console.error('[OwnerSetupResend Error]', err);
-      res.status(500).json({ error: err.message || 'Failed to resend verification code.' });
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to resend Owner setup verification code.',
+        code: err.code
+      });
     }
   });
 
-  // 3. Login
-  router.post('/login', async (req: Request, res: Response) => {
+  // 3. Owner Login — Step 1: Validate Authorized Owner Email & Password -> Send 6-Digit OTP
+  const handleOwnerLoginInit = async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body || {};
 
-      if (!email || !password) {
+      if (!email || typeof email !== 'string') {
+        res.status(400).json({ error: 'Email address is required.' });
+        return;
+      }
+
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Please enter a valid email address.' });
+        return;
+      }
+
+      const normalizedEmail = emailCheck.normalizedEmail;
+      if (!isEmailAuthorizedOwner(normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
+        });
+        return;
+      }
+
+      if (!password || typeof password !== 'string') {
         res.status(400).json({ error: 'Email and password are required.' });
         return;
       }
 
       const owner = getOwnerAccount();
-      if (!owner || owner.email !== email.trim().toLowerCase()) {
+      if (!owner || owner.email !== normalizedEmail) {
         res.status(401).json({ error: 'Invalid owner credentials.' });
         return;
       }
@@ -1008,8 +892,78 @@ export function createOwnerRouter(): express.Router {
         return;
       }
 
+      const otpResult = await issueOwnerOtp({
+        purpose: 'owner_login',
+        email: normalizedEmail,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        payload: {
+          email: owner.email,
+          username: owner.username
+        },
+        subject: 'Zenime Owner Login Verification Code',
+        heading: 'Verify Zenime Owner Sign-In',
+        description: `Use this 6-digit verification code to complete sign-in to the Zenime Owner account (${owner.username}).`
+      });
+
+      res.json({
+        success: true,
+        requiresVerification: true,
+        email: owner.email,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: 'A 6-digit verification code has been sent to your authorized Owner email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        error: err.message || 'Internal server error during owner login.',
+        code: err.code
+      });
+    }
+  };
+
+  router.post('/login', handleOwnerLoginInit);
+  router.post('/login-init', handleOwnerLoginInit);
+
+  // 3b. Owner Login — Step 2: Verify 6-Digit OTP & Establish Owner Session
+  router.post('/login-verify', async (req: Request, res: Response) => {
+    try {
+      const { email, code } = req.body || {};
+
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Email address is required.' });
+        return;
+      }
+      if (!isEmailAuthorizedOwner(emailCheck.normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
+        });
+        return;
+      }
+
+      verifyAndConsumeOwnerOtp({
+        purpose: 'owner_login',
+        email: emailCheck.normalizedEmail,
+        code,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner
+      });
+
+      const owner = getOwnerAccount();
+      if (!owner || owner.email !== emailCheck.normalizedEmail || owner.role !== 'owner') {
+        res.status(401).json({ error: 'Owner account not found or unauthorized.' });
+        return;
+      }
+
       const sessionExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      const sessionId = generateSignedSessionToken(owner.id || 'usr_owner', owner.email, owner.username, 'owner', 'email', sessionExpires);
+      const sessionId = generateSignedSessionToken(
+        owner.id || 'usr_owner',
+        owner.email,
+        owner.username,
+        'owner',
+        'email',
+        sessionExpires
+      );
       const sessionData: SessionData = {
         sessionId,
         email: owner.email,
@@ -1026,13 +980,57 @@ export function createOwnerRouter(): express.Router {
 
       res.json({
         success: true,
-        message: 'Owner login successful.',
+        message: 'Owner login verified.',
         owner: { email: owner.email, username: owner.username, role: owner.role },
         sessionToken: sessionId
       });
     } catch (err: any) {
-      console.error('[OwnerLogin Error]', err);
-      res.status(500).json({ error: err.message || 'Internal server error during owner login.' });
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Owner verification failed.',
+        code: err.code
+      });
+    }
+  });
+
+  // 3c. Owner Login — Resend 6-Digit OTP
+  router.post('/login-resend', async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body || {};
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Email address is required.' });
+        return;
+      }
+      if (!isEmailAuthorizedOwner(emailCheck.normalizedEmail)) {
+        res.status(403).json({
+          error: 'Unauthorised email',
+          code: 'UNAUTHORISED_EMAIL'
+        });
+        return;
+      }
+
+      const result = await resendOwnerOtp({
+        purpose: 'owner_login',
+        email: emailCheck.normalizedEmail,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        subject: 'Zenime Owner Login Verification Code (New Code)',
+        heading: 'Verify Zenime Owner Sign-In',
+        description: 'A new 6-digit verification code was requested to complete your Zenime Owner login. Any previous code is now invalid.'
+      });
+
+      res.json({
+        success: true,
+        email: result.normalizedEmail,
+        cooldownSeconds: result.cooldownSeconds,
+        message: 'A new 6-digit verification code has been sent to your Owner email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to resend Owner verification code.',
+        code: err.code
+      });
     }
   });
 
@@ -1051,6 +1049,206 @@ export function createOwnerRouter(): express.Router {
     setSessionCookie(res, 'anivault_owner_session', '', 0, req);
 
     res.json({ success: true, message: 'Logged out successfully.' });
+  });
+
+  // 4b. Delete Owner Account (Strictly deletes/resets ONLY the Owner authentication account and invalidates all Owner sessions)
+  const pendingOwnerDeletionGrants = new Map<string, { email: string; sessionId: string; verifiedAt: number; expiresAt: number }>();
+
+  router.post('/delete-account-init', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const owner = getOwnerAccount();
+      const session = (req as any).ownerSession;
+      if (!owner || !session || !isEmailAuthorizedOwner(owner.email)) {
+        res.status(401).json({ error: 'Unauthorized: Valid Owner session required.' });
+        return;
+      }
+
+      const { password } = req.body || {};
+      if (!password || typeof password !== 'string') {
+        res.status(400).json({ error: 'Please enter your current Owner password to verify account ownership.' });
+        return;
+      }
+
+      const passwordValid = verifyPassword(password, owner.passwordHash, owner.salt);
+      if (!passwordValid) {
+        res.status(401).json({ error: 'Invalid Owner password. Please enter your current Owner password.' });
+        return;
+      }
+
+      const otpResult = await issueOwnerOtp({
+        purpose: 'owner_delete_account',
+        email: owner.email,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        payload: {
+          email: owner.email,
+          username: owner.username,
+          sessionId: session.sessionId
+        },
+        subject: 'Zenime Owner Account Deletion Verification Code',
+        heading: 'Verify Zenime Owner Account Deletion',
+        description: `Use this 6-digit verification code to confirm deletion of the Zenime Owner authentication account (${owner.username}). Catalogue, artwork, user accounts, and application data will NOT be deleted.`
+      });
+
+      res.json({
+        success: true,
+        requiresVerification: true,
+        email: owner.email,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: 'A 6-digit verification code has been sent to your authorized Owner email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to initiate Owner account deletion.',
+        code: err.code
+      });
+    }
+  });
+
+  router.post('/delete-account-resend', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const owner = getOwnerAccount();
+      if (!owner || !isEmailAuthorizedOwner(owner.email)) {
+        res.status(401).json({ error: 'Unauthorized: Valid Owner session required.' });
+        return;
+      }
+
+      const result = await resendOwnerOtp({
+        purpose: 'owner_delete_account',
+        email: owner.email,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner,
+        subject: 'Zenime Owner Account Deletion Verification Code (New Code)',
+        heading: 'Verify Zenime Owner Account Deletion',
+        description: `A new 6-digit verification code was requested to confirm deletion of the Zenime Owner authentication account (${owner.username}). Any previous code is now invalid.`
+      });
+
+      res.json({
+        success: true,
+        email: result.normalizedEmail,
+        cooldownSeconds: result.cooldownSeconds,
+        message: 'A new 6-digit verification code has been sent to your Owner email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to resend verification code.',
+        code: err.code
+      });
+    }
+  });
+
+  router.post('/delete-account-verify', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const owner = getOwnerAccount();
+      const session = (req as any).ownerSession;
+      if (!owner || !session || !isEmailAuthorizedOwner(owner.email)) {
+        res.status(401).json({ error: 'Unauthorized: Valid Owner session required.' });
+        return;
+      }
+
+      const { code } = req.body || {};
+      verifyAndConsumeOwnerOtp({
+        purpose: 'owner_delete_account',
+        email: owner.email,
+        code,
+        isAuthorizedOwnerEmail: isEmailAuthorizedOwner
+      });
+
+      pendingOwnerDeletionGrants.set(owner.email.trim().toLowerCase(), {
+        email: owner.email.trim().toLowerCase(),
+        sessionId: session.sessionId,
+        verifiedAt: Date.now(),
+        expiresAt: Date.now() + 5 * 60 * 1000
+      });
+
+      res.json({
+        success: true,
+        verified: true,
+        message: 'Verification code confirmed. Complete the final confirmation step to delete the Owner account.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Invalid verification code.',
+        code: err.code
+      });
+    }
+  });
+
+  router.post('/delete-account-confirm', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const owner = getOwnerAccount();
+      const session = (req as any).ownerSession;
+      if (!owner || !session || !isEmailAuthorizedOwner(owner.email)) {
+        res.status(401).json({ error: 'Unauthorized: Valid Owner session required.' });
+        return;
+      }
+
+      const normalizedOwnerEmail = owner.email.trim().toLowerCase();
+      const grant = pendingOwnerDeletionGrants.get(normalizedOwnerEmail);
+      if (!grant || grant.sessionId !== session.sessionId || grant.expiresAt < Date.now()) {
+        pendingOwnerDeletionGrants.delete(normalizedOwnerEmail);
+        res.status(403).json({
+          error: 'Owner deletion verification has expired or was not completed. Please verify your password and 6-digit OTP code first.'
+        });
+        return;
+      }
+
+      const { confirmText } = req.body || {};
+      const normalizedConfirm = String(confirmText || '').trim().toUpperCase();
+      if (normalizedConfirm !== 'DELETE OWNER ACCOUNT' && normalizedConfirm !== 'DELETE') {
+        res.status(400).json({
+          error: 'Please type DELETE OWNER ACCOUNT to confirm permanent deletion of the Owner account.'
+        });
+        return;
+      }
+
+      // 1. Mark Owner account as explicitly deleted so it is NOT auto-recreated from environment variables
+      fs.writeFileSync(
+        OWNER_DELETED_STATE_PATH,
+        JSON.stringify(
+          {
+            deleted: true,
+            deletedAt: new Date().toISOString()
+          },
+          null,
+          2
+        ),
+        'utf-8'
+      );
+
+      // 2. Delete ONLY the Owner account record file and clear in-memory Owner cache
+      if (fs.existsSync(OWNER_ACCOUNT_PATH)) {
+        try {
+          fs.unlinkSync(OWNER_ACCOUNT_PATH);
+        } catch {}
+      }
+      runtimeEnvOwnerCache = null;
+      pendingOwnerDeletionGrants.clear();
+
+      // 3. Invalidate ALL active Owner sessions immediately and clear session persistence
+      activeSessions.clear();
+      saveSessions();
+      setSessionCookie(res, 'anivault_owner_session', '', 0, req);
+
+      // 4. Clear any pending Owner OTP records
+      const ownerOtpPath = path.join(DATA_DIR, 'zenime-owner-otp.json');
+      if (fs.existsSync(ownerOtpPath)) {
+        try {
+          fs.writeFileSync(ownerOtpPath, '{}', 'utf-8');
+        } catch {}
+      }
+
+      res.json({
+        success: true,
+        deleted: true,
+        message: 'Owner account deleted and all active Owner sessions invalidated.'
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        error: err.message || 'Failed to delete Owner account.'
+      });
+    }
   });
 
   // 5. Get Session Status
@@ -1098,122 +1296,6 @@ export function createOwnerRouter(): express.Router {
       },
       activeSessionsCount: activeSessions.size
     });
-  });
-
-  // 7. Owner Email Change Init
-  router.post('/change-email-init', authenticateSession, requireOwner, async (req: Request, res: Response) => {
-    try {
-      const { newEmail, currentPassword } = req.body;
-      const owner = getOwnerAccount()!;
-
-      if (!newEmail || typeof newEmail !== 'string' || !newEmail.includes('@')) {
-        res.status(400).json({ error: 'Valid new email address is required.' });
-        return;
-      }
-
-      if (!currentPassword) {
-        res.status(400).json({ error: 'Current password is required to change owner email.' });
-        return;
-      }
-
-      if (!verifyPassword(currentPassword, owner.passwordHash, owner.salt)) {
-        res.status(401).json({ error: 'Incorrect current password.' });
-        return;
-      }
-
-      const normalizedNewEmail = newEmail.trim().toLowerCase();
-      if (normalizedNewEmail === owner.email) {
-        res.status(400).json({ error: 'New email must be different from current owner email.' });
-        return;
-      }
-
-      const emailStatus = getEmailConfigStatus();
-      if (!emailStatus.configured) {
-        res.status(503).json({
-          error: 'Email service is not configured correctly.',
-          code: 'EMAIL_NOT_CONFIGURED',
-          missing: emailStatus.missing
-        });
-        return;
-      }
-
-      const { code, codeHash } = generateVerificationCode();
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_GENERATED: true, length=6, recipient=${normalizedNewEmail} (OWNER_EMAIL_CHANGE)`);
-
-      const emailChange: TempEmailChange = {
-        ownerEmail: owner.email,
-        newEmail: normalizedNewEmail,
-        codeHash,
-        expiresAt: Date.now() + 10 * 60 * 1000,
-        attempts: 0
-      };
-
-      saveTempEmailChange(emailChange);
-      console.log(`[EMAIL_DIAGNOSTIC] OTP_STORAGE_SUCCESS: true, recipient=${normalizedNewEmail}, expiresAt=+10m (OWNER_EMAIL_CHANGE)`);
-
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(normalizedNewEmail, code, 'Verify your Anivex account', origin);
-      } catch (mailErr: any) {
-        console.error('[OwnerEmailChange] Failed to send email:', mailErr.message);
-        saveTempEmailChange(null);
-        res.status(503).json({
-          error: mailErr.message || 'We couldn’t send the verification email. Please try again.',
-          code: 'EMAIL_SEND_FAILED'
-        });
-        return;
-      }
-
-      res.json({
-        success: true,
-        message: 'Verification code sent to your new email address.'
-      });
-    } catch (err: any) {
-      console.error('[OwnerEmailChangeInit Error]', err);
-      res.status(500).json({ error: err.message || 'Internal server error during email change initiation.' });
-    }
-  });
-
-  // 8. Owner Email Change Verify
-  router.post('/change-email-verify', authenticateSession, requireOwner, async (req: Request, res: Response) => {
-    try {
-      const { code } = req.body;
-      const owner = getOwnerAccount()!;
-      const tempChange = getTempEmailChange();
-
-      if (!code || !tempChange || tempChange.ownerEmail !== owner.email) {
-        res.status(400).json({ error: 'No active email change request found.' });
-        return;
-      }
-
-      if (Date.now() > tempChange.expiresAt) {
-        saveTempEmailChange(null);
-        res.status(400).json({ error: 'Email change verification code has expired.' });
-        return;
-      }
-
-      const testCodeHash = crypto.createHash('sha256').update(code.trim()).digest('hex');
-      if (testCodeHash !== tempChange.codeHash) {
-        tempChange.attempts += 1;
-        saveTempEmailChange(tempChange);
-        res.status(400).json({ error: 'Invalid verification code.' });
-        return;
-      }
-
-      owner.email = tempChange.newEmail;
-      owner.updatedAt = new Date().toISOString();
-      saveOwnerAccount(owner);
-      saveTempEmailChange(null);
-
-      res.json({
-        success: true,
-        message: 'Permanent Owner email updated successfully.',
-        owner: { email: owner.email, username: owner.username, role: owner.role }
-      });
-    } catch (err: any) {
-      console.error('[OwnerEmailChangeVerify Error]', err);
-      res.status(500).json({ error: err.message || 'Internal server error during email change verification.' });
-    }
   });
 
   // 9. Switch to Owner account (strictly requires an active verified Owner session or valid Owner password)
@@ -1367,7 +1449,6 @@ export function createOwnerRouter(): express.Router {
         },
         recentActivity: auditLogs.slice(0, 20),
         systemHealth: 'Healthy',
-        emailConfigured: getEmailConfigStatus().configured,
         lastSync
       });
     } catch (err: any) {
@@ -1391,7 +1472,6 @@ export function createOwnerRouter(): express.Router {
         name: u.name,
         avatar: u.avatar,
         provider: u.provider,
-        isVerified: u.isVerified,
         role: u.role,
         createdAt: u.createdAt,
         updatedAt: u.updatedAt,
@@ -2681,15 +2761,20 @@ export function createOwnerRouter(): express.Router {
   // 8. System Environment Settings Diagnostics (Strictly no secret credentials exposed)
   router.get('/settings-diagnostics', authenticateSession, requireOwner, (req: Request, res: Response) => {
     try {
+      const emailConfig = getEmailConfigStatus();
+      const secretsDiag = checkServerSecretsDiagnostic();
+
       res.json({
         success: true,
         env: {
           NODE_ENV: process.env.NODE_ENV || 'development',
           PORT: 3000,
-          hasSessionSecret: Boolean(process.env.SESSION_SECRET),
-          hasSmtpHost: Boolean(process.env.SMTP_HOST),
-          hasSmtpUser: Boolean(process.env.SMTP_USER),
-          hasSmtpPass: Boolean(process.env.SMTP_PASS)
+          hasSessionSecret: Boolean(process.env.SESSION_SECRET)
+        },
+        emailService: {
+          configured: emailConfig.configured,
+          missing: emailConfig.missing,
+          secrets: secretsDiag
         },
         security: {
           rateLimitStatus: 'Enabled (100 requests per 15 mins)',
@@ -2831,10 +2916,10 @@ export function createOwnerRouter(): express.Router {
         `attachment; filename="${pkg.filename}"; filename*=UTF-8''${encodeURIComponent(pkg.filename)}`
       );
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Anivex-Source-Filename', pkg.filename);
-      res.setHeader('X-Anivex-Source-Generated-At', pkg.generatedAt);
-      res.setHeader('X-Anivex-Source-Files-Count', String(pkg.totalFiles));
-      res.setHeader('X-Anivex-Source-SHA256', pkg.sha256);
+      res.setHeader('X-Zenime-Source-Filename', pkg.filename);
+      res.setHeader('X-Zenime-Source-Generated-At', pkg.generatedAt);
+      res.setHeader('X-Zenime-Source-Files-Count', String(pkg.totalFiles));
+      res.setHeader('X-Zenime-Source-SHA256', pkg.sha256);
 
       res.status(200).end(pkg.buffer);
     } catch (err: any) {
@@ -2861,6 +2946,741 @@ export function createOwnerRouter(): express.Router {
   router.get('/source-package/download/t/:ownerToken', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
   router.get('/source-package/download/t/:ownerToken/:requestedFilename', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
   router.get('/source-package/download/:requestedFilename', authenticateSession, requireOwner, handleOwnerSourcePackageDownload);
+
+  // ==========================================
+  // ISOLATED ARTWORK & METADATA SOURCES DIAGNOSTICS (Owner-only)
+  // ==========================================
+  function getSourcePurposeLabel(id: string): string {
+    switch (id) {
+      case 'anilist':
+        return 'Artwork / Metadata / Verification';
+      case 'jikan':
+        return 'Metadata / Verification';
+      case 'anidb':
+        return 'Metadata / Verification';
+      case 'tmdb':
+        return 'Artwork / Metadata';
+      case 'tvmaze':
+        return 'Artwork / Metadata';
+      case 'thetvdb':
+        return 'Artwork / Metadata';
+      case 'watchordr':
+        return 'Metadata / Verification';
+      case 'theanimeorder':
+        return 'Metadata / Verification';
+      default:
+        return 'Artwork / Metadata';
+    }
+  }
+
+  function mapRawStatusToDisplay(enabled: boolean, rawStatus?: string): 'Operational' | 'Failed' | 'Disabled' {
+    if (!enabled || rawStatus === 'disabled') {
+      return 'Disabled';
+    }
+    if (rawStatus === 'operational') {
+      return 'Operational';
+    }
+    return 'Failed';
+  }
+
+  function buildUnifiedSourcesRegistry() {
+    const artworkSources = [...getArtworkSourcesConfig()].sort((a, b) => a.priority - b.priority);
+    const watchOrderSources = [...getWatchOrderSourcesConfig()].sort((a, b) => a.priority - b.priority);
+    const tmdbConfigured = hasConfiguredTmdbApiKey();
+
+    const unified = [
+      ...artworkSources.map(s => {
+        const canToggle = s.id !== 'jikan' && (s.id !== 'tmdb' || tmdbConfigured);
+        const displayStatus = mapRawStatusToDisplay(s.enabled, s.status);
+        return {
+          id: s.id,
+          name: s.name,
+          group: 'artwork' as const,
+          purpose: getSourcePurposeLabel(s.id),
+          priority: s.priority,
+          enabled: Boolean(s.enabled),
+          canToggle,
+          toggleReason:
+            s.id === 'jikan'
+              ? 'Permanently disabled per artwork specification'
+              : s.id === 'tmdb' && !tmdbConfigured
+                ? 'Optional source (TMDB_API_KEY not configured)'
+                : null,
+          rawStatus: s.status,
+          status: displayStatus,
+          lastTested: s.lastChecked || null,
+          responseTimeMs: typeof s.lastLatencyMs === 'number' ? s.lastLatencyMs : null,
+          lastMessage: s.lastMessage || null,
+          lastError: s.lastError || null,
+          description: s.description
+        };
+      }),
+      ...watchOrderSources.map(s => {
+        const displayStatus = mapRawStatusToDisplay(s.enabled, s.status);
+        return {
+          id: s.id,
+          name: s.name,
+          group: 'watch_order' as const,
+          purpose: getSourcePurposeLabel(s.id),
+          priority: s.priority,
+          enabled: Boolean(s.enabled),
+          canToggle: true,
+          toggleReason: null,
+          rawStatus: s.status,
+          status: displayStatus,
+          lastTested: s.lastChecked || null,
+          responseTimeMs: typeof s.lastLatencyMs === 'number' ? s.lastLatencyMs : null,
+          lastMessage: s.lastMessage || null,
+          lastError: s.lastError || null,
+          description: s.description
+        };
+      })
+    ];
+
+    const passed = unified.filter(s => s.status === 'Operational').length;
+    const failed = unified.filter(s => s.status === 'Failed').length;
+    const disabled = unified.filter(s => s.status === 'Disabled').length;
+    const totalTested = passed + failed;
+
+    return {
+      sources: unified,
+      summary: {
+        passed,
+        failed,
+        disabled,
+        totalTested,
+        totalConfigured: unified.length
+      }
+    };
+  }
+
+  async function runSingleUnifiedSourceTest(sourceId: string) {
+    if (sourceId === 'watchordr' || sourceId === 'theanimeorder') {
+      return await testWatchOrderSourceConnectivity(sourceId);
+    }
+    return await testSourceConnectivity(sourceId);
+  }
+
+  router.get('/sources-registry', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const payload = buildUnifiedSourcesRegistry();
+      res.json({ success: true, ...payload });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load configured sources registry.' });
+    }
+  });
+
+  router.post('/sources-registry/:id/test', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await runSingleUnifiedSourceTest(id);
+      const payload = buildUnifiedSourcesRegistry();
+      res.json({
+        success: true,
+        testResult: result,
+        ...payload
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to test source.' });
+    }
+  });
+
+  router.post('/sources-registry/test-all', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const initial = buildUnifiedSourcesRegistry();
+      const results: Record<string, any> = {};
+      for (const src of initial.sources) {
+        results[src.id] = await runSingleUnifiedSourceTest(src.id);
+      }
+      const payload = buildUnifiedSourcesRegistry();
+      res.json({
+        success: true,
+        results,
+        ...payload
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to test all configured sources.' });
+    }
+  });
+
+  router.post('/sources-registry/retry-failed', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const initial = buildUnifiedSourcesRegistry();
+      const failedSources = initial.sources.filter(s => s.status === 'Failed' && s.enabled);
+      const results: Record<string, any> = {};
+      for (const src of failedSources) {
+        results[src.id] = await runSingleUnifiedSourceTest(src.id);
+      }
+      const payload = buildUnifiedSourcesRegistry();
+      res.json({
+        success: true,
+        retriedCount: failedSources.length,
+        results,
+        ...payload
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to retry failed sources.' });
+    }
+  });
+
+  router.post('/sources-registry/:id/toggle', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { enabled } = req.body || {};
+      if (typeof enabled !== 'boolean') {
+        res.status(400).json({ error: 'enabled boolean is required.' });
+        return;
+      }
+
+      if (id === 'jikan') {
+        res.status(400).json({ error: 'Jikan API is permanently disabled per artwork specification.' });
+        return;
+      }
+
+      if (id === 'tmdb' && !hasConfiguredTmdbApiKey()) {
+        res.status(400).json({ error: 'TMDB requires TMDB_API_KEY to be configured before enabling.' });
+        return;
+      }
+
+      if (id === 'watchordr' || id === 'theanimeorder') {
+        const woSources = getWatchOrderSourcesConfig();
+        const idx = woSources.findIndex(s => s.id === id);
+        if (idx === -1) {
+          res.status(404).json({ error: `Unknown source: ${id}` });
+          return;
+        }
+        woSources[idx].enabled = enabled;
+        woSources[idx].status = enabled ? 'operational' : 'disabled';
+        saveWatchOrderSourcesConfig(woSources);
+      } else {
+        const artSources = getArtworkSourcesConfig();
+        const idx = artSources.findIndex(s => s.id === id);
+        if (idx === -1) {
+          res.status(404).json({ error: `Unknown source: ${id}` });
+          return;
+        }
+        artSources[idx].enabled = enabled;
+        artSources[idx].status = enabled ? 'operational' : 'disabled';
+        saveArtworkSourcesConfig(artSources);
+      }
+
+      const payload = buildUnifiedSourcesRegistry();
+      res.json({
+        success: true,
+        ...payload
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to update source state.' });
+    }
+  });
+
+  // ==========================================
+  // OWNER-ONLY INFORMATION MANAGER ENDPOINTS
+  // ==========================================
+  router.get('/info-manager/status', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        state,
+        stats: state.globalStats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load Information Manager status.' });
+    }
+  });
+
+  router.get('/info-manager/anime', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const {
+        filter = 'all',
+        search = '',
+        page = '1',
+        limit = '30'
+      } = req.query as Record<string, string>;
+
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 30));
+      const q = (search || '').trim().toLowerCase();
+
+      const catalogue = globalDataStore.getAllCatalogueAnime();
+      const duplicateMap = infoManager.buildDuplicateIndex(catalogue);
+      const records = infoManager.getAllRecords();
+
+      let items = catalogue.map((anime: any) => {
+        const rec = records[anime.id] || null;
+        const dupIds = duplicateMap.get(anime.id) || [];
+        const seasonsCount = anime.totalSeasons ?? anime.seasonsCount ?? (Array.isArray(anime.seasons) ? anime.seasons.length : 0);
+        const seasonEpSum = Array.isArray(anime.seasons)
+          ? anime.seasons.reduce((acc: number, s: any) => acc + (s.episodeCount || (Array.isArray(s.episodes) ? s.episodes.length : 0)), 0)
+          : 0;
+
+        return {
+          ...anime,
+          infoRecord: rec,
+          duplicateIds: dupIds,
+          computedSeasonsCount: seasonsCount,
+          computedSeasonEpisodesSum: seasonEpSum
+        };
+      });
+
+      if (q) {
+        items = items.filter((item: any) => {
+          const titleMatch = (item.title || '').toLowerCase().includes(q);
+          const altMatch = (item.alternateTitle || '').toLowerCase().includes(q);
+          const jpMatch = (item.japaneseTitle || '').toLowerCase().includes(q);
+          const idMatch = (item.id || '').toLowerCase().includes(q);
+          const genreMatch = Array.isArray(item.genres) && item.genres.some((g: string) => g.toLowerCase().includes(q));
+          const yearMatch = String(item.releaseYear || '').includes(q);
+          const typeMatch = (item.type || '').toLowerCase().includes(q);
+          return titleMatch || altMatch || jpMatch || idMatch || genreMatch || yearMatch || typeMatch;
+        });
+      }
+
+      if (filter !== 'all') {
+        items = items.filter((item: any) => {
+          const rec = item.infoRecord;
+          if (filter === 'duplicates') {
+            return item.duplicateIds.length > 0 || rec?.status === 'duplicate';
+          }
+          if (filter === 'suspected_fake') {
+            return rec?.status === 'suspected_fake' || rec?.checkedFields?.suspectedFake === 'mismatch';
+          }
+          if (filter === 'conflict') {
+            return rec?.status === 'conflict' || rec?.checkedFields?.conflictingInformation === 'mismatch';
+          }
+          if (filter === 'needs_review') {
+            return (
+              rec?.status === 'needs_review' ||
+              rec?.status === 'conflict' ||
+              rec?.status === 'duplicate' ||
+              rec?.status === 'suspected_fake' ||
+              (rec?.discrepancies?.length || 0) > 0
+            );
+          }
+          if (filter === 'missing_info') {
+            return (
+              rec?.status === 'missing_info' ||
+              !item.synopsis ||
+              item.synopsis.trim().length < 30 ||
+              !Array.isArray(item.genres) ||
+              item.genres.length === 0 ||
+              !item.alternateTitle
+            );
+          }
+          if (filter === 'episode_mismatch') {
+            return (
+              !item.totalEpisodes ||
+              item.totalEpisodes <= 0 ||
+              (item.computedSeasonEpisodesSum > 0 && item.totalEpisodes !== item.computedSeasonEpisodesSum) ||
+              rec?.checkedFields?.totalEpisodes !== 'ok' ||
+              rec?.checkedFields?.seasonEpisodes !== 'ok' ||
+              rec?.checkedFields?.seasonsCount !== 'ok'
+            );
+          }
+          if (filter === 'verified') {
+            return rec?.status === 'verified' || rec?.status === 'correct' || rec?.status === 'auto_fixed';
+          }
+          if (filter === 'auto_fixed') {
+            return rec?.status === 'auto_fixed';
+          }
+          if (filter === 'unverified') {
+            return !rec || rec.status === 'unverified';
+          }
+          return true;
+        });
+      }
+
+      const total = items.length;
+      const totalPages = Math.max(1, Math.ceil(total / limitNum));
+      const offset = (pageNum - 1) * limitNum;
+      const paginated = items.slice(offset, offset + limitNum);
+
+      res.json({
+        success: true,
+        anime: paginated,
+        total,
+        page: pageNum,
+        totalPages,
+        limit: limitNum,
+        stats: infoManager.computeGlobalStats()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to list anime for Information Manager.' });
+    }
+  });
+
+  router.get('/info-manager/history', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const history = infoManager.getHistory();
+      res.json({
+        success: true,
+        history,
+        total: history.length
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load Information Manager history.' });
+    }
+  });
+
+  router.post('/info-manager/inspect-all', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.inspectAllCatalogue(email);
+      res.json({
+        success: true,
+        message: `Audited ${result.inspectedCount} anime entries across all 12 information categories.`,
+        stats: result.stats,
+        state: infoManager.getJobState()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to inspect catalogue information.' });
+    }
+  });
+
+  router.post('/info-manager/start', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const mode =
+        req.body?.mode === 'unverified'
+          ? 'unverified'
+          : req.body?.mode === 'fix_missing'
+            ? 'fix_missing'
+            : 'all';
+      const limit = req.body?.limit ? parseInt(String(req.body.limit), 10) : undefined;
+      const state = infoManager.startScan(email, mode, limit);
+      res.json({
+        success: true,
+        state,
+        stats: state.globalStats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to start Information Manager scan.' });
+    }
+  });
+
+  router.post('/info-manager/pause', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    const state = infoManager.pauseScan();
+    res.json({ success: true, state, stats: state.globalStats });
+  });
+
+  router.post('/info-manager/resume', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    const state = infoManager.resumeScan();
+    res.json({ success: true, state, stats: state.globalStats });
+  });
+
+  router.post('/info-manager/stop', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    const state = infoManager.stopScan();
+    res.json({ success: true, state, stats: state.globalStats });
+  });
+
+  router.post('/info-manager/reset', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    const state = infoManager.resetScan();
+    res.json({ success: true, state, stats: state.globalStats });
+  });
+
+  router.post('/info-manager/verify-single/:id', authenticateSession, requireOwner, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const autoFix = Boolean(req.body?.autoFix);
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const record = await infoManager.verifySingleAnime(id, autoFix, email);
+      if (!record) {
+        res.status(404).json({ error: `Anime '${id}' not found.` });
+        return;
+      }
+      const updatedAnime = globalDataStore.getCatalogueAnime(id);
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        record,
+        anime: updatedAnime,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to verify anime information.' });
+    }
+  });
+
+  router.post('/info-manager/anime/:id/update', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { updates, reason, source } = req.body || {};
+      if (!updates || typeof updates !== 'object') {
+        res.status(400).json({ error: 'updates object is required.' });
+        return;
+      }
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.applyMetadataUpdate(
+        id,
+        updates,
+        email,
+        reason || 'Manual correction via Information Manager',
+        source || 'Owner Manual Correction',
+        'verified'
+      );
+      if (!result.success) {
+        res.status(404).json({ error: result.error || 'Failed to update anime information.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        message: `Updated and verified "${result.anime?.title}".`,
+        anime: result.anime,
+        record: result.record,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to save information update.' });
+    }
+  });
+
+  router.post('/info-manager/anime/:id/approve', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.applyMetadataUpdate(
+        id,
+        {},
+        email,
+        'Owner approved current anime information as Verified',
+        'Owner Approval',
+        'verified'
+      );
+      if (!result.success) {
+        res.status(404).json({ error: result.error || 'Anime not found.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        message: `"${result.anime?.title}" marked as Verified.`,
+        anime: result.anime,
+        record: result.record,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to approve anime information.' });
+    }
+  });
+
+  router.post('/info-manager/history/:historyId/revert', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { historyId } = req.params;
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.revertHistoryEntry(historyId, email);
+      if (!result.success) {
+        res.status(404).json({ error: result.error || 'Failed to revert history entry.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        message: `Reverted metadata for "${result.anime?.title}".`,
+        anime: result.anime,
+        history: infoManager.getHistory(),
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to revert change.' });
+    }
+  });
+
+  router.post('/info-manager/anime/:id/delete-duplicate', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.deleteDuplicateEntry(id, email);
+      if (!result.success) {
+        res.status(404).json({ error: result.error || 'Failed to delete duplicate entry.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        message: `Removed duplicate anime entry "${result.deletedTitle}".`,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to delete duplicate entry.' });
+    }
+  });
+
+  router.post('/info-manager/anime/:id/resolve-fake', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const action = req.body?.action === 'confirm_delete' ? 'confirm_delete' : 'dismiss';
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.resolveSuspectedFake(id, action, email);
+      if (!result.success) {
+        res.status(400).json({ error: result.error || 'Failed to resolve suspected fake entry.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        deleted: result.deleted,
+        anime: result.anime,
+        record: result.record,
+        message: result.message,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to resolve suspected fake entry.' });
+    }
+  });
+
+  router.post('/info-manager/retry-all-review', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.retryAllNeedsReview(email);
+      res.json({
+        success: true,
+        queuedCount: result.queuedCount,
+        message:
+          result.queuedCount > 0
+            ? `Queued ${result.queuedCount} Needs Review items onto the shared worker pool.`
+            : 'No Needs Review items required queuing.',
+        state: result.state,
+        stats: result.state.globalStats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to retry Needs Review items.' });
+    }
+  });
+
+  router.post('/info-manager/fix-all-high-confidence', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.fixAllHighConfidence(email);
+      res.json({
+        success: true,
+        fixedCount: result.fixedCount,
+        skippedHumanReviewCount: result.skippedHumanReviewCount,
+        message: `Auto-resolved ${result.fixedCount} high-confidence items (${result.skippedHumanReviewCount} items requiring human judgment kept for individual review).`,
+        state: result.state,
+        stats: result.state.globalStats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to execute Fix All High-Confidence.' });
+    }
+  });
+
+  router.post('/info-manager/anime/:id/resolve-review', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const rawAction = req.body?.action;
+      const action: 'approve_suggestions' | 'mark_verified' | 'reject_suggestions' | 'skip_ignore' =
+        rawAction === 'approve_suggestions' ||
+        rawAction === 'reject_suggestions' ||
+        rawAction === 'skip_ignore'
+          ? rawAction
+          : 'mark_verified';
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const result = infoManager.resolveReviewItem(id, action, email);
+      if (!result.success) {
+        res.status(400).json({ error: result.error || 'Failed to resolve review item.' });
+        return;
+      }
+      const state = infoManager.getJobState();
+      res.json({
+        success: true,
+        anime: result.anime,
+        record: result.record,
+        message: result.message,
+        stats: state.globalStats,
+        state
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to resolve review item.' });
+    }
+  });
+
+  // ==========================================
+  // CENTRAL SHARED WORKERS ADMINISTRATION ENDPOINTS (Owner-only)
+  // ==========================================
+  router.get('/workers/status', authenticateSession, requireOwner, (_req: Request, res: Response) => {
+    try {
+      const sharedSnapshot = globalWorkerJobEngine.getSnapshot();
+      const artworkSnapshot = globalWorkerJobEngine.getSnapshot('ARTWORK_VERIFICATION');
+      const infoSnapshot = globalWorkerJobEngine.getSnapshot('INFORMATION_VERIFICATION');
+      const artworkStats = computeGlobalCatalogueStats();
+      const infoStats = infoManager.computeGlobalStats();
+
+      res.json({
+        success: true,
+        sharedSnapshot,
+        artworkSnapshot,
+        infoSnapshot,
+        artworkStats,
+        infoStats,
+        awaitingReviewTotal: (artworkStats.needsReview || 0) + (infoStats.needsReview || 0),
+        healthMetrics: {
+          heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+          leaseDurationMs: LEASE_DURATION_MS,
+          stalledDetectionEnabled: true,
+          autoRecoveryEnabled: true,
+          duplicateJobProtection: 'Deterministic Task IDs + Per-Anime / Per-Season Atomic Leases',
+          backoffStrategy: 'Exponential Backoff with Jitter (2s → 4s → 8s → 16s)',
+          gracefulShutdownSupported: true,
+          queuePersistenceEnabled: true
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to load shared worker pool telemetry.' });
+    }
+  });
+
+  router.post('/workers/control', authenticateSession, requireOwner, (req: Request, res: Response) => {
+    try {
+      const { action, jobSystem } = req.body || {};
+      const email = (req as any).ownerSession?.email || 'Owner';
+      const sysFilter =
+        jobSystem === 'ARTWORK_VERIFICATION' || jobSystem === 'INFORMATION_VERIFICATION'
+          ? jobSystem
+          : undefined;
+
+      if (action === 'pause') {
+        globalWorkerJobEngine.pauseJob();
+      } else if (action === 'resume') {
+        globalWorkerJobEngine.resumeJob();
+      } else if (action === 'stop') {
+        globalWorkerJobEngine.stopJob(sysFilter);
+      } else if (action === 'reset') {
+        globalWorkerJobEngine.resetJob(sysFilter);
+      } else if (action === 'retry_failed') {
+        globalWorkerJobEngine.retryFailedTasks();
+      } else {
+        res.status(400).json({ error: 'Invalid worker control action.' });
+        return;
+      }
+
+      logAdminAction(
+        `Shared Worker Pool Control: ${String(action).toUpperCase()}${sysFilter ? ` (${sysFilter})` : ''}`,
+        email,
+        'success',
+        undefined,
+        `Executed ${action} on shared worker infrastructure.`
+      );
+
+      res.json({
+        success: true,
+        message: `Worker pool action "${action}" executed.`,
+        sharedSnapshot: globalWorkerJobEngine.getSnapshot(),
+        artworkSnapshot: globalWorkerJobEngine.getSnapshot('ARTWORK_VERIFICATION'),
+        infoSnapshot: globalWorkerJobEngine.getSnapshot('INFORMATION_VERIFICATION')
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to execute worker control action.' });
+    }
+  });
 
   return router;
 }

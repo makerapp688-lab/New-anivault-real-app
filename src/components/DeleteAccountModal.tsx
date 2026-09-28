@@ -8,11 +8,12 @@ import {
   CheckCircle2,
   ArrowRight,
   ShieldAlert,
-  RotateCcw
+  RotateCcw,
+  Lock
 } from 'lucide-react';
 import { UserAccount } from '../types.ts';
-import { OtpInput } from './OtpInput.tsx';
 import { removeSavedAccount, logoutToGuest, removeSessionTokenForAccount } from '../utils/userStorage.ts';
+import { OtpInput } from './OtpInput.tsx';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -30,47 +31,58 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   onAccountDeleted
 }) => {
   const [step, setStep] = useState<Step>('warning');
+  const [ownerPassword, setOwnerPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [deletionToken, setDeletionToken] = useState<string | null>(null);
-  const [maskedEmail, setMaskedEmail] = useState<string>('');
+  const [confirmInput, setConfirmInput] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   const isOwner = account.role === 'owner' || account.id === 'usr_owner';
 
   useEffect(() => {
     if (isOpen) {
       setStep('warning');
+      setOwnerPassword('');
       setVerificationCode('');
-      setDeletionToken(null);
+      setConfirmInput('');
+      setResendCooldown(0);
       setError(null);
       setLoading(false);
-      setResendCooldown(0);
     }
   }, [isOpen, account.id]);
 
   useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setInterval(() => {
-        setResendCooldown(c => (c > 0 ? c - 1 : 0));
-      }, 1000);
-      return () => clearInterval(timer);
-    }
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(c => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(timer);
   }, [resendCooldown]);
 
   if (!isOpen) return null;
 
-  const maskEmailAddress = (emailStr?: string) => {
-    if (!emailStr || !emailStr.includes('@')) return 'your email';
-    const [name, domain] = emailStr.split('@');
-    if (name.length <= 2) return `${name[0]}***@${domain}`;
-    return `${name[0]}***${name[name.length - 1]}@${domain}`;
+  const getAuthHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    if (isOwner) {
+      const ownerToken = localStorage.getItem('anivault_owner_session_token');
+      if (ownerToken) {
+        headers['Authorization'] = `Bearer ${ownerToken}`;
+        headers['x-anivault-owner-session'] = ownerToken;
+      }
+    } else {
+      const userToken = localStorage.getItem('anivault_user_session_token');
+      if (userToken) {
+        headers['Authorization'] = `Bearer ${userToken}`;
+        headers['x-anivault-user-session'] = userToken;
+      }
+    }
+    return headers;
   };
 
   const handleRequestOtp = async () => {
-    if (isOwner) {
-      setError('The permanent Owner account cannot be deleted from account settings.');
+    if (isOwner && !ownerPassword.trim()) {
+      setError('Please enter your current Owner password to verify ownership.');
       return;
     }
 
@@ -78,75 +90,26 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
     setError(null);
 
     try {
-      const userToken = localStorage.getItem('anivault_user_session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (userToken) {
-        headers['Authorization'] = `Bearer ${userToken}`;
-        headers['x-anivault-user-session'] = userToken;
-      }
+      const endpoint = isOwner ? '/api/owner/delete-account-init' : '/api/auth/delete-account-init';
+      const bodyPayload = isOwner
+        ? { password: ownerPassword }
+        : { accountId: account.id };
 
-      const res = await fetch('/api/auth/delete-account-init', {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers,
+        headers: getAuthHeaders(),
         credentials: 'include',
-        body: JSON.stringify({ accountId: account.id, email: account.email })
+        body: JSON.stringify(bodyPayload)
       });
-
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send deletion verification code.');
+        throw new Error(data.error || 'Failed to send verification code.');
       }
-
-      setMaskedEmail(data.maskedEmail || maskEmailAddress(account.email));
+      setVerificationCode('');
+      setResendCooldown(data.cooldownSeconds || (isOwner ? 30 : 20));
       setStep('otp');
-      setResendCooldown(60);
     } catch (err: any) {
-      setError(err.message || 'Could not initiate account deletion.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      setError('Please enter the complete 6-digit verification code.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const userToken = localStorage.getItem('anivault_user_session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (userToken) {
-        headers['Authorization'] = `Bearer ${userToken}`;
-        headers['x-anivault-user-session'] = userToken;
-      }
-
-      const res = await fetch('/api/auth/delete-account-verify', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({
-          accountId: account.id,
-          code: verificationCode.trim()
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Invalid verification code.');
-      }
-
-      setDeletionToken(data.deletionToken);
-      setStep('final_confirm');
-    } catch (err: any) {
-      setError(err.message || 'Verification failed. Please check the code.');
+      setError(err.message || 'Failed to send verification code.');
     } finally {
       setLoading(false);
     }
@@ -154,45 +117,69 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
   const handleResendOtp = async () => {
     if (resendCooldown > 0 || loading) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      const userToken = localStorage.getItem('anivault_user_session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (userToken) {
-        headers['Authorization'] = `Bearer ${userToken}`;
-        headers['x-anivault-user-session'] = userToken;
-      }
+      const endpoint = isOwner ? '/api/owner/delete-account-resend' : '/api/auth/delete-account-resend';
+      const bodyPayload = isOwner ? {} : { accountId: account.id };
 
-      const res = await fetch('/api/auth/delete-account-resend', {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers,
+        headers: getAuthHeaders(),
         credentials: 'include',
-        body: JSON.stringify({ accountId: account.id })
+        body: JSON.stringify(bodyPayload)
       });
-
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Failed to resend verification code.');
       }
-
       setVerificationCode('');
-      setResendCooldown(60);
+      setResendCooldown(data.cooldownSeconds || (isOwner ? 30 : 20));
     } catch (err: any) {
-      setError(err.message || 'Failed to resend code.');
+      setError(err.message || 'Failed to resend verification code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const cleanCode = verificationCode.trim();
+    if (!/^\d{6}$/.test(cleanCode)) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      const endpoint = isOwner ? '/api/owner/delete-account-verify' : '/api/auth/delete-account-verify';
+      const bodyPayload = isOwner
+        ? { code: cleanCode }
+        : { accountId: account.id, code: cleanCode };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify(bodyPayload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid verification code.');
+      }
+      setConfirmInput('');
+      setStep('final_confirm');
+    } catch (err: any) {
+      setError(err.message || 'Invalid verification code.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleConfirmDeletion = async () => {
-    if (!deletionToken) {
-      setError('Deletion authorization expired. Please verify again.');
-      setStep('otp');
+    if (isOwner && confirmInput.trim().toUpperCase() !== 'DELETE OWNER ACCOUNT') {
+      setError('Please type DELETE OWNER ACCOUNT to confirm deletion.');
       return;
     }
 
@@ -201,23 +188,16 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
     setStep('deleting');
 
     try {
-      const userToken = localStorage.getItem('anivault_user_session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (userToken) {
-        headers['Authorization'] = `Bearer ${userToken}`;
-        headers['x-anivault-user-session'] = userToken;
-      }
+      const endpoint = isOwner ? '/api/owner/delete-account-confirm' : '/api/auth/delete-account-confirm';
+      const bodyPayload = isOwner
+        ? { confirmText: confirmInput.trim() }
+        : { accountId: account.id };
 
-      const res = await fetch('/api/auth/delete-account-confirm', {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers,
+        headers: getAuthHeaders(),
         credentials: 'include',
-        body: JSON.stringify({
-          accountId: account.id,
-          deletionToken
-        })
+        body: JSON.stringify(bodyPayload)
       });
 
       const data = await res.json();
@@ -225,15 +205,22 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         throw new Error(data.error || 'Failed to complete account deletion.');
       }
 
-      // 1. Clean up local client-side storage for this account
-      try {
-        localStorage.removeItem(`anivault_user_data_${account.id}`);
-        localStorage.removeItem(`anivault_avatar_${account.id}`);
-      } catch {}
-
-      removeSessionTokenForAccount(account.id);
-      removeSavedAccount(account.id);
-      logoutToGuest();
+      if (isOwner) {
+        try {
+          localStorage.removeItem('anivault_owner_session_token');
+        } catch {}
+        removeSessionTokenForAccount('usr_owner');
+        removeSavedAccount('usr_owner');
+        logoutToGuest();
+      } else {
+        try {
+          localStorage.removeItem(`anivault_user_data_${account.id}`);
+          localStorage.removeItem(`anivault_avatar_${account.id}`);
+        } catch {}
+        removeSessionTokenForAccount(account.id);
+        removeSavedAccount(account.id);
+        logoutToGuest();
+      }
 
       setStep('success');
 
@@ -271,10 +258,12 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             </div>
             <div>
               <h3 id="delete-account-modal-title" className="text-base font-bold text-white tracking-tight">
-                Delete Account
+                {isOwner ? 'Delete Owner Account' : 'Delete Zenime Account'}
               </h3>
               <p className="text-xs text-slate-400">
-                Permanent deletion of account and saved data
+                {isOwner
+                  ? 'Deletes ONLY the Owner authentication account'
+                  : 'Permanent deletion of account and saved data'}
               </p>
             </div>
           </div>
@@ -283,7 +272,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -299,28 +288,77 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           </div>
         )}
 
-        {/* STEP 1: WARNING & CONFIRMATION */}
+        {/* STEP 1: WARNING & OTP DISPATCH */}
         {step === 'warning' && (
           <div className="space-y-4">
             {isOwner ? (
-              <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 space-y-2">
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
-                  <ShieldAlert className="w-4 h-4 text-amber-400" />
-                  <span>Owner Account Protected</span>
+              <>
+                <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-900/60 space-y-2.5">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
+                    <ShieldAlert className="w-4 h-4 text-rose-400" />
+                    <span>Owner Account Deletion Scope</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    This action resets and deletes <strong>ONLY</strong> the Owner authentication account (<span className="font-mono text-white">{account.username}</span>) and invalidates all active Owner sessions.
+                  </p>
+                  <div className="text-[11px] text-emerald-300/90 bg-emerald-950/30 border border-emerald-800/40 rounded-xl p-2.5 space-y-1">
+                    <div className="font-bold text-emerald-300">Protected Application Data (NOT Deleted):</div>
+                    <div>• Anime catalogue, verified artwork &amp; watch orders</div>
+                    <div>• User accounts, user favorites &amp; watch history</div>
+                    <div>• Worker data, source files &amp; website state</div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  The permanent Owner account cannot be deleted from account settings. The Owner role is fixed and required to maintain Anivex system governance.
-                </p>
-                <div className="pt-2">
+
+                <div className="space-y-2">
+                  <label htmlFor="owner-delete-password-input" className="block text-xs font-bold text-slate-300">
+                    Current Owner Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      id="owner-delete-password-input"
+                      type="password"
+                      value={ownerPassword}
+                      onChange={e => {
+                        setOwnerPassword(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder="Enter current Owner password"
+                      disabled={loading}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    After password verification, a 6-digit OTP code will be sent to <span className="font-mono text-slate-200">{account.email}</span>.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 pt-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 transition-all cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all cursor-pointer"
                   >
-                    Close
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-owner-delete-send-otp"
+                    onClick={handleRequestOtp}
+                    disabled={loading || !ownerPassword.trim()}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Verify &amp; Send OTP</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
                   </button>
                 </div>
-              </div>
+              </>
             ) : (
               <>
                 <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-900/60 space-y-2.5">
@@ -340,9 +378,9 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-400 space-y-1">
-                  <div className="text-slate-300 font-semibold">Security Verification Required:</div>
+                  <div className="text-slate-300 font-semibold">Email OTP Verification Required:</div>
                   <p>
-                    A 6-digit verification code will be dispatched to your account's email ({maskEmailAddress(account.email)}) before deletion can occur.
+                    A 6-digit verification code will be sent to <span className="font-mono text-slate-200">{account.email}</span> to confirm account ownership before deletion.
                   </p>
                 </div>
 
@@ -364,7 +402,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <span>Continue</span>
+                        <span>Send Verification Code</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -375,7 +413,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           </div>
         )}
 
-        {/* STEP 2: OTP VERIFICATION */}
+        {/* STEP 2: 6-DIGIT OTP VERIFICATION */}
         {step === 'otp' && (
           <div className="space-y-4">
             <div className="text-center space-y-1.5">
@@ -383,10 +421,10 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                 <KeyRound className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-white">
-                Verify it's your account
+                {isOwner ? 'Verify Owner Account Deletion' : 'Verify Account Ownership'}
               </h4>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                Enter the verification code sent to <span className="font-mono text-rose-300 font-semibold">{maskedEmail}</span> to confirm that you own this account.
+                Enter the 6-digit verification code sent to <span className="font-mono text-rose-300 font-semibold">{account.email}</span>.
               </p>
             </div>
 
@@ -433,7 +471,8 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
               </button>
               <button
                 type="button"
-                disabled={loading || verificationCode.length !== 6}
+                id="btn-delete-verify-otp"
+                disabled={loading || verificationCode.trim().length !== 6}
                 onClick={handleVerifyOtp}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
               >
@@ -454,9 +493,37 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                 Final Deletion Confirmation
               </h4>
               <p className="text-xs text-rose-200/90 leading-relaxed">
-                Code verified. Are you absolutely certain you want to permanently delete <strong className="text-white font-mono">{account.username}</strong>? This action cannot be reversed.
+                {isOwner ? (
+                  <>
+                    Code verified. Confirming will delete ONLY the Owner authentication account (<strong className="text-white font-mono">{account.username}</strong>) and immediately invalidate all active Owner sessions.
+                  </>
+                ) : (
+                  <>
+                    Code verified. Are you absolutely certain you want to permanently delete <strong className="text-white font-mono">{account.username}</strong>? This action cannot be reversed.
+                  </>
+                )}
               </p>
             </div>
+
+            {isOwner && (
+              <div className="space-y-1.5">
+                <label htmlFor="owner-delete-confirm-text" className="block text-xs font-bold text-slate-300">
+                  Type <span className="font-mono text-rose-400">DELETE OWNER ACCOUNT</span> to confirm:
+                </label>
+                <input
+                  id="owner-delete-confirm-text"
+                  type="text"
+                  value={confirmInput}
+                  onChange={e => {
+                    setConfirmInput(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="DELETE OWNER ACCOUNT"
+                  disabled={loading}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+            )}
 
             <div className="flex items-center gap-2.5 pt-2">
               <button
@@ -469,11 +536,16 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
               </button>
               <button
                 type="button"
+                id="btn-confirm-final-delete"
                 onClick={handleConfirmDeletion}
-                disabled={loading}
+                disabled={loading || (isOwner && confirmInput.trim().toUpperCase() !== 'DELETE OWNER ACCOUNT')}
                 className="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white shadow-xl shadow-rose-900/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-rose-500"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Delete Account</span>}
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span>{isOwner ? 'Delete Owner Account' : 'Delete Account'}</span>
+                )}
               </button>
             </div>
           </div>
@@ -483,8 +555,14 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {step === 'deleting' && (
           <div className="py-8 text-center space-y-3">
             <Loader2 className="w-8 h-8 text-rose-500 animate-spin mx-auto" />
-            <h4 className="text-sm font-bold text-white">Permanently deleting account...</h4>
-            <p className="text-xs text-slate-400">Cleaning up saved data and revoking sessions.</p>
+            <h4 className="text-sm font-bold text-white">
+              {isOwner ? 'Deleting Owner account...' : 'Permanently deleting account...'}
+            </h4>
+            <p className="text-xs text-slate-400">
+              {isOwner
+                ? 'Removing Owner authentication record and invalidating all active Owner sessions.'
+                : 'Cleaning up saved data and revoking sessions.'}
+            </p>
           </div>
         )}
 
@@ -494,8 +572,14 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-white">Account Successfully Deleted</h4>
-            <p className="text-xs text-slate-400">You have been returned to Guest mode.</p>
+            <h4 className="text-base font-bold text-white">
+              {isOwner ? 'Owner Account Deleted' : 'Account Successfully Deleted'}
+            </h4>
+            <p className="text-xs text-slate-400">
+              {isOwner
+                ? 'All active Owner sessions have been invalidated. Catalogue and website data remain intact.'
+                : 'You have been returned to Guest mode.'}
+            </p>
           </div>
         )}
       </div>

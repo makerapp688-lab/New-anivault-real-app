@@ -40,7 +40,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             <AnivexLogo size="sm" />
             <div>
               <h2 className="text-base font-bold text-white dark:text-white light:text-slate-900 tracking-tight">
-                Anivex Production Catalogue Report
+                Zenime Production Catalogue Report
               </h2>
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">
                 Verified Data &amp; RareToon India Provider Status
@@ -126,7 +126,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 leading-relaxed">
               Provider URL: <a href={RARETOON_BASE_URL} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline font-mono inline-flex items-center gap-1">{RARETOON_BASE_URL} <ExternalLink className="w-3 h-3 inline" /></a>.
-              Anivex operates strictly as a discovery catalogue. Clicking “OPEN THIS ANIME TO WATCH” deep-links to the exact verified anime on the new RareToon India website without proxying, faking links, or routing to old websites.
+              Zenime operates strictly as a discovery catalogue. Clicking “OPEN THIS ANIME TO WATCH” deep-links to the exact verified anime on the new RareToon India website without proxying, faking links, or routing to old websites.
             </p>
           </div>
 
@@ -156,7 +156,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           <div className="p-4 bg-rose-950/30 dark:bg-rose-950/30 light:bg-rose-50 border border-rose-900/50 dark:border-rose-900/50 light:border-rose-200 rounded-xl text-xs space-y-1.5 text-slate-300 dark:text-slate-300 light:text-slate-700">
             <div className="font-semibold text-rose-400 dark:text-rose-400 light:text-rose-700">Provider &amp; Integrity Compliance</div>
             <p className="leading-relaxed text-slate-400 dark:text-slate-400 light:text-slate-600">
-              Anivex catalogues verified anime from the active RareToon India provider. All links resolve to verified pages on the new RareToon India website (<code className="text-slate-200 dark:text-slate-200 light:text-slate-800">rareanimes.mov</code>) with honest fallback to the new RareToon homepage. Zero fake anime or fabricated deep links exist in the system.
+              Zenime catalogues verified anime from the active RareToon India provider. All links resolve to verified pages on the new RareToon India website (<code className="text-slate-200 dark:text-slate-200 light:text-slate-800">rareanimes.mov</code>) with honest fallback to the new RareToon homepage. Zero fake anime or fabricated deep links exist in the system.
             </p>
           </div>
         </div>

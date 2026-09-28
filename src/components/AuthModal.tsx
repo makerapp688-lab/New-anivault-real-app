@@ -14,11 +14,12 @@ import {
   Edit2,
   Users,
   Shield,
-  KeyRound,
   Eye,
   EyeOff,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 import {
   getCurrentAccount,
@@ -45,10 +46,6 @@ interface AuthModalProps {
   initialView?: 'overview' | 'email' | 'edit_username';
 }
 
-interface ProviderStatus {
-  email: { configured: boolean; missing: string[] };
-}
-
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
@@ -66,8 +63,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Mode: 'overview' | 'email' | 'edit_username'
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [activeView, setActiveView] = useState<'overview' | 'email' | 'edit_username'>('overview');
-  
-  // Registration / verification step
   const [registerStep, setRegisterStep] = useState<'form' | 'verify'>('form');
   const [verificationCode, setVerificationCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -97,8 +92,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     watchlistCount: number;
     completedCount: number;
   } | null>(null);
-
-  const [providersStatus, setProvidersStatus] = useState<ProviderStatus | null>(null);
 
   // Live debounced username uniqueness check with database backend
   useEffect(() => {
@@ -161,20 +154,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }, [isOpen, authMode, registerStep, chosenUsername, hasEditedUsername]);
 
   useEffect(() => {
-    let timer: any;
-    if (resendCooldown > 0) {
-      timer = setTimeout(() => setResendCooldown(c => c - 1), 1000);
-    }
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(c => Math.max(0, c - 1)), 1000);
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
   useEffect(() => {
     if (isOpen) {
-      fetchAuthStatus();
       setAuthError(null);
       setAuthSuccess(null);
       setRegisterStep('form');
       setVerificationCode('');
+      setResendCooldown(0);
+      setEmailInput('');
+      setPasswordInput('');
       setShowPassword(false);
       setHasEditedUsername(false);
       const freshAcc = getCurrentAccount();
@@ -194,18 +187,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     }
   }, [isOpen, initialMode, initialView]);
-
-  const fetchAuthStatus = async () => {
-    try {
-      const res = await fetch('/api/auth/status');
-      if (res.ok) {
-        const data = await res.json();
-        setProvidersStatus(data.providers);
-      }
-    } catch (err) {
-      console.warn('Failed to fetch auth status', err);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -248,7 +229,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onAccountChanged?.();
   };
 
-  // Submit email auth: Login or Register-Init
+  // Submit email auth: Login or Register
   const handleEmailAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -257,7 +238,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const cleanEmail = emailInput.trim().toLowerCase();
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
-    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+    if (!cleanEmail) {
+      setAuthError('Please enter your email address.');
+      return;
+    }
+
+    if ((authMode === 'register' || cleanEmail.includes('@')) && !emailRegex.test(cleanEmail)) {
       setAuthError('Please enter a valid email address (e.g. user@gmail.com).');
       return;
     }
@@ -280,10 +266,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (authMode === 'register') {
-        // Step 1: Register-Init
         const res = await fetch('/api/auth/register-init', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             email: cleanEmail,
             username: cleanUsername,
@@ -293,92 +279,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || 'Email verification is temporarily unavailable. Please try again later.');
+          throw new Error(data.error || 'Registration verification could not be started.');
         }
 
-        setAuthSuccess(data.message || 'Verification code sent to your email.');
+        if (data.username && data.username !== chosenUsername) {
+          setChosenUsername(data.username);
+        }
+        setEmailInput(data.email || cleanEmail);
+        setVerificationCode('');
         setRegisterStep('verify');
-        setResendCooldown(30);
-      } else {
-        // Real Login
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: cleanEmail,
-            password: passwordInput
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Login failed. Please check your credentials.');
-        }
-
-        if (data.requiresVerification) {
-          if (data.email) {
-            setEmailInput(data.email);
-          }
-          setAuthSuccess(data.message || 'Verification code sent to your email.');
-          setRegisterStep('verify');
-          setResendCooldown(30);
-          return;
-        }
-
-        const user = data.user;
-        const acc: UserAccount = {
-          id: user.id,
-          username: user.username,
-          name: user.name || user.username,
-          email: user.email,
-          provider: user.provider,
-          createdAt: user.createdAt
-        };
-
-        setSessionAccount(acc, data.sessionToken);
-
-        if (canMigrate) {
-          setPendingAccount(acc);
-          setShowMigratePrompt(true);
-        } else {
-          onAccountChanged?.();
-          onClose();
-        }
+        setResendCooldown(data.cooldownSeconds || 20);
+        setAuthSuccess(data.message || `A 6-digit verification code has been sent to ${cleanEmail}.`);
+        return;
       }
-    } catch (err: any) {
-      setAuthError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Step 2: Register-Verify
-  const handleVerifyCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError(null);
-    setAuthSuccess(null);
-
-    if (!verificationCode || verificationCode.trim().length !== 6) {
-      setAuthError('Please enter the 6-digit verification code.');
-      return;
-    }
-
-    setLoading(true);
-    const cleanEmail = emailInput.trim().toLowerCase();
-
-    try {
-      const res = await fetch('/api/auth/register-verify', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          code: verificationCode.trim()
-        })
+        credentials: 'include',
+        body: JSON.stringify({ email: cleanEmail, password: passwordInput })
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Email verification failed.');
+        throw new Error(data.error || 'Login failed. Please check your credentials.');
       }
 
       const user = data.user;
@@ -407,27 +331,87 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // Resend code for registration
-  const handleResendRegisterCode = async () => {
-    if (resendCooldown > 0 || loading) return;
+  const handleVerifyRegistrationOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
     setAuthError(null);
-    setLoading(true);
+    setAuthSuccess(null);
 
     const cleanEmail = emailInput.trim().toLowerCase();
+    const cleanCode = verificationCode.trim();
+
+    if (!/^\d{6}$/.test(cleanCode)) {
+      setAuthError('Please enter the 6-digit verification code sent to your email.');
+      return;
+    }
+
+    setLoading(true);
     try {
+      const res = await fetch('/api/auth/register-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: cleanEmail,
+          code: cleanCode
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Verification failed. Please check the code and try again.');
+      }
+
+      const user = data.user;
+      const acc: UserAccount = {
+        id: user.id,
+        username: user.username,
+        name: user.name || user.username,
+        email: user.email,
+        provider: user.provider,
+        createdAt: user.createdAt
+      };
+
+      setSessionAccount(acc, data.sessionToken);
+
+      if (canMigrate) {
+        setPendingAccount(acc);
+        setShowMigratePrompt(true);
+      } else {
+        onAccountChanged?.();
+        onClose();
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Verification failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendRegistrationOtp = async () => {
+    if (resendCooldown > 0 || loading) return;
+    setAuthError(null);
+    setAuthSuccess(null);
+    setLoading(true);
+
+    try {
+      const cleanEmail = emailInput.trim().toLowerCase();
       const res = await fetch('/api/auth/register-resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: cleanEmail })
       });
+
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to resend code.');
+        throw new Error(data.error || 'Failed to resend verification code.');
       }
-      setAuthSuccess('New verification code sent to your email.');
-      setResendCooldown(30);
+
+      setVerificationCode('');
+      setResendCooldown(data.cooldownSeconds || 20);
+      setAuthSuccess(data.message || `A new 6-digit verification code has been sent to ${cleanEmail}.`);
     } catch (err: any) {
-      setAuthError(err.message);
+      setAuthError(err.message || 'Failed to resend verification code.');
     } finally {
       setLoading(false);
     }
@@ -474,7 +458,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="flex items-center gap-2.5">
             <AnivexLogo size="xs" />
             <h2 className="text-base font-bold text-white dark:text-white light:text-slate-900">
-              Anivex Account &amp; Profile
+              Zenime Account &amp; Profile
             </h2>
           </div>
           <button
@@ -528,7 +512,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </button>
                   </div>
                   <div className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">
-                    {isGuest ? 'Guest Session' : `${currentAccount.name} (${currentAccount.email || 'Verified Account'})`}
+                    {isGuest ? 'Guest Session' : `${currentAccount.name} (${currentAccount.email || 'Account'})`}
                   </div>
                 </div>
               </div>
@@ -546,7 +530,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   ? 'Owner'
                   : isGuest
                   ? 'Guest'
-                  : 'Verified'}
+                  : 'Account'}
               </span>
             </div>
 
@@ -617,7 +601,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClick={() => {
                       setAuthMode('register');
                       setActiveView('email');
-                      setRegisterStep('form');
                       setAuthError(null);
                       setAuthSuccess(null);
                     }}
@@ -684,168 +667,82 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           {/* Sign In & Registration Section */}
-          {(isGuest || activeView === 'email' || registerStep === 'verify') && !showMigratePrompt && (
+          {(isGuest || activeView === 'email') && !showMigratePrompt && (
             <div className="space-y-4">
               <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center">
                 Sign In or Register
               </div>
 
-              {/* STEP 1: Registration or Login Form */}
-              {registerStep === 'form' ? (
-                <div className="space-y-3">
-                  {/* Mode Toggle: Register vs Login */}
-                  <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('register');
-                        setAuthError(null);
-                        setAuthSuccess(null);
-                      }}
-                      className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                        authMode === 'register'
-                          ? 'bg-rose-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      Create Account
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('login');
-                        setAuthError(null);
-                        setAuthSuccess(null);
-                      }}
-                      className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                        authMode === 'login'
-                          ? 'bg-rose-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      Sign In
-                    </button>
-                  </div>
+              {/* Registration or Login Form */}
+              <div className="space-y-3">
+                {/* Mode Toggle: Register vs Login */}
+                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('register');
+                      setRegisterStep('form');
+                      setVerificationCode('');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                      authMode === 'register'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setRegisterStep('form');
+                      setVerificationCode('');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                      authMode === 'login'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                </div>
 
-                  {/* EMAIL FORM */}
-                  <form noValidate onSubmit={handleEmailAuthSubmit} className="space-y-3">
-                    {authMode === 'register' && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600">
-                            Anivex Display Username
-                          </label>
-                          {usernameStatus === 'checking' && (
-                            <span className="text-[10px] text-amber-400 flex items-center gap-1 font-medium">
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              <span>Checking database...</span>
-                            </span>
-                          )}
-                          {usernameStatus === 'available' && (
-                            <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                              <span>Username available</span>
-                            </span>
-                          )}
-                          {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
-                            <span className="text-[10px] text-rose-400 flex items-center gap-1 font-semibold">
-                              <AlertCircle className="w-3 h-3 text-rose-400" />
-                              <span>{usernameMessage || 'Unavailable'}</span>
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                          <input
-                            type="text"
-                            id="input-auth-name"
-                            value={chosenUsername}
-                            onChange={e => {
-                              setHasEditedUsername(true);
-                              setChosenUsername(e.target.value);
-                              setAuthError(null);
-                            }}
-                            placeholder="e.g. AnimeExplorer"
-                            className={`w-full pl-9 pr-9 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
-                              usernameStatus === 'available'
-                                ? 'border-emerald-500/70 focus:border-emerald-500'
-                                : usernameStatus === 'unavailable' || usernameStatus === 'invalid'
-                                ? 'border-rose-500/80 focus:border-rose-500'
-                                : 'border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 focus:border-rose-500'
-                            }`}
-                            required
-                          />
-                          <div className="absolute right-3 top-2.5 pointer-events-none">
-                            {usernameStatus === 'checking' && (
-                              <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                            )}
-                            {usernameStatus === 'available' && (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            )}
-                            {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
-                              <AlertCircle className="w-4 h-4 text-rose-400" />
-                            )}
-                          </div>
-                        </div>
+                {authMode === 'register' && registerStep === 'verify' ? (
+                  <form noValidate onSubmit={handleVerifyRegistrationOtp} className="space-y-4">
+                    <div className="p-3.5 rounded-xl bg-slate-950/90 border border-rose-500/30 space-y-1 text-center">
+                      <div className="w-9 h-9 rounded-full bg-rose-500/15 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/30 mb-1">
+                        <KeyRound className="w-4 h-4" />
                       </div>
-                    )}
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                        <input
-                          type="email"
-                          id="input-auth-email"
-                          value={emailInput}
-                          onChange={e => {
-                            setEmailInput(e.target.value);
-                            setAuthError(null);
-                          }}
-                          placeholder="you@example.com"
-                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
-                        Password (min 8 characters)
-                      </label>
-                      <div className="relative">
-                        <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="input-auth-password"
-                          value={passwordInput}
-                          onChange={e => {
-                            setPasswordInput(e.target.value);
-                            setAuthError(null);
-                          }}
-                          minLength={8}
-                          placeholder="••••••••••••"
-                          className="w-full pl-9 pr-10 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(p => !p)}
-                          className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {authMode === 'register' && (
-                      <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-normal">
-                        Remember these details — you’ll need them later to sign in.
+                      <h3 className="text-sm font-bold text-white">Verify Your Email Address</h3>
+                      <p className="text-xs text-slate-400">
+                        Enter the 6-digit verification code sent to:
                       </p>
-                    )}
+                      <p className="text-xs font-mono font-bold text-rose-400 break-all">
+                        {emailInput.trim().toLowerCase()}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-[11px] font-semibold text-slate-300 text-center">
+                        6-Digit Verification Code
+                      </label>
+                      <OtpInput
+                        value={verificationCode}
+                        onChange={val => {
+                          setVerificationCode(val);
+                          setAuthError(null);
+                        }}
+                        disabled={loading}
+                        autoFocus
+                        idPrefix="register-otp"
+                      />
+                    </div>
 
                     {authError && (
                       <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-[11px] text-rose-300 flex items-start gap-1.5">
@@ -863,69 +760,167 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                     <button
                       type="submit"
-                      id="btn-auth-submit"
-                      disabled={loading || (authMode === 'register' && (usernameStatus === 'unavailable' || usernameStatus === 'invalid'))}
+                      id="btn-verify-otp-submit"
+                      disabled={loading || verificationCode.trim().length !== 6}
                       className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <span>
-                            {authMode === 'register'
-                              ? usernameStatus === 'unavailable'
-                                ? 'Username Unavailable'
-                                : usernameStatus === 'invalid'
-                                ? 'Enter Valid Username'
-                                : 'Send Verification Code'
-                              : 'Sign In to Account'}
-                          </span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Verify &amp; Create Zenime Account</span>
                         </>
                       )}
                     </button>
 
-                    {loading && authMode === 'register' && (
-                      <p className="text-[11px] text-center text-slate-400 animate-pulse pt-1">
-                        It may take some time. Please be patient.
-                      </p>
-                    )}
-                  </form>
-                </div>
-              ) : (
-                /* STEP 2: Real Email Verification Code Form */
-                <form noValidate onSubmit={handleVerifyCodeSubmit} className="space-y-4 animate-fade-in">
-                  <div className="p-3.5 bg-slate-950/90 dark:bg-slate-950/90 light:bg-slate-100 border border-slate-800 dark:border-slate-800 light:border-slate-300 rounded-xl space-y-1.5 text-center">
-                    <div className="font-bold text-sm text-white dark:text-white light:text-slate-900 flex items-center justify-center gap-1.5">
-                      <KeyRound className="w-4 h-4 text-rose-500" />
-                      <span>Verify your account</span>
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRegisterStep('form');
+                          setVerificationCode('');
+                          setAuthError(null);
+                          setAuthSuccess(null);
+                        }}
+                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        ← Change Email / Details
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResendRegistrationOtp}
+                        disabled={resendCooldown > 0 || loading}
+                        className="text-rose-400 hover:text-rose-300 font-semibold inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>
+                          {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : 'Resend Code'}
+                        </span>
+                      </button>
                     </div>
-                    <p className="text-slate-400 dark:text-slate-400 light:text-slate-600 text-xs">
-                      We sent a verification code to:
-                    </p>
-                    <p className="text-rose-400 font-mono font-bold text-xs break-all">
-                      {emailInput}
-                    </p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-500 pt-0.5">
-                      Remember these details — you’ll need them later to sign in.
-                    </p>
+                  </form>
+                ) : (
+                /* EMAIL FORM */
+                <form noValidate onSubmit={handleEmailAuthSubmit} className="space-y-3">
+                  {authMode === 'register' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600">
+                          Zenime Display Username
+                        </label>
+                        {usernameStatus === 'checking' && (
+                          <span className="text-[10px] text-amber-400 flex items-center gap-1 font-medium">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span>Checking database...</span>
+                          </span>
+                        )}
+                        {usernameStatus === 'available' && (
+                          <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            <span>Username available</span>
+                          </span>
+                        )}
+                        {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
+                          <span className="text-[10px] text-rose-400 flex items-center gap-1 font-semibold">
+                            <AlertCircle className="w-3 h-3 text-rose-400" />
+                            <span>{usernameMessage || 'Unavailable'}</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                        <input
+                          type="text"
+                          id="input-auth-name"
+                          value={chosenUsername}
+                          onChange={e => {
+                            setHasEditedUsername(true);
+                            setChosenUsername(e.target.value);
+                            setAuthError(null);
+                          }}
+                          placeholder="e.g. AnimeExplorer"
+                          className={`w-full pl-9 pr-9 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
+                            usernameStatus === 'available'
+                              ? 'border-emerald-500/70 focus:border-emerald-500'
+                              : usernameStatus === 'unavailable' || usernameStatus === 'invalid'
+                              ? 'border-rose-500/80 focus:border-rose-500'
+                              : 'border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 focus:border-rose-500'
+                          }`}
+                          required
+                        />
+                        <div className="absolute right-3 top-2.5 pointer-events-none">
+                          {usernameStatus === 'checking' && (
+                            <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                          )}
+                          {usernameStatus === 'available' && (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          )}
+                          {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && (
+                            <AlertCircle className="w-4 h-4 text-rose-400" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                      <input
+                        type="email"
+                        id="input-auth-email"
+                        value={emailInput}
+                        onChange={e => {
+                          setEmailInput(e.target.value);
+                          setAuthError(null);
+                        }}
+                        placeholder="you@example.com"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-300 dark:text-slate-300 light:text-slate-700 text-center">
-                      Enter 6-digit code
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-400 light:text-slate-600 mb-1">
+                      Password (min 8 characters)
                     </label>
-                    <OtpInput
-                      value={verificationCode}
-                      onChange={val => {
-                        setVerificationCode(val);
-                        setAuthError(null);
-                      }}
-                      disabled={loading}
-                      autoFocus
-                      idPrefix="register-otp"
-                    />
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="input-auth-password"
+                        value={passwordInput}
+                        onChange={e => {
+                          setPasswordInput(e.target.value);
+                          setAuthError(null);
+                        }}
+                        minLength={8}
+                        placeholder="••••••••••••"
+                        className="w-full pl-9 pr-10 py-2 rounded-xl bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(p => !p)}
+                        className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
+
+                  {authMode === 'register' && (
+                    <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-normal">
+                      Remember these details — you’ll need them later to sign in.
+                    </p>
+                  )}
 
                   {authError && (
                     <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-[11px] text-rose-300 flex items-start gap-1.5">
@@ -943,54 +938,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                   <button
                     type="submit"
-                    disabled={loading || verificationCode.length !== 6}
-                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    id="btn-auth-submit"
+                    disabled={loading || (authMode === 'register' && (usernameStatus === 'unavailable' || usernameStatus === 'invalid'))}
+                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <span>Verify Email</span>
-                        <Check className="w-4 h-4" />
+                        <span>
+                          {authMode === 'register'
+                            ? usernameStatus === 'unavailable'
+                              ? 'Username Unavailable'
+                              : usernameStatus === 'invalid'
+                              ? 'Enter Valid Username'
+                              : 'Send Verification Code'
+                            : 'Sign In to Account'}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
-
-                  <div className="pt-2 border-t border-slate-800/80 text-center space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Didn't receive the code?</span>
-                      <button
-                        type="button"
-                        onClick={handleResendRegisterCode}
-                        disabled={resendCooldown > 0 || loading}
-                        className="font-semibold text-rose-400 hover:text-rose-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                      >
-                        {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : 'Resend Code'}
-                      </button>
-                    </div>
-
-                    {loading && (
-                      <p className="text-[11px] text-center text-slate-400 animate-pulse">
-                        It may take some time. Please be patient.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="text-center pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRegisterStep('form');
-                        setAuthError(null);
-                        setAuthSuccess(null);
-                      }}
-                      className="text-[11px] text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
-                    >
-                      ← Back to Registration Details
-                    </button>
-                  </div>
                 </form>
-              )}
+                )}
+              </div>
 
               {/* Saved accounts list */}
               {savedAccounts.length > 0 && (

@@ -4156,7 +4156,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                                       )}
                                       {entry.matchedCatalogueTitle && (
                                         <div className="text-[10px] font-mono text-emerald-400">
-                                          ✓ Matched in Anivex Catalogue: {entry.matchedCatalogueTitle}
+                                          ✓ Matched in Zenime Catalogue: {entry.matchedCatalogueTitle}
                                         </div>
                                       )}
                                     </div>
@@ -4259,7 +4259,7 @@ export const ArtworkManager: React.FC<ArtworkManagerProps> = () => {
                                       )}
                                       {entry.matchedCatalogueTitle && (
                                         <div className="text-[10px] font-mono text-emerald-400">
-                                          ✓ Matched in Anivex Catalogue: {entry.matchedCatalogueTitle}
+                                          ✓ Matched in Zenime Catalogue: {entry.matchedCatalogueTitle}
                                         </div>
                                       )}
                                     </div>

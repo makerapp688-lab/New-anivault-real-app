@@ -1,11 +1,9 @@
 import nodemailer from 'nodemailer';
-import crypto from 'crypto';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
-// Ensure latest environment variables are loaded
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export interface EmailConfigStatus {
   configured: boolean;
@@ -18,106 +16,120 @@ export interface EmailConfigStatus {
 }
 
 export interface ServerSecretsDiagnostic {
+  SESSION_SECRET: 'configured' | 'missing';
   SMTP_HOST: 'configured' | 'missing';
   SMTP_PORT: 'configured' | 'missing';
   SMTP_USER: 'configured' | 'missing';
   SMTP_PASS: 'configured' | 'missing';
   SMTP_FROM: 'configured' | 'missing';
+  OWNER_EMAIL: 'configured' | 'missing';
+  OWNER_USERNAME: 'configured' | 'missing';
+  OWNER_PASSWORD: 'configured' | 'missing';
+}
+
+function cleanEnvValue(val: string | undefined): string {
+  const cleaned = (val || '').trim().replace(/^["']|["']$/g, '').trim();
+  if (/^(YOUR_[A-Z0-9_]+_HERE|MY_[A-Z0-9_]+|CHANGE_ME)$/i.test(cleaned)) {
+    return '';
+  }
+  return cleaned;
+}
+
+function parseSmtpPort(rawPort: string): number | null {
+  if (!rawPort) return null;
+  const parsed = Number.parseInt(rawPort, 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    return null;
+  }
+  return parsed;
 }
 
 /**
- * Check if the email service has the minimum required SMTP configuration.
- * Reloads dotenv if present to ensure dynamically added env vars are detected.
- * Never logs or exposes credential values.
+ * Checks whether the SMTP email service has all required configuration:
+ * SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.
+ * Never reads or depends on OWNER_EMAIL.
  */
 export function getEmailConfigStatus(): EmailConfigStatus {
-  dotenv.config();
-
+  dotenv.config({ quiet: true });
   const missing: string[] = [];
-  const host = (process.env.SMTP_HOST || '').trim().replace(/^["']|["']$/g, '');
-  const user = (process.env.SMTP_USER || '').trim().replace(/^["']|["']$/g, '');
-  const pass = (process.env.SMTP_PASS || '').trim().replace(/^["']|["']$/g, '');
-  const from = (process.env.SMTP_FROM || '').trim().replace(/^["']|["']$/g, '');
 
-  const hostConfigured = !!host;
-  const userConfigured = !!user;
-  const passConfigured = !!pass;
-  const fromConfigured = !!from || !!user;
+  const host = cleanEnvValue(process.env.SMTP_HOST);
+  const portRaw = cleanEnvValue(process.env.SMTP_PORT);
+  const port = parseSmtpPort(portRaw);
+  const user = cleanEnvValue(process.env.SMTP_USER);
+  const pass = cleanEnvValue(process.env.SMTP_PASS);
+  const from = cleanEnvValue(process.env.SMTP_FROM);
 
-  if (!hostConfigured) {
-    missing.push('SMTP_HOST');
-  }
-  if (!userConfigured) {
-    missing.push('SMTP_USER');
-  }
-  if (!passConfigured) {
-    missing.push('SMTP_PASS');
-  }
+  const hostConfigured = Boolean(host);
+  const portConfigured = Boolean(port !== null);
+  const userConfigured = Boolean(user);
+  const passConfigured = Boolean(pass);
+  const fromConfigured = Boolean(from);
+
+  if (!hostConfigured) missing.push('SMTP_HOST');
+  if (!portConfigured) missing.push('SMTP_PORT');
+  if (!userConfigured) missing.push('SMTP_USER');
+  if (!passConfigured) missing.push('SMTP_PASS');
+  if (!fromConfigured) missing.push('SMTP_FROM');
 
   return {
     configured: missing.length === 0,
     missing,
     hostConfigured,
-    portConfigured: true,
+    portConfigured,
     userConfigured,
     passConfigured,
     fromConfigured
   };
 }
 
-/**
- * Verifies AI Studio server secrets status without ever exposing private values.
- * Reports only 'configured' | 'missing' for each required variable.
- */
 export function checkServerSecretsDiagnostic(): ServerSecretsDiagnostic {
-  dotenv.config();
-  const host = (process.env.SMTP_HOST || '').trim().replace(/^["']|["']$/g, '');
-  const port = (process.env.SMTP_PORT || '').trim().replace(/^["']|["']$/g, '');
-  const user = (process.env.SMTP_USER || '').trim().replace(/^["']|["']$/g, '');
-  const pass = (process.env.SMTP_PASS || '').trim().replace(/^["']|["']$/g, '');
-  const from = (process.env.SMTP_FROM || '').trim().replace(/^["']|["']$/g, '');
+  dotenv.config({ quiet: true });
+  const sessionSecret = cleanEnvValue(process.env.SESSION_SECRET);
+  const host = cleanEnvValue(process.env.SMTP_HOST);
+  const port = parseSmtpPort(cleanEnvValue(process.env.SMTP_PORT));
+  const user = cleanEnvValue(process.env.SMTP_USER);
+  const pass = cleanEnvValue(process.env.SMTP_PASS);
+  const from = cleanEnvValue(process.env.SMTP_FROM);
+  const ownerEmail = cleanEnvValue(process.env.OWNER_EMAIL);
+  const ownerUsername = cleanEnvValue(process.env.OWNER_USERNAME);
+  const ownerPassword = cleanEnvValue(process.env.OWNER_PASSWORD);
 
   return {
+    SESSION_SECRET: sessionSecret ? 'configured' : 'missing',
     SMTP_HOST: host ? 'configured' : 'missing',
-    SMTP_PORT: port ? 'configured' : 'missing',
+    SMTP_PORT: port !== null ? 'configured' : 'missing',
     SMTP_USER: user ? 'configured' : 'missing',
     SMTP_PASS: pass ? 'configured' : 'missing',
-    SMTP_FROM: from || user ? 'configured' : 'missing'
+    SMTP_FROM: from ? 'configured' : 'missing',
+    OWNER_EMAIL: ownerEmail ? 'configured' : 'missing',
+    OWNER_USERNAME: ownerUsername ? 'configured' : 'missing',
+    OWNER_PASSWORD: ownerPassword ? 'configured' : 'missing'
   };
 }
 
-/**
- * Safe server-side startup report logging secret status without exposing values.
- */
-export function logEmailConfigDiagnostics(): void {
-  const diag = checkServerSecretsDiagnostic();
-  console.log('[AI_STUDIO_SECRETS_CHECK] Server runtime email configuration:');
-  console.log(`  SMTP_HOST: ${diag.SMTP_HOST}`);
-  console.log(`  SMTP_PORT: ${diag.SMTP_PORT}`);
-  console.log(`  SMTP_USER: ${diag.SMTP_USER}`);
-  console.log(`  SMTP_PASS: ${diag.SMTP_PASS}`);
-  console.log(`  SMTP_FROM: ${diag.SMTP_FROM}`);
-}
-
-/**
- * Creates and configures a nodemailer transport compliant with Gmail and standard SMTP.
- * Enforces TLS, timeouts, and authenticated connection.
- */
 export function createEmailTransporter() {
   const { configured } = getEmailConfigStatus();
   if (!configured) {
     return null;
   }
 
-  const host = process.env.SMTP_HOST!.trim().replace(/^["']|["']$/g, '');
-  const portStr = (process.env.SMTP_PORT || '587').trim().replace(/^["']|["']$/g, '');
-  const port = parseInt(portStr, 10) || 587;
-  const user = process.env.SMTP_USER!.trim().replace(/^["']|["']$/g, '');
-  let pass = process.env.SMTP_PASS!.trim().replace(/^["']|["']$/g, '');
+  const host = cleanEnvValue(process.env.SMTP_HOST);
+  const port = parseSmtpPort(cleanEnvValue(process.env.SMTP_PORT));
+  const user = cleanEnvValue(process.env.SMTP_USER);
+  let pass = cleanEnvValue(process.env.SMTP_PASS);
 
-  // Gmail 16-character App Passwords are commonly displayed in 4 space-separated groups (e.g. "abcd efgh ijkl mnop").
-  // Strip all standard and unicode whitespace so SMTP authentication succeeds.
-  if ((host.toLowerCase().includes('gmail') || user.toLowerCase().includes('@gmail.com') || pass.length >= 16)) {
+  if (!host || port === null || !user || !pass) {
+    return null;
+  }
+
+  const isGmail =
+    host.toLowerCase().includes('gmail.com') ||
+    host.toLowerCase().includes('googlemail.com') ||
+    user.toLowerCase().endsWith('@gmail.com');
+
+  // For Gmail SMTP, strip formatting spaces from 16-character Google App Passwords
+  if (isGmail || pass.length >= 16) {
     pass = pass.replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '');
   }
 
@@ -127,8 +139,9 @@ export function createEmailTransporter() {
     host,
     port,
     secure: isSecurePort,
-    requireTLS: !isSecurePort, // enforce STARTTLS on port 587 and others
+    requireTLS: !isSecurePort,
     auth: {
+      type: 'LOGIN',
       user,
       pass
     },
@@ -136,46 +149,35 @@ export function createEmailTransporter() {
       minVersion: 'TLSv1.2',
       rejectUnauthorized: true
     },
-    connectionTimeout: 15000, // 15 seconds connection timeout
-    greetingTimeout: 15000,   // 15 seconds greeting timeout
-    socketTimeout: 20000      // 20 seconds socket timeout
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000
   });
 }
 
 /**
- * Generate cryptographically secure 6-digit verification code and its SHA-256 hash.
- * Plaintext code is strictly single-use and only the hash is persisted.
- */
-export function generateVerificationCode(): { code: string; codeHash: string } {
-  const code = crypto.randomInt(100000, 1000000).toString();
-  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
-  return { code, codeHash };
-}
-
-/**
- * Determines the authoritative From address.
- * Formats sender display name as "Anivex" with verified sender email.
+ * Resolves the sender From header using the configured SMTP_FROM environment variable.
+ * Formats display name as "Zenime".
  */
 function resolveFromAddress(smtpUser: string): string {
-  const envFrom = (process.env.SMTP_FROM || '').trim().replace(/^["']|["']$/g, '');
-  
+  const envFrom = cleanEnvValue(process.env.SMTP_FROM);
   if (envFrom) {
-    const match = envFrom.match(/<([^>]+)>/);
-    if (match && match[1]) {
-      return `"Anivex" <${match[1].trim()}>`;
+    const angleMatch = envFrom.match(/<([^>]+)>/);
+    if (angleMatch && angleMatch[1]) {
+      return `"Zenime" <${angleMatch[1].trim()}>`;
     }
     if (envFrom.includes('@')) {
-      return `"Anivex" <${envFrom}>`;
+      return `"Zenime" <${envFrom}>`;
     }
   }
-
-  return `"Anivex" <${smtpUser}>`;
+  return `"Zenime" <${smtpUser}>`;
 }
 
 function sanitizeSmtpError(err: any): string {
   const rawMsg = String(err?.response || err?.message || 'Unknown SMTP error');
-  const rawPass = (process.env.SMTP_PASS || '').trim().replace(/^["']|["']$/g, '');
+  const rawPass = cleanEnvValue(process.env.SMTP_PASS);
   const strippedPass = rawPass.replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '');
+
   let safe = rawMsg;
   if (rawPass && rawPass.length > 2) {
     safe = safe.split(rawPass).join('[REDACTED]');
@@ -186,6 +188,206 @@ function sanitizeSmtpError(err: any): string {
   return safe.slice(0, 240);
 }
 
+export interface SendOtpEmailOptions {
+  recipientEmail: string;
+  code: string;
+  subject?: string;
+  heading?: string;
+  description?: string;
+  expiryMinutes?: number;
+}
+
+/**
+ * Sends a 6-digit OTP verification email to the exact normalized recipientEmail provided.
+ * Never overrides, filters, or restricts recipientEmail against OWNER_EMAIL.
+ * Never logs the OTP code.
+ */
+export async function sendOtpVerificationEmail(options: SendOtpEmailOptions): Promise<{
+  success: boolean;
+  messageId: string;
+}> {
+  const status = getEmailConfigStatus();
+  if (!status.configured) {
+    throw new Error('Email service is not configured. Missing required SMTP configuration.');
+  }
+
+  const transporter = createEmailTransporter();
+  if (!transporter) {
+    throw new Error('Failed to initialize SMTP email transporter.');
+  }
+
+  const smtpUser = cleanEnvValue(process.env.SMTP_USER);
+  const from = resolveFromAddress(smtpUser);
+  const cleanRecipient = options.recipientEmail.trim().toLowerCase();
+
+  if (!cleanRecipient || !cleanRecipient.includes('@')) {
+    throw new Error('Invalid recipient email address.');
+  }
+
+  const subject = options.subject || 'Verify your Zenime account';
+  const heading = options.heading || 'Verify your Zenime email';
+  const description =
+    options.description || 'Use the 6-digit verification code below to complete your Zenime verification request.';
+  const expiryMinutes = options.expiryMinutes || 10;
+
+  const plainTextContent = `Zenime
+
+${heading}
+
+${description}
+
+Verification Code: ${options.code}
+
+This code expires in ${expiryMinutes} minutes and can only be used once.
+
+If you did not request this verification code, you can safely ignore this email.
+
+© Zenime
+This is an automated message. Please do not reply to this email.`;
+
+  const builtInCandidates = [
+    path.join(process.cwd(), 'src', 'assets', 'images', 'zenime_primary_logo_1790572796973.jpg'),
+    path.join(process.cwd(), 'public', 'zenime-logo.png')
+  ];
+  const logoDiskPath = builtInCandidates.find(p => fs.existsSync(p)) || builtInCandidates[0];
+  const hasLogoFile = fs.existsSync(logoDiskPath);
+  const logoAttachment = hasLogoFile
+    ? {
+        filename: 'zenime-logo.png',
+        path: logoDiskPath,
+        cid: 'zenime-logo',
+        contentDisposition: 'inline' as const,
+        contentType: 'image/png'
+      }
+    : null;
+  const externalLogoUrl: string | null = null;
+
+  const appUrl = cleanEnvValue(process.env.APP_URL).replace(/\/+$/, '');
+  const logoSrc = logoAttachment
+    ? 'cid:zenime-logo'
+    : externalLogoUrl
+      ? externalLogoUrl
+      : appUrl
+        ? `${appUrl}/zenime-logo.png`
+        : '/zenime-logo.png';
+
+  const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${subject}</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #030712; padding: 40px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 500px; background-color: #0b0f19; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+            <!-- Zenime Brand Header -->
+            <tr>
+              <td align="center" style="padding: 36px 24px 20px; text-align: center;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
+                  <tr>
+                    <td align="center" style="padding-bottom: 14px; text-align: center;">
+                      <img src="${logoSrc}" alt="Zenime" width="240" style="display: block; width: 240px; max-width: 100%; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="text-align: center;">
+                      <div style="font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.2;">
+                        Zen<span style="color: #f43f5e;">ime</span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <!-- Body Content -->
+            <tr>
+              <td align="center" style="padding: 6px 32px 32px; text-align: center;">
+                <h1 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.3px; line-height: 1.35;">
+                  ${heading}
+                </h1>
+                <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+                  ${description}
+                </p>
+                <!-- Dedicated OTP Box -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 20px auto;">
+                  <tr>
+                    <td align="center" style="background-color: #030712; border: 1.5px solid #f43f5e; border-radius: 12px; padding: 16px 28px; text-align: center;">
+                      <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #fda4af; display: inline-block;">
+                        ${options.code}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+                <!-- Expiration -->
+                <p style="color: #cbd5e1; font-size: 13px; font-weight: 600; margin: 0 0 16px 0;">
+                  This code expires in ${expiryMinutes} minutes and is single-use.
+                </p>
+                <!-- Security Message -->
+                <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0;">
+                  If you did not request this verification code, you can safely ignore this email.
+                </p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding: 20px 32px; background-color: #060911; border-top: 1px solid #1e293b; text-align: center;">
+                <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0; font-weight: 600;">
+                  &copy; Zenime
+                </p>
+                <p style="font-size: 11px; color: #475569; margin: 0; line-height: 1.4;">
+                  This is an automated message. Please do not reply to this email.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const host = cleanEnvValue(process.env.SMTP_HOST);
+  const port = parseSmtpPort(cleanEnvValue(process.env.SMTP_PORT));
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: cleanRecipient,
+      subject,
+      text: plainTextContent,
+      html: htmlContent,
+      attachments: logoAttachment ? [logoAttachment] : undefined
+    });
+
+    if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {
+      throw new Error('Email provider rejected the recipient address.');
+    }
+
+    return {
+      success: true,
+      messageId: info.messageId || 'sent'
+    };
+  } catch (err: any) {
+    const safeDetail = sanitizeSmtpError(err);
+    if (err.code === 'EAUTH' || (err.response && (String(err.response).includes('535') || String(err.response).includes('534')))) {
+      const gmailHint = host.toLowerCase().includes('gmail')
+        ? ' For Gmail SMTP, use a 16-character Google App Password (with 2-Step Verification enabled) rather than a normal account password.'
+        : '';
+      throw new Error(`Email service authentication failed (${err.code || '535'}: ${safeDetail}).${gmailHint}`);
+    }
+    if (err.code === 'EENVELOPE' || (err.response && String(err.response).includes('550')) || (err.message && err.message.includes('rejected'))) {
+      throw new Error(`Email provider rejected the message (${safeDetail})`);
+    }
+    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.code === 'ESOCKET' || err.code === 'ENOTFOUND' || err.code === 'EDNS') {
+      throw new Error(`Email service connection to ${host}:${port} failed (${err.code || 'NETWORK_ERROR'}: ${safeDetail})`);
+    }
+    throw new Error(`Email delivery failed (${safeDetail})`);
+  }
+}
+
 export async function testEmailTransport(testRecipient?: string): Promise<{
   success: boolean;
   step: string;
@@ -194,7 +396,6 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
 }> {
   const status = getEmailConfigStatus();
   if (!status.configured) {
-    console.error(`[EMAIL_DIAGNOSTIC] SMTP_CONFIGURATION_ERROR: missing=[${status.missing.join(', ')}]`);
     return {
       success: false,
       step: 'SMTP_CONFIGURATION_ERROR',
@@ -212,248 +413,35 @@ export async function testEmailTransport(testRecipient?: string): Promise<{
     };
   }
 
-  const host = process.env.SMTP_HOST!.trim().replace(/^["']|["']$/g, '');
-  const port = parseInt((process.env.SMTP_PORT || '587').trim().replace(/^["']|["']$/g, ''), 10) || 587;
-
   try {
-    console.log(`[EMAIL_DIAGNOSTIC] EMAIL_TRANSPORT_TEST_STARTED: host=${host}, port=${port}`);
     await transporter.verify();
-    console.log(`[EMAIL_DIAGNOSTIC] SMTP_CONNECTION_SUCCESS: host=${host}, port=${port}`);
-    console.log('[EMAIL_DIAGNOSTIC] SMTP_AUTH_SUCCESS: true');
-
     if (testRecipient) {
-      const recipientDomain = testRecipient.includes('@') ? '@' + testRecipient.split('@')[1] : 'recipient';
-      const smtpUser = process.env.SMTP_USER!.trim().replace(/^["']|["']$/g, '');
+      const smtpUser = cleanEnvValue(process.env.SMTP_USER);
       const from = resolveFromAddress(smtpUser);
-      console.log(`[EMAIL_DIAGNOSTIC] EMAIL_SEND_STARTED: domain=${recipientDomain}`);
       const info = await transporter.sendMail({
         from,
-        to: testRecipient,
-        subject: 'Anivex Email Transport Diagnostic Test',
-        text: 'This is an automated test message from Anivex to confirm SMTP transport connectivity.',
-        html: '<div style="font-family:sans-serif;padding:20px;background:#0b0f19;color:#fff;border-radius:8px;">Anivex email transport test successful.</div>'
+        to: testRecipient.trim().toLowerCase(),
+        subject: 'Zenime Email Transport Diagnostic Test',
+        text: 'This is an automated test message from Zenime to confirm SMTP transport connectivity.',
+        html: '<div style="font-family:sans-serif;padding:20px;background:#0b0f19;color:#fff;border-radius:8px;">Zenime email transport test successful.</div>'
       });
-
       if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {
-        console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: provider rejected recipient count=${info.rejected?.length || 0}`);
         return {
           success: false,
           step: 'EMAIL_REJECTED',
           error: 'Email provider rejected the recipient address.'
         };
       }
-
-      console.log(`[EMAIL_DIAGNOSTIC] EMAIL_ACCEPTED: messageId=${info.messageId}, response=${info.response || 'OK'}`);
     }
-
     return {
       success: true,
-      step: 'EMAIL_ACCEPTED'
+      step: testRecipient ? 'EMAIL_ACCEPTED' : 'SMTP_AUTH_SUCCESS'
     };
   } catch (err: any) {
-    const safeDetail = sanitizeSmtpError(err);
-    if (err.code === 'EAUTH' || (err.response && err.response.includes('535'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP_AUTH_FAILED: ${safeDetail}`);
-      return { success: false, step: 'SMTP_AUTH_FAILED', error: `Email service authentication failed (${err.code || '535'}: ${safeDetail})` };
-    }
-    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.code === 'ESOCKET' || err.code === 'ENOTFOUND' || err.code === 'EDNS') {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP_CONNECTION_FAILED: ${safeDetail}`);
-      return { success: false, step: 'SMTP_CONNECTION_FAILED', error: `Email service connection to ${host}:${port} failed (${err.code || 'NETWORK_ERROR'}: ${safeDetail})` };
-    }
-    if (err.code === 'EENVELOPE' || (err.response && err.response.includes('550'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] EMAIL_REJECTED: ${safeDetail}`);
-      return { success: false, step: 'EMAIL_REJECTED', error: `Email provider rejected the message (${safeDetail})` };
-    }
-    console.error(`[EMAIL_DIAGNOSTIC] EMAIL_SEND_FAILED: ${safeDetail}`);
-    return { success: false, step: 'EMAIL_SEND_FAILED', error: `Email delivery failed (${safeDetail})` };
+    return {
+      success: false,
+      step: 'SMTP_TRANSPORT_ERROR',
+      error: sanitizeSmtpError(err)
+    };
   }
 }
-
-/**
- * Send real email verification code via authenticated SMTP.
- * Awaits full provider confirmation before returning success.
- * Throws clean, informative errors if delivery fails.
- */
-export async function sendVerificationEmail(
-  toEmail: string,
-  code: string,
-  subjectTitle: string = 'Verify your Anivex account',
-  _origin?: string
-): Promise<{ success: boolean; messageId?: string }> {
-  const status = getEmailConfigStatus();
-  if (!status.configured) {
-    const msg = `Email service is not configured. Missing: ${status.missing.join(', ')}`;
-    console.error(`[EMAIL_DIAGNOSTIC] ${msg}`);
-    throw new Error(msg);
-  }
-
-  const transporter = createEmailTransporter();
-  if (!transporter) {
-    console.error('[EMAIL_DIAGNOSTIC] Missing SMTP configuration: transporter initialization returned null');
-    throw new Error('Email service is not configured.');
-  }
-
-  const smtpUser = process.env.SMTP_USER!.trim().replace(/^["']|["']$/g, '');
-  const from = resolveFromAddress(smtpUser);
-  const host = process.env.SMTP_HOST!.trim().replace(/^["']|["']$/g, '');
-  const port = parseInt((process.env.SMTP_PORT || '587').trim().replace(/^["']|["']$/g, ''), 10) || 587;
-  const userDomain = smtpUser.includes('@') ? '@' + smtpUser.split('@')[1] : 'smtp_host';
-
-  const cleanRecipient = toEmail.trim().toLowerCase();
-  const recipientDomain = cleanRecipient.includes('@') ? '@' + cleanRecipient.split('@')[1] : 'recipient';
-  console.log(`[EMAIL_DIAGNOSTIC] Email send started: recipientDomain=${recipientDomain}`);
-  console.log(`[EMAIL_DIAGNOSTIC] SMTP connection: host=${host}, port=${port}`);
-  console.log(`[EMAIL_DIAGNOSTIC] SMTP authentication: authenticated as userDomain=${userDomain}`);
-
-  // Plain text fallback
-  const plainTextContent = 
-`Anivex
-
-Here’s your new account verification code
-
-Use the verification code below to verify your Anivex account:
-
-┌─────────────────┐
-│     ${code}      │
-└─────────────────┘
-
-This code expires in 10 minutes.
-
-If you didn’t request this verification code, you can safely ignore this email.
-
-© Anivex
-This is an automated message. Please do not reply to this email.`;
-
-  // Clean HTML email template matching the verified deliverable structure (no localhost URLs, no bot headers)
-  const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subjectTitle}</title>
-  </head>
-  <body style="margin: 0; padding: 0; background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #030712; padding: 40px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 500px; background-color: #0b0f19; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
-            
-            <!-- Header: Anivex Brand Header -->
-            <tr>
-              <td align="center" style="padding: 36px 32px 20px; text-align: center;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
-                  <tr>
-                    <td align="center" style="padding-bottom: 12px;">
-                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
-                        <tr>
-                          <td align="center" style="width: 56px; height: 56px; background-color: #e11d48; border-radius: 14px; text-align: center; vertical-align: middle; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);">
-                            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 30px; font-weight: 900; color: #ffffff; line-height: 56px; display: block;">A</span>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center">
-                      <div style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.2;">
-                        Ani<span style="color: #f43f5e;">vex</span>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- Body Content -->
-            <tr>
-              <td align="center" style="padding: 6px 32px 32px; text-align: center;">
-                <h1 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.3px; line-height: 1.35;">
-                  Here’s your new account verification
-                </h1>
-                
-                <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
-                  Use the verification code below to verify your Anivex account.
-                </p>
-
-                <!-- Dedicated OTP Box -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 20px auto;">
-                  <tr>
-                    <td align="center" style="background-color: #030712; border: 1.5px solid #f43f5e; border-radius: 12px; padding: 16px 28px; text-align: center;">
-                      <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #fda4af; display: inline-block;">
-                        ${code}
-                      </span>
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Expiration -->
-                <p style="color: #cbd5e1; font-size: 13px; font-weight: 600; margin: 0 0 16px 0;">
-                  This code expires in 10 minutes.
-                </p>
-
-                <!-- Security Message -->
-                <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0;">
-                  If you didn’t request this verification code, you can safely ignore this email.
-                </p>
-              </td>
-            </tr>
-
-            <!-- Professional Footer -->
-            <tr>
-              <td align="center" style="padding: 20px 32px; background-color: #060911; border-top: 1px solid #1e293b; text-align: center;">
-                <p style="font-size: 12px; color: #64748b; margin: 0 0 4px 0; font-weight: 600;">
-                  &copy; Anivex
-                </p>
-                <p style="font-size: 11px; color: #475569; margin: 0; line-height: 1.4;">
-                  This is an automated message. Please do not reply to this email.
-                </p>
-              </td>
-            </tr>
-
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-
-  try {
-    console.log(`[EMAIL_DIAGNOSTIC] SMTP send attempt: recipientDomain=${recipientDomain}, subject="${subjectTitle}"`);
-    const info = await transporter.sendMail({
-      from,
-      to: cleanRecipient,
-      subject: subjectTitle,
-      text: plainTextContent,
-      html: htmlContent
-    });
-
-    if ((info.rejected && info.rejected.length > 0) || !info.accepted || info.accepted.length === 0) {
-      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: rejectedCount=${info.rejected?.length || 0}, acceptedCount=${info.accepted?.length || 0}`);
-      throw new Error('Email provider rejected the recipient address.');
-    }
-
-    console.log(`[EMAIL_DIAGNOSTIC] SMTP/provider acceptance: messageId=${info.messageId}, response=${info.response || 'OK'}`);
-    return { success: true, messageId: info.messageId };
-  } catch (err: any) {
-    const safeDetail = sanitizeSmtpError(err);
-    if (err.code === 'EAUTH' || (err.response && err.response.includes('535'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP authentication failed: ${safeDetail}`);
-      throw new Error(`Email service authentication failed (${err.code || '535'}: ${safeDetail})`);
-    }
-    if (err.code === 'EENVELOPE' || (err.response && err.response.includes('550')) || (err.message && err.message.includes('Email provider rejected'))) {
-      console.error(`[EMAIL_DIAGNOSTIC] Email provider rejected message: ${safeDetail}`);
-      throw new Error(`Email provider rejected the message (${safeDetail})`);
-    }
-    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.code === 'ESOCKET' || err.code === 'ENOTFOUND' || err.code === 'EDNS') {
-      console.error(`[EMAIL_DIAGNOSTIC] SMTP connection failed: ${safeDetail}`);
-      throw new Error(`Email service connection to ${host}:${port} failed (${err.code || 'NETWORK_ERROR'}: ${safeDetail})`);
-    }
-    if (err.message && (err.message.includes('authentication') || err.message.includes('connection') || err.message.includes('configured'))) {
-      throw err;
-    }
-
-    console.error(`[EMAIL_DIAGNOSTIC] SMTP send failed: ${safeDetail}`);
-    throw new Error(`Email delivery failed (${safeDetail})`);
-  }
-}
-

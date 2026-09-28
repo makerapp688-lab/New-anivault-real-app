@@ -22,6 +22,8 @@ import {
 import { Anime } from '../types.ts';
 import { AnimeArtwork } from './AnimeArtwork.tsx';
 import { calculateTotalEpisodes, resolveWatchUrl } from '../utils/provider.ts';
+import { useUserData } from '../hooks/useUserData.ts';
+import { triggerGuestRestriction } from '../utils/userStorage.ts';
 
 interface CompareAnimeViewProps {
   allAnime: Anime[];
@@ -36,6 +38,8 @@ export const CompareAnimeView: React.FC<CompareAnimeViewProps> = ({
   initialAnimeId2,
   onOpenDetails
 }) => {
+  const { isGuest } = useUserData();
+
   // Selected Anime for Slot 1 and Slot 2
   const [anime1, setAnime1] = useState<Anime | null>(() => {
     if (initialAnimeId1) {
@@ -89,6 +93,10 @@ export const CompareAnimeView: React.FC<CompareAnimeViewProps> = ({
   }, [allAnime, searchQuery, selectedTypeFilter]);
 
   const handleSelectAnime = (selected: Anime) => {
+    if (isGuest) {
+      triggerGuestRestriction('compare');
+      return;
+    }
     if (activeSelectingSlot === 1) {
       setAnime1(selected);
       setActiveSelectingSlot(null);
@@ -826,7 +834,7 @@ export const CompareAnimeView: React.FC<CompareAnimeViewProps> = ({
                   <span>Select Anime for Slot {activeSelectingSlot}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Browse or search verified anime cards from the Anivex catalogue
+                  Browse or search verified anime cards from the Zenime catalogue
                 </p>
               </div>
               <button

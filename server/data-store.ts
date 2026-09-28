@@ -144,6 +144,15 @@ class AuthoritativeDataStore {
     return true;
   }
 
+  public deleteCatalogueAnime(animeId: string): boolean {
+    if (!this.catalogueMap.has(animeId)) return false;
+    this.catalogueMap.delete(animeId);
+    this.isCatalogueDirty = true;
+    this.totalDbWrites++;
+    this.flushCatalogueSync();
+    return true;
+  }
+
   public markCatalogueVerified(animeId: string, status: string): void {
     this.updateCatalogueAnime(animeId, (item) => {
       item.artwork = {

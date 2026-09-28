@@ -1,117 +1,72 @@
 import React from 'react';
+import zenimePrimaryLogo from '../assets/images/zenime_primary_logo_1790572796973.jpg';
+import zenimeCinematicLogo from '../assets/images/zenime_official_logo_1790572469771.jpg';
 
-interface AnivexLogoProps {
+export { zenimePrimaryLogo, zenimeCinematicLogo };
+
+interface ZenimeLogoProps {
   className?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  variant?: 'primary' | 'cinematic';
   showText?: boolean;
   textClassName?: string;
 }
 
-const SIZE_MAP = {
-  xs: 'w-6 h-6',
-  sm: 'w-8 h-8',
-  md: 'w-10 h-10',
-  lg: 'w-14 h-14',
-  xl: 'w-20 h-20',
-  '2xl': 'w-32 h-32',
-  '3xl': 'w-48 h-48'
+const PRIMARY_SIZE_MAP = {
+  xs: 'w-6 h-6 text-xs',
+  sm: 'w-8 h-8 text-sm',
+  md: 'w-10 h-10 text-base',
+  lg: 'w-14 h-14 text-xl',
+  xl: 'w-20 h-20 text-2xl',
+  '2xl': 'w-32 h-32 text-4xl',
+  '3xl': 'w-48 h-48 text-5xl'
 };
 
-export const AnivexLogo: React.FC<AnivexLogoProps> = ({
+const CINEMATIC_SIZE_MAP = {
+  xs: 'w-12 h-7 text-xs',
+  sm: 'w-16 h-10 text-sm',
+  md: 'w-24 h-14 text-base',
+  lg: 'w-32 h-20 text-xl',
+  xl: 'w-44 h-28 text-2xl',
+  '2xl': 'w-56 h-36 text-4xl',
+  '3xl': 'w-72 h-44 text-5xl'
+};
+
+export const ZenimeLogo: React.FC<ZenimeLogoProps> = ({
   className = '',
   size = 'md',
+  variant = 'primary',
   showText = false,
   textClassName = ''
 }) => {
-  const sizeClass = SIZE_MAP[size] || SIZE_MAP.md;
+  const isCinematic = variant === 'cinematic';
+  const sizeClass = isCinematic
+    ? CINEMATIC_SIZE_MAP[size] || CINEMATIC_SIZE_MAP.lg
+    : PRIMARY_SIZE_MAP[size] || PRIMARY_SIZE_MAP.md;
+
+  const logoSrc = isCinematic ? zenimeCinematicLogo : zenimePrimaryLogo;
+  const fallbackStaticPath = isCinematic ? '/zenime-cinematic-logo.png' : '/zenime-logo.png';
 
   return (
-    <div className={`inline-flex items-center gap-3 ${className}`} id="anivex-brand-logo">
+    <div
+      className={`inline-flex items-center gap-3 ${className}`}
+      id={isCinematic ? 'zenime-cinematic-logo' : 'zenime-brand-logo'}
+    >
       <div
-        className={`${sizeClass} relative shrink-0 flex items-center justify-center`}
+        className={`${sizeClass} relative shrink-0 flex items-center justify-center select-none overflow-hidden rounded-xl bg-black`}
       >
-        <svg
-          viewBox="0 0 120 120"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-[0_0_12px_rgba(56,189,248,0.3)]"
-        >
-          {/* Gradients and Filters */}
-          <defs>
-            <linearGradient id="aBodyGrad" x1="15%" y1="10%" x2="85%" y2="90%">
-              <stop offset="0%" stopColor="#38bdf8" /> {/* sky-400 */}
-              <stop offset="45%" stopColor="#2563eb" /> {/* blue-600 */}
-              <stop offset="100%" stopColor="#8b5cf6" /> {/* violet-600 */}
-            </linearGradient>
-            
-            <linearGradient id="swooshGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="#38bdf8" /> {/* sky-400 */}
-              <stop offset="60%" stopColor="#a855f7" /> {/* purple-500 */}
-              <stop offset="100%" stopColor="#ec4899" /> {/* pink-500 */}
-            </linearGradient>
-
-            <linearGradient id="wingGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#38bdf8" />
-            </linearGradient>
-
-            <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background Ambient Glow Layer */}
-          <path
-            d="M60 15 L25 88 L44 88 L54 62 L66 62 L76 88 L95 88 Z"
-            fill="#2563eb"
-            opacity="0.15"
-            filter="url(#neonGlow)"
-          />
-
-          {/* Main Futuristic Bold 'A' Shape */}
-          {/* Left Leg & Apex */}
-          <path
-            d="M60 14 L24 88 L44 88 L53 62 L67 62 L60 45 L56 45 Z"
-            fill="url(#aBodyGrad)"
-          />
-          {/* Right Leg */}
-          <path
-            d="M60 14 L96 88 L76 88 L67 62 L53 62 L60 45 L64 45 Z"
-            fill="url(#aBodyGrad)"
-          />
-          
-          {/* Inner Cut-out / Counter of the 'A' */}
-          <path
-            d="M60 32 L47 62 L73 62 Z"
-            fill="#030712" /* Blends into dark theme background for sleek stenciled look */
-            opacity="0.85"
-          />
-
-          {/* Wing / Feather Elements on the Top Right Peak */}
-          <g filter="url(#neonGlow)">
-            {/* Wing Feather 1 */}
-            <path
-              d="M62 25 C69 21 78 23 83 29 C79 28 75 27 72 28 C76 30 79 34 78 39 C74 36 70 35 66 36 C68 40 69 45 66 49 C64 44 61 41 58 40 Z"
-              fill="url(#wingGrad)"
-            />
-          </g>
-
-          {/* Glowing Dynamic Orbiting Swoosh / Ring */}
-          <path
-            d="M18 80 C28 66 52 42 78 44 C96 46 94 62 76 72 C52 84 26 84 18 80 Z"
-            stroke="url(#swooshGrad)"
-            strokeWidth="5"
-            strokeLinecap="round"
-            fill="none"
-            filter="url(#neonGlow)"
-            className="animate-pulse"
-            style={{ animationDuration: '3s' }}
-          />
-        </svg>
+        <img
+          src={logoSrc}
+          alt="Zenime"
+          referrerPolicy="no-referrer"
+          className="w-full h-full object-contain pointer-events-none"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (!target.src.endsWith(fallbackStaticPath)) {
+              target.src = fallbackStaticPath;
+            }
+          }}
+        />
       </div>
 
       {showText && (
@@ -120,9 +75,15 @@ export const AnivexLogo: React.FC<AnivexLogoProps> = ({
             textClassName || (size === 'lg' ? 'text-2xl' : size === 'xl' ? 'text-3xl' : size === '2xl' ? 'text-4xl' : 'text-xl')
           }`}
         >
-          ANI<span className="text-blue-500">VEX</span>
+          Zen<span className="text-rose-500">ime</span>
         </span>
       )}
     </div>
   );
 };
+
+export const ZenimeCinematicLogo: React.FC<Omit<ZenimeLogoProps, 'variant'>> = (props) => (
+  <ZenimeLogo {...props} variant="cinematic" />
+);
+
+export const AnivexLogo = ZenimeLogo;

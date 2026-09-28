@@ -142,7 +142,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
     setStatusBanner({
       type: 'generating',
       title: 'Updating Download File...',
-      message: 'Generating and refreshing the source archive using the latest current ANIVEX project files...'
+      message: 'Generating and refreshing the source archive using the latest current Zenime project files...'
     });
 
     try {
@@ -191,7 +191,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
       setStatusBanner({
         type: 'success',
         title: 'Download File Updated',
-        message: `Latest ANIVEX source archive (${pkg.totalFiles} files, ${compressedMB} MB) has been generated and replaced the previous version. Tap "Download Latest App Source" to download it.`,
+        message: `Latest Zenime source archive (${pkg.totalFiles} files, ${compressedMB} MB) has been generated and replaced the previous version. Tap "Download Latest App Source" to download it.`,
         filename: pkg.filename,
         sha256: pkg.sha256,
         totalFiles: pkg.totalFiles,
@@ -217,7 +217,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
       const activeToken = ownerToken || localStorage.getItem('anivault_owner_session_token') || '';
       const rawFilename =
         sourcePkgInfo?.packageName ||
-        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+        `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
       const filename = rawFilename.endsWith('.zip')
         ? rawFilename
         : rawFilename.replace(/\.(tar\.gz|tgz)$/i, '') + '.zip';
@@ -255,7 +255,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
       setStatusBanner({
         type: 'generating',
         title: 'Verifying Source Archive...',
-        message: 'Verifying the latest ANIVEX source archive exists and is readable before starting browser download...'
+        message: 'Verifying the latest Zenime source archive exists and is readable before starting browser download...'
       });
 
       const token = await ensureOwnerToken();
@@ -293,7 +293,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
 
       const verifiedFilename =
         infoData.metadata.packageName ||
-        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+        `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
       const downloadUrl = buildStandardDownloadUrl(verifiedToken, verifiedFilename);
       triggerBrowserAttachmentDownload(downloadUrl, verifiedFilename);
 
@@ -344,7 +344,7 @@ export const OwnerSourceDownloadPanel: React.FC<OwnerSourceDownloadPanelProps> =
             </span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Generates and downloads the latest ANIVEX project source archive (<code className="text-emerald-300 font-mono">.zip</code>). Passwords, API keys, SMTP credentials, session secrets, tokens, and sensitive <code className="text-rose-300 font-mono">.env</code> values are automatically excluded.
+            Generates and downloads the latest Zenime project source archive (<code className="text-emerald-300 font-mono">.zip</code>). Passwords, API keys, session secrets, tokens, and sensitive <code className="text-rose-300 font-mono">.env</code> values are automatically excluded.
           </p>
         </div>
 

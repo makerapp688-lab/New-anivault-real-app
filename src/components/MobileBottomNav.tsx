@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, Bookmark, Scale, User, Shield } from 'lucide-react';
 import { useUserData } from '../hooks/useUserData.ts';
-import { getAccountAvatar } from '../utils/userStorage.ts';
+import { getAccountAvatar, triggerGuestRestriction } from '../utils/userStorage.ts';
 import { NavTabType } from './Navbar.tsx';
 
 interface MobileBottomNavProps {
@@ -61,7 +61,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <button
           type="button"
           id="mobile-nav-compare"
-          onClick={() => setActiveTab('compare')}
+          onClick={() => {
+            if (isGuest) {
+              triggerGuestRestriction('compare');
+              return;
+            }
+            setActiveTab('compare');
+          }}
           className={`flex flex-col items-center justify-center p-1 rounded-xl transition-colors ${
             activeTab === 'compare'
               ? 'text-rose-500 font-bold'

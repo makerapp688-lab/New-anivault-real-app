@@ -308,7 +308,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Anivex-Artwork-Manager/1.0'
+          'User-Agent': 'Zenime-Artwork-Manager/1.0'
         },
         body: JSON.stringify({
           query: `query ($search: String) {
@@ -373,7 +373,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         const res = await fetch('https://anidb.net', {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; Anivex-Artwork-Manager/1.0)'
+            'User-Agent': 'Mozilla/5.0 (compatible; Zenime-Artwork-Manager/1.0)'
           },
           signal: controller.signal
         });
@@ -384,7 +384,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         const backupCtrl = new AbortController();
         const backupTimer = setTimeout(() => backupCtrl.abort(), 4000);
         const backupRes = await fetch('https://api.tvmaze.com/singlesearch/shows?q=Naruto', {
-          headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+          headers: { 'User-Agent': 'Zenime-Artwork-Manager/1.0' },
           signal: backupCtrl.signal
         });
         clearTimeout(backupTimer);
@@ -419,7 +419,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
 
       const res = await fetch(`${source.endpoint}/search/shows?q=Naruto`, {
-        headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+        headers: { 'User-Agent': 'Zenime-Artwork-Manager/1.0' },
         signal: controller.signal
       });
 
@@ -483,7 +483,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
         : `${source.endpoint}/search/tv?api_key=${encodeURIComponent(tmdbKey)}&query=Naruto`;
       const headers: Record<string, string> = {
         'Accept': 'application/json',
-        'User-Agent': 'Anivex-Artwork-Manager/1.0'
+        'User-Agent': 'Zenime-Artwork-Manager/1.0'
       };
       if (isBearer) {
         headers['Authorization'] = `Bearer ${tmdbKey}`;
@@ -537,7 +537,7 @@ export async function testSourceConnectivity(sourceId: string): Promise<{
       const timeoutId = setTimeout(() => controller.abort(), source.timeoutMs || 8000);
 
       const res = await fetch('https://api.tvmaze.com/search/shows?q=Naruto', {
-        headers: { 'User-Agent': 'Anivex-Artwork-Manager/1.0' },
+        headers: { 'User-Agent': 'Zenime-Artwork-Manager/1.0' },
         signal: controller.signal
       });
 

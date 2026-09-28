@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { UserAccount } from '../types.ts';
+import { AnivexLogo } from './AnivexLogo.tsx';
 import {
   getSavedAccounts,
   switchActiveAccount,
@@ -224,9 +225,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-600/10 border border-rose-500/30 flex items-center justify-center text-rose-500 shadow-sm">
-              <Users className="w-5 h-5" />
-            </div>
+            <AnivexLogo size="sm" />
             <div>
               <h2
                 id="account-switcher-title"
@@ -447,7 +446,7 @@ export const AccountSwitcherModal: React.FC<AccountSwitcherModalProps> = ({
                             {acc.username || acc.name || 'AnimeExplorer'}
                           </span>
                           <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                            {acc.role === 'owner' ? 'Owner' : 'Verified'}
+                            {acc.role === 'owner' ? 'Owner' : 'Account'}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-500 font-mono truncate">

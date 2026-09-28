@@ -50,11 +50,9 @@ const EXCLUDED_SENSITIVE_FILES = new Set([
   '.session-secret',
   'server/data/.session-secret',
   'server/data/owner-account.json',
+  'server/data/owner-account-deleted.json',
   'server/data/owner-sessions.json',
-  'server/data/owner-setup-temp.json',
-  'server/data/owner-email-change-temp.json',
   'server/data/users-sessions.json',
-  'server/data/users-temp-verifications.json',
   'public/anivault-source.tar.gz',
   'dist/anivault-source.tar.gz',
   'public/anivault-source.zip',
@@ -99,7 +97,7 @@ function isSensitiveOrExcludedFile(relPath: string, fileName: string): boolean {
 
 /**
  * Sanitizes text content for configuration files to ensure no secret values,
- * API keys, SMTP passwords, or tokens can ever leak into the exported archive.
+ * API keys, passwords, or tokens can ever leak into the exported archive.
  */
 function sanitizeContentIfNeeded(relPath: string, rawBuffer: Buffer): Buffer {
   const normalizedRel = relPath.replace(/\\/g, '/');
@@ -171,7 +169,7 @@ function collectProjectFiles(rootDir: string): {
     'server/data/owner-sessions.json (Active Owner session tokens)',
     'server/data/users-accounts.json (Sanitized — user password hashes stripped)',
     'server/data/users-sessions.json (Active user session tokens)',
-    'SMTP credentials, API keys, and runtime process.env secrets'
+    'API keys and runtime process.env secrets'
   ]);
 
   function walk(currentDir: string, relPrefix: string) {
@@ -455,7 +453,7 @@ function readVerifiedArchiveFromDisk(): GeneratedSourcePackage | null {
 
     const pkg: GeneratedSourcePackage = {
       buffer: diskBuffer,
-      filename: metaRaw.filename || `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`,
+      filename: (metaRaw.filename || `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`).replace(/^anivex-/i, 'zenime-'),
       generatedAt: metaRaw.generatedAt || new Date().toISOString(),
       sha256: metaRaw.sha256 || crypto.createHash('sha256').update(diskBuffer).digest('hex'),
       compressedBytes: diskBuffer.length,
@@ -486,7 +484,7 @@ export function inspectLatestAppSourceMetadata(): SourcePackageMetadata {
 
   return {
     available: files.length > 0,
-    packageName: lastUpdatedPackageState?.filename || `anivex-latest-source-${dateStamp}.zip`,
+    packageName: lastUpdatedPackageState?.filename || `zenime-latest-source-${dateStamp}.zip`,
     generatedAt,
     totalFiles: files.length + 1, // +1 for SOURCE_PACKAGE_MANIFEST.json
     totalUncompressedBytes,
@@ -500,7 +498,7 @@ export function inspectLatestAppSourceMetadata(): SourcePackageMetadata {
 
 /**
  * Explicitly rebuilds and replaces the downloadable source archive file on disk
- * using the latest current ANIVEX project files.
+ * using the latest current Zenime project files.
  */
 export function updateLatestAppSourceArchive(ownerUsername: string = 'Death197'): GeneratedSourcePackage {
   const pkg = buildLatestAppSourceArchive(ownerUsername);
@@ -538,11 +536,11 @@ export function buildLatestAppSourceArchive(ownerUsername: string = 'Death197'):
 
   const generatedAt = new Date().toISOString();
   const dateStamp = generatedAt.slice(0, 10);
-  const filename = `anivex-latest-source-${dateStamp}.zip`;
+  const filename = `zenime-latest-source-${dateStamp}.zip`;
 
   // Build live manifest file so the developer knows the exact snapshot state
   const manifest = {
-    application: 'ANIVEX',
+    application: 'ZENIME',
     packageType: 'live-development-source-snapshot',
     archiveFormat: 'zip',
     generatedAt,
@@ -551,7 +549,6 @@ export function buildLatestAppSourceArchive(ownerUsername: string = 'Death197'):
     securityPolicy: {
       secretsExcluded: true,
       passwordsExcluded: true,
-      smtpCredentialsExcluded: true,
       apiKeysExcluded: true,
       sessionSecretsExcluded: true,
       excludedSensitiveItems

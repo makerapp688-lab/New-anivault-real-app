@@ -1,5 +1,3196 @@
 [
   {
+    "id": "LOG-1790517164982-3026",
+    "timestamp": "2026-09-27T13:52:44.982Z",
+    "action": "Information Manager: Update \"Doraemon All Seasons Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_all_seasons_episodes",
+    "details": "Source: AniList (99% match) | Fields: releaseYear, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790517164923-5381",
+    "timestamp": "2026-09-27T13:52:44.923Z",
+    "action": "Information Manager: Update \"Doraemon (TV Series)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_tv_series",
+    "details": "Source: AniList (99% match) | Fields: status, releaseYear, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790517164261-3305",
+    "timestamp": "2026-09-27T13:52:44.261Z",
+    "action": "Start Verification Job (ALL)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: all, batch=4, limit=4."
+  },
+  {
+    "id": "LOG-1790517164203-6008",
+    "timestamp": "2026-09-27T13:52:44.203Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 855 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790516798617-2035",
+    "timestamp": "2026-09-27T13:46:38.617Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 855 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790516572135-9098",
+    "timestamp": "2026-09-27T13:42:52.135Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 855 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790516572047-8918",
+    "timestamp": "2026-09-27T13:42:52.047Z",
+    "action": "Information Manager: Fix All High-Confidence",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Auto-resolved 318 high-confidence items; preserved 147 items requiring human review."
+  },
+  {
+    "id": "LOG-1790516572044-7202",
+    "timestamp": "2026-09-27T13:42:52.044Z",
+    "action": "Information Manager: Update \"Yowayowa Sensei\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_yowayowa_sensei_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571987-8911",
+    "timestamp": "2026-09-27T13:42:51.987Z",
+    "action": "Information Manager: Update \"Sabrina: The Animated Series\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_sabrina_the_animated_series_season_1_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571927-5148",
+    "timestamp": "2026-09-27T13:42:51.927Z",
+    "action": "Information Manager: Update \"From Overshadowed to Overpowered: Second Reincarnation of a Talentless Sage\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_from_overshadowed_to_overpowered_second_reincarnation_of_a_talentless_sage_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571864-6412",
+    "timestamp": "2026-09-27T13:42:51.864Z",
+    "action": "Information Manager: Update \"Tamon's B-Side\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tamons_b_side_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571802-1650",
+    "timestamp": "2026-09-27T13:42:51.802Z",
+    "action": "Information Manager: Update \"Haikyu!! OVA Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_haikyu_ova_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571746-8281",
+    "timestamp": "2026-09-27T13:42:51.746Z",
+    "action": "Information Manager: Update \"Kamen Rider Gavv\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kamen_rider_gavv_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571689-4420",
+    "timestamp": "2026-09-27T13:42:51.689Z",
+    "action": "Information Manager: Update \"Skeleton Knight in Another World\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_skeleton_knight_in_another_world_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571629-7590",
+    "timestamp": "2026-09-27T13:42:51.629Z",
+    "action": "Information Manager: Update \"Scooby-Doo, Where Are You Now! (2021)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_scooby_doo_where_are_you_now_2021_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571573-4343",
+    "timestamp": "2026-09-27T13:42:51.573Z",
+    "action": "Information Manager: Update \"Tom and Jerry Special Shorts English Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tom_and_jerry_special_shorts_english_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571517-7593",
+    "timestamp": "2026-09-27T13:42:51.517Z",
+    "action": "Information Manager: Update \"The Tom and Jerry Show\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_tom_and_jerry_show_season_4_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571459-1878",
+    "timestamp": "2026-09-27T13:42:51.459Z",
+    "action": "Information Manager: Update \"Marriage Toxin\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_marriage_toxin_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571406-2009",
+    "timestamp": "2026-09-27T13:42:51.406Z",
+    "action": "Information Manager: Update \"Obocchama kun All Episodes In\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_obocchama_kun_complete_all_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571345-9255",
+    "timestamp": "2026-09-27T13:42:51.345Z",
+    "action": "Information Manager: Update \"Tom and Jerry Tales\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tom_and_jerry_tales_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571287-9264",
+    "timestamp": "2026-09-27T13:42:51.287Z",
+    "action": "Information Manager: Update \"Tom & Jerry Kids Show Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tom_jerry_kids_show_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571234-8306",
+    "timestamp": "2026-09-27T13:42:51.234Z",
+    "action": "Information Manager: Update \"Tom and Jerry All Season Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tom_and_jerry_all_season_episodes_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571177-3189",
+    "timestamp": "2026-09-27T13:42:51.177Z",
+    "action": "Information Manager: Update \"Lord of Mysteries\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_lord_of_mysteries_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571119-6956",
+    "timestamp": "2026-09-27T13:42:51.119Z",
+    "action": "Information Manager: Update \"The First Order\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_first_order_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571063-8170",
+    "timestamp": "2026-09-27T13:42:51.063Z",
+    "action": "Information Manager: Update \"Campfire Cooking in Another World with My Absurd Skill\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_campfire_cooking_in_another_world_with_my_absurd_skill_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516571001-4271",
+    "timestamp": "2026-09-27T13:42:51.001Z",
+    "action": "Information Manager: Update \"Cinderella Chef\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_cinderella_chef_season_3_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570943-8761",
+    "timestamp": "2026-09-27T13:42:50.943Z",
+    "action": "Information Manager: Update \"Stranger Things Tales from '85\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_stranger_things_tales_from_85_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570885-4473",
+    "timestamp": "2026-09-27T13:42:50.885Z",
+    "action": "Information Manager: Update \"The Exiled Heavy Knight Knows How to Game the System\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_exiled_heavy_knight_knows_how_to_game_the_system_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570825-4836",
+    "timestamp": "2026-09-27T13:42:50.825Z",
+    "action": "Information Manager: Update \"Smoking Behind the Supermarket with You\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_smoking_behind_the_supermarket_with_you_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570766-5897",
+    "timestamp": "2026-09-27T13:42:50.766Z",
+    "action": "Information Manager: Update \"Chainsmoker Cat\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_chainsmoker_cat_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570715-9919",
+    "timestamp": "2026-09-27T13:42:50.715Z",
+    "action": "Information Manager: Update \"Bandbudh aur Budbak 2.0\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_bandbudh_aur_budbak_2_0_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570656-3797",
+    "timestamp": "2026-09-27T13:42:50.656Z",
+    "action": "Information Manager: Update \"The Frontier Lord Begins with Zero Subjects\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_frontier_lord_begins_with_zero_subjects_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570603-6978",
+    "timestamp": "2026-09-27T13:42:50.603Z",
+    "action": "Information Manager: Update \"Legend of Exorcism\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_legend_of_exorcism_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570549-9381",
+    "timestamp": "2026-09-27T13:42:50.549Z",
+    "action": "Information Manager: Update \"Pokémon Horizons The Search for Laqua (\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_horizons_the_search_for_laqua_season_27_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570485-2344",
+    "timestamp": "2026-09-27T13:42:50.485Z",
+    "action": "Information Manager: Update \"I Became a Legend After My 10 Year-Long Last Stand\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_i_became_a_legend_after_my_10_year_long_last_stand_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570426-5667",
+    "timestamp": "2026-09-27T13:42:50.426Z",
+    "action": "Information Manager: Update \"The Elusive Samurai\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_elusive_samurai_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570373-9853",
+    "timestamp": "2026-09-27T13:42:50.373Z",
+    "action": "Information Manager: Update \"The Beginning After the End\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_beginning_after_the_end_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570311-8148",
+    "timestamp": "2026-09-27T13:42:50.311Z",
+    "action": "Information Manager: Update \"Bandbudh Aur Budbak Complete All Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_bandbudh_aur_budbak_complete_all_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570249-1293",
+    "timestamp": "2026-09-27T13:42:50.249Z",
+    "action": "Information Manager: Update \"BLACK TORCH\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_black_torch_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570192-6985",
+    "timestamp": "2026-09-27T13:42:50.192Z",
+    "action": "Information Manager: Update \"Kaiju No. 8 - Narumi's Week at Work Shorts Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kaiju_no_8_narumis_week_at_work_shorts_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570133-1725",
+    "timestamp": "2026-09-27T13:42:50.133Z",
+    "action": "Information Manager: Update \"BoBoiBoy Galaxy Sori\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_boboiboy_galaxy_sori_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570068-1155",
+    "timestamp": "2026-09-27T13:42:50.068Z",
+    "action": "Information Manager: Update \"Jaadugar A Witch in Mongolia\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_jaadugar_a_witch_in_mongolia_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516570001-7005",
+    "timestamp": "2026-09-27T13:42:50.001Z",
+    "action": "Information Manager: Update \"The 100 Girlfriends Who Really, Really, Really, Really, REALLY Love You\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_100_girlfriends_who_really_really_really_really_really_love_you_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569946-3181",
+    "timestamp": "2026-09-27T13:42:49.946Z",
+    "action": "Information Manager: Update \"Heaven Official's Blessing\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_heaven_officials_blessing_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569888-9406",
+    "timestamp": "2026-09-27T13:42:49.888Z",
+    "action": "Information Manager: Update \"Welcome to Demon School! Iruma-kun\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_welcome_to_demon_school_iruma_kun_season_3_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569836-9767",
+    "timestamp": "2026-09-27T13:42:49.836Z",
+    "action": "Information Manager: Update \"Hanaori-san Still Wants to Fight in the Next Life\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_hanaori_san_still_wants_to_fight_in_the_next_life_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569782-1761",
+    "timestamp": "2026-09-27T13:42:49.782Z",
+    "action": "Information Manager: Update \"Jungle Tales with Mowgli\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_jungle_tales_with_mowgli_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569728-2185",
+    "timestamp": "2026-09-27T13:42:49.728Z",
+    "action": "Information Manager: Update \"Sparks of Tomorrow\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_sparks_of_tomorrow_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569679-4742",
+    "timestamp": "2026-09-27T13:42:49.679Z",
+    "action": "Information Manager: Update \"Looney Tunes Cartoons\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_looney_tunes_cartoons_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569626-9624",
+    "timestamp": "2026-09-27T13:42:49.626Z",
+    "action": "Information Manager: Update \"Captain Tsubasa Junior Youth Arc\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_captain_tsubasa_junior_youth_arc_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569574-5464",
+    "timestamp": "2026-09-27T13:42:49.574Z",
+    "action": "Information Manager: Update \"JoJo's Bizarre Adventure\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_jojos_bizarre_adventure_season_3_diamond_is_unbreakable_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569524-4023",
+    "timestamp": "2026-09-27T13:42:49.524Z",
+    "action": "Information Manager: Update \"Thunder 3\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_thunder_3_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569467-1743",
+    "timestamp": "2026-09-27T13:42:49.467Z",
+    "action": "Information Manager: Update \"KONOSUBA – An Explosion on This Wonderful World!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_konosuba_an_explosion_on_this_wonderful_world_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569414-5292",
+    "timestamp": "2026-09-27T13:42:49.414Z",
+    "action": "Information Manager: Update \"Clevatess\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_clevatess_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569364-1984",
+    "timestamp": "2026-09-27T13:42:49.364Z",
+    "action": "Information Manager: Update \"Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_trapped_in_a_dating_sim_the_world_of_otome_games_is_tough_for_mobs_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569313-6771",
+    "timestamp": "2026-09-27T13:42:49.313Z",
+    "action": "Information Manager: Update \"Hana-Kimi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_hana_kimi_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569262-5577",
+    "timestamp": "2026-09-27T13:42:49.262Z",
+    "action": "Information Manager: Update \"The Wait is Over: Official\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_official_android_app",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569213-1514",
+    "timestamp": "2026-09-27T13:42:49.213Z",
+    "action": "Information Manager: Update \"Tomb Raider King\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tomb_raider_king_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569161-1107",
+    "timestamp": "2026-09-27T13:42:49.161Z",
+    "action": "Information Manager: Update \"Boruto Naruto Next Generations\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_boruto_naruto_next_generations_hindi_subbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569107-8533",
+    "timestamp": "2026-09-27T13:42:49.107Z",
+    "action": "Information Manager: Update \"Yo-kai Watch\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_yo_kai_watch_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569057-4545",
+    "timestamp": "2026-09-27T13:42:49.057Z",
+    "action": "Information Manager: Update \"The Powerpuff Girls\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_powerpuff_girls_season_1_6_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516569005-8144",
+    "timestamp": "2026-09-27T13:42:49.005Z",
+    "action": "Information Manager: Update \"Teen Titans Go\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_teen_titans_go_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568955-3431",
+    "timestamp": "2026-09-27T13:42:48.955Z",
+    "action": "Information Manager: Update \"Supa Strikas\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_supa_strikas_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568906-6847",
+    "timestamp": "2026-09-27T13:42:48.906Z",
+    "action": "Information Manager: Update \"Samurai Jack All Season\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_samurai_jack_all_season_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568855-4383",
+    "timestamp": "2026-09-27T13:42:48.855Z",
+    "action": "Information Manager: Update \"Redakai Conquer the Kairu\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_redakai_conquer_the_kairu_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568808-9559",
+    "timestamp": "2026-09-27T13:42:48.808Z",
+    "action": "Information Manager: Update \"Oggy and the Cockroaches\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_oggy_and_the_cockroaches_season_3_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568762-4487",
+    "timestamp": "2026-09-27T13:42:48.762Z",
+    "action": "Information Manager: Update \"Jackie Chan Adventures\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_jackie_chan_adventures_season_1_hindi_episodes_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568712-5159",
+    "timestamp": "2026-09-27T13:42:48.712Z",
+    "action": "Information Manager: Update \"Johnny Test (2022)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_johnny_test_2021_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568663-7583",
+    "timestamp": "2026-09-27T13:42:48.663Z",
+    "action": "Information Manager: Update \"Johnny Test 2021\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_johnny_test_2021_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568617-9263",
+    "timestamp": "2026-09-27T13:42:48.617Z",
+    "action": "Information Manager: Update \"Horrid Henry\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_horrid_henry_season_3_episodes_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568525-8940",
+    "timestamp": "2026-09-27T13:42:48.525Z",
+    "action": "Information Manager: Update \"Generator Rex\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_generator_rex_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568460-2023",
+    "timestamp": "2026-09-27T13:42:48.460Z",
+    "action": "Information Manager: Update \"Dexters Laboratory\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_dexters_laboratory_season_1_hindi_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568411-5635",
+    "timestamp": "2026-09-27T13:42:48.411Z",
+    "action": "Information Manager: Update \"Dc Super Hero Girls\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_dc_super_hero_girls_season_1_hindi_episodes_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568362-9490",
+    "timestamp": "2026-09-27T13:42:48.362Z",
+    "action": "Information Manager: Update \"Courage The Cowardly Dog\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_courage_the_cowardly_dog_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568311-6776",
+    "timestamp": "2026-09-27T13:42:48.311Z",
+    "action": "Information Manager: Update \"Bob the Builder All Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_bob_the_builder_all_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568263-6264",
+    "timestamp": "2026-09-27T13:42:48.263Z",
+    "action": "Information Manager: Update \"Baby Looney Tunes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_baby_looney_tunes_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568212-8124",
+    "timestamp": "2026-09-27T13:42:48.212Z",
+    "action": "Information Manager: Update \"Ben 10 Omniverse\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_omniverse_all_episodes_hindi_tamil_telugu_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: title, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568160-5135",
+    "timestamp": "2026-09-27T13:42:48.160Z",
+    "action": "Information Manager: Update \"Ben 10 Reboot (2016)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_reboot_2016_season_3_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568111-4569",
+    "timestamp": "2026-09-27T13:42:48.111Z",
+    "action": "Information Manager: Update \"Ben 10 Ultimate Alien\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_ultimate_alien_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568062-8333",
+    "timestamp": "2026-09-27T13:42:48.062Z",
+    "action": "Information Manager: Update \"Ben 10 Alien Force\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_alien_force_season_2_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516568013-2864",
+    "timestamp": "2026-09-27T13:42:48.013Z",
+    "action": "Information Manager: Update \"Ben 10 Classic\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_classic_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567960-3244",
+    "timestamp": "2026-09-27T13:42:47.960Z",
+    "action": "Information Manager: Update \"Ben 10 Destroy All Aliens\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ben_10_destroy_all_aliens_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567910-4151",
+    "timestamp": "2026-09-27T13:42:47.910Z",
+    "action": "Information Manager: Update \"Adventure Time\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_adventure_time_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567863-2055",
+    "timestamp": "2026-09-27T13:42:47.863Z",
+    "action": "Information Manager: Update \"Zatch Bell\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_zatch_bell_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567814-3382",
+    "timestamp": "2026-09-27T13:42:47.814Z",
+    "action": "Information Manager: Update \"Zinba All\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_zinba_all_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567768-8211",
+    "timestamp": "2026-09-27T13:42:47.768Z",
+    "action": "Information Manager: Update \"Winx Club\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_winx_club_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567721-1229",
+    "timestamp": "2026-09-27T13:42:47.721Z",
+    "action": "Information Manager: Update \"Thomas Friends All Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_thomas_friends_all_hindi_episodes_download_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567674-3362",
+    "timestamp": "2026-09-27T13:42:47.674Z",
+    "action": "Information Manager: Update \"Teenage Mutant Ninja Turtles\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_teenage_mutant_ninja_turtles_season_1_hindi_dubbed_download_01",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567625-6065",
+    "timestamp": "2026-09-27T13:42:47.625Z",
+    "action": "Information Manager: Update \"Power Rangers (2017)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_2017_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567576-3472",
+    "timestamp": "2026-09-27T13:42:47.576Z",
+    "action": "Information Manager: Update \"Mighty Morphin Power Rangers Once Always 2023\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_mighty_morphin_power_rangers_once_always_2023_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567515-3976",
+    "timestamp": "2026-09-27T13:42:47.515Z",
+    "action": "Information Manager: Update \"Power Rangers Samurai Clash of the Red Rangers (2011)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_samurai_clash_of_the_red_rangers_2011_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567463-1222",
+    "timestamp": "2026-09-27T13:42:47.463Z",
+    "action": "Information Manager: Update \"Power Rangers Cosmic Fury\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_cosmic_fury_season_30_2023_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567415-3925",
+    "timestamp": "2026-09-27T13:42:47.415Z",
+    "action": "Information Manager: Update \"Power Rangers Dino Fury (2)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_dino_fury_2_season_29_2022_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567366-7029",
+    "timestamp": "2026-09-27T13:42:47.366Z",
+    "action": "Information Manager: Update \"Power Rangers Dino Fury (1)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_dino_fury_1_season_28_2021_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567313-5274",
+    "timestamp": "2026-09-27T13:42:47.313Z",
+    "action": "Information Manager: Update \"Power Rangers Beast Morphers\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_beast_morphers_1_season_26_2019_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567266-5783",
+    "timestamp": "2026-09-27T13:42:47.266Z",
+    "action": "Information Manager: Update \"Power Rangers Ninja Steel\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_ninja_steel_season_24_2017_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567214-1395",
+    "timestamp": "2026-09-27T13:42:47.214Z",
+    "action": "Information Manager: Update \"Power Rangers Dino Super Charge\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_dino_super_charge_season_23_2016_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567163-9448",
+    "timestamp": "2026-09-27T13:42:47.163Z",
+    "action": "Information Manager: Update \"Power Rangers Dino Charge\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_dino_charge_season_22_2015_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567113-8764",
+    "timestamp": "2026-09-27T13:42:47.113Z",
+    "action": "Information Manager: Update \"Power Rangers Super Megaforce\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_super_megaforce_season_21_2014_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516567049-7086",
+    "timestamp": "2026-09-27T13:42:47.049Z",
+    "action": "Information Manager: Update \"Power Rangers Megaforce\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_megaforce_season_20_2013_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566995-5594",
+    "timestamp": "2026-09-27T13:42:46.995Z",
+    "action": "Information Manager: Update \"Power Rangers Super Samurai\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_super_samurai_season_19_2012_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566947-6060",
+    "timestamp": "2026-09-27T13:42:46.947Z",
+    "action": "Information Manager: Update \"Power Rangers Samurai\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_samurai_season_18_2011_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566898-1112",
+    "timestamp": "2026-09-27T13:42:46.898Z",
+    "action": "Information Manager: Update \"Power Rangers RPM\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_rpm_season_17_2009_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566849-1709",
+    "timestamp": "2026-09-27T13:42:46.849Z",
+    "action": "Information Manager: Update \"Power Rangers Jungle Fury\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_jungle_fury_season_16_2008_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566800-8895",
+    "timestamp": "2026-09-27T13:42:46.800Z",
+    "action": "Information Manager: Update \"Power Rangers Operation Overdrive\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_operation_overdrive_season_15_2007_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566751-9967",
+    "timestamp": "2026-09-27T13:42:46.751Z",
+    "action": "Information Manager: Update \"Power Rangers Mystic Force\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_mystic_force_season_14_2006_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566699-2434",
+    "timestamp": "2026-09-27T13:42:46.699Z",
+    "action": "Information Manager: Update \"Power Rangers Dino Thunder\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_dino_thunder_season_12_2004_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566652-3439",
+    "timestamp": "2026-09-27T13:42:46.652Z",
+    "action": "Information Manager: Update \"Power Rangers Ninja Storm\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_ninja_storm_season_11_2003_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566603-1832",
+    "timestamp": "2026-09-27T13:42:46.603Z",
+    "action": "Information Manager: Update \"Power Rangers Wild Force\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_wild_force_season_10_2002_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566554-5682",
+    "timestamp": "2026-09-27T13:42:46.554Z",
+    "action": "Information Manager: Update \"Power Rangers Time Force\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_time_force_season_9_2001_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566504-1511",
+    "timestamp": "2026-09-27T13:42:46.504Z",
+    "action": "Information Manager: Update \"Power Rangers Lightspeed Rescue\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_lightspeed_rescue_season_8_2000_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566454-6188",
+    "timestamp": "2026-09-27T13:42:46.454Z",
+    "action": "Information Manager: Update \"Power Rangers Lost Galaxy\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_lost_galaxy_season_7_1999_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566405-8023",
+    "timestamp": "2026-09-27T13:42:46.405Z",
+    "action": "Information Manager: Update \"Power Rangers In Space\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_in_space_season_6_1998_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566359-6448",
+    "timestamp": "2026-09-27T13:42:46.359Z",
+    "action": "Information Manager: Update \"Power Rangers Turbo\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_turbo_season_5_1997_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566310-2862",
+    "timestamp": "2026-09-27T13:42:46.310Z",
+    "action": "Information Manager: Update \"Power Rangers Zeo\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_power_rangers_zeo_season_4_1996_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566261-2698",
+    "timestamp": "2026-09-27T13:42:46.261Z",
+    "action": "Information Manager: Update \"Ninja Hattori Returns\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ninja_hattori_returns_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566212-3264",
+    "timestamp": "2026-09-27T13:42:46.212Z",
+    "action": "Information Manager: Update \"Ninja Hattori (1981)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ninja_hattori_1981_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566160-2087",
+    "timestamp": "2026-09-27T13:42:46.160Z",
+    "action": "Information Manager: Update \"Mighty Cat Masked Niyander Hindi – Tamil Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_mighty_cat_masked_niyander_hindi_tamil_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566112-2149",
+    "timestamp": "2026-09-27T13:42:46.112Z",
+    "action": "Information Manager: Update \"Jing Ju Cats\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_jing_ju_cats_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566065-9639",
+    "timestamp": "2026-09-27T13:42:46.065Z",
+    "action": "Information Manager: Update \"Idaten Jump\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_idaten_jump_season_1_all_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516566015-9509",
+    "timestamp": "2026-09-27T13:42:46.015Z",
+    "action": "Information Manager: Update \"Ghosts at School Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ghosts_at_school_hindi_episodes_download_ghost_at_school",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565966-7258",
+    "timestamp": "2026-09-27T13:42:45.966Z",
+    "action": "Information Manager: Update \"Dinosaur King\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_dinosaur_king_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565919-6626",
+    "timestamp": "2026-09-27T13:42:45.919Z",
+    "action": "Information Manager: Update \"Avatar The Legend of Korra\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_avatar_the_legend_of_korra_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565871-7288",
+    "timestamp": "2026-09-27T13:42:45.871Z",
+    "action": "Information Manager: Update \"Avatar The Last Airbender\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_avatar_the_last_airbender_season_1_hindi_tamil_telugu_malayalam_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565823-2070",
+    "timestamp": "2026-09-27T13:42:45.823Z",
+    "action": "Information Manager: Update \"The Avengers: Earth’s Mightiest Heroes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_avengers_earths_mightiest_heroes_season_1_hindi_episode_download_in_01",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565777-3304",
+    "timestamp": "2026-09-27T13:42:45.777Z",
+    "action": "Information Manager: Update \"Star Wars Rebels\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_star_wars_rebels_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565712-6956",
+    "timestamp": "2026-09-27T13:42:45.712Z",
+    "action": "Information Manager: Update \"Star Wars Resistance\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_star_wars_resistance_season_1_episodes_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565661-9045",
+    "timestamp": "2026-09-27T13:42:45.661Z",
+    "action": "Information Manager: Update \"The Spectacular Spider-Man\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_spectacular_spider_man_season_1_hindi_episodes_720p_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565613-7811",
+    "timestamp": "2026-09-27T13:42:45.613Z",
+    "action": "Information Manager: Update \"Spider-Man The Animated Series (1994) All Season Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_spider_man_the_animated_series_1994_all_season_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565564-9261",
+    "timestamp": "2026-09-27T13:42:45.564Z",
+    "action": "Information Manager: Update \"Marvel’s Spider-Man (2017)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_marvels_spider_man_2017_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565515-7701",
+    "timestamp": "2026-09-27T13:42:45.515Z",
+    "action": "Information Manager: Update \"Marvel Future Avengers\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_marvel_future_avengers_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565466-3723",
+    "timestamp": "2026-09-27T13:42:45.466Z",
+    "action": "Information Manager: Update \"Ultimate Spider-Man\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ultimate_spider_man_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565415-1045",
+    "timestamp": "2026-09-27T13:42:45.415Z",
+    "action": "Information Manager: Update \"Marvel Disk Wars The Avengers Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_marvel_disk_wars_the_avengers_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565368-3637",
+    "timestamp": "2026-09-27T13:42:45.368Z",
+    "action": "Information Manager: Update \"Blade (2011)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_blade_2011_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565322-5796",
+    "timestamp": "2026-09-27T13:42:45.322Z",
+    "action": "Information Manager: Update \"X-Men (2011)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_x_men_2011_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565276-2923",
+    "timestamp": "2026-09-27T13:42:45.276Z",
+    "action": "Information Manager: Update \"Wolverine (2011)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_wolverine_2011_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565228-7322",
+    "timestamp": "2026-09-27T13:42:45.228Z",
+    "action": "Information Manager: Update \"Iron Man 2010 Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_iron_man_2010_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565181-9886",
+    "timestamp": "2026-09-27T13:42:45.181Z",
+    "action": "Information Manager: Update \"Iron Man (1994) All Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_iron_man_1994_all_hindi_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565130-4797",
+    "timestamp": "2026-09-27T13:42:45.130Z",
+    "action": "Information Manager: Update \"Iron Man Armored Adventures\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_iron_man_armored_adventures_season_1_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565081-4085",
+    "timestamp": "2026-09-27T13:42:45.081Z",
+    "action": "Information Manager: Update \"Hulk And The Agent Of SMASH\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_hulk_and_the_agent_of_smash_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516565033-8684",
+    "timestamp": "2026-09-27T13:42:45.033Z",
+    "action": "Information Manager: Update \"Guardians of the Galaxy\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_guardians_of_the_galaxy_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564983-7802",
+    "timestamp": "2026-09-27T13:42:44.983Z",
+    "action": "Information Manager: Update \"Bakugan Battle Brawlers\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_bakugan_battle_brawlers_season_1_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564935-6805",
+    "timestamp": "2026-09-27T13:42:44.935Z",
+    "action": "Information Manager: Update \"Avengers Assemble\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_avengers_assemble_season_2_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564888-6496",
+    "timestamp": "2026-09-27T13:42:44.888Z",
+    "action": "Information Manager: Update \"Yu-Gi-Oh! Duel Monsters\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_yu_gi_oh_duel_monsters_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564839-7164",
+    "timestamp": "2026-09-27T13:42:44.839Z",
+    "action": "Information Manager: Update \"Ultra B\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ultra_b_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564789-1843",
+    "timestamp": "2026-09-27T13:42:44.789Z",
+    "action": "Information Manager: Update \"TaleSpin\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_talespin_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564744-6059",
+    "timestamp": "2026-09-27T13:42:44.744Z",
+    "action": "Information Manager: Update \"DuckTales\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ducktales_season_1_hindi_tamil_telugu_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564693-7669",
+    "timestamp": "2026-09-27T13:42:44.693Z",
+    "action": "Information Manager: Update \"Lilo & Stitch\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_lilo_stitch_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564646-3765",
+    "timestamp": "2026-09-27T13:42:44.646Z",
+    "action": "Information Manager: Update \"The New Adventures of Winnie the Pooh\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_new_adventures_of_winnie_the_pooh_season_1_hindi_episodes_download_01",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564599-6714",
+    "timestamp": "2026-09-27T13:42:44.599Z",
+    "action": "Information Manager: Update \"Timon and Pumbaa\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_timon_and_pumbaa_season_1_episodes_hindi_tamil_telugu_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564550-6122",
+    "timestamp": "2026-09-27T13:42:44.550Z",
+    "action": "Information Manager: Update \"Gravity Falls\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_gravity_falls_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564498-6166",
+    "timestamp": "2026-09-27T13:42:44.498Z",
+    "action": "Information Manager: Update \"Milo Murphy’s Law\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_milo_murphys_law_season_1_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564453-2630",
+    "timestamp": "2026-09-27T13:42:44.453Z",
+    "action": "Information Manager: Update \"Star vs the Forces of Evil\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_star_vs_the_forces_of_evil_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564399-4185",
+    "timestamp": "2026-09-27T13:42:44.399Z",
+    "action": "Information Manager: Update \"Tangled The Series\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tangled_the_series_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564350-4344",
+    "timestamp": "2026-09-27T13:42:44.350Z",
+    "action": "Information Manager: Update \"Ryukendo All Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ryukendo_all_hindi_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564302-7286",
+    "timestamp": "2026-09-27T13:42:44.302Z",
+    "action": "Information Manager: Update \"Digimon Xros Wars\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_digimon_xros_wars_season_1_hindi_episodes_download_720p_hd_1080p_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564252-5731",
+    "timestamp": "2026-09-27T13:42:44.252Z",
+    "action": "Information Manager: Update \"The Little Mermaid\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_little_mermaid_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564205-3064",
+    "timestamp": "2026-09-27T13:42:44.205Z",
+    "action": "Information Manager: Update \"Tron Uprising\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_tron_uprising_season_1_hindi_episodes_download_360p_480p_720p_hd_1080p_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516564161-5640",
+    "timestamp": "2026-09-27T13:42:44.161Z",
+    "action": "Information Manager: Update \"Phineas and Ferb Star Wars Movie\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_phineas_and_ferb_star_wars_movie_hindi_tamil_telugu_download_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516564111-5363",
+    "timestamp": "2026-09-27T13:42:44.111Z",
+    "action": "Information Manager: Update \"Phineas And Ferb Movie Across the 2nd Dimension\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_phineas_and_ferb_movie_across_the_2nd_dimension_hindi_tamil_telugu_download_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516564058-2483",
+    "timestamp": "2026-09-27T13:42:44.058Z",
+    "action": "Information Manager: Update \"Phineas and Ferb\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_phineas_and_ferb_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563999-6426",
+    "timestamp": "2026-09-27T13:42:43.999Z",
+    "action": "Information Manager: Update \"Big Hero 6 Baymax Returns 2017 Movie Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_big_hero_6_baymax_returns_2017_movie_hindi_tamil_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516563951-6106",
+    "timestamp": "2026-09-27T13:42:43.951Z",
+    "action": "Information Manager: Update \"Big Hero 6 The Series\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_big_hero_6_the_series_season_1_hindi_episodes_download_0hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563903-3464",
+    "timestamp": "2026-09-27T13:42:43.903Z",
+    "action": "Information Manager: Update \"Kim Possible\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kim_possible_season_1_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563852-3352",
+    "timestamp": "2026-09-27T13:42:43.852Z",
+    "action": "Information Manager: Update \"The Ghost and Molly McGee\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_ghost_and_molly_mcgee_season_1_hindi_episodes_download",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563804-9910",
+    "timestamp": "2026-09-27T13:42:43.804Z",
+    "action": "Information Manager: Update \"Ghostforce\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_ghostforce_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563755-3302",
+    "timestamp": "2026-09-27T13:42:43.755Z",
+    "action": "Information Manager: Update \"Luckyman (1994) Complete All Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_luckyman_1994_complete_all_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563704-2942",
+    "timestamp": "2026-09-27T13:42:43.704Z",
+    "action": "Information Manager: Update \"The Gutsy Frog (Dokonjou Gaeru) Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_the_gutsy_frog_dokonjou_gaeru_hindi_episodes_download_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563659-3487",
+    "timestamp": "2026-09-27T13:42:43.659Z",
+    "action": "Information Manager: Update \"Kiteretsu All Season Episodes Hindi – Tamil – Telugu\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kiteretsu_all_season_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563610-9958",
+    "timestamp": "2026-09-27T13:42:43.610Z",
+    "action": "Information Manager: Update \"Kochikame The Movie\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kochikame_the_movie_hindi_subbed_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516563560-5560",
+    "timestamp": "2026-09-27T13:42:43.560Z",
+    "action": "Information Manager: Update \"Kochikame\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_kochikame_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563511-8097",
+    "timestamp": "2026-09-27T13:42:43.511Z",
+    "action": "Information Manager: Update \"Perman All Season Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_perman_all_hindi_dubbed_episodes_download_watch_online",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563459-8572",
+    "timestamp": "2026-09-27T13:42:43.459Z",
+    "action": "Information Manager: Update \"Mickey Mouse Clubhouse\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_mickey_mouse_clubhouse_season_1_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563411-5770",
+    "timestamp": "2026-09-27T13:42:43.411Z",
+    "action": "Information Manager: Update \"Shinchan\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_shinchan_season_1_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563367-8753",
+    "timestamp": "2026-09-27T13:42:43.367Z",
+    "action": "Information Manager: Update \"Doraemon\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_doraemon_season_1_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563318-5004",
+    "timestamp": "2026-09-27T13:42:43.318Z",
+    "action": "Information Manager: Update \"BeyWarriors Cyborg\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beywarriors_cyborg_season_3_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563270-3819",
+    "timestamp": "2026-09-27T13:42:43.270Z",
+    "action": "Information Manager: Update \"BeyWarriors BeyRaiderz Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beywarriors_beyraiderz_season_2_hindi_episodes_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563225-3762",
+    "timestamp": "2026-09-27T13:42:43.225Z",
+    "action": "Information Manager: Update \"BeyWheelz\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beywheelz_season_1_hindi_episodes_download_720p_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563176-9436",
+    "timestamp": "2026-09-27T13:42:43.176Z",
+    "action": "Information Manager: Update \"Beyblade Burst QuadDrive\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_quaddrive_season_6_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563128-7404",
+    "timestamp": "2026-09-27T13:42:43.128Z",
+    "action": "Information Manager: Update \"Beyblade Burst Surge\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_surge_season_5_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563084-4422",
+    "timestamp": "2026-09-27T13:42:43.084Z",
+    "action": "Information Manager: Update \"Beyblade Burst Rise\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_rise_season_4_hindi_episodes_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516563036-8359",
+    "timestamp": "2026-09-27T13:42:43.036Z",
+    "action": "Information Manager: Update \"Beyblade Burst Turbo\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_turbo_season_3_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562985-1881",
+    "timestamp": "2026-09-27T13:42:42.985Z",
+    "action": "Information Manager: Update \"Beyblade Burst Evolution\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_evolution_season_2_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562941-4180",
+    "timestamp": "2026-09-27T13:42:42.941Z",
+    "action": "Information Manager: Update \"Beyblade Burst\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_burst_season_1_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562895-1303",
+    "timestamp": "2026-09-27T13:42:42.895Z",
+    "action": "Information Manager: Update \"Beyblade Shogun Steel\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_shogun_steel_season_4_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562850-8878",
+    "timestamp": "2026-09-27T13:42:42.850Z",
+    "action": "Information Manager: Update \"Beyblade Metal Fury\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_metal_fury_season_3_hindi_episodes_download_cn_dub",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562806-3686",
+    "timestamp": "2026-09-27T13:42:42.806Z",
+    "action": "Information Manager: Update \"Beyblade Metal Masters\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_metal_masters_season_2_hindi_episodes_download_in_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562759-1816",
+    "timestamp": "2026-09-27T13:42:42.759Z",
+    "action": "Information Manager: Update \"Beyblade Metal Fusion\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_metal_fusion_season_1_hindi_episodes_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562713-5311",
+    "timestamp": "2026-09-27T13:42:42.713Z",
+    "action": "Information Manager: Update \"Beyblade\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_beyblade_season_1_remastered_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562670-4409",
+    "timestamp": "2026-09-27T13:42:42.670Z",
+    "action": "Information Manager: Update \"Dragon Ball Z Movie 10 Broly – Second Coming\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_dragon_ball_z_movie_10_broly_second_coming_hindi_watch_download_fhd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516562624-2692",
+    "timestamp": "2026-09-27T13:42:42.624Z",
+    "action": "Information Manager: Update \"Dragon Ball Z Movie 9 Bojack Unbound\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_dragon_ball_z_movie_9_bojack_unbound_hindi_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516562578-4231",
+    "timestamp": "2026-09-27T13:42:42.578Z",
+    "action": "Information Manager: Update \"Pokémon Horizons: The Series (\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_horizons_the_series_season_26_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562535-1915",
+    "timestamp": "2026-09-27T13:42:42.535Z",
+    "action": "Information Manager: Update \"Pokémon the Series: XYZ (\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_the_series_xyz_season_19_episodes_hindi_dubbed_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562489-7932",
+    "timestamp": "2026-09-27T13:42:42.489Z",
+    "action": "Information Manager: Update \"Pokemon Pikachu’s Winter Vacation Special Hindi Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_pikachus_winter_vacation_special_hindi_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562443-7185",
+    "timestamp": "2026-09-27T13:42:42.443Z",
+    "action": "Information Manager: Update \"Pokemon XY Mega Evolution Special Episodes\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_xy_mega_evolution_special_episodes_hindi_tamil_telugu_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562398-8468",
+    "timestamp": "2026-09-27T13:42:42.398Z",
+    "action": "Information Manager: Update \"Pokemon Adventures on the Orange Islands\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_adventures_in_the_orange_islands_season_2_hindi_tamil_telugu_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562352-7110",
+    "timestamp": "2026-09-27T13:42:42.352Z",
+    "action": "Information Manager: Update \"Pokemon\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_pokemon_season_1_indigo_league_hindi_episodes_watch_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562303-5327",
+    "timestamp": "2026-09-27T13:42:42.304Z",
+    "action": "Information Manager: Update \"My Hero Academia Season 6\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_my_hero_academia_season_6",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516562261-2821",
+    "timestamp": "2026-09-27T13:42:42.261Z",
+    "action": "Information Manager: Update \"Vinland Saga Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_vinland_saga_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516562215-4590",
+    "timestamp": "2026-09-27T13:42:42.215Z",
+    "action": "Information Manager: Update \"Samurai Champloo\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_samurai_champloo",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562168-3612",
+    "timestamp": "2026-09-27T13:42:42.168Z",
+    "action": "Information Manager: Update \"Kaiju No. 8 Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_kaiju_no_8_season_2",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516562123-4411",
+    "timestamp": "2026-09-27T13:42:42.123Z",
+    "action": "Information Manager: Update \"Trigun\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_trigun",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562075-6986",
+    "timestamp": "2026-09-27T13:42:42.075Z",
+    "action": "Information Manager: Update \"Dragon Ball Super\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_dragon_ball_super",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516562022-9527",
+    "timestamp": "2026-09-27T13:42:42.022Z",
+    "action": "Information Manager: Update \"Dragon Ball\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_dragon_ball",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561980-4270",
+    "timestamp": "2026-09-27T13:42:41.980Z",
+    "action": "Information Manager: Update \"My Hero Academia Season 5\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_my_hero_academia_season_5",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561932-6805",
+    "timestamp": "2026-09-27T13:42:41.932Z",
+    "action": "Information Manager: Update \"Dragon Ball Z\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_dragon_ball_z",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561889-8229",
+    "timestamp": "2026-09-27T13:42:41.889Z",
+    "action": "Information Manager: Update \"Hunter x Hunter (2011)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hunter_x_hunter_2011",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561842-9522",
+    "timestamp": "2026-09-27T13:42:41.842Z",
+    "action": "Information Manager: Update \"Cowboy Bebop\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_cowboy_bebop",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561795-2834",
+    "timestamp": "2026-09-27T13:42:41.795Z",
+    "action": "Information Manager: Update \"Code Geass: Lelouch of the Rebellion\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_code_geass_lelouch_of_the_rebellion",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561750-4484",
+    "timestamp": "2026-09-27T13:42:41.750Z",
+    "action": "Information Manager: Update \"My Hero Academia Season 4\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_my_hero_academia_season_4",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561705-9618",
+    "timestamp": "2026-09-27T13:42:41.705Z",
+    "action": "Information Manager: Update \"My Hero Academia Season 3\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_my_hero_academia_season_3",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561659-1908",
+    "timestamp": "2026-09-27T13:42:41.659Z",
+    "action": "Information Manager: Update \"Fullmetal Alchemist: Brotherhood\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_fullmetal_alchemist_brotherhood",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561613-9369",
+    "timestamp": "2026-09-27T13:42:41.613Z",
+    "action": "Information Manager: Update \"NANA\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_nana",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561568-3268",
+    "timestamp": "2026-09-27T13:42:41.568Z",
+    "action": "Information Manager: Update \"Nichijou - My Ordinary Life\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_nichijou_my_ordinary_life",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561523-2793",
+    "timestamp": "2026-09-27T13:42:41.523Z",
+    "action": "Information Manager: Update \"The Disastrous Life of Saiki K.\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_disastrous_life_of_saiki_k",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561478-2025",
+    "timestamp": "2026-09-27T13:42:41.478Z",
+    "action": "Information Manager: Update \"Soul Eater\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_soul_eater",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561436-4250",
+    "timestamp": "2026-09-27T13:42:41.436Z",
+    "action": "Information Manager: Update \"JoJo's Bizarre Adventure (TV)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_jojo_s_bizarre_adventure_tv",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561390-4289",
+    "timestamp": "2026-09-27T13:42:41.390Z",
+    "action": "Information Manager: Update \"JUJUTSU KAISEN Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_jujutsu_kaisen_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516561348-3025",
+    "timestamp": "2026-09-27T13:42:41.348Z",
+    "action": "Information Manager: Update \"Ouran High School Host Club\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_ouran_high_school_host_club",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561302-8328",
+    "timestamp": "2026-09-27T13:42:41.302Z",
+    "action": "Information Manager: Update \"The Irregular at Magic High School\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_irregular_at_magic_high_school",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561262-5310",
+    "timestamp": "2026-09-27T13:42:41.262Z",
+    "action": "Information Manager: Update \"Maid-Sama!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_maid_sama",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561219-9989",
+    "timestamp": "2026-09-27T13:42:41.219Z",
+    "action": "Information Manager: Update \"Gurren Lagann\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_gurren_lagann",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516561177-9634",
+    "timestamp": "2026-09-27T13:42:41.177Z",
+    "action": "Information Manager: Update \"Hell’s Paradise Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hell_s_paradise_season_2",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561134-3618",
+    "timestamp": "2026-09-27T13:42:41.134Z",
+    "action": "Information Manager: Update \"Link Click\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_link_click",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516561092-2435",
+    "timestamp": "2026-09-27T13:42:41.092Z",
+    "action": "Information Manager: Update \"Yamada and the Seven Witches\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_yamada_and_the_seven_witches",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561047-1301",
+    "timestamp": "2026-09-27T13:42:41.047Z",
+    "action": "Information Manager: Update \"The Melancholy of Haruhi Suzumiya\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_melancholy_of_haruhi_suzumiya",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516561005-2509",
+    "timestamp": "2026-09-27T13:42:41.005Z",
+    "action": "Information Manager: Update \"The Apothecary Diaries Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_apothecary_diaries_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516560958-6802",
+    "timestamp": "2026-09-27T13:42:40.958Z",
+    "action": "Information Manager: Update \"Toilet-bound Hanako-kun\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_toilet_bound_hanako_kun",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560916-6697",
+    "timestamp": "2026-09-27T13:42:40.916Z",
+    "action": "Information Manager: Update \"Black Butler\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_black_butler",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560869-7833",
+    "timestamp": "2026-09-27T13:42:40.869Z",
+    "action": "Information Manager: Update \"JoJo's Bizarre Adventure: Golden Wind\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_jojo_s_bizarre_adventure_golden_wind",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560825-6845",
+    "timestamp": "2026-09-27T13:42:40.825Z",
+    "action": "Information Manager: Update \"JoJo's Bizarre Adventure: Diamond is Unbreakable\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_jojo_s_bizarre_adventure_diamond_is_unbreakable",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560779-5905",
+    "timestamp": "2026-09-27T13:42:40.779Z",
+    "action": "Information Manager: Update \"The Apothecary Diaries\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_apothecary_diaries",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560738-3186",
+    "timestamp": "2026-09-27T13:42:40.738Z",
+    "action": "Information Manager: Update \"Bungo Stray Dogs\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_bungo_stray_dogs",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560693-5001",
+    "timestamp": "2026-09-27T13:42:40.693Z",
+    "action": "Information Manager: Update \"Attack on Titan Season 3\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_attack_on_titan_season_3",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516560652-4598",
+    "timestamp": "2026-09-27T13:42:40.652Z",
+    "action": "Information Manager: Update \"Attack on Titan Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_attack_on_titan_season_2",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516560608-6919",
+    "timestamp": "2026-09-27T13:42:40.608Z",
+    "action": "Information Manager: Update \"Monogatari Series Second Season\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_monogatari_series_second_season",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560569-8962",
+    "timestamp": "2026-09-27T13:42:40.569Z",
+    "action": "Information Manager: Update \"Classroom of the Elite Season 3\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_classroom_of_the_elite_season_3",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516560521-6564",
+    "timestamp": "2026-09-27T13:42:40.521Z",
+    "action": "Information Manager: Update \"MUSHI-SHI\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_mushi_shi",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560472-4080",
+    "timestamp": "2026-09-27T13:42:40.472Z",
+    "action": "Information Manager: Update \"Classroom of the Elite Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_classroom_of_the_elite_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516560394-4638",
+    "timestamp": "2026-09-27T13:42:40.394Z",
+    "action": "Information Manager: Update \"Call of the Night\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_call_of_the_night",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560355-8659",
+    "timestamp": "2026-09-27T13:42:40.355Z",
+    "action": "Information Manager: Update \"To Your Eternity\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_to_your_eternity",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516560307-9508",
+    "timestamp": "2026-09-27T13:42:40.307Z",
+    "action": "Information Manager: Update \"Neon Genesis Evangelion\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_neon_genesis_evangelion",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560267-7856",
+    "timestamp": "2026-09-27T13:42:40.267Z",
+    "action": "Information Manager: Update \"Mob Psycho 100\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_mob_psycho_100",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560225-3179",
+    "timestamp": "2026-09-27T13:42:40.225Z",
+    "action": "Information Manager: Update \"Air Gear\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_air_gear",
+    "details": "Source: AniList | Fields: franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516560187-9468",
+    "timestamp": "2026-09-27T13:42:40.187Z",
+    "action": "Information Manager: Update \"Hajime No Ippo: The Fighting! - Rising\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hajime_no_ippo_the_fighting_rising",
+    "details": "Source: AniList | Fields: franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516560145-6415",
+    "timestamp": "2026-09-27T13:42:40.145Z",
+    "action": "Information Manager: Update \"Ahiru no Sora\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_ahiru_no_sora",
+    "details": "Source: AniList | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516560106-7051",
+    "timestamp": "2026-09-27T13:42:40.106Z",
+    "action": "Information Manager: Update \"Initial D 2nd Stage\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_initial_d_2nd_stage",
+    "details": "Source: AniList | Fields: franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516560065-1581",
+    "timestamp": "2026-09-27T13:42:40.065Z",
+    "action": "Information Manager: Update \"Tsurune\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_tsurune",
+    "details": "Source: AniList | Fields: franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516559998-1867",
+    "timestamp": "2026-09-27T13:42:39.998Z",
+    "action": "Information Manager: Update \"Hajime no Ippo: The Fighting! New Challenger\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hajime_no_ippo_the_fighting_new_challenger",
+    "details": "Source: AniList | Fields: totalEpisodes, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516559942-7946",
+    "timestamp": "2026-09-27T13:42:39.942Z",
+    "action": "Information Manager: Update \"Inazuma Eleven\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_inazuma_eleven",
+    "details": "Source: AniList | Fields: totalEpisodes, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516559903-6133",
+    "timestamp": "2026-09-27T13:42:39.903Z",
+    "action": "Information Manager: Update \"Grand Blue Dreaming Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_grand_blue_dreaming_season_2",
+    "details": "Source: AniList | Fields: releaseYear, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790516559859-6381",
+    "timestamp": "2026-09-27T13:42:39.859Z",
+    "action": "Information Manager: Update \"Slam Dunk\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_slam_dunk",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559821-5224",
+    "timestamp": "2026-09-27T13:42:39.821Z",
+    "action": "Information Manager: Update \"Initial D 1st Stage\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_initial_d_1st_stage",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559776-5943",
+    "timestamp": "2026-09-27T13:42:39.776Z",
+    "action": "Information Manager: Update \"BAKI\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_baki_2",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559722-4780",
+    "timestamp": "2026-09-27T13:42:39.722Z",
+    "action": "Information Manager: Update \"BLUE LOCK Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_blue_lock_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516559671-7872",
+    "timestamp": "2026-09-27T13:42:39.671Z",
+    "action": "Information Manager: Update \"Hajime no Ippo: The Fighting!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hajime_no_ippo_the_fighting",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559631-4038",
+    "timestamp": "2026-09-27T13:42:39.631Z",
+    "action": "Information Manager: Update \"Grand Blue Dreaming\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_grand_blue_dreaming",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559588-8595",
+    "timestamp": "2026-09-27T13:42:39.588Z",
+    "action": "Information Manager: Update \"SHADOWS HOUSE\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_shadows_house",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516559549-4740",
+    "timestamp": "2026-09-27T13:42:39.549Z",
+    "action": "Information Manager: Update \"Claymore\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_claymore",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559510-3220",
+    "timestamp": "2026-09-27T13:42:39.510Z",
+    "action": "Information Manager: Update \"When They Cry\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_when_they_cry",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559473-6835",
+    "timestamp": "2026-09-27T13:42:39.473Z",
+    "action": "Information Manager: Update \"Dorohedoro\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_dorohedoro",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516559431-9793",
+    "timestamp": "2026-09-27T13:42:39.431Z",
+    "action": "Information Manager: Update \"Angels of Death\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_angels_of_death",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516559392-1234",
+    "timestamp": "2026-09-27T13:42:39.392Z",
+    "action": "Information Manager: Update \"Perfect Blue\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_perfect_blue",
+    "details": "Source: TVMaze | Fields: type, releaseYear"
+  },
+  {
+    "id": "LOG-1790516559351-3980",
+    "timestamp": "2026-09-27T13:42:39.351Z",
+    "action": "Information Manager: Update \"The Promised Neverland Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_promised_neverland_season_2",
+    "details": "Source: TVMaze | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516559310-8054",
+    "timestamp": "2026-09-27T13:42:39.310Z",
+    "action": "Information Manager: Update \"Monster\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_monster",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559270-6897",
+    "timestamp": "2026-09-27T13:42:39.270Z",
+    "action": "Information Manager: Update \"Made in Abyss\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_made_in_abyss",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516559231-4923",
+    "timestamp": "2026-09-27T13:42:39.231Z",
+    "action": "Information Manager: Update \"The Future Diary\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_future_diary",
+    "details": "Source: TVMaze | Fields: releaseYear, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559188-5287",
+    "timestamp": "2026-09-27T13:42:39.188Z",
+    "action": "Information Manager: Update \"Chainsaw Man\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_chainsaw_man",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516559149-3127",
+    "timestamp": "2026-09-27T13:42:39.149Z",
+    "action": "Information Manager: Update \"Tokyo Ghoul\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_tokyo_ghoul",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516559107-9034",
+    "timestamp": "2026-09-27T13:42:39.107Z",
+    "action": "Information Manager: Update \"That Time I Got Reincarnated as a Slime Season 3\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_that_time_i_got_reincarnated_as_a_slime_season_3",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516559067-8745",
+    "timestamp": "2026-09-27T13:42:39.067Z",
+    "action": "Information Manager: Update \"The Eminence in Shadow Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_eminence_in_shadow_season_2",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516559017-5381",
+    "timestamp": "2026-09-27T13:42:39.017Z",
+    "action": "Information Manager: Update \"The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_world_s_finest_assassin_gets_reincarnated_in_another_wor",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558980-2456",
+    "timestamp": "2026-09-27T13:42:38.980Z",
+    "action": "Information Manager: Update \"How NOT to Summon a Demon Lord\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_how_not_to_summon_a_demon_lord",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558938-2776",
+    "timestamp": "2026-09-27T13:42:38.938Z",
+    "action": "Information Manager: Update \"Log Horizon\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_log_horizon",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558899-4739",
+    "timestamp": "2026-09-27T13:42:38.899Z",
+    "action": "Information Manager: Update \"The Rising of the Shield Hero Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_rising_of_the_shield_hero_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516558858-4445",
+    "timestamp": "2026-09-27T13:42:38.858Z",
+    "action": "Information Manager: Update \"Mushoku Tensei: Jobless Reincarnation Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_mushoku_tensei_jobless_reincarnation_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516558820-3920",
+    "timestamp": "2026-09-27T13:42:38.820Z",
+    "action": "Information Manager: Update \"Fullmetal Alchemist\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_fullmetal_alchemist",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558777-3688",
+    "timestamp": "2026-09-27T13:42:38.777Z",
+    "action": "Information Manager: Update \"The Eminence in Shadow\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_eminence_in_shadow",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558740-9098",
+    "timestamp": "2026-09-27T13:42:38.740Z",
+    "action": "Information Manager: Update \"That Time I Got Reincarnated as a Slime Season 2\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_that_time_i_got_reincarnated_as_a_slime_season_2",
+    "details": "Source: TVMaze | Fields: status, releaseYear"
+  },
+  {
+    "id": "LOG-1790516558699-1897",
+    "timestamp": "2026-09-27T13:42:38.699Z",
+    "action": "Information Manager: Update \"Fairy Tail\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_fairy_tail",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558664-7346",
+    "timestamp": "2026-09-27T13:42:38.664Z",
+    "action": "Information Manager: Update \"Overlord\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_overlord",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558617-4297",
+    "timestamp": "2026-09-27T13:42:38.617Z",
+    "action": "Information Manager: Update \"The Rising of the Shield Hero\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_rising_of_the_shield_hero",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558581-8462",
+    "timestamp": "2026-09-27T13:42:38.581Z",
+    "action": "Information Manager: Update \"KONOSUBA - God's blessing on this wonderful world!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_hindi_konosuba_gods_blessing_on_this_wonderful_world_season_2_hindi_dubbed_episodes_download_hd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558543-6404",
+    "timestamp": "2026-09-27T13:42:38.543Z",
+    "action": "Information Manager: Update \"Bleach\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_bleach",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558507-2172",
+    "timestamp": "2026-09-27T13:42:38.507Z",
+    "action": "Information Manager: Update \"Sword Art Online\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_sword_art_online",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558471-5710",
+    "timestamp": "2026-09-27T13:42:38.471Z",
+    "action": "Information Manager: Update \"Re:Zero - Starting Life in Another World\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_rezero",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558435-4969",
+    "timestamp": "2026-09-27T13:42:38.435Z",
+    "action": "Information Manager: Update \"Blue Lock\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_blue_lock",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558392-4340",
+    "timestamp": "2026-09-27T13:42:38.392Z",
+    "action": "Information Manager: Update \"That Time I Got Reincarnated as a Slime\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_that_time_i_got_reincarnated_as_a_slime",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558355-2337",
+    "timestamp": "2026-09-27T13:42:38.356Z",
+    "action": "Information Manager: Update \"Mushoku Tensei: Jobless Reincarnation\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_mushoku_tensei",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516558313-2440",
+    "timestamp": "2026-09-27T13:42:38.313Z",
+    "action": "Information Manager: Update \"Release That Witch\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_release_that_witch",
+    "details": "Source: TVMaze | Fields: alternateTitle, status"
+  },
+  {
+    "id": "LOG-1790516558279-6901",
+    "timestamp": "2026-09-27T13:42:38.279Z",
+    "action": "Information Manager: Update \"Devil May Cry\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_devil_may_cry",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558237-8607",
+    "timestamp": "2026-09-27T13:42:38.237Z",
+    "action": "Information Manager: Update \"Bleach: Thousand-Year Blood War\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_bleach_thousand_year_blood_war",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558193-5261",
+    "timestamp": "2026-09-27T13:42:38.193Z",
+    "action": "Information Manager: Update \"Wistoria: Wand and Sword\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_wistoria_wand_and_sword",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558140-5010",
+    "timestamp": "2026-09-27T13:42:38.140Z",
+    "action": "Information Manager: Update \"High School DxD\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_high_school_dxd",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558103-2674",
+    "timestamp": "2026-09-27T13:42:38.103Z",
+    "action": "Information Manager: Update \"Dr. STONE\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_dr_stone",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516558038-5252",
+    "timestamp": "2026-09-27T13:42:38.038Z",
+    "action": "Information Manager: Update \"Daemons of the Shadow Realm\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_daemons_of_the_shadow_realm",
+    "details": "Source: TVMaze | Fields: alternateTitle, status"
+  },
+  {
+    "id": "LOG-1790516557986-9477",
+    "timestamp": "2026-09-27T13:42:37.986Z",
+    "action": "Information Manager: Update \"Liar Game\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_liar_game",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557942-6687",
+    "timestamp": "2026-09-27T13:42:37.942Z",
+    "action": "Information Manager: Update \"Suzume no Tojimari (2022)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_suzume_no_tojimari_2022_english_subbed_download",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516557894-5325",
+    "timestamp": "2026-09-27T13:42:37.894Z",
+    "action": "Information Manager: Update \"Solo Leveling\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_solo_leveling",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516557858-3127",
+    "timestamp": "2026-09-27T13:42:37.858Z",
+    "action": "Information Manager: Update \"Demon Slayer: Kimetsu no Yaiba\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_demon_slayer",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557821-7124",
+    "timestamp": "2026-09-27T13:42:37.821Z",
+    "action": "Information Manager: Update \"Naruto\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_naruto",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557782-5547",
+    "timestamp": "2026-09-27T13:42:37.782Z",
+    "action": "Information Manager: Update \"Jujutsu Kaisen\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_jujutsu_kaisen",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516557744-1870",
+    "timestamp": "2026-09-27T13:42:37.744Z",
+    "action": "Information Manager: Update \"Attack on Titan\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_attack_on_titan",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557704-1441",
+    "timestamp": "2026-09-27T13:42:37.704Z",
+    "action": "Information Manager: Update \"Naruto: Shippuden\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_naruto_shippuden",
+    "details": "Source: TVMaze | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557670-4791",
+    "timestamp": "2026-09-27T13:42:37.670Z",
+    "action": "Information Manager: Update \"Doraemon The Movie Nobita Aur Jadooi Tapu Download\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_the_movie_nobita_aur_jadooi_tapu",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516557633-8822",
+    "timestamp": "2026-09-27T13:42:37.633Z",
+    "action": "Information Manager: Update \"Doraemon Nobita and the Birth of Japan\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_nobita_and_the_birth_of_japan_hd",
+    "details": "Source: AniList | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516557601-9613",
+    "timestamp": "2026-09-27T13:42:37.601Z",
+    "action": "Information Manager: Update \"Doraemon Nobita And The Steel Troops Download\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_nobita_and_the_steel_troops_hd",
+    "details": "Source: High-Confidence Fix All | Fields: title"
+  },
+  {
+    "id": "LOG-1790516557566-9025",
+    "timestamp": "2026-09-27T13:42:37.566Z",
+    "action": "Information Manager: Update \"Pokemon Season 20 Sun & Moon\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_pokemon",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557532-3641",
+    "timestamp": "2026-09-27T13:42:37.532Z",
+    "action": "Information Manager: Update \"Classroom of the Elite\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_classroom_of_the_elite",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557495-2966",
+    "timestamp": "2026-09-27T13:42:37.495Z",
+    "action": "Information Manager: Update \"My Hero Academia\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_my_hero_academia",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557461-2733",
+    "timestamp": "2026-09-27T13:42:37.461Z",
+    "action": "Information Manager: Update \"Stranger Things: Tales from ’85 Season 1\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_stranger_things_tales_from_85",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557425-8324",
+    "timestamp": "2026-09-27T13:42:37.425Z",
+    "action": "Information Manager: Update \"Gintama\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_gintama",
+    "details": "Source: AniList | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557392-7053",
+    "timestamp": "2026-09-27T13:42:37.392Z",
+    "action": "Information Manager: Update \"Vinland Saga\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_vinland_saga",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557357-9967",
+    "timestamp": "2026-09-27T13:42:37.357Z",
+    "action": "Information Manager: Update \"Death Note\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_death_note",
+    "details": "Source: AniList | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557323-2726",
+    "timestamp": "2026-09-27T13:42:37.323Z",
+    "action": "Information Manager: Update \"Baki Hanma\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_baki_hanma",
+    "details": "Source: AniList | Fields: type, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557287-8472",
+    "timestamp": "2026-09-27T13:42:37.287Z",
+    "action": "Information Manager: Update \"Zenshu\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_zenshu",
+    "details": "Source: AniList | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557254-5237",
+    "timestamp": "2026-09-27T13:42:37.254Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: AniList | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557198-6836",
+    "timestamp": "2026-09-27T13:42:37.198Z",
+    "action": "Information Manager: Update \"Kaiju No. 8\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_kaiju_no_8",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557161-9812",
+    "timestamp": "2026-09-27T13:42:37.161Z",
+    "action": "Information Manager: Update \"Horimiya: The Missing Pieces\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_horimiya_the_missing_pieces",
+    "details": "Source: AniList | Fields: releaseYear, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557119-9427",
+    "timestamp": "2026-09-27T13:42:37.119Z",
+    "action": "Information Manager: Update \"BAKI Season 1\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_baki",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557087-2193",
+    "timestamp": "2026-09-27T13:42:37.087Z",
+    "action": "Information Manager: Update \"Frieren: Beyond Journey's End\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_frieren_beyond_journeys_end",
+    "details": "Source: TVMaze | Fields: status"
+  },
+  {
+    "id": "LOG-1790516557049-5536",
+    "timestamp": "2026-09-27T13:42:37.049Z",
+    "action": "Information Manager: Update \"Miraculous Tales of Ladybug & Cat Noir\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_miraculous_tales_of_ladybug_cat_noir",
+    "details": "Source: High-Confidence Fix All | Fields: totalSeasons, totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516557009-3890",
+    "timestamp": "2026-09-27T13:42:37.009Z",
+    "action": "Information Manager: Update \"Doraemon All Seasons Hindi\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_all_seasons_episodes",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516556970-6689",
+    "timestamp": "2026-09-27T13:42:36.970Z",
+    "action": "Information Manager: Update \"Doraemon (TV Series)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_tv_series",
+    "details": "Source: High-Confidence Fix All | Fields: totalEpisodes"
+  },
+  {
+    "id": "LOG-1790516556927-3353",
+    "timestamp": "2026-09-27T13:42:36.927Z",
+    "action": "Information Manager: Update \"Doraemon Nobita’s Little Star Wars (2021 Remake)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
+    "details": "Source: AniList | Fields: releaseYear"
+  },
+  {
+    "id": "LOG-1790516556866-4297",
+    "timestamp": "2026-09-27T13:42:36.866Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 855 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790512932309-7956",
+    "timestamp": "2026-09-27T12:42:12.309Z",
+    "action": "Information Manager: Delete Confirmed Fake Anime \"Shin Chan Movie Action Kamen vs Higure Rakshas\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas",
+    "details": "Owner confirmed and deleted fake/non-existent entry anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas"
+  },
+  {
+    "id": "LOG-1790512190802-4616",
+    "timestamp": "2026-09-27T12:29:50.802Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 856 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790512157061-2726",
+    "timestamp": "2026-09-27T12:29:17.061Z",
+    "action": "Information Manager: Update \"Naruto\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_naruto",
+    "details": "Source: TVMaze | Fields: totalEpisodes, seasons"
+  },
+  {
+    "id": "LOG-1790512156876-7383",
+    "timestamp": "2026-09-27T12:29:16.876Z",
+    "action": "Information Manager: Update \"Naruto: Shippuden\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_naruto_shippuden",
+    "details": "Source: TVMaze | Fields: totalEpisodes, seasons"
+  },
+  {
+    "id": "LOG-1790512154017-5993",
+    "timestamp": "2026-09-27T12:29:14.017Z",
+    "action": "Information Manager: Update \"Doraemon Nobita and the Birth of Japan\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_nobita_and_the_birth_of_japan_hd",
+    "details": "Source: AniList | Fields: alternateTitle, japaneseTitle, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512152287-6388",
+    "timestamp": "2026-09-27T12:29:12.287Z",
+    "action": "Information Manager: Update \"Gintama\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_gintama",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512151835-4069",
+    "timestamp": "2026-09-27T12:29:11.835Z",
+    "action": "Information Manager: Update \"Death Note\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_death_note",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512151510-5889",
+    "timestamp": "2026-09-27T12:29:11.510Z",
+    "action": "Information Manager: Update \"Tokyo Revengers\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_tokyo_revengers",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512151376-5408",
+    "timestamp": "2026-09-27T12:29:11.376Z",
+    "action": "Information Manager: Update \"Zenshu\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_zenshu",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons"
+  },
+  {
+    "id": "LOG-1790512151231-2171",
+    "timestamp": "2026-09-27T12:29:11.231Z",
+    "action": "Information Manager: Update \"Baki Hanma\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_baki_hanma",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512151089-8224",
+    "timestamp": "2026-09-27T12:29:11.089Z",
+    "action": "Information Manager: Update \"Sakamoto Days\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_sakamoto_days",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512150953-3423",
+    "timestamp": "2026-09-27T12:29:10.953Z",
+    "action": "Information Manager: Update \"Assassination Classroom\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_assassination_classroom",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512150244-6291",
+    "timestamp": "2026-09-27T12:29:10.244Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512150113-6188",
+    "timestamp": "2026-09-27T12:29:10.113Z",
+    "action": "Information Manager: Update \"Black Clover\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_black_clover",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512149993-5839",
+    "timestamp": "2026-09-27T12:29:09.993Z",
+    "action": "Information Manager: Update \"Doraemon Nobita’s Little Star Wars (2021 Remake)\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
+    "details": "Source: AniList | Fields: alternateTitle, japaneseTitle, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512149868-6159",
+    "timestamp": "2026-09-27T12:29:09.868Z",
+    "action": "Information Manager: Update \"Horimiya: The Missing Pieces\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_horimiya_the_missing_pieces",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512149731-4071",
+    "timestamp": "2026-09-27T12:29:09.731Z",
+    "action": "Information Manager: Update \"The Daily Life of the Immortal King\"",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivault_rt_the_daily_life_of_the_immortal_king",
+    "details": "Source: AniList | Fields: japaneseTitle, totalEpisodes, seasons, relatedAnime, franchiseRelationships"
+  },
+  {
+    "id": "LOG-1790512147837-2177",
+    "timestamp": "2026-09-27T12:29:07.837Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Audited 856 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, synopsis, story, franchise relations, RareToon mapping, and fake checks."
+  },
+  {
+    "id": "LOG-1790510080853-1147",
+    "timestamp": "2026-09-27T11:54:40.853Z",
+    "action": "Information Manager: Inspect All Catalogue",
+    "operator": "Death197",
+    "result": "success",
+    "details": "Audited 856 anime entries for title, seasons, episodes, duplicates, status, type, year, genres, languages, and synopsis."
+  },
+  {
+    "id": "LOG-1790502019509-3186",
+    "timestamp": "2026-09-27T09:40:19.509Z",
+    "action": "Toggle user access to ENABLED",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "usr_9bb03e1cb98bd3e4",
+    "details": "User: Death (c3204495@gmail.com)"
+  },
+  {
+    "id": "LOG-1790502017724-2308",
+    "timestamp": "2026-09-27T09:40:17.724Z",
+    "action": "Toggle user access to DISABLED",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "usr_9bb03e1cb98bd3e4",
+    "details": "User: Death (c3204495@gmail.com)"
+  },
+  {
+    "id": "LOG-1790502003404-2578",
+    "timestamp": "2026-09-27T09:40:03.404Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "zenime-latest-source-2026-09-27.zip",
+    "details": "Rebuilt & updated latest website source package (95 files, 3.46 MB compressed, SHA-256: 4dd93b995dbf593a...)"
+  },
+  {
+    "id": "LOG-1790499363340-9767",
+    "timestamp": "2026-09-27T08:56:03.340Z",
+    "action": "Download Latest App Source",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "zenime-latest-source-2026-09-27.zip",
+    "details": "Generated live .zip source package (94 files, 3.45 MB compressed, SHA-256: 97425a0b75e09e7a...)"
+  },
+  {
+    "id": "LOG-1790499362498-5465",
+    "timestamp": "2026-09-27T08:56:02.498Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "zenime-latest-source-2026-09-27.zip",
+    "details": "Rebuilt & updated latest website source package (94 files, 3.45 MB compressed, SHA-256: 97425a0b75e09e7a...)"
+  },
+  {
+    "id": "LOG-1790499359815-2080",
+    "timestamp": "2026-09-27T08:55:59.815Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "zenime-latest-source-2026-09-27.zip",
+    "details": "Rebuilt & updated latest website source package (94 files, 3.45 MB compressed, SHA-256: f68cd6e55ab87908...)"
+  },
+  {
+    "id": "LOG-1790497606006-1692",
+    "timestamp": "2026-09-27T08:26:46.006Z",
+    "action": "Start Verification Job (ALL)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: all, batch=856, limit=All."
+  },
+  {
+    "id": "LOG-1790497600552-2734",
+    "timestamp": "2026-09-27T08:26:40.552Z",
+    "action": "Reset Artwork Verification Scan",
+    "operator": "makerapp688@gmail.com",
+    "result": "success"
+  },
+  {
+    "id": "LOG-1790486399315-9205",
+    "timestamp": "2026-09-27T05:19:59.315Z",
+    "action": "Start Verification Job (ALL)",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "details": "Job launched: all, batch=856, limit=All."
+  },
+  {
+    "id": "LOG-1790484275144-6032",
+    "timestamp": "2026-09-27T04:44:35.144Z",
+    "action": "Download Latest App Source",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivex-latest-source-2026-09-27.zip",
+    "details": "Generated live .zip source package (99 files, 6.94 MB compressed, SHA-256: 62b7dc35bbe7c7a9...)"
+  },
+  {
+    "id": "LOG-1790484273976-9709",
+    "timestamp": "2026-09-27T04:44:33.976Z",
+    "action": "Update Latest App Source Package",
+    "operator": "makerapp688@gmail.com",
+    "result": "success",
+    "recordId": "anivex-latest-source-2026-09-27.zip",
+    "details": "Rebuilt & updated latest website source package (99 files, 6.94 MB compressed, SHA-256: 62b7dc35bbe7c7a9...)"
+  },
+  {
     "id": "LOG-1790438773896-8448",
     "timestamp": "2026-09-26T16:06:13.896Z",
     "action": "Start Verification Job (UNVERIFIED)",

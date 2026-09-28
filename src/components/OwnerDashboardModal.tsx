@@ -37,6 +37,10 @@ import {
 import { getAccountAvatar, resolveOwnerUsername } from '../utils/userStorage.ts';
 import { Anime } from '../types.ts';
 import { ArtworkManager } from './ArtworkManager.tsx';
+import { InformationManager } from './InformationManager.tsx';
+import { OwnerWorkersSection } from './OwnerWorkersSection.tsx';
+import { AnivexLogo } from './AnivexLogo.tsx';
+import { OwnerSourcesSection } from './OwnerSourcesSection.tsx';
 
 interface OwnerDashboardModalProps {
   isOpen: boolean;
@@ -45,6 +49,7 @@ interface OwnerDashboardModalProps {
   onOpenCreateAccount?: () => void;
   onOpenLoginAccount?: () => void;
   onOpenProfilePhoto?: () => void;
+  onOpenDeleteOwnerAccount?: () => void;
   initialTab?: string;
 }
 
@@ -53,6 +58,9 @@ type AdminTab =
   | 'bugs'
   | 'catalogue'
   | 'artwork'
+  | 'information'
+  | 'workers'
+  | 'sources'
   | 'users'
   | 'settings'
   | 'audit';
@@ -64,18 +72,13 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
   onOpenCreateAccount,
   onOpenLoginAccount,
   onOpenProfilePhoto,
+  onOpenDeleteOwnerAccount,
   initialTab
 }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [loading, setLoading] = useState(false);
   const [statsData, setStatsData] = useState<any>(null);
   const [diagData, setDiagData] = useState<any>(null);
-
-  // Email Config Diagnostics (original feature)
-  const [emailStatus, setEmailStatus] = useState<any>(null);
-  const [testingEmail, setTestingEmail] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string; step?: string } | null>(null);
-  const [testRecipient, setTestRecipient] = useState('');
 
   // Bug Reports Tab State
   const [bugReports, setBugReports] = useState<any[]>([]);
@@ -150,14 +153,12 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
         setActiveTab('overview');
       }
       fetchAdminStats();
-      fetchEmailStatus();
       fetchDiagData();
       fetchBugReports();
       fetchCatalogue();
       fetchUsers();
       fetchAuditLogs();
       fetchSourcePackageInfo();
-      setTestResult(null);
       setSourceDownloadStatus({ type: 'idle', message: '' });
     } else {
       document.body.style.overflow = '';
@@ -185,27 +186,6 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       console.error('Failed to fetch admin stats', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchEmailStatus = async () => {
-    try {
-      const token = localStorage.getItem('anivault_owner_session_token') || '';
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        headers['x-anivault-owner-session'] = token;
-      }
-      const res = await fetch('/api/owner/email-status', {
-        headers,
-        credentials: 'include'
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setEmailStatus(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch email status', err);
     }
   };
 
@@ -334,7 +314,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
     const rawName =
       filenameOverride ||
       sourcePkgInfo?.packageName ||
-      `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+      `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
     const targetName = rawName.endsWith('.zip')
       ? rawName
       : rawName.replace(/\.(tar\.gz|tgz)$/i, '') + '.zip';
@@ -360,7 +340,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
     setUpdatingSource(true);
     setSourceDownloadStatus({
       type: 'generating',
-      message: 'Generating and refreshing the source archive using the latest current ANIVEX project files...'
+      message: 'Generating and refreshing the source archive using the latest current Zenime project files...'
     });
 
     try {
@@ -402,7 +382,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
       setSourceDownloadStatus({
         type: 'success',
-        message: `Latest ANIVEX source archive (${pkg.totalFiles} files, ${compressedMB} MB) has been generated and replaced the previous version. Tap "Download Latest App Source" to download it.`,
+        message: `Latest Zenime source archive (${pkg.totalFiles} files, ${compressedMB} MB) has been generated and replaced the previous version. Tap "Download Latest App Source" to download it.`,
         filename: pkg.filename,
         sha256: pkg.sha256,
         totalFiles: pkg.totalFiles,
@@ -427,7 +407,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       const activeToken = localStorage.getItem('anivault_owner_session_token') || '';
       const rawFilename =
         sourcePkgInfo?.packageName ||
-        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+        `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
       const finalFilename = rawFilename.endsWith('.zip')
         ? rawFilename
         : rawFilename.replace(/\.(tar\.gz|tgz)$/i, '') + '.zip';
@@ -460,7 +440,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
       setSourceDownloadStatus({
         type: 'generating',
-        message: 'Verifying the latest ANIVEX source archive exists and is readable before starting browser download...'
+        message: 'Verifying the latest Zenime source archive exists and is readable before starting browser download...'
       });
 
       const token = await ensureOwnerToken();
@@ -490,7 +470,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
 
       const verifiedFilename =
         infoData.metadata.packageName ||
-        `anivex-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
+        `zenime-latest-source-${new Date().toISOString().slice(0, 10)}.zip`;
       const downloadUrl = getDirectOwnerSaveUrl(verifiedFilename, verifiedToken);
       triggerBrowserAttachmentDownload(downloadUrl, verifiedFilename);
 
@@ -517,49 +497,6 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
       });
     } finally {
       setDownloadingSource(false);
-    }
-  };
-
-  const handleTestEmailService = async () => {
-    setTestingEmail(true);
-    setTestResult(null);
-    try {
-      const token = localStorage.getItem('anivault_owner_session_token') || '';
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        headers['x-anivault-owner-session'] = token;
-      }
-      const res = await fetch('/api/owner/email-test', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ recipient: testRecipient.trim() || undefined })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTestResult({
-          success: true,
-          message:
-            data.step === 'EMAIL_ACCEPTED'
-              ? 'SMTP transport connection verified and test message accepted by provider.'
-              : 'SMTP transport connection and authentication verified successfully.',
-          step: data.step
-        });
-      } else {
-        setTestResult({
-          success: false,
-          message: data.error || 'SMTP test failed. Check host, credentials, or network permissions.',
-          step: data.step
-        });
-      }
-    } catch (err: any) {
-      setTestResult({
-        success: false,
-        message: err.message || 'Failed to communicate with email testing endpoint.'
-      });
-    } finally {
-      setTestingEmail(false);
     }
   };
 
@@ -847,9 +784,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
         {/* Header (BLACK & GOLD) */}
         <div className="flex items-center justify-between border-b border-amber-500/30 p-3.5 sm:p-5 shrink-0 bg-black gap-2">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10 shrink-0">
-              <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <AnivexLogo size="sm" />
             <div className="min-w-0">
               <h2 className="text-sm sm:text-xl font-black tracking-tight text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span className="truncate">OWNER COMMAND CENTER</span>
@@ -857,7 +792,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                   v2.5 ADMIN
                 </span>
               </h2>
-              <p className="text-[11px] sm:text-xs text-amber-300/80 truncate">Anivex Core System, Catalogue &amp; Security Controller</p>
+              <p className="text-[11px] sm:text-xs text-amber-300/80 truncate">Zenime Core System, Catalogue &amp; Security Controller</p>
             </div>
           </div>
           <button
@@ -921,6 +856,44 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
             >
               <ImageIcon className="w-4 h-4" />
               <span>Artwork Manager</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('information')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === 'information'
+                  ? 'bg-amber-500 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Info className="w-4 h-4" />
+              <span>Information Manager</span>
+            </button>
+
+            <button
+              id="owner-tab-workers"
+              onClick={() => setActiveTab('workers')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === 'workers'
+                  ? 'bg-amber-500 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>Workers</span>
+            </button>
+
+            <button
+              id="owner-tab-sources"
+              onClick={() => setActiveTab('sources')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === 'sources'
+                  ? 'bg-amber-500 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              <span>Artwork &amp; Metadata Sources</span>
             </button>
 
             <button
@@ -1082,6 +1055,16 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Logout Owner</span>
                     </button>
+                    {onOpenDeleteOwnerAccount && (
+                      <button
+                        type="button"
+                        onClick={onOpenDeleteOwnerAccount}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/80 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Delete Owner Account</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1106,7 +1089,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed">
-                      Generates a fresh <code className="text-emerald-300 font-mono">.zip</code> development archive on-demand from the current ANIVEX server &amp; project state. Passwords, SMTP credentials, API keys, session tokens, and sensitive <code className="text-rose-300 font-mono">.env</code> secrets are automatically stripped.
+                      Generates a fresh <code className="text-emerald-300 font-mono">.zip</code> development archive on-demand from the current Zenime server &amp; project state. Passwords, API keys, session tokens, and sensitive <code className="text-rose-300 font-mono">.env</code> secrets are automatically stripped.
                     </p>
                   </div>
 
@@ -1215,91 +1198,6 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Email service transmitter matrix (Original feature preserved and enhanced) */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                      Email Service Status (Owner Diagnostics)
-                    </span>
-                  </div>
-                  <button
-                    onClick={fetchEmailStatus}
-                    className="text-[11px] text-slate-400 hover:text-amber-400 flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3 animate-pulse" />
-                    <span>Refresh</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <span className="text-slate-400">Email:</span>
-                    <span className={`px-2 py-0.5 rounded font-mono font-bold ${emailStatus?.configured ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {emailStatus?.configured ? 'Configured' : 'Missing'}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <span className="text-slate-400">Host:</span>
-                    <span className={`px-2 py-0.5 rounded font-mono font-bold ${emailStatus?.hostConfigured ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {emailStatus?.hostConfigured ? 'OK' : 'Missing'}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <span className="text-slate-400">User:</span>
-                    <span className={`px-2 py-0.5 rounded font-mono font-bold ${emailStatus?.userConfigured ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {emailStatus?.userConfigured ? 'OK' : 'Missing'}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <span className="text-slate-400">Pass:</span>
-                    <span className={`px-2 py-0.5 rounded font-mono font-bold ${emailStatus?.passConfigured ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {emailStatus?.passConfigured ? 'OK' : 'Missing'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-800/80 space-y-3">
-                  <div className="text-xs font-semibold text-slate-300">Send Test Email from Anivex Server</div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="email"
-                      value={testRecipient}
-                      onChange={e => setTestRecipient(e.target.value)}
-                      placeholder={`Recipient email (defaults to ${ownerInfo.email})`}
-                      className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                    />
-                    <button
-                      onClick={handleTestEmailService}
-                      disabled={testingEmail}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      {testingEmail ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5" />
-                      )}
-                      <span>Send Test</span>
-                    </button>
-                  </div>
-
-                  {testResult && (
-                    <div className={`p-3 rounded-xl text-xs flex items-start gap-2 ${testResult.success ? 'bg-emerald-950/80 border border-emerald-800 text-emerald-300' : 'bg-rose-950/80 border border-rose-800 text-rose-300'}`}>
-                      {testResult.success ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                      )}
-                      <div>
-                        <p className="font-semibold">{testResult.success ? 'SMTP Connection Success' : 'SMTP Connection Error'}</p>
-                        <p className="text-[11px] opacity-90">{testResult.message}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* User Account Access Switching / Creation Row */}
@@ -1805,6 +1703,16 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
             <ArtworkManager />
           )}
 
+          {/* 4B. INFORMATION MANAGER (ANIME METADATA & EPISODE VERIFICATION ENGINE) */}
+          {activeTab === 'information' && (
+            <InformationManager />
+          )}
+
+          {/* 4C. WORKERS (SHARED WORKER INFRASTRUCTURE & MONITORING) */}
+          {activeTab === 'workers' && (
+            <OwnerWorkersSection />
+          )}
+
           {/* 5. USER MANAGEMENT TAB */}
           {activeTab === 'users' && (
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col h-[55vh] animate-fade-in">
@@ -1937,7 +1845,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
               <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Activity className="w-5 h-5 text-amber-400" />
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Anivex Backend Node Environment</h3>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Zenime Backend Node Environment</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
                   <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
@@ -1952,12 +1860,6 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                     <span className="text-slate-400">Session Secret Key:</span>
                     <span className={`px-1.5 py-0.5 rounded font-bold ${diagData.env?.hasSessionSecret ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                       {diagData.env?.hasSessionSecret ? 'Active' : 'Missing'}
-                    </span>
-                  </div>
-                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-                    <span className="text-slate-400">SMTP Host Connection:</span>
-                    <span className={`px-1.5 py-0.5 rounded font-bold ${diagData.env?.hasSmtpHost ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {diagData.env?.hasSmtpHost ? 'Active' : 'Missing'}
                     </span>
                   </div>
                 </div>
@@ -2094,8 +1996,33 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {onOpenDeleteOwnerAccount && (
+                <div className="bg-rose-950/20 border border-rose-800/40 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-rose-300 font-black text-sm uppercase tracking-wider">
+                      <Trash2 className="w-4 h-4 text-rose-400" />
+                      <span>Delete Owner Account</span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Deletes ONLY the Owner authentication account and invalidates all active Owner sessions. Catalogue, artwork, user accounts, and website data are not deleted.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenDeleteOwnerAccount}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <span>Delete Owner Account</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
+
+          {/* TAB: ARTWORK & METADATA SOURCES */}
+          {activeTab === 'sources' && <OwnerSourcesSection />}
         </div>
       </div>
     </div>

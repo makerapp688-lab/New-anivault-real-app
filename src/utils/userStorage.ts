@@ -20,6 +20,194 @@ const DEFAULT_USER_DATA: UserData = {
   theme: 'dark'
 };
 
+export interface ZenimeThemeDefinition {
+  id: ThemeMode;
+  name: string;
+  category: 'basic' | 'visual';
+  tagline: string;
+  description: string;
+  buttonPreviewStyle: string;
+  accentDotClass: string;
+  badgeText: string;
+}
+
+export const ZENIME_THEMES: ZenimeThemeDefinition[] = [
+  // BASIC APPEARANCE MODES (1-3)
+  {
+    id: 'dark',
+    name: 'Black',
+    category: 'basic',
+    tagline: 'Default obsidian black & crimson',
+    description: 'Signature Zenime obsidian black appearance with crimson and metallic silver accents',
+    buttonPreviewStyle: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+    accentDotClass: 'bg-rose-500 shadow-[0_0_8px_#f43f5e]',
+    badgeText: 'Default Black'
+  },
+  {
+    id: 'light',
+    name: 'White',
+    category: 'basic',
+    tagline: 'Clean daylight appearance',
+    description: 'Bright high-contrast white surface mode with crisp slate typography',
+    buttonPreviewStyle: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+    accentDotClass: 'bg-white border border-slate-400 shadow-[0_0_6px_rgba(255,255,255,0.8)]',
+    badgeText: 'Clean White'
+  },
+  {
+    id: 'system',
+    name: 'System',
+    category: 'basic',
+    tagline: 'Follows device setting',
+    description: 'Automatically adapts between Black and White modes based on your OS preference',
+    buttonPreviewStyle: 'linear-gradient(135deg, #475569 0%, #e11d48 100%)',
+    accentDotClass: 'bg-slate-300 shadow-[0_0_8px_#cbd5e1]',
+    badgeText: 'Auto OS'
+  },
+  // ADDITIONAL VISUAL THEMES (4-12)
+  {
+    id: 'zenime-signature',
+    name: 'Zenime Signature',
+    category: 'visual',
+    tagline: 'Official logo cyan, blue, purple & neon pink glow',
+    description: 'Signature pitch-black abyssal canvas matching both official Zenime logos with electric cyan, sapphire blue, royal violet, and neon magenta-pink metallic gradients',
+    buttonPreviewStyle: 'linear-gradient(135deg, #ff1e9b 0%, #9333ea 34%, #2563eb 68%, #00f0ff 100%)',
+    accentDotClass: 'bg-[#00d4ff] shadow-[0_0_10px_#ff1e9b,0_0_14px_#00f0ff]',
+    badgeText: 'Official Signature'
+  },
+  {
+    id: 'cyber-neon',
+    name: 'Cyber Neon',
+    category: 'visual',
+    tagline: 'Neon cyan & purple accents',
+    description: 'Glowing futuristic buttons with subtle cybernetic luminance',
+    buttonPreviewStyle: 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)',
+    accentDotClass: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
+    badgeText: 'Futuristic Glow'
+  },
+  {
+    id: 'calm-ocean',
+    name: 'Calm Ocean',
+    category: 'visual',
+    tagline: 'Smooth blue & turquoise accents',
+    description: 'Clean and peaceful appearance with soft ocean-inspired tones',
+    buttonPreviewStyle: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)',
+    accentDotClass: 'bg-teal-400 shadow-[0_0_8px_#2dd4bf]',
+    badgeText: 'Serene Aqua'
+  },
+  {
+    id: 'modern-tech',
+    name: 'Modern Tech',
+    category: 'visual',
+    tagline: 'Graphite, white & cobalt blue',
+    description: 'Clean premium buttons with sleek modern engineering aesthetics',
+    buttonPreviewStyle: 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
+    accentDotClass: 'bg-blue-400 shadow-[0_0_8px_#60a5fa]',
+    badgeText: 'Sleek Precision'
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    category: 'visual',
+    tagline: 'Green, cyan & purple glow',
+    description: 'Soft multicolor northern lights glow and atmospheric depth',
+    buttonPreviewStyle: 'linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #8b5cf6 100%)',
+    accentDotClass: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+    badgeText: 'Atmospheric'
+  },
+  {
+    id: 'midnight-premium',
+    name: 'Midnight Premium',
+    category: 'visual',
+    tagline: 'Charcoal base & silver/violet',
+    description: 'Elegant dark metallic buttons on a deep obsidian foundation',
+    buttonPreviewStyle: 'linear-gradient(145deg, #6d28d9 0%, #4c1d95 55%, #334155 100%)',
+    accentDotClass: 'bg-violet-400 shadow-[0_0_8px_#a78bfa]',
+    badgeText: 'Dark Metallic'
+  },
+  {
+    id: 'pixel',
+    name: 'Pixel',
+    category: 'visual',
+    tagline: 'Retro arcade visual details',
+    description: 'Polished pixel-style beveled buttons and crisp arcade borders',
+    buttonPreviewStyle: 'linear-gradient(180deg, #ec4899 0%, #db2777 100%)',
+    accentDotClass: 'bg-pink-400 shadow-[0_0_8px_#f472b6]',
+    badgeText: 'Retro Arcade'
+  },
+  {
+    id: 'space',
+    name: 'Space',
+    category: 'visual',
+    tagline: 'Deep navy, stars & nebula',
+    description: 'Cosmic glowing buttons with subtle starfield and nebula gradients',
+    buttonPreviewStyle: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 55%, #ec4899 100%)',
+    accentDotClass: 'bg-purple-400 shadow-[0_0_8px_#c084fc]',
+    badgeText: 'Cosmic Nebula'
+  },
+  {
+    id: 'golden-sunset',
+    name: 'Golden Sunset',
+    category: 'visual',
+    tagline: 'Warm golden & orange highlights',
+    description: 'Sunset-inspired gradients with a premium cinematic appearance',
+    buttonPreviewStyle: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 55%, #e11d48 100%)',
+    accentDotClass: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
+    badgeText: 'Warm Cinematic'
+  }
+];
+
+export const BASIC_THEMES = ZENIME_THEMES.filter(t => t.category === 'basic');
+export const VISUAL_THEMES = ZENIME_THEMES.filter(t => t.category === 'visual');
+
+export const VALID_THEME_IDS = new Set<ThemeMode>(ZENIME_THEMES.map(t => t.id));
+
+export function normalizeThemeMode(raw?: string | null): ThemeMode {
+  if (!raw) return 'dark';
+  const cleaned = raw.trim().toLowerCase();
+  if (cleaned === 'black') return 'dark';
+  if (cleaned === 'white') return 'light';
+  if (
+    cleaned === 'zenime' ||
+    cleaned === 'zenime_signature' ||
+    cleaned === 'zenime signature' ||
+    cleaned === 'electric-sapphire' ||
+    cleaned === 'zenime-crest'
+  ) {
+    return 'zenime-signature';
+  }
+  if (VALID_THEME_IDS.has(cleaned as ThemeMode)) {
+    return cleaned as ThemeMode;
+  }
+  return 'dark';
+}
+
+export type RestrictedGuestFeature = 'favorites' | 'watchlist' | 'avatar' | 'compare' | 'theme';
+
+type GuestRestrictionListener = (feature: RestrictedGuestFeature) => void;
+const guestRestrictionListeners = new Set<GuestRestrictionListener>();
+
+export function subscribeGuestRestriction(callback: GuestRestrictionListener): () => void {
+  guestRestrictionListeners.add(callback);
+  return () => {
+    guestRestrictionListeners.delete(callback);
+  };
+}
+
+export function triggerGuestRestriction(feature: RestrictedGuestFeature): void {
+  guestRestrictionListeners.forEach(fn => {
+    try {
+      fn(feature);
+    } catch (err) {
+      console.error('Error notifying guestRestrictionListener:', err);
+    }
+  });
+}
+
+export function isGuestAccount(account?: UserAccount): boolean {
+  const acc = account || getCurrentAccount();
+  return !acc || acc.id === 'guest_user' || acc.provider === 'guest';
+}
+
 export const STORAGE_KEYS = {
   CURRENT_SESSION: 'anivault_current_session',
   CURRENT_ACCOUNT: 'anivault_current_account',
@@ -100,7 +288,10 @@ export function getAccountAvatar(accountId: string): string | null {
  * Persist isolated avatar for a specific account identity
  */
 export function setAccountAvatar(accountId: string, avatarDataUrl: string | null): void {
-  if (!accountId || accountId === 'guest_user') return;
+  if (!accountId || accountId === 'guest_user' || isGuestAccount()) {
+    triggerGuestRestriction('avatar');
+    return;
+  }
   try {
     const key = `anivault_avatar_${accountId}`;
     if (avatarDataUrl) {
@@ -145,7 +336,7 @@ export function setAccountAvatar(accountId: string, avatarDataUrl: string | null
     if (accountId !== 'usr_owner') {
       const token = localStorage.getItem('anivault_user_session_token');
       if (token) {
-        fetch('/api/user/avatar', {
+        fetch('/api/auth/user/avatar', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -281,12 +472,21 @@ export function getUserData(accountId?: string): UserData {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (currentId === 'guest_user') {
+        return {
+          favorites: [],
+          watchlist: [],
+          completed: Array.isArray(parsed.completed) ? parsed.completed : [],
+          history: Array.isArray(parsed.history) ? parsed.history : [],
+          theme: 'dark'
+        };
+      }
       return {
         favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
         watchlist: Array.isArray(parsed.watchlist) ? parsed.watchlist : [],
         completed: Array.isArray(parsed.completed) ? parsed.completed : [],
         history: Array.isArray(parsed.history) ? parsed.history : [],
-        theme: parsed.theme === 'light' || parsed.theme === 'system' ? parsed.theme : 'dark'
+        theme: normalizeThemeMode(parsed.theme)
       };
     }
   } catch (err) {
@@ -313,6 +513,10 @@ export function saveUserData(data: UserData, accountId?: string): void {
 }
 
 export function toggleFavorite(animeId: string): boolean {
+  if (isGuestAccount()) {
+    triggerGuestRestriction('favorites');
+    return false;
+  }
   const data = getUserData();
   const exists = data.favorites.includes(animeId);
   const updatedFavorites = exists
@@ -323,6 +527,10 @@ export function toggleFavorite(animeId: string): boolean {
 }
 
 export function toggleWatchlist(animeId: string): boolean {
+  if (isGuestAccount()) {
+    triggerGuestRestriction('watchlist');
+    return false;
+  }
   const data = getUserData();
   const exists = data.watchlist.includes(animeId);
   const updatedWatchlist = exists
@@ -355,48 +563,77 @@ export function clearHistory(): void {
 }
 
 export function setThemeMode(theme: ThemeMode): void {
-  const data = getUserData();
-  saveUserData({ ...data, theme });
-  applyThemeClass(theme);
+  if (isGuestAccount()) {
+    triggerGuestRestriction('theme');
+    return;
+  }
+  const validTheme = normalizeThemeMode(theme);
+  const current = getCurrentAccount();
+  const data = getUserData(current.id);
+  saveUserData({ ...data, theme: validTheme }, current.id);
+  applyThemeClass(validTheme);
+
+  // Sync to backend for signed-in normal user accounts
+  if (current.id !== 'guest_user' && current.id !== 'usr_owner') {
+    const token = localStorage.getItem('anivault_user_session_token') || getClientCookie('anivault_user_session');
+    if (token) {
+      fetch('/api/auth/user/theme', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-anivault-user-session': token
+        },
+        body: JSON.stringify({ theme: validTheme })
+      }).catch(() => {});
+    }
+  }
 }
 
-let systemThemeMediaQuery: MediaQueryList | null = null;
-let systemThemeHandler: ((e: MediaQueryListEvent) => void) | null = null;
+let systemMediaListenerAttached = false;
 
 export function applyThemeClass(theme: ThemeMode): void {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
+  const validTheme = normalizeThemeMode(theme);
 
-  if (!systemThemeMediaQuery) {
-    systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    systemThemeHandler = () => {
-      const currentTheme = getUserData().theme;
-      if (currentTheme === 'system') {
-        applyThemeClass('system');
-      }
-    };
-    try {
-      systemThemeMediaQuery.addEventListener('change', systemThemeHandler);
-    } catch {
-      systemThemeMediaQuery.addListener(systemThemeHandler);
-    }
+  root.setAttribute('data-theme', validTheme);
+  for (const t of ZENIME_THEMES) {
+    root.classList.remove(`theme-${t.id}`);
+  }
+  root.classList.add(`theme-${validTheme}`);
+
+  let isLight = false;
+  if (validTheme === 'light') {
+    isLight = true;
+  } else if (validTheme === 'system') {
+    isLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   }
 
-  let isDark = true;
-  if (theme === 'system') {
-    isDark = systemThemeMediaQuery.matches;
+  if (isLight) {
+    root.classList.add('light');
+    root.classList.remove('dark');
+    root.style.colorScheme = 'light';
   } else {
-    isDark = theme === 'dark';
-  }
-
-  if (isDark) {
     root.classList.add('dark');
     root.classList.remove('light');
     root.style.colorScheme = 'dark';
-  } else {
-    root.classList.remove('dark');
-    root.classList.add('light');
-    root.style.colorScheme = 'light';
+  }
+
+  if (!systemMediaListenerAttached && typeof window.matchMedia === 'function') {
+    systemMediaListenerAttached = true;
+    try {
+      const mql = window.matchMedia('(prefers-color-scheme: light)');
+      const onSystemChange = () => {
+        const currentTheme = getUserData().theme;
+        if (currentTheme === 'system') {
+          applyThemeClass('system');
+        }
+      };
+      if (typeof mql.addEventListener === 'function') {
+        mql.addEventListener('change', onSystemChange);
+      }
+    } catch {}
   }
 }
 
@@ -854,6 +1091,12 @@ export async function syncWithServerSession(): Promise<UserAccount | null> {
         if (data.user.avatar && !getAccountAvatar(data.user.id)) {
           setAccountAvatar(data.user.id, data.user.avatar);
         }
+        if (data.user.theme && VALID_THEME_IDS.has(data.user.theme)) {
+          const existingData = getUserData(data.user.id);
+          if (existingData.theme !== data.user.theme) {
+            saveUserData({ ...existingData, theme: data.user.theme }, data.user.id);
+          }
+        }
         const isOwnerUser = data.user.id === 'usr_owner' || data.user.role === 'owner';
         const resolvedUsername = isOwnerUser
           ? resolveOwnerUsername(data.user.username)
@@ -1031,6 +1274,12 @@ export async function switchActiveAccount(accountId: string): Promise<{
     if (res.ok) {
       const data = await res.json();
       if (data.success && data.user) {
+        if (data.user.theme && VALID_THEME_IDS.has(data.user.theme)) {
+          const existingData = getUserData(data.user.id);
+          if (existingData.theme !== data.user.theme) {
+            saveUserData({ ...existingData, theme: data.user.theme }, data.user.id);
+          }
+        }
         const serverAcc: UserAccount = {
           id: data.user.id,
           username: data.user.username,

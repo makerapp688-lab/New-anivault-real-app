@@ -25,13 +25,12 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 }) => {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Focus first empty box on mount if autoFocus
   useEffect(() => {
     if (autoFocus && inputsRef.current[0]) {
       const firstEmptyIdx = value.length < length ? value.length : 0;
       inputsRef.current[firstEmptyIdx]?.focus();
     }
-  }, [autoFocus]);
+  }, [autoFocus, length]);
 
   const digits = Array.from({ length }, (_, i) => value[i] || '');
 
@@ -42,7 +41,6 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     if (clean.length === length && onComplete) {
       onComplete(clean);
     }
-    // Focus next box or last box
     const nextIdx = Math.min(clean.length, length - 1);
     inputsRef.current[nextIdx]?.focus();
   };
@@ -55,7 +53,6 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
     const rawVal = e.target.value;
-    // Check if user pasted multi-character text via mobile autofill/paste
     if (rawVal.length > 1) {
       handlePasteRaw(rawVal);
       return;
@@ -70,7 +67,6 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     if (cleanChar && idx < length - 1) {
       inputsRef.current[idx + 1]?.focus();
     }
-
     if (combined.length === length && onComplete) {
       onComplete(combined);
     }
@@ -105,7 +101,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     >
       {Array.from({ length }).map((_, idx) => {
         const char = digits[idx];
-        const isCurrent = (value.length === idx) || (idx === length - 1 && value.length === length);
+        const isCurrent = value.length === idx || (idx === length - 1 && value.length === length);
 
         return (
           <input
@@ -117,7 +113,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
             type="text"
             inputMode="numeric"
             autoComplete={idx === 0 ? 'one-time-code' : 'off'}
-            maxLength={length} // allow paste multi-character in single input
+            maxLength={length}
             value={char}
             disabled={disabled}
             onChange={e => handleChange(e, idx)}
@@ -150,4 +146,5 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     </div>
   );
 };
+
 export default OtpInput;

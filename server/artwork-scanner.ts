@@ -117,7 +117,7 @@ export function computeGlobalCatalogueStats(): GlobalCatalogueStats {
   }
 
   const unverified = Math.max(0, catalogue.length - verified - needsReview - unableToVerify - itemPossibleFakeCount);
-  const snapshot = globalWorkerJobEngine.getSnapshot();
+  const snapshot = globalWorkerJobEngine.getSnapshot('ARTWORK_VERIFICATION');
   const activeInFlight = snapshot.queuedCount + snapshot.claimedCount;
   const pending = (snapshot.status === 'running' || snapshot.status === 'paused') && activeInFlight > 0
     ? activeInFlight
@@ -146,6 +146,9 @@ class ArtworkScannerEngine {
 
   constructor() {
     this.reloadCatalogueMap();
+    globalWorkerJobEngine.registerSystemProcessor('ARTWORK_VERIFICATION', async (task, workerId) => {
+      return await this.processTaskByWorker(task, workerId, 'Owner');
+    });
     // Automatically resume unfinished tasks if server restarted during an active running job
     const snap = globalWorkerJobEngine.getSnapshot();
     if (snap.status === 'running' && (snap.queuedCount + snap.claimedCount) > 0) {
@@ -230,8 +233,8 @@ class ArtworkScannerEngine {
       return { success: false, message: 'Catalogue not found.' };
     }
 
-    // Active Job Reconnection: Do NOT create a duplicate job if the same mode is actively processing tasks
-    const currentSnapshot = globalWorkerJobEngine.getSnapshot();
+    // Active Job Reconnection: Do NOT create a duplicate job if the same mode is actively processing artwork tasks
+    const currentSnapshot = globalWorkerJobEngine.getSnapshot('ARTWORK_VERIFICATION');
     const activeTasksRemaining = currentSnapshot.queuedCount + currentSnapshot.claimedCount;
     if (currentSnapshot.status === 'running' && activeTasksRemaining > 0 && currentSnapshot.mode === mode) {
       const activeState = this.getJobState();
@@ -245,7 +248,7 @@ class ArtworkScannerEngine {
     }
 
     if (currentSnapshot.status === 'running' || currentSnapshot.status === 'paused') {
-      globalWorkerJobEngine.stopJob();
+      globalWorkerJobEngine.stopJob('ARTWORK_VERIFICATION');
     }
 
     this.reloadCatalogueMap();

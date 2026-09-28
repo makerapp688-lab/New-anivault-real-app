@@ -2,19 +2,22 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import {
-  getEmailConfigStatus,
-  generateVerificationCode,
-  sendVerificationEmail,
-  testEmailTransport,
-  checkServerSecretsDiagnostic
-} from './email-service.js';
 import { validateOwnerSession, revokeOwnerSession, authenticateSession, requireOwner } from './owner-auth.js';
 import { getSessionSecret } from './session-secret.js';
+import {
+  getEmailConfigStatus,
+  checkServerSecretsDiagnostic,
+  testEmailTransport
+} from './email-service.js';
+import {
+  normalizeAndValidateEmail,
+  issueNormalUserOtp,
+  resendNormalUserOtp,
+  verifyAndConsumeNormalUserOtp
+} from './email-verification.js';
 
 const DATA_DIR = path.join(process.cwd(), 'server', 'data');
 const USERS_ACCOUNTS_PATH = path.join(DATA_DIR, 'users-accounts.json');
-const USERS_TEMP_VERIFICATIONS_PATH = path.join(DATA_DIR, 'users-temp-verifications.json');
 const USERS_SESSIONS_PATH = path.join(DATA_DIR, 'users-sessions.json');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -27,26 +30,15 @@ export interface UserRecord {
   username: string;
   name?: string;
   avatar?: string;
+  theme?: string;
   passwordHash?: string;
   salt?: string;
   provider: 'email';
-  isVerified: boolean;
   role: 'user';
+  isVerified?: boolean;
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string;
-}
-
-export interface TempUserVerification {
-  email: string;
-  username: string;
-  passwordHash: string;
-  salt: string;
-  codeHash: string;
-  expiresAt: number;
-  attempts: number;
-  resendCount: number;
-  lastResendAt: number;
 }
 
 export interface UserSession {
@@ -63,13 +55,14 @@ export interface UserSession {
 
 // In-memory caches with persistent disk backing
 let usersCache: Record<string, UserRecord> = {};
-let tempVerificationsCache: Record<string, TempUserVerification> = {};
 const activeUserSessions: Map<string, UserSession> = new Map();
+const verifiedAccountDeletions: Map<string, { userId: string; email: string; expiresAt: number }> = new Map();
 
 export const RESERVED_USERNAMES = new Set([
   'admin',
   'administrator',
   'owner',
+  'zenime',
   'anivex',
   'system',
   'sysadmin',
@@ -116,7 +109,7 @@ export function isUsernameAvailable(
   }
 
   if (RESERVED_USERNAMES.has(norm) || norm === 'death197') {
-    return { available: false, reason: 'This username is reserved by Anivex.' };
+    return { available: false, reason: 'This username is reserved by Zenime.' };
   }
 
   // Check against permanent user accounts
@@ -125,17 +118,6 @@ export function isUsernameAvailable(
 
     if (user.username.trim().toLowerCase() === clean.toLowerCase() || normalizeUsername(user.username) === norm) {
       return { available: false, reason: 'This username is already taken. Please choose another.' };
-    }
-  }
-
-  // Check against pending verifications
-  const now = Date.now();
-  for (const temp of Object.values(tempVerificationsCache)) {
-    if (temp.expiresAt > now) {
-      if (excludeEmail && temp.email.toLowerCase() === excludeEmail.toLowerCase()) continue;
-      if (temp.username.trim().toLowerCase() === clean.toLowerCase() || normalizeUsername(temp.username) === norm) {
-        return { available: false, reason: 'This username is currently pending verification. Try another.' };
-      }
     }
   }
 
@@ -200,9 +182,6 @@ function loadUsersData() {
         }
       }
     }
-    if (fs.existsSync(USERS_TEMP_VERIFICATIONS_PATH)) {
-      tempVerificationsCache = JSON.parse(fs.readFileSync(USERS_TEMP_VERIFICATIONS_PATH, 'utf-8'));
-    }
     if (fs.existsSync(USERS_SESSIONS_PATH)) {
       const list: UserSession[] = JSON.parse(fs.readFileSync(USERS_SESSIONS_PATH, 'utf-8'));
       const now = Date.now();
@@ -226,14 +205,6 @@ function saveUsers() {
   }
 }
 
-function saveTempVerifications() {
-  try {
-    fs.writeFileSync(USERS_TEMP_VERIFICATIONS_PATH, JSON.stringify(tempVerificationsCache, null, 2), 'utf-8');
-  } catch (err: any) {
-    console.error('[UserAuth DB] Error saving temp verifications:', err.message);
-  }
-}
-
 function saveUserSessions() {
   try {
     const list = Array.from(activeUserSessions.values());
@@ -244,19 +215,6 @@ function saveUserSessions() {
 }
 
 loadUsersData();
-
-// Clean up stale temp verifications older than 24 hours periodically
-setInterval(() => {
-  const now = Date.now();
-  let changedTemp = false;
-  for (const [key, v] of Object.entries(tempVerificationsCache)) {
-    if (v.expiresAt + 24 * 60 * 60 * 1000 < now) {
-      delete tempVerificationsCache[key];
-      changedTemp = true;
-    }
-  }
-  if (changedTemp) saveTempVerifications();
-}, 60000);
 
 // Password hashing
 function hashPassword(password: string): { hash: string; salt: string } {
@@ -293,11 +251,22 @@ function setSessionCookie(res: Response, name: string, value: string, maxAgeSeco
   const cookieValue = value || '';
 
   const secureFlags = isSecure ? '; Secure' : '';
+  const cookieStr = `${name}=${cookieValue}; Path=/; HttpOnly; SameSite=Lax${secureFlags}; Max-Age=${maxAge}; Expires=${expires}`;
 
-  res.setHeader(
-    'Set-Cookie',
-    `${name}=${cookieValue}; Path=/; HttpOnly; SameSite=Lax${secureFlags}; Max-Age=${maxAge}; Expires=${expires}`
-  );
+  const existing = res.getHeader('Set-Cookie');
+  if (!existing) {
+    res.setHeader('Set-Cookie', [cookieStr]);
+  } else if (Array.isArray(existing)) {
+    const filtered = existing.filter(c => !String(c).startsWith(`${name}=`));
+    res.setHeader('Set-Cookie', [...filtered, cookieStr]);
+  } else {
+    const existingStr = String(existing);
+    if (existingStr.startsWith(`${name}=`)) {
+      res.setHeader('Set-Cookie', [cookieStr]);
+    } else {
+      res.setHeader('Set-Cookie', [existingStr, cookieStr]);
+    }
+  }
 }
 
 export function generateSignedSessionToken(userId: string, email: string, username: string, role: string, provider: string, expiresAt: number): string {
@@ -352,11 +321,6 @@ function reloadUserSessionsFromDisk() {
     } else {
       usersCache = {};
     }
-    if (fs.existsSync(USERS_TEMP_VERIFICATIONS_PATH)) {
-      tempVerificationsCache = JSON.parse(fs.readFileSync(USERS_TEMP_VERIFICATIONS_PATH, 'utf-8'));
-    } else {
-      tempVerificationsCache = {};
-    }
     if (fs.existsSync(USERS_SESSIONS_PATH)) {
       const list: UserSession[] = JSON.parse(fs.readFileSync(USERS_SESSIONS_PATH, 'utf-8'));
       const now = Date.now();
@@ -398,7 +362,7 @@ export function validateUserSessionToken(sessionId: string | undefined | null): 
 
   const user = usersCache[session.userId];
   // Never recreate a missing or deleted account from a session token
-  if (!user || !user.isVerified || (user as any).disabled || user.id === 'usr_owner' || (user.role as string) === 'owner') {
+  if (!user || (user as any).disabled || user.id === 'usr_owner' || (user.role as string) === 'owner') {
     activeUserSessions.delete(sessionId);
     saveUserSessions();
     return null;
@@ -427,46 +391,24 @@ function sanitizeUser(u: UserRecord) {
     username: u.username,
     name: u.name || u.username,
     avatar: u.avatar || undefined,
+    theme: u.theme || undefined,
     provider: u.provider || 'email',
-    isVerified: u.isVerified,
     role: u.role || 'user',
     createdAt: u.createdAt,
     lastLoginAt: u.lastLoginAt
   };
 }
 
-interface DeletionVerificationRecord {
-  userId: string;
-  email: string;
-  codeHash: string;
-  expiresAt: number;
-  attempts: number;
-  resendCount: number;
-  lastResendAt: number;
-  verifiedToken?: string;
-  tokenExpiresAt?: number;
-}
-
-let deletionVerificationsCache: Record<string, DeletionVerificationRecord> = {};
-
-function maskEmail(email?: string): string {
-  if (!email || !email.includes('@')) return 'your email';
-  const [user, domain] = email.split('@');
-  if (user.length <= 2) return `${user[0]}***@${domain}`;
-  return `${user[0]}***${user[user.length - 1]}@${domain}`;
-}
-
 export function createUserAuthRouter() {
   const router = express.Router();
 
   // 1. Authentication Provider Status Check
-  router.get('/status', (req: Request, res: Response) => {
-    const emailStatus = getEmailConfigStatus();
-
+  router.get('/status', (_req: Request, res: Response) => {
+    const emailConfig = getEmailConfigStatus();
     const statusObj = {
       email: {
-        configured: emailStatus.configured,
-        missing: emailStatus.missing
+        configured: emailConfig.configured,
+        missing: emailConfig.missing
       }
     };
 
@@ -476,8 +418,8 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 1a2. AI Studio Server Secrets Diagnostic (Owner-Only; reports ONLY 'configured' | 'missing' - never secrets)
-  router.get('/email-status', authenticateSession, requireOwner, (req: Request, res: Response) => {
+  // 1a. Email Configuration Status (Owner-Only)
+  router.get('/email-status', authenticateSession, requireOwner, (_req: Request, res: Response) => {
     const secretsDiag = checkServerSecretsDiagnostic();
     const configStatus = getEmailConfigStatus();
     res.json({
@@ -487,7 +429,7 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 1b. Controlled Email Transport Diagnostic Test (Owner-Only)
+  // 1a-2. Controlled Email Transport Diagnostic Test (Owner-Only)
   router.get('/email-diagnostic', authenticateSession, requireOwner, async (req: Request, res: Response) => {
     try {
       const emailStatus = getEmailConfigStatus();
@@ -504,7 +446,7 @@ export function createUserAuthRouter() {
     }
   });
 
-  // 1c. Live Username Availability Check
+  // 1b. Live Username Availability Check
   router.get('/check-username', (req: Request, res: Response) => {
     reloadUserSessionsFromDisk();
     const rawUsername = typeof req.query.username === 'string' ? req.query.username : '';
@@ -520,27 +462,29 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 2. Normal User Registration - Step 1: Init with Email, Username, Password
-  router.post('/register-init', async (req: Request, res: Response) => {
+  // 2. Normal User Registration - Step 1: Validate & Send 6-Digit OTP to ANY Valid Email
+  const handleRegisterInit = async (req: Request, res: Response) => {
     try {
       reloadUserSessionsFromDisk();
-      const { email, username, password } = req.body;
+      const { email, username, password } = req.body || {};
 
-      // 1. Email validation
-      if (!email || typeof email !== 'string') {
-        res.status(400).json({ error: 'Email address is required.' });
+      // 1. Normalize & validate email (any valid email is allowed; never restricted to OWNER_EMAIL)
+      const emailCheck = normalizeAndValidateEmail(email);
+      if (!emailCheck.valid) {
+        res.status(400).json({ error: emailCheck.error || 'Please enter a valid email address.' });
         return;
       }
-      const normalizedEmail = email.trim().toLowerCase();
-      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-      if (!emailRegex.test(normalizedEmail)) {
-        res.status(400).json({ error: 'Please enter a valid email address (e.g. user@gmail.com).' });
+      const normalizedEmail = emailCheck.normalizedEmail;
+
+      // 2. Password validation
+      if (!password || typeof password !== 'string' || password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters long.' });
         return;
       }
 
-      // 1b. Max 2 accounts per email & distinct password check
+      // 3. Max 2 accounts per email & distinct password check
       const existingAccounts = Object.values(usersCache).filter(
-        u => u.email.toLowerCase() === normalizedEmail && u.isVerified
+        u => u.email.toLowerCase() === normalizedEmail
       );
 
       if (existingAccounts.length >= 2) {
@@ -563,13 +507,17 @@ export function createUserAuthRouter() {
         }
       }
 
-      // 2. Username uniqueness and format validation
+      // 4. Username uniqueness and format validation against permanent verified accounts
       if (!username || typeof username !== 'string') {
         res.status(400).json({ error: 'Username is required.' });
         return;
       }
-      const cleanUsername = username.trim();
-      const availCheck = isUsernameAvailable(cleanUsername, undefined, normalizedEmail);
+      let cleanUsername = username.trim();
+      let availCheck = isUsernameAvailable(cleanUsername);
+      if (!availCheck.available && normalizeUsername(cleanUsername) === 'animeexplorer') {
+        cleanUsername = generateUniqueUsername('AnimeExplorer');
+        availCheck = isUsernameAvailable(cleanUsername);
+      }
       if (!availCheck.available) {
         res.status(400).json({
           error: availCheck.reason || 'Username already taken.'
@@ -577,175 +525,97 @@ export function createUserAuthRouter() {
         return;
       }
 
-      // 3. Password validation
-      if (!password || typeof password !== 'string' || password.length < 8) {
-        res.status(400).json({ error: 'Password must be at least 8 characters long.' });
-        return;
-      }
-
-      // Check email configuration status
-      const emailStatus = getEmailConfigStatus();
-      if (!emailStatus.configured) {
-        res.status(503).json({
-          error: 'Email verification is temporarily unavailable. Please try again later.',
-          code: 'EMAIL_UNAVAILABLE'
-        });
-        return;
-      }
-
-      // Rate limit check
-      const existingPending = tempVerificationsCache[normalizedEmail];
-      const now = Date.now();
-      if (existingPending && existingPending.expiresAt > now) {
-        if (now - existingPending.lastResendAt < 15000) {
-          const waitSec = Math.ceil((15000 - (now - existingPending.lastResendAt)) / 1000);
-          res.status(429).json({
-            error: `Please wait ${waitSec} seconds before requesting a new verification code.`,
-            code: 'RATE_LIMITED'
-          });
-          return;
-        }
-      }
-
-      // Generate verification code
-      const { code, codeHash } = generateVerificationCode();
-      const recipientDomain = normalizedEmail.includes('@') ? '@' + normalizedEmail.split('@')[1] : 'recipient';
-      console.log(`[EMAIL_DIAGNOSTIC] OTP generated: 6-digit secure code, domain=${recipientDomain}`);
       const { hash: passwordHash, salt } = hashPassword(password);
 
-      const tempRec: TempUserVerification = {
+      const otpResult = await issueNormalUserOtp({
+        purpose: 'user_register',
         email: normalizedEmail,
-        username: cleanUsername,
-        passwordHash,
-        salt,
-        codeHash,
-        expiresAt: now + 10 * 60 * 1000,
-        attempts: 0,
-        resendCount: existingPending ? existingPending.resendCount + 1 : 1,
-        lastResendAt: now
-      };
-
-      tempVerificationsCache[normalizedEmail] = tempRec;
-      saveTempVerifications();
-      console.log(`[EMAIL_DIAGNOSTIC] OTP stored: recipientDomain=${recipientDomain}, expiresAt=+10m`);
-
-      // Dispatch verification email
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(
-          normalizedEmail,
-          code,
-          'Verify your Anivex account',
-          origin
-        );
-      } catch (mailErr: any) {
-        console.error('[UserRegisterInit] Failed to send email:', mailErr.message);
-        delete tempVerificationsCache[normalizedEmail];
-        saveTempVerifications();
-        const safeError = mailErr.message || 'Verification email could not be sent. Please try again.';
-        res.status(503).json({
-          error: safeError,
-          code: 'EMAIL_SEND_FAILED'
-        });
-        return;
-      }
+        payload: {
+          email: normalizedEmail,
+          username: cleanUsername,
+          passwordHash,
+          salt
+        },
+        subject: 'Verify your Zenime account',
+        heading: 'Here is your Zenime verification code',
+        description: `Use the 6-digit verification code below to verify ${normalizedEmail} and create your Zenime account (${cleanUsername}).`
+      });
 
       res.json({
         success: true,
-        message: 'Verification code sent to your email. Please enter the code to verify your account within 10 minutes.',
-        email: normalizedEmail
+        requiresVerification: true,
+        email: otpResult.normalizedEmail,
+        username: cleanUsername,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: `A 6-digit verification code has been sent to ${otpResult.normalizedEmail}.`
       });
     } catch (err: any) {
-      console.error('[UserRegisterInit Error]', err);
-      res.status(500).json({
-        error: err.message || 'An unexpected error occurred during registration initiation.'
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to initiate registration verification.',
+        code: err.code
       });
     }
-  });
+  };
 
-  // 3. Normal User Registration - Step 2: Verify Code and Activate Account
+  router.post('/register-init', handleRegisterInit);
+  router.post('/register', handleRegisterInit);
+
+  // 2b. Normal User Registration - Step 2: Verify 6-Digit OTP & Create Account
   router.post('/register-verify', async (req: Request, res: Response) => {
     try {
       reloadUserSessionsFromDisk();
-      const { email, code } = req.body;
+      const { email, code } = req.body || {};
 
-      if (!email || !code || typeof email !== 'string' || typeof code !== 'string') {
-        res.status(400).json({ error: 'Email and 6-digit verification code are required.' });
-        return;
-      }
+      const verified = verifyAndConsumeNormalUserOtp<{
+        email: string;
+        username: string;
+        passwordHash: string;
+        salt: string;
+      }>({
+        purpose: 'user_register',
+        email,
+        code
+      });
 
-      const normalizedEmail = email.trim().toLowerCase();
-      const tempRec = tempVerificationsCache[normalizedEmail];
+      const normalizedEmail = verified.normalizedEmail;
+      let cleanUsername = verified.payload.username;
 
-      if (!tempRec) {
-        res.status(400).json({
-          error: 'No active registration request found for this email, or the verification has expired. Please register again.'
-        });
-        return;
-      }
-
-      const now = Date.now();
-      if (now > tempRec.expiresAt || !tempRec.codeHash) {
-        tempRec.codeHash = '';
-        saveTempVerifications();
-        res.status(400).json({
-          error: 'This code has expired. Request a new code.'
-        });
-        return;
-      }
-
-      if (tempRec.attempts >= 5) {
-        tempRec.codeHash = '';
-        saveTempVerifications();
-        res.status(429).json({
-          error: 'Too many incorrect attempts. Please request a new verification code.'
-        });
-        return;
-      }
-
-      const inputCodeHash = crypto.createHash('sha256').update(code.trim()).digest('hex');
-      if (inputCodeHash !== tempRec.codeHash) {
-        tempRec.attempts += 1;
-        saveTempVerifications();
-        if (tempRec.attempts >= 5) {
-          tempRec.codeHash = '';
-          saveTempVerifications();
-          res.status(429).json({
-            error: 'Too many incorrect attempts. Please request a new verification code.'
-          });
+      // Final check against permanent accounts in case username was claimed while OTP was pending
+      let availCheck = isUsernameAvailable(cleanUsername);
+      if (!availCheck.available) {
+        cleanUsername = generateUniqueUsername(cleanUsername);
+        availCheck = isUsernameAvailable(cleanUsername);
+        if (!availCheck.available) {
+          res.status(400).json({ error: 'Chosen username is no longer available. Please register with a new username.' });
           return;
         }
+      }
+
+      const existingAccounts = Object.values(usersCache).filter(
+        u => u.email.toLowerCase() === normalizedEmail
+      );
+      if (existingAccounts.length >= 2) {
         res.status(400).json({
-          error: 'Incorrect verification code.'
+          error: 'An account limit of 2 accounts per email address has been reached for this email.'
         });
         return;
       }
 
-      // Final check for username availability before committing
-      const finalAvailCheck = isUsernameAvailable(tempRec.username, undefined, normalizedEmail);
-      if (!finalAvailCheck.available) {
-        delete tempVerificationsCache[normalizedEmail];
-        saveTempVerifications();
-        res.status(409).json({
-          error: finalAvailCheck.reason || 'Username was claimed during the verification window. Please register again with a new username.'
-        });
-        return;
-      }
-
-      // Code is valid! Create permanent verified normal user account
       const userId = `usr_${crypto.randomBytes(8).toString('hex')}`;
-      const isoNow = new Date().toISOString();
+      const now = Date.now();
+      const isoNow = new Date(now).toISOString();
 
       const newUser: UserRecord = {
         id: userId,
         email: normalizedEmail,
-        username: tempRec.username,
-        name: tempRec.username,
-        passwordHash: tempRec.passwordHash,
-        salt: tempRec.salt,
+        username: cleanUsername,
+        name: cleanUsername,
+        passwordHash: verified.payload.passwordHash,
+        salt: verified.payload.salt,
         provider: 'email',
-        isVerified: true,
         role: 'user',
+        isVerified: true,
         createdAt: isoNow,
         updatedAt: isoNow,
         lastLoginAt: isoNow
@@ -754,13 +624,16 @@ export function createUserAuthRouter() {
       usersCache[userId] = newUser;
       saveUsers();
 
-      // Clean up pending verification
-      delete tempVerificationsCache[normalizedEmail];
-      saveTempVerifications();
-
-      // Create authenticated session
+      // Establish authenticated session
       const sessionExpires = now + 30 * 24 * 60 * 60 * 1000;
-      const sessionId = generateSignedSessionToken(newUser.id, newUser.email, newUser.username, 'user', 'email', sessionExpires);
+      const sessionId = generateSignedSessionToken(
+        newUser.id,
+        newUser.email,
+        newUser.username,
+        'user',
+        'email',
+        sessionExpires
+      );
       const session: UserSession = {
         sessionId,
         userId: newUser.id,
@@ -775,108 +648,54 @@ export function createUserAuthRouter() {
       activeUserSessions.set(sessionId, session);
       saveUserSessions();
 
+      setSessionCookie(res, 'anivault_owner_session', '', 0, req);
       setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
 
       res.json({
         success: true,
-        message: 'Account successfully verified and created! Welcome to Anivex.',
+        message: 'Email verified! Your Zenime account has been created.',
         user: sanitizeUser(newUser),
         sessionToken: sessionId
       });
     } catch (err: any) {
-      console.error('[UserRegisterVerify Error]', err);
-      res.status(500).json({ error: err.message || 'Internal error during registration verification.' });
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Verification failed.'
+      });
     }
   });
 
-  // 4. Resend Verification Code
-  const handleResend = async (req: Request, res: Response) => {
+  // 2c. Normal User Registration - Resend 6-Digit OTP
+  const handleRegisterResend = async (req: Request, res: Response) => {
     try {
-      reloadUserSessionsFromDisk();
-      const { email } = req.body;
-      if (!email || typeof email !== 'string') {
-        res.status(400).json({ error: 'Email address is required.' });
-        return;
-      }
-
-      const normalizedEmail = email.trim().toLowerCase();
-      const tempRec = tempVerificationsCache[normalizedEmail];
-
-      if (!tempRec) {
-        res.status(400).json({ error: 'No active pending verification found for this email.' });
-        return;
-      }
-
-      // Check email configuration status
-      const emailStatus = getEmailConfigStatus();
-      if (!emailStatus.configured) {
-        res.status(503).json({
-          error: 'Email verification is temporarily unavailable. Please try again later.',
-          code: 'EMAIL_UNAVAILABLE'
-        });
-        return;
-      }
-
-      const now = Date.now();
-      if (tempRec.resendCount >= 10) {
-        res.status(429).json({
-          error: 'Maximum code resend limit reached for this session. Please start registration over.'
-        });
-        return;
-      }
-
-      if (now - tempRec.lastResendAt < 15000) {
-        const waitSec = Math.ceil((15000 - (now - tempRec.lastResendAt)) / 1000);
-        res.status(429).json({
-          error: `Please wait ${waitSec} seconds before requesting another code.`,
-          code: 'RATE_LIMITED'
-        });
-        return;
-      }
-
-      const { code, codeHash } = generateVerificationCode();
-      const recipientDomain = normalizedEmail.includes('@') ? '@' + normalizedEmail.split('@')[1] : 'recipient';
-      console.log(`[EMAIL_DIAGNOSTIC] OTP generated: 6-digit secure code, domain=${recipientDomain} (RESEND)`);
-      tempRec.codeHash = codeHash;
-      tempRec.expiresAt = now + 10 * 60 * 1000;
-      tempRec.attempts = 0;
-      tempRec.resendCount += 1;
-      tempRec.lastResendAt = now;
-      saveTempVerifications();
-      console.log(`[EMAIL_DIAGNOSTIC] OTP stored: recipientDomain=${recipientDomain}, previous code invalidated, resendCount=${tempRec.resendCount}`);
-
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(
-          normalizedEmail,
-          code,
-          'Verify your Anivex account',
-          origin
-        );
-      } catch (mailErr: any) {
-        console.error('[UserResendCode] Failed to send email:', mailErr.message);
-        const safeError = mailErr.message || 'Verification email could not be sent. Please try again.';
-        res.status(503).json({
-          error: safeError,
-          code: 'EMAIL_SEND_FAILED'
-        });
-        return;
-      }
+      const { email } = req.body || {};
+      const result = await resendNormalUserOtp({
+        purpose: 'user_register',
+        email,
+        subject: 'Verify your Zenime account (New Code)',
+        heading: 'Here is your new Zenime verification code',
+        description: 'A new 6-digit verification code was requested to verify your Zenime account. Any previous code is now invalid.'
+      });
 
       res.json({
         success: true,
-        message: 'A fresh verification code has been sent to your email.'
+        email: result.normalizedEmail,
+        cooldownSeconds: result.cooldownSeconds,
+        message: `A new 6-digit verification code has been sent to ${result.normalizedEmail}.`
       });
     } catch (err: any) {
-      console.error('[UserResendCode Error]', err);
-      res.status(500).json({ error: err.message || 'Failed to resend verification code.' });
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to resend verification code.',
+        code: err.code
+      });
     }
   };
 
-  router.post('/resend-code', handleResend);
-  router.post('/register-resend', handleResend);
+  router.post('/register-resend', handleRegisterResend);
+  router.post('/resend-code', handleRegisterResend);
 
-  // 5. Normal User Login
+  // 3. Normal User Login
   router.post('/login', async (req: Request, res: Response) => {
     try {
       reloadUserSessionsFromDisk();
@@ -914,7 +733,7 @@ export function createUserAuthRouter() {
         } else {
           // 3b. Match by email. Identify which Account matches the password provided
           const candidateUsers = Object.values(usersCache).filter(
-            u => u.email.toLowerCase() === normalizedInput && u.isVerified
+            u => u.email.toLowerCase() === normalizedInput
           );
 
           if (candidateUsers.length > 0) {
@@ -926,65 +745,12 @@ export function createUserAuthRouter() {
       }
 
       if (!user) {
-        // Check if there is a pending registration in tempVerificationsCache for this email or username
-        const rawIdentifier = (typeof email === 'string' && email.trim()) || (typeof username === 'string' && username.trim()) || '';
-        const normIdentifier = rawIdentifier.toLowerCase();
-        const pendingRec =
-          tempVerificationsCache[normIdentifier] ||
-          Object.values(tempVerificationsCache).find(
-            t => normalizeUsername(t.username) === normalizeUsername(rawIdentifier)
-          );
-
-        if (pendingRec && verifyPassword(password, pendingRec.passwordHash, pendingRec.salt)) {
-          const now = Date.now();
-          const { code, codeHash } = generateVerificationCode();
-          pendingRec.codeHash = codeHash;
-          pendingRec.expiresAt = now + 10 * 60 * 1000;
-          pendingRec.attempts = 0;
-          pendingRec.resendCount = (pendingRec.resendCount || 0) + 1;
-          pendingRec.lastResendAt = now;
-          tempVerificationsCache[pendingRec.email] = pendingRec;
-          saveTempVerifications();
-
-          try {
-            const origin = req.protocol + '://' + req.get('host');
-            await sendVerificationEmail(
-              pendingRec.email,
-              code,
-              'Verify your Anivex account',
-              origin
-            );
-          } catch (mailErr: any) {
-            res.status(503).json({
-              error: mailErr.message || 'Verification email could not be sent. Please try again.',
-              code: 'EMAIL_SEND_FAILED'
-            });
-            return;
-          }
-
-          res.json({
-            requiresVerification: true,
-            email: pendingRec.email,
-            username: pendingRec.username,
-            message: 'Verification code sent to your email. Please enter the 6-digit code to verify your account.'
-          });
-          return;
-        }
-
         res.status(401).json({ error: 'Invalid email, username, or password.' });
         return;
       }
 
       if ((user as any).disabled) {
         res.status(403).json({ error: 'This account has been disabled by the administrator.' });
-        return;
-      }
-
-      if (!user.isVerified) {
-        res.status(403).json({
-          error: 'This account has not been verified yet. Please complete email verification.',
-          code: 'UNVERIFIED_ACCOUNT'
-        });
         return;
       }
 
@@ -1021,6 +787,7 @@ export function createUserAuthRouter() {
       user.lastLoginAt = new Date().toISOString();
       saveUsers();
 
+      setSessionCookie(res, 'anivault_owner_session', '', 0, req);
       setSessionCookie(res, 'anivault_user_session', sessionId, 2592000, req);
 
       res.json({
@@ -1074,7 +841,6 @@ export function createUserAuthRouter() {
             username: ownerAcc.username,
             name: ownerAcc.username,
             provider: 'email',
-            isVerified: true,
             role: 'owner',
             createdAt: ownerAcc.createdAt
           }
@@ -1111,7 +877,6 @@ export function createUserAuthRouter() {
           username: ownerAcc.username,
           name: ownerAcc.username,
           provider: 'email',
-          isVerified: true,
           role: 'owner',
           createdAt: ownerAcc.createdAt
         }
@@ -1252,6 +1017,58 @@ export function createUserAuthRouter() {
     });
   });
 
+  // 9b. Update Normal User Visual Theme
+  router.post('/user/theme', (req: Request, res: Response) => {
+    const cookies = parseCookies(req);
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const customHeader = req.headers['x-anivault-user-session'] as string;
+    const sessionId = cookies.anivault_user_session || bearerToken || customHeader;
+
+    if (!sessionId) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const validated = validateUserSessionToken(sessionId);
+    if (!validated) {
+      res.status(401).json({ error: 'Session expired or invalid.' });
+      return;
+    }
+
+    const { user } = validated;
+    const { theme } = req.body || {};
+    const validThemes = new Set([
+      'dark',
+      'light',
+      'system',
+      'zenime-signature',
+      'cyber-neon',
+      'calm-ocean',
+      'modern-tech',
+      'aurora',
+      'midnight-premium',
+      'pixel',
+      'space',
+      'golden-sunset'
+    ]);
+
+    if (typeof theme !== 'string' || !validThemes.has(theme)) {
+      res.status(400).json({ error: 'Invalid theme selection.' });
+      return;
+    }
+
+    user.theme = theme;
+    user.updatedAt = new Date().toISOString();
+    saveUsers();
+
+    res.json({
+      success: true,
+      message: 'Theme updated successfully.',
+      theme: user.theme
+    });
+  });
+
   // 10. Switch to Normal User Account
   router.post('/switch', (req: Request, res: Response) => {
     const { accountId, sessionToken } = req.body || {};
@@ -1269,7 +1086,7 @@ export function createUserAuthRouter() {
     const user = usersCache[accountId];
 
     // Never recreate a missing or deleted account from client-supplied account data
-    if (!user || !user.isVerified || user.id === 'usr_owner' || (user.role as string) === 'owner') {
+    if (!user || user.id === 'usr_owner' || (user.role as string) === 'owner') {
       res.status(404).json({ error: 'Account not found. Please sign in.', requireLogin: true });
       return;
     }
@@ -1362,203 +1179,202 @@ export function createUserAuthRouter() {
     });
   });
 
-  // 11. Delete Account - Step 1: Request Deletion OTP
+  // 11. Delete Account — Step 1: Send 6-Digit OTP to Account Email
   router.post('/delete-account-init', async (req: Request, res: Response) => {
     try {
       reloadUserSessionsFromDisk();
-      const { accountId, email } = req.body;
-      let user: UserRecord | undefined;
+      const { accountId } = req.body || {};
 
-      if (accountId && usersCache[accountId]) {
-        user = usersCache[accountId];
-      } else if (email && typeof email === 'string') {
-        const norm = email.trim().toLowerCase();
-        user = Object.values(usersCache).find(u => u.email.toLowerCase() === norm);
+      const cookies = parseCookies(req);
+      const authHeader = req.headers.authorization;
+      const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+      const userHeader = req.headers['x-anivault-user-session'] as string;
+      const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
+
+      const validated = sessionId ? validateUserSessionToken(sessionId) : null;
+      const targetAccountId = accountId && typeof accountId === 'string' ? accountId : validated?.user.id;
+
+      if (!targetAccountId || !validated || validated.user.id !== targetAccountId) {
+        res.status(401).json({ error: 'Unauthorized: Valid session required to delete this account.' });
+        return;
       }
 
+      const user = usersCache[targetAccountId];
       if (!user) {
-        const cookies = parseCookies(req);
-        const authHeader = req.headers.authorization;
-        const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-        const userHeader = req.headers['x-anivault-user-session'] as string;
-        const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
-        if (sessionId) {
-          const validated = validateUserSessionToken(sessionId);
-          if (validated) user = validated.user;
-        }
-      }
-
-      if (!user) {
-        res.status(404).json({ error: 'User account not found.' });
-        return;
-      }
-
-      if (user.role === ('owner' as any) || user.id === 'usr_owner') {
-        res.status(403).json({ error: 'The permanent Owner account cannot be deleted from normal account settings.' });
-        return;
-      }
-
-      const existingRecord = deletionVerificationsCache[user.id];
-      const now = Date.now();
-      if (existingRecord && existingRecord.lastResendAt && now - existingRecord.lastResendAt < 45000) {
-        const waitSec = Math.ceil((45000 - (now - existingRecord.lastResendAt)) / 1000);
-        res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting a new code.` });
-        return;
-      }
-
-      const { code, codeHash } = generateVerificationCode();
-
-      deletionVerificationsCache[user.id] = {
-        userId: user.id,
-        email: user.email,
-        codeHash,
-        expiresAt: now + 10 * 60 * 1000,
-        attempts: 0,
-        resendCount: (existingRecord?.resendCount || 0) + 1,
-        lastResendAt: now
-      };
-
-      try {
-        const origin = req.protocol + '://' + req.get('host');
-        await sendVerificationEmail(
-          user.email,
-          code,
-          'Verify your Anivex account deletion',
-          origin
-        );
-      } catch (mailErr: any) {
-        delete deletionVerificationsCache[user.id];
-        res.status(503).json({ error: mailErr.message || 'Failed to send verification email. Please try again.' });
-        return;
-      }
-
-      res.json({
-        success: true,
-        message: 'Verification code sent to your email.',
-        maskedEmail: maskEmail(user.email)
-      });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message || 'Internal server error.' });
-    }
-  });
-
-  // 12. Delete Account - Step 2: Verify Deletion OTP
-  router.post('/delete-account-verify', (req: Request, res: Response) => {
-    try {
-      const { accountId, code } = req.body;
-      if (!accountId || !code) {
-        res.status(400).json({ error: 'Account ID and verification code are required.' });
-        return;
-      }
-
-      const record = deletionVerificationsCache[accountId];
-      if (!record) {
-        res.status(400).json({ error: 'No active deletion request found. Please request a new code.' });
-        return;
-      }
-
-      const now = Date.now();
-      if (record.expiresAt < now) {
-        delete deletionVerificationsCache[accountId];
-        res.status(400).json({ error: 'Verification code expired. Please request a new one.' });
-        return;
-      }
-
-      record.attempts = (record.attempts || 0) + 1;
-      if (record.attempts > 5) {
-        delete deletionVerificationsCache[accountId];
-        res.status(429).json({ error: 'Too many incorrect attempts. Please request a new verification code.' });
-        return;
-      }
-
-      const inputHash = crypto.createHash('sha256').update(code.trim()).digest('hex');
-      if (inputHash !== record.codeHash) {
-        res.status(400).json({ error: 'Incorrect verification code.' });
-        return;
-      }
-
-      const deletionToken = crypto.randomBytes(24).toString('hex');
-      record.verifiedToken = deletionToken;
-      record.tokenExpiresAt = now + 5 * 60 * 1000;
-
-      res.json({
-        success: true,
-        message: 'Code verified successfully.',
-        deletionToken
-      });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message || 'Internal verification error.' });
-    }
-  });
-
-  // 13. Delete Account - Step 3: Resend Deletion OTP
-  router.post('/delete-account-resend', async (req: Request, res: Response) => {
-    try {
-      const { accountId } = req.body;
-      if (!accountId || !usersCache[accountId]) {
         res.status(404).json({ error: 'Account not found.' });
         return;
       }
 
-      const user = usersCache[accountId];
-      const existingRecord = deletionVerificationsCache[user.id];
-      const now = Date.now();
-
-      if (existingRecord && existingRecord.lastResendAt && now - existingRecord.lastResendAt < 45000) {
-        const waitSec = Math.ceil((45000 - (now - existingRecord.lastResendAt)) / 1000);
-        res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting a new code.` });
+      if (user.role === ('owner' as any) || user.id === 'usr_owner') {
+        res.status(403).json({ error: 'The permanent Owner account cannot be deleted.' });
         return;
       }
 
-      const { code, codeHash } = generateVerificationCode();
-
-      deletionVerificationsCache[user.id] = {
-        userId: user.id,
+      const otpResult = await issueNormalUserOtp({
+        purpose: 'user_delete_account',
         email: user.email,
-        codeHash,
-        expiresAt: now + 10 * 60 * 1000,
-        attempts: 0,
-        resendCount: (existingRecord?.resendCount || 0) + 1,
-        lastResendAt: now
-      };
-
-      const origin = req.protocol + '://' + req.get('host');
-      await sendVerificationEmail(
-        user.email,
-        code,
-        'Verify your Anivex account deletion',
-        origin
-      );
+        payload: {
+          userId: user.id,
+          email: user.email,
+          username: user.username
+        },
+        subject: 'Confirm Zenime account deletion',
+        heading: 'Confirm account deletion',
+        description: `Use this 6-digit verification code to confirm permanent deletion of your Zenime account (${user.username}).`
+      });
 
       res.json({
         success: true,
-        message: 'New verification code sent.',
-        maskedEmail: maskEmail(user.email)
+        email: otpResult.normalizedEmail,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: 'A 6-digit verification code has been sent to your account email.'
       });
     } catch (err: any) {
-      res.status(500).json({ error: err.message || 'Failed to resend code.' });
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to send deletion verification code.',
+        code: err.code
+      });
     }
   });
 
-  // 14. Delete Account - Step 4: Final Confirmation & Complete Removal
-  router.post('/delete-account-confirm', (req: Request, res: Response) => {
+  // 11b. Delete Account — Resend 6-Digit OTP
+  router.post('/delete-account-resend', async (req: Request, res: Response) => {
     try {
       reloadUserSessionsFromDisk();
-      const { accountId, deletionToken } = req.body;
-      if (!accountId || !deletionToken) {
-        res.status(400).json({ error: 'Account ID and deletion token are required.' });
+      const { accountId } = req.body || {};
+
+      const cookies = parseCookies(req);
+      const authHeader = req.headers.authorization;
+      const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+      const userHeader = req.headers['x-anivault-user-session'] as string;
+      const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
+
+      const validated = sessionId ? validateUserSessionToken(sessionId) : null;
+      const targetAccountId = accountId && typeof accountId === 'string' ? accountId : validated?.user.id;
+
+      if (!targetAccountId || !validated || validated.user.id !== targetAccountId) {
+        res.status(401).json({ error: 'Unauthorized: Valid session required.' });
         return;
       }
 
-      const record = deletionVerificationsCache[accountId];
-      if (!record || record.verifiedToken !== deletionToken || !record.tokenExpiresAt || record.tokenExpiresAt < Date.now()) {
-        res.status(403).json({ error: 'Deletion authorization has expired or is invalid. Please verify again.' });
-        return;
-      }
-
-      const user = usersCache[accountId];
+      const user = usersCache[targetAccountId];
       if (!user) {
-        delete deletionVerificationsCache[accountId];
+        res.status(404).json({ error: 'Account not found.' });
+        return;
+      }
+
+      const otpResult = await resendNormalUserOtp({
+        purpose: 'user_delete_account',
+        email: user.email,
+        subject: 'Confirm Zenime account deletion (New Code)',
+        heading: 'Confirm account deletion',
+        description: `Use this new 6-digit verification code to confirm permanent deletion of your Zenime account (${user.username}).`
+      });
+
+      res.json({
+        success: true,
+        email: otpResult.normalizedEmail,
+        cooldownSeconds: otpResult.cooldownSeconds,
+        message: 'A new 6-digit verification code has been sent to your email.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Failed to resend deletion verification code.',
+        code: err.code
+      });
+    }
+  });
+
+  // 11c. Delete Account — Step 2: Verify 6-Digit OTP
+  router.post('/delete-account-verify', (req: Request, res: Response) => {
+    try {
+      reloadUserSessionsFromDisk();
+      const { accountId, code } = req.body || {};
+
+      const cookies = parseCookies(req);
+      const authHeader = req.headers.authorization;
+      const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+      const userHeader = req.headers['x-anivault-user-session'] as string;
+      const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
+
+      const validated = sessionId ? validateUserSessionToken(sessionId) : null;
+      const targetAccountId = accountId && typeof accountId === 'string' ? accountId : validated?.user.id;
+
+      if (!targetAccountId || !validated || validated.user.id !== targetAccountId) {
+        res.status(401).json({ error: 'Unauthorized: Valid session required.' });
+        return;
+      }
+
+      const user = usersCache[targetAccountId];
+      if (!user) {
+        res.status(404).json({ error: 'Account not found.' });
+        return;
+      }
+
+      verifyAndConsumeNormalUserOtp({
+        purpose: 'user_delete_account',
+        email: user.email,
+        code
+      });
+
+      verifiedAccountDeletions.set(targetAccountId, {
+        userId: targetAccountId,
+        email: user.email,
+        expiresAt: Date.now() + 5 * 60 * 1000
+      });
+
+      res.json({
+        success: true,
+        verified: true,
+        message: 'Verification code confirmed. You may now permanently delete your account.'
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 400;
+      res.status(statusCode).json({
+        error: err.message || 'Invalid or expired verification code.'
+      });
+    }
+  });
+
+  // 11d. Delete Account — Step 3: Final Confirmed Deletion (Requires Verified OTP Grant)
+  const handleDeleteAccount = (req: Request, res: Response) => {
+    try {
+      reloadUserSessionsFromDisk();
+      const { accountId } = req.body || {};
+
+      const cookies = parseCookies(req);
+      const authHeader = req.headers.authorization;
+      const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+      const userHeader = req.headers['x-anivault-user-session'] as string;
+      const sessionId = cookies.anivault_user_session || userHeader || bearerToken;
+
+      const validated = sessionId ? validateUserSessionToken(sessionId) : null;
+      const targetAccountId = (accountId && typeof accountId === 'string') ? accountId : validated?.user.id;
+
+      if (!targetAccountId) {
+        res.status(400).json({ error: 'Account ID is required.' });
+        return;
+      }
+
+      if (!validated || validated.user.id !== targetAccountId) {
+        res.status(401).json({ error: 'Unauthorized: Valid session required to delete this account.' });
+        return;
+      }
+
+      const grant = verifiedAccountDeletions.get(targetAccountId);
+      if (!grant || grant.expiresAt < Date.now()) {
+        verifiedAccountDeletions.delete(targetAccountId);
+        res.status(403).json({
+          error: 'Email OTP verification is required before deleting your account.'
+        });
+        return;
+      }
+
+      const user = usersCache[targetAccountId];
+      if (!user) {
+        verifiedAccountDeletions.delete(targetAccountId);
         res.status(404).json({ error: 'Account not found or already deleted.' });
         return;
       }
@@ -1568,34 +1384,36 @@ export function createUserAuthRouter() {
         return;
       }
 
+      verifiedAccountDeletions.delete(targetAccountId);
+
       // 1. Delete user record permanently
-      delete usersCache[accountId];
+      delete usersCache[targetAccountId];
       saveUsers();
 
       // 2. Remove all active sessions for this user immediately
-      for (const [sessionId, session] of activeUserSessions.entries()) {
-        if (session.userId === accountId) {
-          activeUserSessions.delete(sessionId);
+      for (const [sid, session] of activeUserSessions.entries()) {
+        if (session.userId === targetAccountId) {
+          activeUserSessions.delete(sid);
         }
       }
       saveUserSessions();
 
-      // 3. Clear deletion record
-      delete deletionVerificationsCache[accountId];
-
-      // 4. Clear cookie
+      // 3. Clear cookie
       setSessionCookie(res, 'anivault_user_session', '', 0, req);
 
-      console.log(`[UserAuth DB] Account permanently deleted: ${accountId} (${user.username}, ${user.email})`);
+      console.log(`[UserAuth DB] Account permanently deleted: ${targetAccountId} (${user.username}, ${user.email})`);
 
       res.json({
         success: true,
-        message: 'Your account has been permanently deleted.'
+        message: 'Your Zenime account has been permanently deleted.'
       });
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to delete account.' });
     }
-  });
+  };
+
+  router.post('/delete-account-confirm', handleDeleteAccount);
+  router.post('/delete-account', handleDeleteAccount);
 
   return router;
 }

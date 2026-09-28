@@ -7,14 +7,14 @@
   color-scheme: dark;
 }
 
-html.dark, html.dark body {
-  background-color: #020617;
-  color: #f8fafc;
+html, body {
+  min-height: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
-html.light, html.light body {
-  background-color: #f8fafc;
-  color: #0f172a;
+body {
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 @layer utilities {
@@ -23,13 +23,492 @@ html.light, html.light body {
   }
 }
 
-html, body {
-  min-height: 100%;
-  -webkit-overflow-scrolling: touch;
+/* ==========================================================================
+   ZENIME 11-THEME VISUAL SYSTEM (3 BASIC MODES + 8 ADDITIONAL VISUAL THEMES)
+   ========================================================================== */
+
+/* BASIC 1. Black (Default) — Obsidian black with Zenime logo crimson & metallic silver accents */
+html[data-theme="dark"],
+html:not([data-theme]) {
+  --color-slate-950: #050507;
+  --color-slate-900: #0d0e12;
+  --color-slate-800: #181a22;
+  --color-slate-700: #2a2d3a;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-rose-700: #be123c;
+  --color-rose-800: #9f1239;
+  --color-rose-900: #881337;
+  --color-rose-950: #4c0519;
 }
 
-body {
-  overflow-x: hidden;
+html[data-theme="dark"] body,
+html:not([data-theme]) body {
+  background-color: #050507;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(225, 29, 72, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 80% 15%, rgba(203, 213, 225, 0.05) 0%, transparent 45%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] button.bg-rose-600,
+html[data-theme="dark"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+  border: 1px solid rgba(251, 113, 133, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 16px rgba(225, 29, 72, 0.32) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] button.bg-rose-600:hover,
+html[data-theme="dark"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 20px rgba(244, 63, 94, 0.45) !important;
+}
+
+/* BASIC 2 & 3. White (light) and System when OS prefers light */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.06) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #0f172a;
+}
+
+/* ADDITIONAL 4. Cyber Neon — Glowing futuristic buttons, neon cyan/purple accents, subtle futuristic glow */
+html[data-theme="cyber-neon"] {
+  --color-slate-950: #050714;
+  --color-slate-900: #0b1026;
+  --color-slate-800: #161f42;
+  --color-slate-700: #253366;
+  --color-rose-400: #22d3ee;
+  --color-rose-500: #06b6d4;
+  --color-rose-600: #0891b2;
+  --color-rose-700: #7c3aed;
+  --color-rose-800: #5b21b6;
+  --color-rose-900: #3b0764;
+  --color-rose-950: #1e1038;
+}
+
+html[data-theme="cyber-neon"] body {
+  background-color: #050714;
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+html[data-theme="cyber-neon"] button.bg-rose-600,
+html[data-theme="cyber-neon"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+  border: 1px solid rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.4), 0 0 28px rgba(139, 92, 246, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="cyber-neon"] button.bg-rose-600:hover,
+html[data-theme="cyber-neon"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%) !important;
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.65), 0 0 36px rgba(168, 85, 247, 0.4) !important;
+}
+
+/* 2. Calm Ocean — Smooth blue/turquoise buttons, clean and peaceful appearance, soft ocean accents */
+html[data-theme="calm-ocean"] {
+  --color-slate-950: #04131d;
+  --color-slate-900: #082030;
+  --color-slate-800: #10334a;
+  --color-slate-700: #1b4965;
+  --color-rose-400: #2dd4bf;
+  --color-rose-500: #14b8a6;
+  --color-rose-600: #0284c7;
+  --color-rose-700: #0369a1;
+  --color-rose-800: #115e59;
+  --color-rose-900: #134e4a;
+  --color-rose-950: #072a36;
+}
+
+html[data-theme="calm-ocean"] body {
+  background-color: #04131d;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(20, 184, 166, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(2, 132, 199, 0.12) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #f0fdfa;
+}
+
+html[data-theme="calm-ocean"] button.bg-rose-600,
+html[data-theme="calm-ocean"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #0284c7 0%, #0d9488 100%) !important;
+  border: 1px solid rgba(45, 212, 191, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.28) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="calm-ocean"] button.bg-rose-600:hover,
+html[data-theme="calm-ocean"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+  box-shadow: 0 8px 22px rgba(20, 184, 166, 0.4) !important;
+}
+
+/* 3. Modern Tech — Clean premium buttons, graphite/white/blue visual language, sleek modern appearance */
+html[data-theme="modern-tech"] {
+  --color-slate-950: #090b10;
+  --color-slate-900: #121620;
+  --color-slate-800: #1e2433;
+  --color-slate-700: #2e364d;
+  --color-rose-400: #60a5fa;
+  --color-rose-500: #3b82f6;
+  --color-rose-600: #2563eb;
+  --color-rose-700: #1d4ed8;
+  --color-rose-800: #1e40af;
+  --color-rose-900: #1e3a8a;
+  --color-rose-950: #111c38;
+}
+
+html[data-theme="modern-tech"] body {
+  background-color: #090b10;
+  background-image:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.06) 0%, transparent 35%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+html[data-theme="modern-tech"] button.bg-rose-600,
+html[data-theme="modern-tech"] a.bg-rose-600 {
+  background-image: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border: 1px solid rgba(147, 197, 253, 0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(37, 99, 235, 0.3) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="modern-tech"] button.bg-rose-600:hover,
+html[data-theme="modern-tech"] a.bg-rose-600:hover {
+  background-image: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px rgba(59, 130, 246, 0.42) !important;
+}
+
+/* 4. Aurora — Soft multicolor glow, green/cyan/purple aurora-inspired accents, atmospheric appearance */
+html[data-theme="aurora"] {
+  --color-slate-950: #050d14;
+  --color-slate-900: #0a1924;
+  --color-slate-800: #132a3a;
+  --color-slate-700: #1f3f54;
+  --color-rose-400: #34d399;
+  --color-rose-500: #10b981;
+  --color-rose-600: #059669;
+  --color-rose-700: #0891b2;
+  --color-rose-800: #5b21b6;
+  --color-rose-900: #064e3b;
+  --color-rose-950: #042f2e;
+}
+
+html[data-theme="aurora"] body {
+  background-color: #050d14;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 5%, rgba(6, 182, 212, 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #ecfdf5;
+}
+
+html[data-theme="aurora"] button.bg-rose-600,
+html[data-theme="aurora"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.3), 0 0 28px rgba(139, 92, 246, 0.22) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="aurora"] button.bg-rose-600:hover,
+html[data-theme="aurora"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #34d399 0%, #22d3ee 52%, #a78bfa 100%) !important;
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.45), 0 0 34px rgba(167, 139, 250, 0.35) !important;
+}
+
+/* 5. Midnight Premium — Elegant dark metallic buttons, black/deep charcoal base, subtle silver/violet accents */
+html[data-theme="midnight-premium"] {
+  --color-slate-950: #050508;
+  --color-slate-900: #0e0e14;
+  --color-slate-800: #1a1a26;
+  --color-slate-700: #2c2c3f;
+  --color-rose-400: #a78bfa;
+  --color-rose-500: #8b5cf6;
+  --color-rose-600: #6d28d9;
+  --color-rose-700: #5b21b6;
+  --color-rose-800: #4c1d95;
+  --color-rose-900: #2e1065;
+  --color-rose-950: #170936;
+}
+
+html[data-theme="midnight-premium"] body {
+  background-color: #050508;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #050508 0%, #0a0a10 100%);
+  background-attachment: fixed;
+  color: #f1f5f9;
+}
+
+html[data-theme="midnight-premium"] button.bg-rose-600,
+html[data-theme="midnight-premium"] a.bg-rose-600 {
+  background-image: linear-gradient(145deg, #5b21b6 0%, #3b0764 50%, #1e1b4b 100%) !important;
+  border: 1px solid rgba(203, 213, 225, 0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(226, 232, 240, 0.28), 0 4px 16px rgba(109, 40, 217, 0.32) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="midnight-premium"] button.bg-rose-600:hover,
+html[data-theme="midnight-premium"] a.bg-rose-600:hover {
+  background-image: linear-gradient(145deg, #7c3aed 0%, #4c1d95 55%, #312e81 100%) !important;
+  border-color: rgba(226, 232, 240, 0.55) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 6px 20px rgba(139, 92, 246, 0.45) !important;
+}
+
+/* 6. Pixel — Pixel-style buttons, retro arcade-inspired visual details, pixel-inspired borders */
+html[data-theme="pixel"] {
+  --color-slate-950: #090614;
+  --color-slate-900: #140d2b;
+  --color-slate-800: #24174a;
+  --color-slate-700: #382373;
+  --color-rose-400: #f472b6;
+  --color-rose-500: #ec4899;
+  --color-rose-600: #db2777;
+  --color-rose-700: #be185d;
+  --color-rose-800: #9d174d;
+  --color-rose-900: #831843;
+  --color-rose-950: #3b0926;
+}
+
+html[data-theme="pixel"] body {
+  background-color: #090614;
+  background-image:
+    linear-gradient(rgba(236, 72, 153, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+html[data-theme="pixel"] button.bg-rose-600,
+html[data-theme="pixel"] a.bg-rose-600 {
+  background-image: linear-gradient(180deg, #ec4899 0%, #be185d 100%) !important;
+  border-radius: 4px !important;
+  border: 2px solid #f9a8d4 !important;
+  box-shadow:
+    inset -2px -2px 0px rgba(0, 0, 0, 0.45),
+    inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+    3px 3px 0px #06b6d4 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="pixel"] button.bg-rose-600:hover,
+html[data-theme="pixel"] a.bg-rose-600:hover {
+  transform: translate(-1px, -1px);
+  box-shadow:
+    inset -2px -2px 0px rgba(0, 0, 0, 0.45),
+    inset 2px 2px 0px rgba(255, 255, 255, 0.4),
+    4px 4px 0px #22d3ee !important;
+}
+
+html[data-theme="pixel"] [id^="anime-card-"] {
+  border-radius: 6px !important;
+  border-width: 2px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* 7. Space — Cosmic/glowing buttons, deep navy/black base, subtle stars and nebula-inspired gradients */
+html[data-theme="space"] {
+  --color-slate-950: #02030a;
+  --color-slate-900: #070a1c;
+  --color-slate-800: #111636;
+  --color-slate-700: #1e2659;
+  --color-rose-400: #c084fc;
+  --color-rose-500: #a855f7;
+  --color-rose-600: #7e22ce;
+  --color-rose-700: #6b21a8;
+  --color-rose-800: #581c87;
+  --color-rose-900: #3b0764;
+  --color-rose-950: #1a0533;
+}
+
+html[data-theme="space"] body {
+  background-color: #02030a;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.55) 50%, transparent 100%),
+    radial-gradient(1px 1px at 38% 42%, rgba(192, 132, 252, 0.6) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 24%, rgba(255, 255, 255, 0.45) 50%, transparent 100%),
+    radial-gradient(1px 1px at 88% 68%, rgba(147, 197, 253, 0.55) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 24% 82%, rgba(255, 255, 255, 0.4) 50%, transparent 100%),
+    radial-gradient(ellipse at 25% 15%, rgba(79, 70, 229, 0.16) 0%, transparent 48%),
+    radial-gradient(ellipse at 80% 30%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+html[data-theme="space"] button.bg-rose-600,
+html[data-theme="space"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #4f46e5 0%, #9333ea 55%, #ec4899 100%) !important;
+  border: 1px solid rgba(192, 132, 252, 0.5) !important;
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.42), 0 0 35px rgba(79, 70, 229, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="space"] button.bg-rose-600:hover,
+html[data-theme="space"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #f472b6 100%) !important;
+  box-shadow: 0 0 26px rgba(168, 85, 247, 0.6), 0 0 42px rgba(236, 72, 153, 0.35) !important;
+}
+
+/* 8. Golden Sunset — Warm golden/orange buttons, sunset-inspired gradients, premium cinematic appearance */
+html[data-theme="golden-sunset"] {
+  --color-slate-950: #0e0705;
+  --color-slate-900: #1b0f0b;
+  --color-slate-800: #2e1913;
+  --color-slate-700: #47271d;
+  --color-rose-400: #fbbf24;
+  --color-rose-500: #f59e0b;
+  --color-rose-600: #ea580c;
+  --color-rose-700: #c2410c;
+  --color-rose-800: #9a3412;
+  --color-rose-900: #7c2d12;
+  --color-rose-950: #3b1309;
+}
+
+html[data-theme="golden-sunset"] body {
+  background-color: #0e0705;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 25%, rgba(234, 88, 12, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 15% 80%, rgba(225, 29, 72, 0.1) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #fffbeb;
+}
+
+html[data-theme="golden-sunset"] button.bg-rose-600,
+html[data-theme="golden-sunset"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #f59e0b 0%, #ea580c 55%, #e11d48 100%) !important;
+  border: 1px solid rgba(251, 191, 36, 0.5) !important;
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.38), 0 0 28px rgba(245, 158, 11, 0.2) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="golden-sunset"] button.bg-rose-600:hover,
+html[data-theme="golden-sunset"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #f43f5e 100%) !important;
+  box-shadow: 0 8px 26px rgba(245, 158, 11, 0.5), 0 0 34px rgba(234, 88, 12, 0.32) !important;
+}
+
+/* 9. Zenime Signature — Official Zenime Primary & Cinematic Logos visual identity:
+      Pitch-black void (#010208) & abyssal midnight smoke (#05091a - #0d1636),
+      combining the Primary Emblem's neon magenta-pink (#ff1e9b), electric violet (#9333ea),
+      sapphire blue (#0066ff), and luminous cyan (#00f0ff) with the Cinematic Logo's
+      crystalline energy ring, shards, and reflective horizon glow */
+html[data-theme="zenime-signature"] {
+  --color-slate-950: #010208;
+  --color-slate-900: #05091a;
+  --color-slate-800: #0c1533;
+  --color-slate-700: #1a295c;
+  --color-rose-400: #38e8ff;
+  --color-rose-500: #00a8ff;
+  --color-rose-600: #0066ff;
+  --color-rose-700: #9333ea;
+  --color-rose-800: #db2777;
+  --color-rose-900: #3b0764;
+  --color-rose-950: #0b0524;
+}
+
+html[data-theme="zenime-signature"] body {
+  background-color: #010208;
+  background-image:
+    /* Top-center halo arc glow matching the Cinematic Logo ring */
+    radial-gradient(circle at 50% 10%, rgba(0, 212, 255, 0.20) 0%, rgba(147, 51, 234, 0.09) 30%, transparent 56%),
+    /* Left neon pink-magenta & electric cyan glow from the Primary & Cinematic Logos */
+    radial-gradient(ellipse at 16% 35%, rgba(255, 30, 155, 0.16) 0%, rgba(0, 180, 255, 0.12) 28%, transparent 54%),
+    /* Right electric cyan, sapphire blue & neon violet glow */
+    radial-gradient(ellipse at 84% 38%, rgba(0, 240, 255, 0.16) 0%, rgba(168, 56, 255, 0.14) 28%, transparent 54%),
+    /* Bottom reflective wet-glass horizon flare (magenta-pink left, violet center, cyan-blue right) */
+    radial-gradient(ellipse at 50% 98%, rgba(255, 30, 155, 0.16) 0%, rgba(147, 51, 234, 0.14) 30%, rgba(0, 212, 255, 0.14) 55%, transparent 72%);
+  background-attachment: fixed;
+  color: #f8fbff;
+}
+
+/* Primary Buttons & CTAs: Neon Pink -> Electric Violet -> Sapphire Blue -> Luminous Cyan 3D metallic gradient */
+html[data-theme="zenime-signature"] button.bg-rose-600,
+html[data-theme="zenime-signature"] a.bg-rose-600 {
+  background-image: linear-gradient(135deg, #ff1e9b 0%, #9333ea 34%, #0066ff 68%, #00f0ff 100%) !important;
+  border: 1px solid rgba(125, 232, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    -3px 0 16px rgba(255, 30, 155, 0.42),
+    3px 0 20px rgba(0, 240, 255, 0.42),
+    0 4px 24px rgba(147, 51, 234, 0.35) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 6px rgba(1, 2, 8, 0.6);
+}
+
+html[data-theme="zenime-signature"] button.bg-rose-600:hover,
+html[data-theme="zenime-signature"] a.bg-rose-600:hover {
+  background-image: linear-gradient(135deg, #ff5cc0 0%, #a855f7 34%, #1d7dff 68%, #5cf6ff 100%) !important;
+  border-color: rgba(224, 247, 255, 0.95) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    -4px 0 22px rgba(255, 30, 155, 0.60),
+    4px 0 26px rgba(0, 240, 255, 0.60),
+    0 6px 30px rgba(147, 51, 234, 0.48) !important;
+}
+
+html[data-theme="zenime-signature"] button.bg-rose-600:active,
+html[data-theme="zenime-signature"] a.bg-rose-600:active {
+  background-image: linear-gradient(135deg, #db1483 0%, #7e22ce 35%, #0050e6 70%, #00c4e0 100%) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(1, 2, 8, 0.5),
+    0 0 18px rgba(0, 212, 255, 0.55) !important;
+}
+
+/* Anime Cards & Surface Panels: Deep obsidian-indigo glass with dual pink/violet & cyan/blue rim-light on hover */
+html[data-theme="zenime-signature"] [id^="anime-card-"] {
+  background-color: rgba(5, 9, 26, 0.88) !important;
+  border-color: rgba(56, 189, 248, 0.28) !important;
+  box-shadow: 0 6px 20px rgba(1, 2, 8, 0.78);
+}
+
+html[data-theme="zenime-signature"] [id^="anime-card-"]:hover {
+  border-color: rgba(0, 240, 255, 0.72) !important;
+  box-shadow:
+    -4px 6px 24px rgba(255, 30, 155, 0.30),
+    4px 6px 26px rgba(0, 240, 255, 0.32),
+    inset 0 1px 0 rgba(224, 247, 255, 0.32) !important;
+}
+
+/* Brand Wordmark & Small UI Emphasis Elements: Crystalline pink -> violet -> blue -> cyan gradient text & glow */
+html[data-theme="zenime-signature"] #zenime-brand-logo span.text-rose-500,
+html[data-theme="zenime-signature"] #nav-logo-group span.text-rose-500 {
+  background: linear-gradient(90deg, #ff38ac 0%, #a855f7 36%, #3b82f6 68%, #00f0ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.48));
+}
+
+html[data-theme="zenime-signature"] header {
+  border-bottom-color: rgba(0, 136, 255, 0.25) !important;
+  box-shadow: 0 4px 28px rgba(0, 80, 255, 0.12), 0 1px 0 rgba(168, 85, 247, 0.15);
+}
+
+html[data-theme="zenime-signature"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.45) 0%, rgba(0, 102, 255, 0.45) 50%, rgba(168, 56, 255, 0.45) 100%);
+}
+html[data-theme="zenime-signature"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(56, 220, 255, 0.75) 0%, rgba(0, 112, 255, 0.75) 50%, rgba(217, 70, 239, 0.75) 100%);
 }
 
 /* Custom subtle scrollbar */

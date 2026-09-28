@@ -90,14 +90,27 @@ export interface SyncStatus {
   stats?: CatalogueStats;
 }
 
-export type ThemeMode = 'dark' | 'light' | 'system';
+export type ThemeMode =
+  | 'dark'
+  | 'light'
+  | 'system'
+  | 'zenime-signature'
+  | 'cyber-neon'
+  | 'calm-ocean'
+  | 'modern-tech'
+  | 'aurora'
+  | 'midnight-premium'
+  | 'pixel'
+  | 'space'
+  | 'golden-sunset';
 
 export interface UserAccount {
   id: string;
-  username: string; // Chosen Anivex username
+  username: string; // Chosen Zenime username
   name: string;     // Display identity name
   email?: string;
   avatar?: string;
+  theme?: ThemeMode;
   provider: 'guest' | 'email';
   role?: 'user' | 'owner';
   createdAt: string;

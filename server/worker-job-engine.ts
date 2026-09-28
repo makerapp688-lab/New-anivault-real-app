@@ -4,6 +4,10 @@ import { globalSourceGateway, WorkerWaitReason } from './source-gateway.ts';
 import { globalDataStore } from './data-store.ts';
 
 export type TaskPriority = 'HIGH' | 'MEDIUM' | 'NORMAL' | 'LOW';
+export type WorkerJobSystem = 'ARTWORK_VERIFICATION' | 'INFORMATION_VERIFICATION';
+
+export const DEFAULT_PRODUCTION_WORKERS = 50;
+export const MAX_INFRASTRUCTURE_WORKERS = 80;
 
 export interface WorkerPoolConfig {
   minWorkers: number;
@@ -15,6 +19,7 @@ export interface WorkerPoolConfig {
 export interface JobTask<T = any> {
   taskId: string;
   jobId: string;
+  jobSystem?: WorkerJobSystem;
   animeId: string;
   seasonId?: string | null;
   title: string;
@@ -40,6 +45,7 @@ export interface JobTask<T = any> {
 
 export interface WorkerCompletedTask {
   taskId: string;
+  jobSystem?: WorkerJobSystem;
   animeId?: string | null;
   animeTitle: string;
   operation: string;
@@ -52,6 +58,7 @@ export interface WorkerInfo {
   workerId: number;
   status: 'idle' | 'claiming' | 'working' | 'waiting' | 'retrying' | 'paused' | 'error' | 'stopped' | 'stalled' | 'busy' | 'backing_off';
   waitReason?: WorkerWaitReason | null;
+  jobSystem?: WorkerJobSystem | null;
   currentTaskId?: string | null;
   currentAnimeId?: string | null;
   currentAnimeTitle?: string | null;
@@ -92,6 +99,7 @@ export interface LiveAnimeRegistryEntry {
   animeTitle: string;
   workerId: number;
   taskId: string;
+  jobSystem?: WorkerJobSystem;
   seasonName?: string | null;
   operation: string;
   source: string;
@@ -106,6 +114,7 @@ export interface WorkerActivityEvent {
   timestamp: string;
   timestampMs: number;
   workerId: number;
+  jobSystem?: WorkerJobSystem | null;
   taskId?: string | null;
   animeId?: string | null;
   animeTitle?: string | null;
@@ -115,8 +124,10 @@ export interface WorkerActivityEvent {
     | 'verification_started'
     | 'source_searched'
     | 'artwork_checked'
+    | 'info_checked'
     | 'replacement_found'
     | 'artwork_saved'
+    | 'info_saved'
     | 'retry_started'
     | 'task_completed'
     | 'task_failed'
@@ -151,10 +162,18 @@ export interface JobStateSnapshot {
   claimedCount: number;
   completedCount: number;
   failedCount: number;
+  retryingCount: number;
+  processedCount: number;
   progressPercent: number;
 
   lastLog: string;
   workerCount: number;
+  architectureCapacity: number;
+  busyWorkers: number;
+  busyArtworkWorkers: number;
+  busyInfoWorkers: number;
+  idleWorkers: number;
+  unhealthyWorkers: number;
   poolConfig: WorkerPoolConfig;
   etaFormatted: string;
   avgTaskDurationMs: number;
@@ -164,6 +183,7 @@ export interface JobStateSnapshot {
     status: 'healthy' | 'high_load' | 'critical';
   };
   activeWorkers: WorkerInfo[];
+  workers: WorkerInfo[];
   liveAnimeRegistry: Record<string, LiveAnimeRegistryEntry>;
   activeAnimeLocks: Array<{
     animeId: string;
@@ -213,15 +233,32 @@ export const LEASE_DURATION_MS = 30000; // 30s lease timeout
 export const HEARTBEAT_INTERVAL_MS = 2500; // Worker heartbeat every 2.5s
 export const WATCHDOG_CHECK_INTERVAL_MS = 5000; // Watchdog sweep every 5s
 
+export function inferJobSystemFromTaskType(type?: string | null): WorkerJobSystem {
+  const norm = (type || '').toUpperCase().trim();
+  if (
+    norm.includes('INFO') ||
+    norm === 'INFORMATION_VERIFICATION' ||
+    norm === 'VERIFY_INFORMATION' ||
+    norm === 'FIX_MISSING_INFORMATION' ||
+    norm === 'REVERIFY_INFORMATION'
+  ) {
+    return 'INFORMATION_VERIFICATION';
+  }
+  return 'ARTWORK_VERIFICATION';
+}
+
 /**
  * Deterministic Task ID Generator
- * Standardized across all 50 workers and scanner operations:
+ * Standardized across all shared workers (50 default, scalable to 80+):
  * - VERIFY_ARTWORK:anime_id
  * - VERIFY_SEASON:anime_id:season_id
  * - FIX_ARTWORK:anime_id
  * - FIX_MISSING:anime_id
  * - SEARCH_ARTWORK:anime_id
  * - RETRY_VERIFICATION:anime_id
+ * - VERIFY_INFORMATION:anime_id
+ * - FIX_MISSING_INFORMATION:anime_id
+ * - REVERIFY_INFORMATION:anime_id
  */
 export function createDeterministicTaskId(type: string, animeId: string, seasonId?: string | number | null): string {
   const normType = type.toUpperCase().trim();
@@ -232,6 +269,9 @@ export function createDeterministicTaskId(type: string, animeId: string, seasonI
   else if (normType === 'FIX_MISSING') cleanType = 'FIX_MISSING';
   else if (normType === 'ARTWORK_SEARCH_AGAIN' || normType === 'SEARCH_ARTWORK') cleanType = 'SEARCH_ARTWORK';
   else if (normType === 'ARTWORK_REVERIFY' || normType === 'RETRY_VERIFICATION') cleanType = 'RETRY_VERIFICATION';
+  else if (normType === 'INFORMATION_VERIFICATION' || normType === 'VERIFY_INFORMATION' || normType === 'INFO_VERIFICATION') cleanType = 'VERIFY_INFORMATION';
+  else if (normType === 'FIX_MISSING_INFORMATION' || normType === 'INFO_FIX_MISSING') cleanType = 'FIX_MISSING_INFORMATION';
+  else if (normType === 'REVERIFY_INFORMATION' || normType === 'INFO_REVERIFY') cleanType = 'REVERIFY_INFORMATION';
 
   const cleanAnime = String(animeId).trim();
   if (seasonId !== undefined && seasonId !== null && String(seasonId).trim() !== '') {
@@ -286,12 +326,12 @@ export class ReusableWorkerJobEngine {
   // Activity events (Persisted)
   private activityEvents: WorkerActivityEvent[] = [];
 
-  // Active Production 50-Worker Engine Pool Configuration
+  // Active Production 50-Worker Engine Pool Configuration (Scalable to 80+ workers without redesign)
   private poolConfig: WorkerPoolConfig = {
     minWorkers: 1,
-    maxWorkers: 50,
-    currentWorkers: 50, // Production active 50 real server-side worker instances
-    concurrencyLimit: 50
+    maxWorkers: MAX_INFRASTRUCTURE_WORKERS,
+    currentWorkers: DEFAULT_PRODUCTION_WORKERS, // Practical active 50 server-side workers, architecture supports >=80
+    concurrencyLimit: DEFAULT_PRODUCTION_WORKERS
   };
 
   private isProcessing = false;
@@ -299,6 +339,36 @@ export class ReusableWorkerJobEngine {
   private shouldStop = false;
   private activeRunId = 0;
   private workerMap = new Map<number, WorkerInfo>();
+  private activeWorkerLoopIds = new Set<number>();
+  private queuedTaskIds = new Set<string>();
+  private lastAgingSweepAt = 0;
+  private lastClaimedSystem: WorkerJobSystem = 'INFORMATION_VERIFICATION';
+  private systemProcessors = new Map<WorkerJobSystem, (task: JobTask, workerId: number) => Promise<any>>();
+  private systemMeta: Record<WorkerJobSystem, {
+    jobId: string;
+    mode: string;
+    status: 'idle' | 'running' | 'paused' | 'completed' | 'error';
+    startedAt: string | null;
+    finishedAt: string | null;
+    lastLog: string;
+  }> = {
+    ARTWORK_VERIFICATION: {
+      jobId: 'job_art_init',
+      mode: 'all',
+      status: 'idle',
+      startedAt: null,
+      finishedAt: null,
+      lastLog: 'Artwork verification coordinator ready.'
+    },
+    INFORMATION_VERIFICATION: {
+      jobId: 'job_info_init',
+      mode: 'all',
+      status: 'idle',
+      startedAt: null,
+      finishedAt: null,
+      lastLog: 'Information verification coordinator ready.'
+    }
+  };
 
   // Circuit Breakers / External Source Health
   private sourceHealth: Record<string, SourceHealthStatus> = {
@@ -344,19 +414,39 @@ export class ReusableWorkerJobEngine {
     }, 60);
   }
 
+  public registerSystemProcessor(
+    system: WorkerJobSystem,
+    processor: (task: JobTask, workerId: number) => Promise<any>
+  ) {
+    this.systemProcessors.set(system, processor);
+  }
+
+  public updateWorkerStep(workerId: number, step: string, source?: string) {
+    const worker = this.workerMap.get(workerId);
+    if (worker) {
+      worker.currentStep = step;
+      if (source) worker.currentSource = source;
+      worker.lastHeartbeat = Date.now();
+      this.notifyStateListeners();
+    }
+  }
+
   public getWorkerPoolConfig(): WorkerPoolConfig {
     return { ...this.poolConfig };
   }
 
   public setWorkerPoolConfig(config: Partial<WorkerPoolConfig>): WorkerPoolConfig {
     const minWorkers = Math.max(1, config.minWorkers ?? this.poolConfig.minWorkers);
-    const maxWorkers = Math.max(minWorkers, Math.min(50, config.maxWorkers ?? this.poolConfig.maxWorkers));
+    const maxWorkers = Math.max(minWorkers, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.maxWorkers ?? MAX_INFRASTRUCTURE_WORKERS));
     const currentWorkers = Math.min(maxWorkers, Math.max(minWorkers, config.currentWorkers ?? this.poolConfig.currentWorkers));
-    const concurrencyLimit = Math.max(1, Math.min(50, config.concurrencyLimit ?? this.poolConfig.concurrencyLimit));
+    const concurrencyLimit = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.concurrencyLimit ?? currentWorkers));
 
     this.poolConfig = { minWorkers, maxWorkers, currentWorkers, concurrencyLimit };
     this.initWorkers();
     this.saveJobState();
+    if (this.isProcessing && !this.shouldPause && !this.shouldStop) {
+      this.ensureWorkerPoolRunning();
+    }
     return { ...this.poolConfig };
   }
 
@@ -493,27 +583,30 @@ export class ReusableWorkerJobEngine {
           this.failedTaskSet = new Set(saved.failedTaskIds.filter((id: string) => !id.includes('bench-anime-')));
         }
         if (saved.poolConfig && typeof saved.poolConfig.currentWorkers === 'number') {
-          this.poolConfig.currentWorkers = Math.max(1, Math.min(50, saved.poolConfig.currentWorkers));
-          this.poolConfig.maxWorkers = 50;
-          this.poolConfig.concurrencyLimit = 50;
+          this.poolConfig.currentWorkers = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, saved.poolConfig.currentWorkers));
+          this.poolConfig.maxWorkers = MAX_INFRASTRUCTURE_WORKERS;
+          this.poolConfig.concurrencyLimit = Math.max(1, Math.min(MAX_INFRASTRUCTURE_WORKERS, saved.poolConfig.concurrencyLimit || this.poolConfig.currentWorkers));
         }
 
         // Restore remaining unfinished tasks if server restarted during an active or paused job
         this.tasksMap.clear();
         this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+        this.queuedTaskIds.clear();
         const now = Date.now();
 
         if (Array.isArray(saved.remainingTasks) && saved.remainingTasks.length > 0 && (saved.status === 'running' || saved.status === 'paused')) {
           // 1. Re-populate completed task stubs so totalTasks and progressPercent remain authoritative
           for (const cId of this.completedTaskSet) {
-            const parts = cId.split('_');
-            const aId = parts.length >= 2 ? parts.slice(1).join('_') : cId;
+            const parsed = parseTaskId(cId);
+            const aId = parsed.animeId || cId;
+            const sys = inferJobSystemFromTaskType(parsed.type);
             this.tasksMap.set(cId, {
               taskId: cId,
               jobId: this.jobId,
+              jobSystem: sys,
               animeId: aId,
               title: aId,
-              type: this.mode === 'fix_missing' ? 'fix_missing' : 'artwork_verification',
+              type: parsed.type.toLowerCase(),
               payload: { id: aId },
               priority: 'MEDIUM',
               status: 'completed',
@@ -527,14 +620,16 @@ export class ReusableWorkerJobEngine {
             });
           }
           for (const fId of this.failedTaskSet) {
-            const parts = fId.split('_');
-            const aId = parts.length >= 2 ? parts.slice(1).join('_') : fId;
+            const parsed = parseTaskId(fId);
+            const aId = parsed.animeId || fId;
+            const sys = inferJobSystemFromTaskType(parsed.type);
             this.tasksMap.set(fId, {
               taskId: fId,
               jobId: this.jobId,
+              jobSystem: sys,
               animeId: aId,
               title: aId,
-              type: this.mode === 'fix_missing' ? 'fix_missing' : 'artwork_verification',
+              type: parsed.type.toLowerCase(),
               payload: { id: aId },
               priority: 'MEDIUM',
               status: 'failed',
@@ -554,13 +649,16 @@ export class ReusableWorkerJobEngine {
               continue;
             }
             const prio: TaskPriority = ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'].includes(rt.priority) ? rt.priority : 'MEDIUM';
+            const taskType = rt.type || 'artwork_verification';
+            const sys = rt.jobSystem || inferJobSystemFromTaskType(taskType);
             const task: JobTask = {
               taskId: rt.taskId,
               jobId: this.jobId,
+              jobSystem: sys,
               animeId: rt.animeId,
               seasonId: rt.seasonId || null,
               title: rt.title || rt.animeId,
-              type: rt.type || 'artwork_verification',
+              type: taskType,
               payload: { id: rt.animeId, title: rt.title || rt.animeId },
               priority: prio,
               status: 'queued',
@@ -572,8 +670,9 @@ export class ReusableWorkerJobEngine {
               maxRetries: 2
             };
             this.tasksMap.set(rt.taskId, task);
-            if (!this.priorityQueues[prio].includes(rt.taskId)) {
+            if (!this.queuedTaskIds.has(rt.taskId)) {
               this.priorityQueues[prio].push(rt.taskId);
+              this.queuedTaskIds.add(rt.taskId);
             }
           }
         }
@@ -790,30 +889,69 @@ export class ReusableWorkerJobEngine {
   }
 
   // --- Snapshot Generation (Authoritative Single Source of Truth) ---
-  public getSnapshot(): JobStateSnapshot {
-    // Automatically sweep expired leases
-    this.recoverStaleTasks();
-
+  public getSnapshot(filterSystem?: WorkerJobSystem): JobStateSnapshot {
+    // Automatically sweep expired leases (throttled)
     const now = Date.now();
-    const totalTasks = this.tasksMap.size || (this.completedTaskSet.size + this.failedTaskSet.size);
-    const completedCount = this.completedTaskSet.size;
-    const failedCount = this.failedTaskSet.size;
+    if (now - this.lastStaleSweepAt > 2000) {
+      this.lastStaleSweepAt = now;
+      this.recoverStaleTasks();
+    }
+
+    let totalTasks = 0;
+    let completedCount = 0;
+    let failedCount = 0;
+    let queuedCount = 0;
+    let claimedCount = 0;
+
+    if (this.tasksMap.size > 0 || filterSystem) {
+      for (const task of this.tasksMap.values()) {
+        const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+        if (filterSystem && sys !== filterSystem) continue;
+        totalTasks++;
+        if (task.status === 'completed' || this.completedTaskSet.has(task.taskId)) {
+          completedCount++;
+        } else if (task.status === 'failed' || this.failedTaskSet.has(task.taskId)) {
+          failedCount++;
+        } else if (task.status === 'claimed' || task.status === 'claiming' || task.status === 'running' || task.status === 'waiting' || this.claimedTasks.has(task.taskId)) {
+          claimedCount++;
+        } else if (task.status === 'queued' || task.status === 'retrying') {
+          queuedCount++;
+        }
+      }
+    } else {
+      totalTasks = this.completedTaskSet.size + this.failedTaskSet.size;
+      completedCount = this.completedTaskSet.size;
+      failedCount = this.failedTaskSet.size;
+      queuedCount = (this.priorityQueues.HIGH?.length || 0) +
+        (this.priorityQueues.MEDIUM?.length || 0) +
+        (this.priorityQueues.NORMAL?.length || 0) +
+        (this.priorityQueues.LOW?.length || 0);
+      claimedCount = this.claimedTasks.size;
+    }
+
     const processed = completedCount + failedCount;
-
-    const queuedCount = (this.priorityQueues.HIGH?.length || 0) +
-      (this.priorityQueues.MEDIUM?.length || 0) +
-      (this.priorityQueues.NORMAL?.length || 0) +
-      (this.priorityQueues.LOW?.length || 0);
-    const claimedCount = this.claimedTasks.size;
-
     const progressPercent = totalTasks > 0 ? Math.min(100, Math.round((processed / totalTasks) * 100)) : 0;
+
+    const sysMeta = filterSystem ? this.systemMeta[filterSystem] : null;
+    const effectiveStartedAt = sysMeta?.startedAt || this.startedAt;
+    const effectiveFinishedAt = sysMeta?.finishedAt || this.finishedAt;
+    let effectiveStatus = sysMeta ? sysMeta.status : this.status;
+    if (filterSystem) {
+      if (queuedCount > 0 || claimedCount > 0) {
+        effectiveStatus = this.shouldPause ? 'paused' : 'running';
+      } else if (totalTasks > 0 && processed >= totalTasks) {
+        effectiveStatus = 'completed';
+      } else if (totalTasks === 0) {
+        effectiveStatus = 'idle';
+      }
+    }
 
     // Real ETA calculation
     let etaFormatted = 'Calculating...';
     let avgTaskDurationMs = 0;
 
-    if (this.rateSamples.length >= 3 && this.startedAt) {
-      const startTimeMs = new Date(this.startedAt).getTime();
+    if (this.rateSamples.length >= 2 && effectiveStartedAt) {
+      const startTimeMs = new Date(effectiveStartedAt).getTime();
       const elapsedSec = (now - startTimeMs) / 1000;
       if (elapsedSec > 0 && processed > 0) {
         const ratePerSec = processed / elapsedSec;
@@ -832,6 +970,8 @@ export class ReusableWorkerJobEngine {
           etaFormatted = 'Complete';
         }
       }
+    } else if (totalTasks > 0 && processed >= totalTasks) {
+      etaFormatted = 'Complete';
     }
 
     // System Health Throttling Monitor
@@ -864,8 +1004,8 @@ export class ReusableWorkerJobEngine {
       if (deltaSec > 0) {
         tasksPerMinute = Math.round((deltaCount / deltaSec) * 60);
       }
-    } else if (this.startedAt && processed > 0) {
-      const totalElapsedMin = Math.max(0.05, (now - new Date(this.startedAt).getTime()) / 60000);
+    } else if (effectiveStartedAt && processed > 0) {
+      const totalElapsedMin = Math.max(0.05, (now - new Date(effectiveStartedAt).getTime()) / 60000);
       tasksPerMinute = Math.round(processed / totalElapsedMin);
     }
 
@@ -879,11 +1019,11 @@ export class ReusableWorkerJobEngine {
       const ownedClaim = activeWorkerClaimsByWorkerId.get(w.workerId);
       const activeTaskId = w.currentTaskId || ownedClaim?.taskId || null;
       const ownedTask = activeTaskId ? this.tasksMap.get(activeTaskId) : null;
-      let effectiveStatus = w.status;
+      let effectiveWorkerStatus = w.status;
 
       if (activeTaskId && ownedTask && ownedTask.status !== 'completed' && ownedTask.status !== 'failed') {
-        if (effectiveStatus === 'idle' || effectiveStatus === 'stopped') {
-          effectiveStatus = ownedTask.status === 'claiming'
+        if (effectiveWorkerStatus === 'idle' || effectiveWorkerStatus === 'stopped') {
+          effectiveWorkerStatus = ownedTask.status === 'claiming'
             ? 'claiming'
             : ownedTask.status === 'waiting'
             ? 'waiting'
@@ -891,29 +1031,32 @@ export class ReusableWorkerJobEngine {
             ? 'retrying'
             : 'working';
         }
-      } else if (!activeTaskId && (effectiveStatus === 'working' || effectiveStatus === 'claiming' || effectiveStatus === 'waiting' || effectiveStatus === 'busy')) {
-        effectiveStatus = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
+      } else if (!activeTaskId && (effectiveWorkerStatus === 'working' || effectiveWorkerStatus === 'claiming' || effectiveWorkerStatus === 'waiting' || effectiveWorkerStatus === 'busy')) {
+        effectiveWorkerStatus = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
       }
 
       const hbAge = now - (w.lastHeartbeat || now);
       const effectiveHealth: 'healthy' | 'stale' | 'error' =
-        effectiveStatus === 'error'
+        effectiveWorkerStatus === 'error'
           ? 'error'
           : (activeTaskId && hbAge > LEASE_DURATION_MS)
           ? 'stale'
           : (w.health || 'healthy');
 
       let effectiveWaitReason: WorkerWaitReason | null = null;
-      if (effectiveStatus === 'waiting' || effectiveStatus === 'retrying' || effectiveStatus === 'backing_off') {
-        effectiveWaitReason = w.waitReason || this.inferWaitReason(w.currentStep, effectiveStatus);
-      } else if (effectiveStatus === 'idle' && this.status === 'running') {
+      if (effectiveWorkerStatus === 'waiting' || effectiveWorkerStatus === 'retrying' || effectiveWorkerStatus === 'backing_off') {
+        effectiveWaitReason = w.waitReason || this.inferWaitReason(w.currentStep, effectiveWorkerStatus);
+      } else if (effectiveWorkerStatus === 'idle' && this.status === 'running') {
         effectiveWaitReason = w.waitReason || 'No task';
       }
 
+      const taskSystem = ownedTask ? (ownedTask.jobSystem || inferJobSystemFromTaskType(ownedTask.type)) : (w.jobSystem || null);
+
       return {
         ...w,
-        status: effectiveStatus,
+        status: effectiveWorkerStatus,
         waitReason: effectiveWaitReason,
+        jobSystem: activeTaskId ? taskSystem : null,
         currentTaskId: activeTaskId,
         currentAnimeId: w.currentAnimeId || ownedTask?.animeId || null,
         currentAnimeTitle: w.currentAnimeTitle || ownedTask?.title || null,
@@ -927,13 +1070,33 @@ export class ReusableWorkerJobEngine {
     });
 
     const activeCount = workers.filter(w => w.status === 'working' || w.status === 'claiming' || w.status === 'busy').length;
+    const busyArtworkWorkers = workers.filter(
+      w => (w.status === 'working' || w.status === 'claiming' || w.status === 'busy') && w.jobSystem === 'ARTWORK_VERIFICATION'
+    ).length;
+    const busyInfoWorkers = workers.filter(
+      w => (w.status === 'working' || w.status === 'claiming' || w.status === 'busy') && w.jobSystem === 'INFORMATION_VERIFICATION'
+    ).length;
     const idleCount = workers.filter(w => w.status === 'idle').length;
     const waitingCount = workers.filter(w => w.status === 'waiting').length;
-    const retryingCount = workers.filter(w => w.status === 'retrying' || w.status === 'backing_off').length;
-    const busyOrActiveCount = activeCount + waitingCount + retryingCount;
+    const retryingWorkersCount = workers.filter(w => w.status === 'retrying' || w.status === 'backing_off').length;
+    const unhealthyWorkers = workers.filter(
+      w => w.status === 'error' || w.status === 'stalled' || w.health === 'error' || w.health === 'stale'
+    ).length;
+    const busyOrActiveCount = activeCount + waitingCount + retryingWorkersCount;
     const utilizationPercent = this.poolConfig.currentWorkers > 0
       ? Math.round((busyOrActiveCount / this.poolConfig.currentWorkers) * 100)
       : 0;
+
+    let retryingTaskCount = 0;
+    for (const task of this.tasksMap.values()) {
+      if (filterSystem) {
+        const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+        if (sys !== filterSystem) continue;
+      }
+      if (task.status === 'retrying' || (task.retryCount > 0 && task.status !== 'completed' && task.status !== 'failed')) {
+        retryingTaskCount++;
+      }
+    }
 
     const waitingByReason: Record<WorkerWaitReason, number> = {
       'No task': 0,
@@ -950,24 +1113,37 @@ export class ReusableWorkerJobEngine {
     }
 
     const dbStoreMetrics = globalDataStore.getStoreMetrics();
+    const events = filterSystem
+      ? this.activityEvents.filter(e => !e.jobSystem || e.jobSystem === filterSystem)
+      : this.getActivityEvents();
 
     return {
-      jobId: this.jobId,
-      jobType: this.jobType,
-      status: this.status,
-      mode: this.mode,
+      jobId: sysMeta?.jobId || this.jobId,
+      jobType: filterSystem ? filterSystem.toLowerCase() : this.jobType,
+      status: effectiveStatus,
+      mode: sysMeta?.mode || this.mode,
       batchLimit: this.batchLimit,
-      startedAt: this.startedAt,
+      startedAt: effectiveStartedAt,
       updatedAt: new Date().toISOString(),
-      finishedAt: this.finishedAt,
+      finishedAt: effectiveFinishedAt,
       totalTasks,
       queuedCount,
       claimedCount,
       completedCount,
       failedCount,
+      retryingCount: Math.max(retryingTaskCount, retryingWorkersCount),
+      processedCount: processed,
       progressPercent,
-      lastLog: this.lastLog,
+      lastLog: sysMeta?.lastLog || this.lastLog,
       workerCount: this.poolConfig.currentWorkers,
+      architectureCapacity: this.poolConfig.maxWorkers || MAX_INFRASTRUCTURE_WORKERS,
+      busyWorkers: filterSystem
+        ? (filterSystem === 'INFORMATION_VERIFICATION' ? busyInfoWorkers : busyArtworkWorkers)
+        : activeCount,
+      busyArtworkWorkers,
+      busyInfoWorkers,
+      idleWorkers: idleCount,
+      unhealthyWorkers,
       poolConfig: { ...this.poolConfig },
       etaFormatted,
       avgTaskDurationMs,
@@ -976,7 +1152,7 @@ export class ReusableWorkerJobEngine {
         active: activeCount,
         idle: idleCount,
         waiting: waitingCount,
-        retrying: retryingCount,
+        retrying: retryingWorkersCount,
         utilizationPercent,
         waitingByReason
       },
@@ -991,9 +1167,10 @@ export class ReusableWorkerJobEngine {
         status: systemHealthStatus
       },
       activeWorkers: workers,
+      workers,
       liveAnimeRegistry: liveAnimeRegistryObj,
       activeAnimeLocks,
-      activityEvents: this.getActivityEvents(),
+      activityEvents: events,
       sourceHealth: { ...this.sourceHealth },
       sourceGatewayMetrics: globalSourceGateway.getAllMetrics()
     };
@@ -1001,37 +1178,58 @@ export class ReusableWorkerJobEngine {
 
   // --- Task Queue Management ---
   public submitTasks<T>(
-    tasks: Array<{ taskId: string; animeId?: string; seasonId?: string | null; title: string; payload: T; priority?: TaskPriority; type?: string }>,
+    tasks: Array<{ taskId: string; jobSystem?: WorkerJobSystem; animeId?: string; seasonId?: string | null; title: string; payload: T; priority?: TaskPriority; type?: string }>,
     mode = 'all',
-    batchLimit?: number
+    batchLimit?: number,
+    explicitSystem?: WorkerJobSystem
   ) {
-    this.jobId = 'job_' + Date.now();
+    const targetSystem: WorkerJobSystem = explicitSystem || (tasks[0] ? (tasks[0].jobSystem || inferJobSystemFromTaskType(tasks[0].type)) : 'ARTWORK_VERIFICATION');
+    const newJobId = `job_${targetSystem === 'INFORMATION_VERIFICATION' ? 'info' : 'art'}_${Date.now()}`;
+
+    this.jobId = newJobId;
+    this.jobType = targetSystem.toLowerCase();
     this.mode = mode;
     this.batchLimit = batchLimit || null;
     this.status = 'running';
     this.shouldPause = false;
     this.shouldStop = false;
-    this.startedAt = new Date().toISOString();
+    if (!this.startedAt || !this.isProcessing) {
+      this.startedAt = new Date().toISOString();
+    }
     this.finishedAt = null;
 
-    this.tasksMap.clear();
-    this.claimedTasks.clear();
-    this.animeLeases.clear();
-    this.seasonLeases.clear();
-    this.liveAnimeRegistry.clear();
-    this.completedTaskSet.clear();
-    this.failedTaskSet.clear();
-    this.rateSamples = [];
-    this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+    this.systemMeta[targetSystem] = {
+      jobId: newJobId,
+      mode,
+      status: 'running',
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      lastLog: `Launching ${targetSystem} (${mode}) across shared ${this.poolConfig.currentWorkers}-worker pool...`
+    };
 
-    for (const w of this.workerMap.values()) {
-      w.status = 'idle';
-      w.waitReason = null;
-      w.currentTaskId = null;
-      w.currentAnimeId = null;
-      w.currentAnimeTitle = null;
-      w.tasksCompleted = 0;
-      w.tasksFailed = 0;
+    // Preserve active/queued tasks belonging to the OTHER job system so both systems can run concurrently on the shared worker pool!
+    for (const [tId, existingTask] of Array.from(this.tasksMap.entries())) {
+      const sys = existingTask.jobSystem || inferJobSystemFromTaskType(existingTask.type);
+      if (sys === targetSystem) {
+        const isActivelyClaimed = this.claimedTasks.has(tId);
+        if (!isActivelyClaimed) {
+          this.tasksMap.delete(tId);
+          this.completedTaskSet.delete(tId);
+          this.failedTaskSet.delete(tId);
+          this.queuedTaskIds.delete(tId);
+        }
+      }
+    }
+
+    for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+      this.priorityQueues[prio] = this.priorityQueues[prio].filter(tId => {
+        const t = this.tasksMap.get(tId);
+        if (!t) {
+          this.queuedTaskIds.delete(tId);
+          return false;
+        }
+        return true;
+      });
     }
 
     let candidateTasks = tasks;
@@ -1040,26 +1238,29 @@ export class ReusableWorkerJobEngine {
     }
 
     const seenTaskIds = new Set<string>();
+    const now = Date.now();
 
     for (const item of candidateTasks) {
       const priority = item.priority || 'MEDIUM';
       const animeId = item.animeId || (item.payload as any)?.id || item.taskId;
-      const type = item.type || 'artwork_verification';
+      const type = item.type || (targetSystem === 'INFORMATION_VERIFICATION' ? 'VERIFY_INFORMATION' : 'artwork_verification');
+      const jobSystem = item.jobSystem || inferJobSystemFromTaskType(type);
       const seasonId = item.seasonId !== undefined ? item.seasonId : ((item.payload as any)?.season ? String((item.payload as any).season) : null);
 
-      const deterministicId = item.taskId.startsWith('VERIFY_') || item.taskId.startsWith('FIX_') || item.taskId.startsWith('SEARCH_') || item.taskId.startsWith('RETRY_')
+      const deterministicId = item.taskId.startsWith('VERIFY_') || item.taskId.startsWith('FIX_') || item.taskId.startsWith('SEARCH_') || item.taskId.startsWith('RETRY_') || item.taskId.startsWith('REVERIFY_')
         ? item.taskId
         : createDeterministicTaskId(type, animeId, seasonId);
 
       // Unique Task Identity: Merge/Dedupe identical active jobs
-      if (seenTaskIds.has(deterministicId)) {
+      if (seenTaskIds.has(deterministicId) || this.claimedTasks.has(deterministicId)) {
         continue;
       }
       seenTaskIds.add(deterministicId);
 
       const task: JobTask<T> = {
         taskId: deterministicId,
-        jobId: this.jobId,
+        jobId: newJobId,
+        jobSystem,
         animeId,
         seasonId,
         title: item.title,
@@ -1069,53 +1270,66 @@ export class ReusableWorkerJobEngine {
         status: 'queued',
         workerId: null,
         claimedByWorkerId: null,
-        enqueuedAt: Date.now(),
-        updatedAt: Date.now(),
+        enqueuedAt: now,
+        updatedAt: now,
         retryCount: 0,
         maxRetries: 2
       };
 
       this.tasksMap.set(deterministicId, task);
-      this.priorityQueues[priority].push(deterministicId);
+      if (!this.queuedTaskIds.has(deterministicId)) {
+        this.priorityQueues[priority].push(deterministicId);
+        this.queuedTaskIds.add(deterministicId);
+      }
     }
 
-    this.lastLog = `Launched ${mode} job with ${this.tasksMap.size} unique tasks across ${this.poolConfig.currentWorkers} coordinated workers.`;
+    const msg = `Launched ${mode} (${targetSystem}) with ${seenTaskIds.size} tasks across ${this.poolConfig.currentWorkers} shared workers.`;
+    this.lastLog = msg;
+    this.systemMeta[targetSystem].lastLog = msg;
     this.saveJobState();
     this.notifyStateListeners();
   }
 
   public enqueueHighPriorityTasks<T>(
-    tasks: Array<{ taskId: string; animeId?: string; seasonId?: string | null; title: string; payload: T; type?: string }>
+    tasks: Array<{ taskId: string; jobSystem?: WorkerJobSystem; animeId?: string; seasonId?: string | null; title: string; payload: T; type?: string }>
   ) {
-    // If previous job was idle or completed, initialize a fresh active job session so progress counters are clean
+    const targetSystem: WorkerJobSystem = tasks[0] ? (tasks[0].jobSystem || inferJobSystemFromTaskType(tasks[0].type)) : 'ARTWORK_VERIFICATION';
+
     if (this.status === 'idle' || this.status === 'completed') {
       this.jobId = 'job_' + Date.now();
       this.mode = tasks[0]?.type || 'high_priority';
       this.status = 'running';
       this.startedAt = new Date().toISOString();
       this.finishedAt = null;
-      this.tasksMap.clear();
-      this.claimedTasks.clear();
-      this.animeLeases.clear();
-      this.seasonLeases.clear();
-      this.liveAnimeRegistry.clear();
-      this.completedTaskSet.clear();
-      this.failedTaskSet.clear();
-      this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+      // Only clear completed/failed tasks if no tasks are currently queued/claimed
+      if (this.claimedTasks.size === 0 && this.queuedTaskIds.size === 0) {
+        this.tasksMap.clear();
+        this.completedTaskSet.clear();
+        this.failedTaskSet.clear();
+        this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+        this.queuedTaskIds.clear();
+      }
     } else if (this.status === 'paused') {
       this.status = 'running';
       this.shouldPause = false;
       this.shouldStop = false;
     }
 
+    this.systemMeta[targetSystem].status = 'running';
+    if (!this.systemMeta[targetSystem].startedAt) {
+      this.systemMeta[targetSystem].startedAt = new Date().toISOString();
+    }
+    this.systemMeta[targetSystem].finishedAt = null;
+
     let addedCount = 0;
     const now = Date.now();
     for (const item of tasks) {
       const animeId = item.animeId || (item.payload as any)?.id || item.taskId;
-      const type = item.type || 'artwork_reverify';
+      const type = item.type || (targetSystem === 'INFORMATION_VERIFICATION' ? 'REVERIFY_INFORMATION' : 'artwork_reverify');
+      const jobSystem = item.jobSystem || inferJobSystemFromTaskType(type);
       const seasonId = item.seasonId !== undefined ? item.seasonId : ((item.payload as any)?.season ? String((item.payload as any).season) : null);
 
-      const deterministicId = item.taskId.startsWith('VERIFY_') || item.taskId.startsWith('FIX_') || item.taskId.startsWith('SEARCH_') || item.taskId.startsWith('RETRY_')
+      const deterministicId = item.taskId.startsWith('VERIFY_') || item.taskId.startsWith('FIX_') || item.taskId.startsWith('SEARCH_') || item.taskId.startsWith('RETRY_') || item.taskId.startsWith('REVERIFY_')
         ? item.taskId
         : createDeterministicTaskId(type, animeId, seasonId);
 
@@ -1128,7 +1342,6 @@ export class ReusableWorkerJobEngine {
           existing.status === 'waiting' ||
           existing.status === 'claimed';
         if (isActivelyOwned || (existing.status === 'queued' && this.priorityQueues.HIGH.includes(deterministicId))) {
-          // Already actively running or in high queue, skip duplicate
           continue;
         }
         if (this.completedTaskSet.has(deterministicId)) {
@@ -1142,6 +1355,7 @@ export class ReusableWorkerJobEngine {
       const task: JobTask<T> = {
         taskId: deterministicId,
         jobId: this.jobId,
+        jobSystem,
         animeId,
         seasonId,
         title: item.title,
@@ -1160,23 +1374,28 @@ export class ReusableWorkerJobEngine {
       this.tasksMap.set(deterministicId, task);
       if (!this.priorityQueues.HIGH.includes(deterministicId)) {
         this.priorityQueues.HIGH.unshift(deterministicId);
+        this.queuedTaskIds.add(deterministicId);
         addedCount++;
       }
     }
 
-    this.lastLog = `Queued ${addedCount} high-priority tasks into active worker queue.`;
+    const msg = `Queued ${addedCount} high-priority ${targetSystem} tasks into shared worker queue.`;
+    this.lastLog = msg;
+    this.systemMeta[targetSystem].lastLog = msg;
     this.saveJobState();
     this.notifyStateListeners();
   }
 
-  public resolveManualAnimeAction(animeId: string, animeTitle: string, operation: string, details: string) {
-    // Remove any queued tasks for this animeId so workers do not overwrite manual owner decision
+  public resolveManualAnimeAction(animeId: string, animeTitle: string, operation: string, details: string, jobSystem: WorkerJobSystem = 'ARTWORK_VERIFICATION') {
+    // Remove any queued tasks for this animeId in that system so workers do not overwrite manual owner decision
     for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
       const q = this.priorityQueues[prio];
       for (let i = q.length - 1; i >= 0; i--) {
         const t = this.tasksMap.get(q[i]);
-        if (t && t.animeId === animeId && t.status === 'queued') {
+        const tSys = t ? (t.jobSystem || inferJobSystemFromTaskType(t.type)) : null;
+        if (t && t.animeId === animeId && t.status === 'queued' && (!jobSystem || tSys === jobSystem)) {
           q.splice(i, 1);
+          this.queuedTaskIds.delete(t.taskId);
           t.status = 'completed';
           t.completedAt = new Date().toISOString();
           t.updatedAt = Date.now();
@@ -1187,10 +1406,11 @@ export class ReusableWorkerJobEngine {
 
     this.recordActivityEvent({
       workerId: 1,
+      jobSystem,
       animeId,
       animeTitle,
       operation,
-      eventType: 'artwork_saved',
+      eventType: jobSystem === 'INFORMATION_VERIFICATION' ? 'info_saved' : 'artwork_saved',
       source: 'Owner Action',
       step: operation,
       details
@@ -1201,12 +1421,18 @@ export class ReusableWorkerJobEngine {
 
   public mapTaskTypeToOperation(type: string): string {
     const t = type.toLowerCase();
-    if (t.includes('reverify')) return 'Re-verify';
-    if (t.includes('search')) return 'Search Again';
+    if (t.includes('info') || t.includes('information')) {
+      if (t.includes('reverify')) return 'Information Re-verify';
+      if (t.includes('fix_missing')) return 'Fix Missing Information';
+      if (t.includes('fix')) return 'Fix Information';
+      return 'Information Verification';
+    }
+    if (t.includes('reverify')) return 'Re-verify Artwork';
+    if (t.includes('search')) return 'Search Artwork Again';
     if (t.includes('fix_missing')) return 'Fix Missing Artwork';
     if (t.includes('fix')) return 'Fix Artwork';
     if (t.includes('season')) return 'Verify Season Artwork';
-    return 'Verify Artwork';
+    return 'Artwork Verification';
   }
 
   // --- Worker Heartbeats ---
@@ -1261,6 +1487,7 @@ export class ReusableWorkerJobEngine {
           worker.status = update.status;
         }
       }
+      if (update.jobSystem !== undefined) worker.jobSystem = update.jobSystem;
       if (update.currentAnimeId !== undefined) worker.currentAnimeId = update.currentAnimeId;
       if (update.currentAnimeTitle !== undefined) worker.currentAnimeTitle = update.currentAnimeTitle;
       if (update.seasonName !== undefined) worker.seasonName = update.seasonName;
@@ -1292,10 +1519,10 @@ export class ReusableWorkerJobEngine {
     }
   }
 
-  // --- Atomic Task Claiming with Anime-Level and Season-Level Locks ---
+  // --- Atomic Task Claiming with Anime-Level and Season-Level Locks & Fair Multi-System Scheduling ---
   public claimTask(workerId: number): JobTask | null {
     const now = Date.now();
-    // 1. Recover stale tasks periodically (throttled to at most once every 2s so 50 concurrent workers don't scan all maps on every claim)
+    // 1. Recover stale tasks periodically (throttled to at most once every 2s so 50-80 concurrent workers don't scan all maps on every claim)
     if (now - this.lastStaleSweepAt > 2000) {
       this.lastStaleSweepAt = now;
       this.recoverStaleTasks();
@@ -1309,23 +1536,31 @@ export class ReusableWorkerJobEngine {
       return null;
     }
 
-    // REQUIREMENT 13: SMART SCHEDULING & PRIORITY AGING
-    // Check if any task in MEDIUM, NORMAL, or LOW has been waiting > 25 seconds.
-    // If so, promote to HIGH so large batch operations never starve tasks.
-    const AGING_THRESHOLD_MS = 25000;
-    for (const p of ['MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
-      const q = this.priorityQueues[p];
-      for (let i = 0; i < q.length; i++) {
-        const tId = q[i];
-        const t = this.tasksMap.get(tId);
-        if (t && t.enqueuedAt && now - t.enqueuedAt > AGING_THRESHOLD_MS) {
-          q.splice(i, 1);
-          i--;
-          t.priority = 'HIGH';
-          this.priorityQueues.HIGH.push(tId);
+    // REQUIREMENT 13: SMART SCHEDULING & PRIORITY AGING (throttled to every 2.5s for 80-worker scalability)
+    if (now - this.lastAgingSweepAt > 2500) {
+      this.lastAgingSweepAt = now;
+      const AGING_THRESHOLD_MS = 25000;
+      for (const p of ['MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+        const q = this.priorityQueues[p];
+        for (let i = 0; i < q.length; i++) {
+          const tId = q[i];
+          const t = this.tasksMap.get(tId);
+          if (t && t.enqueuedAt && now - t.enqueuedAt > AGING_THRESHOLD_MS) {
+            q.splice(i, 1);
+            i--;
+            t.priority = 'HIGH';
+            this.priorityQueues.HIGH.push(tId);
+          }
         }
       }
     }
+
+    // Dynamic Fair System Scheduling: alternate preferred system so when both ARTWORK_VERIFICATION
+    // and INFORMATION_VERIFICATION have tasks in queue, workers interleave smoothly (Worker 01 -> Artwork, Worker 02 -> Info, etc.)
+    const preferredSystem: WorkerJobSystem =
+      this.lastClaimedSystem === 'ARTWORK_VERIFICATION'
+        ? 'INFORMATION_VERIFICATION'
+        : 'ARTWORK_VERIFICATION';
 
     // 2. Scan priority queues in order: HIGH, MEDIUM, NORMAL, LOW
     let chosenTaskId: string | null = null;
@@ -1337,12 +1572,16 @@ export class ReusableWorkerJobEngine {
       const queue = this.priorityQueues[prio];
       if (!queue || queue.length === 0) continue;
 
+      let fallbackTaskId: string | null = null;
+      let fallbackIndex = -1;
+
       for (let i = 0; i < queue.length; i++) {
         const taskId = queue[i];
         const task = this.tasksMap.get(taskId);
 
         if (!task || (task.status !== 'queued' && task.status !== 'retrying')) {
           queue.splice(i, 1);
+          this.queuedTaskIds.delete(taskId);
           i--;
           continue;
         }
@@ -1378,11 +1617,22 @@ export class ReusableWorkerJobEngine {
           }
         }
 
-        // Eligible task found!
-        chosenTaskId = taskId;
+        const taskSys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+        if (taskSys === preferredSystem) {
+          chosenTaskId = taskId;
+          chosenPrio = prio;
+          chosenIndex = i;
+          break;
+        } else if (!fallbackTaskId) {
+          fallbackTaskId = taskId;
+          fallbackIndex = i;
+        }
+      }
+
+      if (!chosenTaskId && fallbackTaskId) {
+        chosenTaskId = fallbackTaskId;
         chosenPrio = prio;
-        chosenIndex = i;
-        break;
+        chosenIndex = fallbackIndex;
       }
 
       if (chosenTaskId) break;
@@ -1394,8 +1644,13 @@ export class ReusableWorkerJobEngine {
 
     // Remove from priority queue
     this.priorityQueues[chosenPrio].splice(chosenIndex, 1);
+    this.queuedTaskIds.delete(chosenTaskId);
 
     const task = this.tasksMap.get(chosenTaskId)!;
+    const taskSystem = task.jobSystem || inferJobSystemFromTaskType(task.type);
+    task.jobSystem = taskSystem;
+    this.lastClaimedSystem = taskSystem;
+
     const animeId = task.animeId || task.payload?.id || chosenTaskId;
     const leaseExpiresAt = now + LEASE_DURATION_MS;
 
@@ -1444,6 +1699,7 @@ export class ReusableWorkerJobEngine {
     // Update worker info (CLAIMING initially; transitions to WORKING on execution)
     worker.status = 'claiming';
     worker.waitReason = null;
+    worker.jobSystem = taskSystem;
     worker.currentTaskId = chosenTaskId;
     worker.currentAnimeId = animeId;
     worker.currentAnimeTitle = task.title;
@@ -1464,8 +1720,9 @@ export class ReusableWorkerJobEngine {
       animeTitle: task.title,
       workerId,
       taskId: chosenTaskId,
+      jobSystem: taskSystem,
       seasonName: worker.seasonName,
-      operation: worker.operation || 'Verify Artwork',
+      operation: worker.operation || 'Verification',
       source: 'Local Catalogue',
       claimedAt: now,
       leaseExpiresAt,
@@ -1475,17 +1732,20 @@ export class ReusableWorkerJobEngine {
 
     this.recordActivityEvent({
       workerId,
+      jobSystem: taskSystem,
       taskId: chosenTaskId,
       animeId,
       animeTitle: task.title,
       operation: worker.operation,
       eventType: 'task_claimed',
       source: 'Queue',
-      step: 'Task claimed from shared coordinator',
-      details: `Worker #${workerId} claimed exclusive lock on "${task.title}" (Anime: ${animeId})`
+      step: `Task claimed (${taskSystem === 'INFORMATION_VERIFICATION' ? 'Information' : 'Artwork'})`,
+      details: `Worker #${workerId} claimed exclusive lock on "${task.title}" [${taskSystem}]`
     });
 
-    this.lastLog = `[Worker #${workerId}] Claimed: ${task.title}`;
+    const logMsg = `[Worker #${workerId}] Claimed (${taskSystem === 'INFORMATION_VERIFICATION' ? 'Info' : 'Artwork'}): ${task.title}`;
+    this.lastLog = logMsg;
+    this.systemMeta[taskSystem].lastLog = logMsg;
     this.saveJobState();
     this.notifyStateListeners();
     return task;
@@ -1509,6 +1769,7 @@ export class ReusableWorkerJobEngine {
     }
 
     const animeId = task?.animeId || task?.payload?.id || taskId;
+    const taskSystem: WorkerJobSystem = task ? (task.jobSystem || inferJobSystemFromTaskType(task.type)) : 'ARTWORK_VERIFICATION';
 
     // 1. Release anime lease, season lease, and live registry
     this.releaseAnimeLease(animeId);
@@ -1541,8 +1802,9 @@ export class ReusableWorkerJobEngine {
           task.workerId = null;
           task.claimedByWorkerId = null;
           task.claimedAt = null;
-          if (!this.priorityQueues[task.priority].includes(taskId)) {
+          if (!this.queuedTaskIds.has(taskId)) {
             this.priorityQueues[task.priority].push(taskId);
+            this.queuedTaskIds.add(taskId);
           }
         } else {
           task.status = 'failed';
@@ -1563,6 +1825,7 @@ export class ReusableWorkerJobEngine {
       if (task) {
         worker.recentCompletedTasks.unshift({
           taskId,
+          jobSystem: taskSystem,
           animeId,
           animeTitle: task.title || 'Anime Task',
           operation: this.mapTaskTypeToOperation(task.type),
@@ -1589,6 +1852,7 @@ export class ReusableWorkerJobEngine {
         worker.lastError = typeof result === 'string' ? result : (result?.error || 'Task error');
       }
 
+      worker.jobSystem = null;
       worker.currentTaskId = null;
       worker.currentAnimeId = null;
       worker.currentAnimeTitle = null;
@@ -1603,6 +1867,7 @@ export class ReusableWorkerJobEngine {
     if (task) {
       this.recordActivityEvent({
         workerId,
+        jobSystem: taskSystem,
         taskId,
         animeId,
         animeTitle: task.title,
@@ -1616,20 +1881,34 @@ export class ReusableWorkerJobEngine {
 
     const processed = this.completedTaskSet.size + this.failedTaskSet.size;
     this.rateSamples.push({ timestamp: now, count: processed });
-    if (this.rateSamples.length > 20) this.rateSamples.shift();
+    if (this.rateSamples.length > 30) this.rateSamples.shift();
 
     if (task) {
-      this.lastLog = `[Worker #${workerId}] ${isError ? 'Failed' : 'Completed'}: ${task.title} (${processed}/${this.tasksMap.size})`;
+      const msg = `[Worker #${workerId}] ${isError ? 'Failed' : 'Completed'} (${taskSystem === 'INFORMATION_VERIFICATION' ? 'Info' : 'Artwork'}): ${task.title}`;
+      this.lastLog = msg;
+      this.systemMeta[taskSystem].lastLog = msg;
     }
 
     this.saveJobState();
     this.notifyStateListeners();
   }
 
-  // --- Coordinated 50-Worker Processing Pool Loop ---
+  public ensureWorkerPoolRunning(fallbackProcessor?: (task: JobTask, workerId: number) => Promise<any>) {
+    if (fallbackProcessor && !this.systemProcessors.has('ARTWORK_VERIFICATION')) {
+      this.systemProcessors.set('ARTWORK_VERIFICATION', fallbackProcessor);
+    }
+    if (!this.isProcessing) {
+      void this.runJobPool(fallbackProcessor);
+    }
+  }
+
+  // --- Coordinated Shared Worker Processing Pool Loop (50 default, scalable to 80+ workers) ---
   public async runJobPool(
-    processor: (task: JobTask, workerId: number) => Promise<any>
+    fallbackProcessor?: (task: JobTask, workerId: number) => Promise<any>
   ): Promise<void> {
+    if (fallbackProcessor && !this.systemProcessors.has('ARTWORK_VERIFICATION')) {
+      this.systemProcessors.set('ARTWORK_VERIFICATION', fallbackProcessor);
+    }
     if (this.isProcessing) {
       return;
     }
@@ -1647,20 +1926,20 @@ export class ReusableWorkerJobEngine {
     }, WATCHDOG_CHECK_INTERVAL_MS);
 
     const workerTaskLoop = async (workerId: number) => {
+      this.activeWorkerLoopIds.add(workerId);
       let worker = this.workerMap.get(workerId);
       if (!worker) {
         this.initWorkers();
         worker = this.workerMap.get(workerId)!;
       }
 
-      while (!this.shouldPause && !this.shouldStop && this.activeRunId === myRunId) {
+      while (!this.shouldPause && !this.shouldStop && this.activeRunId === myRunId && workerId <= this.poolConfig.currentWorkers) {
         try {
           worker.lastHeartbeat = Date.now();
 
-          // 1. Atomically claim next eligible task
+          // 1. Atomically claim next eligible task across shared ARTWORK_VERIFICATION & INFORMATION_VERIFICATION queues
           const task = this.claimTask(workerId);
           if (!task) {
-            // Check if queue is completely drained
             const queuedCount = (this.priorityQueues.HIGH?.length || 0) +
               (this.priorityQueues.MEDIUM?.length || 0) +
               (this.priorityQueues.NORMAL?.length || 0) +
@@ -1670,7 +1949,6 @@ export class ReusableWorkerJobEngine {
               break; // Truly complete
             }
 
-            // Determine the real backend reason why no task could be claimed right now
             const nowMs = Date.now();
             let hasRetryBackoffTasks = false;
             for (const p of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
@@ -1707,13 +1985,20 @@ export class ReusableWorkerJobEngine {
           }, HEARTBEAT_INTERVAL_MS);
 
           try {
-            // 3. Process the task (CLAIMING -> RUNNING)
+            // 3. Process the task (CLAIMING -> RUNNING) using registered system processor
             task.status = 'running';
             task.updatedAt = Date.now();
             worker.status = 'working';
             worker.waitReason = null;
             this.notifyStateListeners();
-            const result = await processor(task, workerId);
+
+            const taskSystem = task.jobSystem || inferJobSystemFromTaskType(task.type);
+            const systemProcessor = this.systemProcessors.get(taskSystem) || fallbackProcessor;
+            if (!systemProcessor) {
+              throw new Error(`No processor registered for job system ${taskSystem}`);
+            }
+
+            const result = await systemProcessor(task, workerId);
             clearInterval(heartbeatTimer);
             if (this.activeRunId === myRunId) {
               this.completeTask(workerId, task.taskId, result, false);
@@ -1735,11 +2020,13 @@ export class ReusableWorkerJobEngine {
         }
       }
 
+      this.activeWorkerLoopIds.delete(workerId);
       if (this.activeRunId !== myRunId) return;
 
       // Worker shutdown/pause cleanup
       worker.status = this.shouldPause ? 'paused' : (this.shouldStop ? 'stopped' : 'idle');
       worker.waitReason = null;
+      worker.jobSystem = null;
       worker.currentTaskId = null;
       worker.currentAnimeId = null;
       worker.currentAnimeTitle = null;
@@ -1751,7 +2038,7 @@ export class ReusableWorkerJobEngine {
       worker.leaseExpiresAt = null;
     };
 
-    // Spin up all 50 workers concurrently
+    // Spin up all configured workers concurrently (default 50, scalable up to 80)
     const workerPromises: Promise<void>[] = [];
     for (let i = 1; i <= this.poolConfig.currentWorkers; i++) {
       workerPromises.push(workerTaskLoop(i));
@@ -1772,12 +2059,21 @@ export class ReusableWorkerJobEngine {
     if (this.shouldPause) {
       this.status = 'paused';
       this.lastLog = 'Job paused. Authoritative state preserved.';
+      this.systemMeta.ARTWORK_VERIFICATION.status = 'paused';
+      this.systemMeta.INFORMATION_VERIFICATION.status = 'paused';
     } else if (this.shouldStop) {
       this.status = 'idle';
       this.lastLog = 'Job stopped.';
+      this.systemMeta.ARTWORK_VERIFICATION.status = 'idle';
+      this.systemMeta.INFORMATION_VERIFICATION.status = 'idle';
     } else {
       this.status = 'completed';
-      this.finishedAt = new Date().toISOString();
+      const fin = new Date().toISOString();
+      this.finishedAt = fin;
+      this.systemMeta.ARTWORK_VERIFICATION.status = 'completed';
+      this.systemMeta.ARTWORK_VERIFICATION.finishedAt = fin;
+      this.systemMeta.INFORMATION_VERIFICATION.status = 'completed';
+      this.systemMeta.INFORMATION_VERIFICATION.finishedAt = fin;
       this.lastLog = `Job complete! Processed ${this.completedTaskSet.size}/${this.tasksMap.size} tasks.`;
       this.saveJobHistory();
     }
@@ -1818,12 +2114,34 @@ export class ReusableWorkerJobEngine {
     this.notifyStateListeners();
   }
 
-  public stopJob() {
+  public stopJob(filterSystem?: WorkerJobSystem) {
+    if (filterSystem) {
+      for (const [tId, task] of Array.from(this.tasksMap.entries())) {
+        const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+        if (sys === filterSystem && task.status !== 'completed' && task.status !== 'failed') {
+          this.tasksMap.delete(tId);
+          this.queuedTaskIds.delete(tId);
+          this.claimedTasks.delete(tId);
+          if (task.animeId) this.releaseAnimeLease(task.animeId);
+        }
+      }
+      for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+        this.priorityQueues[prio] = this.priorityQueues[prio].filter(tId => this.tasksMap.has(tId));
+      }
+      this.systemMeta[filterSystem].status = 'idle';
+      this.systemMeta[filterSystem].lastLog = `${filterSystem} jobs stopped by owner.`;
+      this.saveJobState(true);
+      this.notifyStateListeners();
+      return;
+    }
+
     this.activeRunId++;
     this.shouldStop = true;
     this.shouldPause = true;
     this.isProcessing = false;
     this.status = 'idle';
+    this.systemMeta.ARTWORK_VERIFICATION.status = 'idle';
+    this.systemMeta.INFORMATION_VERIFICATION.status = 'idle';
 
     globalDataStore.flushCatalogueSync();
     globalDataStore.flushRecordsSync();
@@ -1836,6 +2154,7 @@ export class ReusableWorkerJobEngine {
     this.claimedTasks.clear();
     for (const w of this.workerMap.values()) {
       w.status = 'stopped';
+      w.jobSystem = null;
       w.currentTaskId = null;
       w.currentAnimeId = null;
       w.currentAnimeTitle = null;
@@ -1844,7 +2163,7 @@ export class ReusableWorkerJobEngine {
       w.currentSource = null;
       w.currentStep = null;
       w.taskStartedAt = null;
-      worker_clear_lease: w.leaseExpiresAt = null;
+      w.leaseExpiresAt = null;
     }
 
     this.lastLog = 'Job stopped by owner.';
@@ -1858,7 +2177,35 @@ export class ReusableWorkerJobEngine {
     this.notifyStateListeners();
   }
 
-  public resetJob() {
+  public resetJob(filterSystem?: WorkerJobSystem) {
+    if (filterSystem) {
+      for (const [tId, task] of Array.from(this.tasksMap.entries())) {
+        const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+        if (sys === filterSystem) {
+          this.tasksMap.delete(tId);
+          this.queuedTaskIds.delete(tId);
+          this.claimedTasks.delete(tId);
+          this.completedTaskSet.delete(tId);
+          this.failedTaskSet.delete(tId);
+          if (task.animeId) this.releaseAnimeLease(task.animeId);
+        }
+      }
+      for (const prio of ['HIGH', 'MEDIUM', 'NORMAL', 'LOW'] as TaskPriority[]) {
+        this.priorityQueues[prio] = this.priorityQueues[prio].filter(tId => this.tasksMap.has(tId));
+      }
+      this.systemMeta[filterSystem] = {
+        jobId: `job_${filterSystem === 'INFORMATION_VERIFICATION' ? 'info' : 'art'}_${Date.now()}`,
+        mode: 'all',
+        status: 'idle',
+        startedAt: null,
+        finishedAt: null,
+        lastLog: `${filterSystem} queue reset.`
+      };
+      this.saveJobState(true);
+      this.notifyStateListeners();
+      return;
+    }
+
     this.activeRunId++;
     this.shouldStop = false;
     this.shouldPause = false;
@@ -1871,6 +2218,7 @@ export class ReusableWorkerJobEngine {
 
     this.tasksMap.clear();
     this.priorityQueues = { HIGH: [], MEDIUM: [], NORMAL: [], LOW: [] };
+    this.queuedTaskIds.clear();
     this.claimedTasks.clear();
     for (const animeId of Array.from(this.animeLeases.keys())) {
       this.releaseAnimeLease(animeId);
@@ -1884,6 +2232,7 @@ export class ReusableWorkerJobEngine {
     for (const w of this.workerMap.values()) {
       w.status = 'idle';
       w.waitReason = null;
+      w.jobSystem = null;
       w.currentTaskId = null;
       w.currentAnimeId = null;
       w.currentAnimeTitle = null;
@@ -1900,6 +2249,37 @@ export class ReusableWorkerJobEngine {
     this.lastLog = 'Authoritative 50-worker coordinator ready.';
     this.saveJobState(true);
     this.notifyStateListeners();
+  }
+
+  public retryFailedTasks(filterSystem?: WorkerJobSystem): number {
+    let retried = 0;
+    const now = Date.now();
+    for (const [taskId, task] of Array.from(this.tasksMap.entries())) {
+      const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+      if (filterSystem && sys !== filterSystem) continue;
+      if (task.status === 'failed' || this.failedTaskSet.has(taskId)) {
+        this.failedTaskSet.delete(taskId);
+        task.status = 'queued';
+        task.retryCount = 0;
+        task.retryAfter = null;
+        task.lastError = null;
+        task.updatedAt = now;
+        if (!this.queuedTaskIds.has(taskId)) {
+          this.priorityQueues.HIGH.push(taskId);
+          this.queuedTaskIds.add(taskId);
+        }
+        retried++;
+      }
+    }
+    if (retried > 0) {
+      this.status = 'running';
+      this.shouldPause = false;
+      this.shouldStop = false;
+      this.ensureWorkerPoolRunning();
+      this.saveJobState(true);
+      this.notifyStateListeners();
+    }
+    return retried;
   }
 
   private saveJobHistory() {

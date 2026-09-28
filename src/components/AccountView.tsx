@@ -43,7 +43,11 @@ import {
   getSavedAccounts,
   switchActiveAccount,
   getAccountAvatar,
-  resolveOwnerUsername
+  resolveOwnerUsername,
+  ZENIME_THEMES,
+  BASIC_THEMES,
+  VISUAL_THEMES,
+  triggerGuestRestriction
 } from '../utils/userStorage.ts';
 import { ThemeMode, UserAccount } from '../types.ts';
 import { AnivexLogo } from './AnivexLogo.tsx';
@@ -205,6 +209,10 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
   };
 
   const handleThemeSelect = (mode: ThemeMode) => {
+    if (isGuest && !isOwner) {
+      triggerGuestRestriction('theme');
+      return;
+    }
     setThemeMode(mode);
   };
 
@@ -221,10 +229,10 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             Account &amp; Preferences
           </h1>
           <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 mt-1">
-            Manage your Anivex profile, customization settings, and account session
+            Manage your Zenime profile, customization settings, and account session
           </p>
         </div>
-        <AnivexLogo size="lg" className="hidden sm:inline-flex" />
+        <AnivexLogo variant="cinematic" size="lg" className="inline-flex shrink-0" />
       </div>
 
       {/* 2. Profile Overview Card */}
@@ -233,7 +241,13 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
           <div className="flex items-center gap-4">
             {/* Clickable Profile Photo with Camera Badge */}
             <div
-              onClick={() => setIsProfilePhotoModalOpen(true)}
+              onClick={() => {
+                if (isGuest && !isOwner) {
+                  triggerGuestRestriction('avatar');
+                  return;
+                }
+                setIsProfilePhotoModalOpen(true);
+              }}
               className="relative group cursor-pointer shrink-0"
               title="Change Profile Photo"
               id="btn-change-profile-photo"
@@ -323,7 +337,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                       : 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
                   }`}
                 >
-                  {isOwner ? 'Owner' : isGuest ? 'Guest' : 'Verified Account'}
+                  {isOwner ? 'Owner' : isGuest ? 'Guest' : 'Account'}
                 </span>
 
                 <span className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 truncate max-w-[200px] sm:max-w-xs font-mono">
@@ -380,7 +394,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
               Change Display Username
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600 leading-relaxed">
-              This username is shown across your Anivex browsing session.
+              This username is shown across your Zenime browsing session.
             </p>
             <div className="flex gap-2 max-w-md">
               <input
@@ -388,7 +402,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                 id="input-account-username"
                 value={usernameInput}
                 onChange={e => setUsernameInput(e.target.value)}
-                placeholder="Enter Anivex username"
+                placeholder="Enter Zenime username"
                 className="flex-1 px-3 py-2 rounded-xl bg-slate-950 dark:bg-slate-950 light:bg-white border border-slate-700 dark:border-slate-700 light:border-slate-300 text-xs text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-rose-500"
                 required
               />
@@ -552,6 +566,40 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
 
             <button
               type="button"
+              id="btn-owner-information-manager"
+              onClick={() => openOwnerDashboardTab('information')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/50 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/30 group-hover:scale-110 transition-transform">
+                  <Info className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Information Manager</div>
+                  <div className="text-[11px] text-slate-400">Titles, seasons, episodes &amp; metadata</div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="btn-owner-workers"
+              onClick={() => openOwnerDashboardTab('workers')}
+              className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/50 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 group-hover:scale-110 transition-transform">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Workers</div>
+                  <div className="text-[11px] text-slate-400">Shared 50-worker pool &amp; health</div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
               onClick={() => openOwnerDashboardTab('overview')}
               className="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-sm"
             >
@@ -659,7 +707,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                     Create Account / Log In
                   </h4>
                   <p className="text-[11px] text-slate-400">
-                    Manage access to Anivex user accounts on this device
+                    Manage access to Zenime user accounts on this device
                   </p>
                 </div>
               </div>
@@ -669,7 +717,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Open registration or login for user accounts. Accounts can be freely created and verified. Note: The Owner role is permanently restricted to the verified system owner; additional owners cannot be created.
+              Open registration or login for user accounts. Accounts can be freely created. Note: The Owner role is permanently restricted to the authorized system owner; additional owners cannot be created.
             </p>
 
             <div className="flex items-center gap-3 pt-1">
@@ -705,84 +753,150 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         </div>
       )}
 
-      {/* 4. Display Theme Settings Card */}
-      <div className="bg-slate-950/80 dark:bg-slate-950/80 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4 transition-colors">
-        <div>
-          <h3 className="text-base font-bold text-white dark:text-white light:text-slate-900 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-rose-500" />
-            <span>Display Theme</span>
-          </h3>
-          <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 mt-0.5">
-            Select your preferred visual appearance. Persists immediately across sessions.
-          </p>
+      {/* 4. Zenime Visual Theme System Card (3 Basic + 9 Additional Visual Themes = 12 Options) */}
+      <div className="bg-slate-950/80 dark:bg-slate-950/80 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5 transition-colors" id="zenime-theme-section">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-base font-bold text-white dark:text-white light:text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-rose-500" />
+              <span>Zenime Appearance &amp; Visual Themes</span>
+            </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 mt-0.5">
+              Choose from Basic appearance modes (Black default, White, System) or {VISUAL_THEMES.length} curated visual themes.
+            </p>
+          </div>
+          {isGuest && !isOwner && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-amber-300 self-start sm:self-auto">
+              <Lock className="w-3 h-3 text-amber-400" />
+              <span>Account required to change theme</span>
+            </span>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button
-            type="button"
-            id="theme-btn-dark"
-            onClick={() => handleThemeSelect('dark')}
-            className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-              userData.theme === 'dark'
-                ? 'bg-slate-900 border-rose-500 shadow-md'
-                : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-50 border-slate-800 dark:border-slate-800 light:border-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
-                <Moon className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white dark:text-white light:text-slate-900">Dark Mode</div>
-                <div className="text-[11px] text-slate-400">Deep obsidian background</div>
-              </div>
-            </div>
-            {userData.theme === 'dark' && <Check className="w-4 h-4 text-rose-500" />}
-          </button>
+        {/* BASIC APPEARANCE MODES: Black, White, System */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400 light:text-slate-500">
+              Basic Appearance Modes
+            </span>
+            <span className="text-[10px] font-mono text-slate-500">Default: Black</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" id="zenime-basic-theme-grid">
+            {BASIC_THEMES.map((themeItem) => {
+              const isSelected = userData.theme === themeItem.id;
+              return (
+                <button
+                  key={themeItem.id}
+                  type="button"
+                  id={`theme-btn-${themeItem.id}`}
+                  onClick={() => handleThemeSelect(themeItem.id)}
+                  className={`p-3.5 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all cursor-pointer group ${
+                    isSelected
+                      ? 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border-rose-500 shadow-lg ring-1 ring-rose-500/40'
+                      : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-50 border-slate-800/90 dark:border-slate-800/90 light:border-slate-200 hover:border-slate-700 hover:bg-slate-900/90'
+                  }`}
+                >
+                  <div className="space-y-1.5 w-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {themeItem.id === 'dark' && <Moon className="w-4 h-4 text-rose-400 shrink-0" />}
+                        {themeItem.id === 'light' && <Sun className="w-4 h-4 text-amber-400 shrink-0" />}
+                        {themeItem.id === 'system' && <Monitor className="w-4 h-4 text-sky-400 shrink-0" />}
+                        <span className="text-xs font-bold text-white dark:text-white light:text-slate-900">{themeItem.name}</span>
+                        {themeItem.id === 'dark' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                            DEFAULT
+                          </span>
+                        )}
+                      </div>
+                      {isSelected ? (
+                        <Check className="w-4 h-4 text-rose-400 shrink-0" />
+                      ) : isGuest && !isOwner ? (
+                        <Lock className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 transition-colors shrink-0" />
+                      ) : null}
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">{themeItem.tagline}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-400 light:text-slate-500 leading-relaxed line-clamp-2">
+                      {themeItem.description}
+                    </div>
+                  </div>
 
-          <button
-            type="button"
-            id="theme-btn-light"
-            onClick={() => handleThemeSelect('light')}
-            className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-              userData.theme === 'light'
-                ? 'bg-slate-100 dark:bg-slate-900 border-amber-500 shadow-md'
-                : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-50 border-slate-800 dark:border-slate-800 light:border-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
-                <Sun className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white dark:text-white light:text-slate-900">Light Mode</div>
-                <div className="text-[11px] text-slate-400">Crisp high-contrast theme</div>
-              </div>
-            </div>
-            {userData.theme === 'light' && <Check className="w-4 h-4 text-amber-500" />}
-          </button>
+                  <div className="pt-1 flex items-center justify-between gap-2 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
+                    <span
+                      className="px-2.5 py-1 text-[10px] font-bold text-white rounded-lg shadow-sm"
+                      style={{ background: themeItem.buttonPreviewStyle }}
+                    >
+                      {themeItem.badgeText}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {isSelected ? 'Active' : 'Select'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          <button
-            type="button"
-            id="theme-btn-system"
-            onClick={() => handleThemeSelect('system')}
-            className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-              userData.theme === 'system'
-                ? 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border-cyan-500 shadow-md'
-                : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-50 border-slate-800 dark:border-slate-800 light:border-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
-                <Monitor className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white dark:text-white light:text-slate-900">System Sync</div>
-                <div className="text-[11px] text-slate-400">Matches device settings</div>
-              </div>
-            </div>
-            {userData.theme === 'system' && <Check className="w-4 h-4 text-cyan-400" />}
-          </button>
+        {/* ADDITIONAL VISUAL THEMES (8 skins) */}
+        <div className="space-y-2.5 pt-2 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400 light:text-slate-500">
+              Additional Visual Themes
+            </span>
+            <span className="text-[10px] font-mono text-slate-500">{VISUAL_THEMES.length} Visual Skins</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="zenime-theme-grid">
+            {VISUAL_THEMES.map((themeItem) => {
+              const isSelected = userData.theme === themeItem.id;
+              return (
+                <button
+                  key={themeItem.id}
+                  type="button"
+                  id={`theme-btn-${themeItem.id}`}
+                  onClick={() => handleThemeSelect(themeItem.id)}
+                  className={`p-3.5 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all cursor-pointer group ${
+                    isSelected
+                      ? 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border-rose-500 shadow-lg ring-1 ring-rose-500/40'
+                      : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-50 border-slate-800/90 dark:border-slate-800/90 light:border-slate-200 hover:border-slate-700 hover:bg-slate-900/90'
+                  }`}
+                >
+                  <div className="space-y-1.5 w-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${themeItem.accentDotClass}`} />
+                        <span className="text-xs font-bold text-white dark:text-white light:text-slate-900">{themeItem.name}</span>
+                      </div>
+                      {isSelected ? (
+                        <Check className="w-4 h-4 text-rose-400 shrink-0" />
+                      ) : isGuest && !isOwner ? (
+                        <Lock className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 transition-colors shrink-0" />
+                      ) : null}
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">{themeItem.tagline}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-400 light:text-slate-500 leading-relaxed line-clamp-2">
+                      {themeItem.description}
+                    </div>
+                  </div>
+
+                  {/* Live Visual Button Swatch Preview */}
+                  <div className="pt-1 flex items-center justify-between gap-2 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
+                    <span
+                      className={`px-2.5 py-1 text-[10px] font-bold text-white shadow-sm ${
+                        themeItem.id === 'pixel' ? 'rounded-[3px] border border-pink-300' : 'rounded-lg'
+                      }`}
+                      style={{ background: themeItem.buttonPreviewStyle }}
+                    >
+                      {themeItem.badgeText}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {isSelected ? 'Active' : 'Select'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -819,35 +933,59 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
       {/* 6. STANDALONE LOGOUT BUTTON (Requirement 3: Dedicated section at the bottom of the page) */}
       <div className="pt-2 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 space-y-3" id="account-logout-section">
         {isOwner ? (
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 dark:bg-slate-950/90 light:bg-white border border-amber-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="text-xs font-bold text-white dark:text-white light:text-slate-900 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-amber-400" />
-                <span>Signed in as {ownerUsername} (Owner Session Active)</span>
+          <div className="space-y-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 dark:bg-slate-950/90 light:bg-white border border-amber-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="text-xs font-bold text-white dark:text-white light:text-slate-900 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  <span>Signed in as {ownerUsername} (Owner Session Active)</span>
+                </div>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600">
+                  Ending your Owner session returns Zenime to guest mode on this device.
+                </p>
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-600">
-                Ending your Owner session returns Anivex to guest mode on this device.
-              </p>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  id="btn-owner-switch-bottom"
+                  onClick={() => setIsAccountSwitcherOpen(true)}
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Switch Account</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-owner-logout-bottom"
+                  onClick={handleOwnerLogout}
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 hover:border-rose-700 shadow-md shadow-rose-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Owner Logout</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Danger Zone: Delete Owner Account */}
+            <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Delete Owner Account</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Deletes ONLY the Owner authentication account and invalidates all Owner sessions. Catalogue, artwork, and user data are preserved.
+                </p>
+              </div>
               <button
                 type="button"
-                id="btn-owner-switch-bottom"
-                onClick={() => setIsAccountSwitcherOpen(true)}
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                id="btn-delete-owner-account"
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/80 hover:border-rose-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
               >
-                <Users className="w-3.5 h-3.5 text-amber-400" />
-                <span>Switch Account</span>
-              </button>
-              <button
-                type="button"
-                id="btn-owner-logout-bottom"
-                onClick={handleOwnerLogout}
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 hover:border-rose-700 shadow-md shadow-rose-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <LogOut className="w-4 h-4 text-rose-400" />
-                <span>Owner Logout</span>
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span>Delete Owner Account</span>
               </button>
             </div>
           </div>
@@ -896,7 +1034,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
                   <span>Delete Account</span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Permanently erase this account, favorites, and watch history with email verification.
+                  Permanently erase this account, favorites, and watch history.
                 </p>
               </div>
               <button
@@ -1055,6 +1193,10 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
           setShowAuthModal(true);
         }}
         onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
+        onOpenDeleteOwnerAccount={() => {
+          setIsOwnerDashboardOpen(false);
+          setIsDeleteModalOpen(true);
+        }}
         initialTab={ownerDashboardTab}
       />
 
@@ -1071,13 +1213,26 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuthModal }) => 
         }}
       />
 
-      {/* Delete Account Modal (with email OTP verification) */}
+      {/* Delete Account Modal */}
       <DeleteAccountModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        account={account}
+        account={
+          isOwner
+            ? {
+                id: 'usr_owner',
+                username: ownerUsername,
+                name: ownerUsername,
+                email: ownerSession?.owner?.email || account.email || 'makerapp688@gmail.com',
+                provider: 'email',
+                role: 'owner',
+                createdAt: account.createdAt
+              }
+            : account
+        }
         onAccountDeleted={() => {
           setIsDeleteModalOpen(false);
+          setOwnerSession(null);
           checkOwnerSession();
         }}
       />

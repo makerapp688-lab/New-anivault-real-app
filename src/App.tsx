@@ -33,6 +33,8 @@ import { AnimeArtwork } from './components/AnimeArtwork.tsx';
 import { CompareAnimeView } from './components/CompareAnimeView.tsx';
 import { AccountView } from './components/AccountView.tsx';
 import { AnivexLogo } from './components/AnivexLogo.tsx';
+import { GuestRestrictionModal } from './components/GuestRestrictionModal.tsx';
+import { CinematicStartupScreen } from './components/CinematicStartupScreen.tsx';
 import {
   RARETOON_BASE_URL,
   RARETOON_PROVIDER_NAME,
@@ -40,15 +42,29 @@ import {
   resolveWatchUrl
 } from './utils/provider.ts';
 import { useUserData } from './hooks/useUserData.ts';
-import { applyThemeClass, syncWithServerSession } from './utils/userStorage.ts';
+import {
+  applyThemeClass,
+  syncWithServerSession,
+  subscribeGuestRestriction,
+  triggerGuestRestriction,
+  RestrictedGuestFeature
+} from './utils/userStorage.ts';
 
 // Static fallback bundle
 import fallbackCatalogue from './data/anivault-catalogue.json';
 import fallbackReport from './data/sync-report.json';
 
+let hasCompletedInitialStartupIntro = false;
+
 export function App() {
   const [allAnime, setAllAnime] = useState<Anime[]>(fallbackCatalogue as Anime[]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showStartupIntro, setShowStartupIntro] = useState<boolean>(() => !hasCompletedInitialStartupIntro);
+  const [isStartupExiting, setIsStartupExiting] = useState<boolean>(false);
+  const [minStartupTimeReached, setMinStartupTimeReached] = useState<boolean>(false);
+  const [catalogueLoaded, setCatalogueLoaded] = useState<boolean>(false);
+  const [artworkPrepared, setArtworkPrepared] = useState<boolean>(false);
+  const [sessionSafetyResolved, setSessionSafetyResolved] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
@@ -62,6 +78,9 @@ export function App() {
   const [isStatsOpen, setIsStatsOpen] = useState<boolean>(false);
   const [isSurpriseOpen, setIsSurpriseOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('register');
+  const [authModalView, setAuthModalView] = useState<'overview' | 'email'>('overview');
+  const [guestRestrictionFeature, setGuestRestrictionFeature] = useState<RestrictedGuestFeature | null>(null);
   const [isGlobalBugReportOpen, setIsGlobalBugReportOpen] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavTabType>('browse');
@@ -100,6 +119,21 @@ export function App() {
     applyThemeClass(userData.theme);
   }, [userData.theme]);
 
+  // Listen for guest feature restriction attempts
+  useEffect(() => {
+    return subscribeGuestRestriction(feature => {
+      setGuestRestrictionFeature(feature);
+    });
+  }, []);
+
+  // Prevent guests from staying on the restricted Compare tab
+  useEffect(() => {
+    if (isGuest && activeTab === 'compare') {
+      setActiveTab('browse');
+      triggerGuestRestriction('compare');
+    }
+  }, [isGuest, activeTab]);
+
   // Restore and synchronize authenticated session with server on startup
   useEffect(() => {
     syncWithServerSession();
@@ -127,11 +161,101 @@ export function App() {
       console.warn('API fetch warning, using pre-bundled catalogue data:', err);
     } finally {
       setIsLoading(false);
+      setCatalogueLoaded(true);
     }
   };
 
+  // Initial 10-second minimum startup timer & non-blocking session safety timer
+  useEffect(() => {
+    if (!showStartupIntro) return;
+    const minTimer = window.setTimeout(() => {
+      setMinStartupTimeReached(true);
+    }, 10000);
+    const sessionSafetyTimer = window.setTimeout(() => {
+      setSessionSafetyResolved(true);
+    }, 8500);
+
+    return () => {
+      window.clearTimeout(minTimer);
+      window.clearTimeout(sessionSafetyTimer);
+    };
+  }, [showStartupIntro]);
+
+  // Preload initial visible anime artwork in the background once catalogue is ready
+  useEffect(() => {
+    if (!catalogueLoaded || artworkPrepared) return;
+    let cancelled = false;
+
+    const preloadVisibleArtwork = async () => {
+      const urls = allAnime
+        .slice(0, 8)
+        .map(a => a.artwork?.verifiedArtworkUrl)
+        .filter((u): u is string => Boolean(u && u.trim().length > 0));
+
+      if (urls.length === 0) {
+        if (!cancelled) setArtworkPrepared(true);
+        return;
+      }
+
+      const preloadPromises = urls.map(
+        url =>
+          new Promise<void>(resolve => {
+            const img = new Image();
+            const timeout = window.setTimeout(() => resolve(), 2200);
+            img.onload = () => {
+              window.clearTimeout(timeout);
+              resolve();
+            };
+            img.onerror = () => {
+              window.clearTimeout(timeout);
+              resolve();
+            };
+            img.src = url;
+          })
+      );
+
+      await Promise.race([
+        Promise.all(preloadPromises),
+        new Promise<void>(resolve => window.setTimeout(resolve, 2500))
+      ]);
+
+      if (!cancelled) {
+        setArtworkPrepared(true);
+      }
+    };
+
+    preloadVisibleArtwork();
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogueLoaded, artworkPrepared, allAnime]);
+
+  const isStartupSessionReady = !isSessionChecking || sessionSafetyResolved;
+  const isAllStartupDataReady =
+    isStartupSessionReady && catalogueLoaded && artworkPrepared;
+
+  // Transition smoothly into the homepage only after BOTH the 10-second minimum AND real startup data are ready
+  useEffect(() => {
+    if (!showStartupIntro) return;
+    if (minStartupTimeReached && isAllStartupDataReady && !isStartupExiting) {
+      setIsStartupExiting(true);
+      const exitTimer = window.setTimeout(() => {
+        hasCompletedInitialStartupIntro = true;
+        setShowStartupIntro(false);
+      }, 650);
+      return () => window.clearTimeout(exitTimer);
+    }
+  }, [showStartupIntro, minStartupTimeReached, isAllStartupDataReady, isStartupExiting]);
+
   useEffect(() => {
     fetchCatalogue();
+    const handleCatalogueUpdated = () => {
+      fetchCatalogue();
+    };
+    window.addEventListener('anivault-catalogue-updated', handleCatalogueUpdated);
+    return () => {
+      window.removeEventListener('anivault-catalogue-updated', handleCatalogueUpdated);
+    };
   }, []);
 
   // Compute genre list with accurate counts
@@ -336,35 +460,21 @@ export function App() {
     return list;
   }, [allAnime, userData.history]);
 
-  if (isSessionChecking) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-6 text-slate-100 antialiased select-none">
-        <div className="relative flex flex-col items-center">
-          {/* Pulsing beautiful logo container */}
-          <div className="w-20 h-20 rounded-2xl bg-rose-600 flex items-center justify-center font-black text-white text-3xl shadow-xl shadow-rose-600/30 animate-pulse">
-            AX
-          </div>
-          <div className="mt-8 flex flex-col items-center space-y-2">
-            <h2 className="text-lg font-bold tracking-wider text-slate-200">Restoring Session...</h2>
-            <p className="text-xs text-slate-400">Verifying secure credentials with Anivex</p>
-          </div>
-          {/* Spinner track */}
-          <div className="mt-6 w-32 h-1 bg-slate-900 rounded-full overflow-hidden relative">
-            <div className="absolute top-0 left-0 h-full w-12 bg-rose-500 rounded-full animate-[loading_1.5s_infinite_ease-in-out]"></div>
-          </div>
-        </div>
-        <style>{`
-          @keyframes loading {
-            0% { transform: translate3d(-100%, 0, 0); }
-            100% { transform: translate3d(300%, 0, 0); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-950 dark:bg-slate-950 light:bg-slate-50 text-slate-100 dark:text-slate-100 light:text-slate-900 flex flex-col antialiased selection:bg-rose-600 selection:text-white pb-20 md:pb-0 transition-colors">
+      {/* Initial Startup Cinematic Intro (Only shown on first website open, minimum 10s while real data loads) */}
+      {showStartupIntro && (
+        <CinematicStartupScreen
+          startupState={{
+            sessionReady: isStartupSessionReady,
+            catalogueReady: catalogueLoaded,
+            artworkReady: artworkPrepared,
+            catalogueCount: allAnime.length
+          }}
+          isExiting={isStartupExiting}
+        />
+      )}
+
       {/* Navigation Bar */}
       <Navbar
         onOpenStats={() => setIsStatsOpen(true)}
@@ -392,24 +502,31 @@ export function App() {
             {/* Hero Welcome Bar (Matching Screenshot 1 & 2) */}
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950/40 to-slate-900 dark:from-slate-900 dark:via-rose-950/40 dark:to-slate-900 light:from-white light:via-rose-50 light:to-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 p-5 md:p-6 shadow-xl">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Active Provider: RareToon India ({RARETOON_PROVIDER_NAME})
-                    </span>
-                    <span className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 font-mono">
-                      {allAnime.length} Verified Anime Titles
-                    </span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <AnivexLogo
+                    variant="cinematic"
+                    size="lg"
+                    className="shrink-0 rounded-xl border border-slate-800/80 shadow-lg"
+                  />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Active Provider: RareToon India ({RARETOON_PROVIDER_NAME})
+                      </span>
+                      <span className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500 font-mono">
+                        {allAnime.length} Verified Anime Titles
+                      </span>
+                    </div>
+                    <h1 className="text-xl md:text-2xl font-black text-white dark:text-white light:text-slate-900 tracking-tight">
+                      Welcome, {account.role === 'owner' || account.id === 'usr_owner' ? (account.username && account.username !== 'Owner' ? account.username : 'Death197') : (account.username || (isGuest ? 'AnimeExplorer' : account.name || 'AnimeExplorer'))}!
+                    </h1>
+                    <p className="text-xs md:text-sm text-slate-300 dark:text-slate-300 light:text-slate-600 max-w-2xl leading-relaxed">
+                      Discover authentic Hindi Dubbed and Dual Audio anime. Pressing{' '}
+                      <strong className="text-rose-400 font-semibold">“OPEN THIS ANIME TO WATCH”</strong>{' '}
+                      takes you directly to the exact corresponding anime page on the new RareToon India website.
+                    </p>
                   </div>
-                  <h1 className="text-xl md:text-2xl font-black text-white dark:text-white light:text-slate-900 tracking-tight">
-                    Welcome, {account.role === 'owner' || account.id === 'usr_owner' ? (account.username && account.username !== 'Owner' ? account.username : 'Death197') : (account.username || (isGuest ? 'AnimeExplorer' : account.name || 'AnimeExplorer'))}!
-                  </h1>
-                  <p className="text-xs md:text-sm text-slate-300 dark:text-slate-300 light:text-slate-600 max-w-2xl leading-relaxed">
-                    Discover authentic Hindi Dubbed and Dual Audio anime. Pressing{' '}
-                    <strong className="text-rose-400 font-semibold">“OPEN THIS ANIME TO WATCH”</strong>{' '}
-                    takes you directly to the exact corresponding anime page on the new RareToon India website.
-                  </p>
                 </div>
 
                 {/* Right Hero Action Buttons */}
@@ -821,13 +938,14 @@ export function App() {
       <footer className="mt-auto border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 bg-slate-950 dark:bg-slate-950 light:bg-white py-8 text-slate-400 dark:text-slate-400 light:text-slate-600 text-xs transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-rose-600 flex items-center justify-center font-black text-white text-xs">
-                AX
+            <div className="flex items-center gap-3">
+              <AnivexLogo variant="cinematic" size="sm" />
+              <div className="flex items-center gap-2">
+                <AnivexLogo variant="primary" size="xs" />
+                <span className="font-bold text-white dark:text-white light:text-slate-900">Zenime</span>
+                <span className="text-slate-500">•</span>
+                <span>Anime Discovery &amp; Metadata Engine</span>
               </div>
-              <span className="font-bold text-white dark:text-white light:text-slate-900">Anivex Foundation</span>
-              <span className="text-slate-500">•</span>
-              <span>Anime Discovery &amp; Metadata Engine</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -857,7 +975,7 @@ export function App() {
 
           <div className="border-t border-slate-900 dark:border-slate-900 light:border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
             <p>
-              Anivex is a catalogue and discovery platform. We do not host or stream media files.
+              Zenime is a catalogue and discovery platform. We do not host or stream media files.
               All watch links connect directly to verified pages on RareToon India (<a href={RARETOON_BASE_URL} className="text-rose-400 hover:underline">{RARETOON_BASE_URL}</a>).
             </p>
             <p>Guest Mode &amp; Account Architecture</p>
@@ -906,11 +1024,32 @@ export function App() {
         />
       )}
 
+      {/* Guest Feature Restriction Notice Modal */}
+      <GuestRestrictionModal
+        isOpen={Boolean(guestRestrictionFeature)}
+        feature={guestRestrictionFeature}
+        onClose={() => setGuestRestrictionFeature(null)}
+        onMakeAccount={() => {
+          setGuestRestrictionFeature(null);
+          setAuthModalMode('register');
+          setAuthModalView('email');
+          setIsAuthOpen(true);
+        }}
+        onLogin={() => {
+          setGuestRestrictionFeature(null);
+          setAuthModalMode('login');
+          setAuthModalView('email');
+          setIsAuthOpen(true);
+        }}
+      />
+
       {/* Account & Guest Mode Modal */}
       {isAuthOpen && (
         <AuthModal
           isOpen={isAuthOpen}
           onClose={() => setIsAuthOpen(false)}
+          initialMode={authModalMode}
+          initialView={authModalView}
         />
       )}
 

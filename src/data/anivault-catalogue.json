@@ -2,9 +2,9 @@
   {
     "id": "anivault_rt_doraemon_nobitas_little_star_wars_2021_remake",
     "title": "Doraemon Nobita’s Little Star Wars (2021 Remake)",
-    "alternateTitle": null,
+    "alternateTitle": "Doraemon: Nobita no Little Star Wars",
     "synopsis": "Doraemon Nobita’s Little Star Wars Hindi Dubbed Download HD, Doraemon Movie Nobita’s Little Star Wars Download, Doraemon the Movie 2021: Nobita’s Little Star",
-    "releaseYear": 2021,
+    "releaseYear": 1985,
     "status": "Completed",
     "type": "Movie",
     "genres": [
@@ -51,6 +51,15 @@
     "languages": [
       "Hindi",
       "Japanese"
+    ],
+    "japaneseTitle": "ドラえもん のび太の宇宙小戦争",
+    "relatedAnime": [
+      "Doraemon",
+      "Doraemon: Nobita no Little Star Wars 2021"
+    ],
+    "franchiseRelationships": [
+      "PARENT: Doraemon (TV_SHORT)",
+      "ALTERNATIVE: Doraemon: Nobita no Little Star Wars 2021 (MOVIE)"
     ]
   },
   {
@@ -58,8 +67,8 @@
     "title": "Doraemon (TV Series)",
     "alternateTitle": "Doraemon (2005)",
     "synopsis": "Download & Watch Doraemon Season 14 in Hindi, Tamil, Telugu. Doraemon Complete Season 14 Hindi Dubbed Episodes Download. Doraemon Season 14 is packed with",
-    "releaseYear": 2005,
-    "status": "Ongoing",
+    "releaseYear": 1973,
+    "status": "Completed",
     "type": "TV",
     "genres": [
       "Comedy",
@@ -202,7 +211,7 @@
         ]
       }
     ],
-    "totalEpisodes": 9,
+    "totalEpisodes": 468,
     "totalSeasons": 9,
     "provider": "RareToon India",
     "languages": [
@@ -210,6 +219,12 @@
       "Tamil",
       "Telugu",
       "Japanese"
+    ],
+    "relatedAnime": [
+      "Doraemon"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Doraemon (TV_SHORT)"
     ]
   },
   {
@@ -217,7 +232,7 @@
     "title": "Doraemon All Seasons Hindi",
     "alternateTitle": "Doraemon Classic All Seasons",
     "synopsis": "Doraemon All Seasons Hindi Episodes Download in good quality. Doraemon all episodes in Hindi download, Doraemon all episodes in Hindi.",
-    "releaseYear": 2005,
+    "releaseYear": 1973,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -258,12 +273,18 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 52,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Japanese"
+    ],
+    "relatedAnime": [
+      "Doraemon"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Doraemon (TV_SHORT)"
     ]
   },
   {
@@ -375,14 +396,15 @@
         ]
       }
     ],
-    "totalEpisodes": 6,
-    "totalSeasons": 1,
+    "totalEpisodes": 87,
+    "totalSeasons": 6,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 6
   },
   {
     "id": "anivault_rt_frieren_beyond_journeys_end",
@@ -390,7 +412,7 @@
     "alternateTitle": "Sousou no Frieren",
     "synopsis": "Watch and download all episodes of Frieren: Beyond Journey’s End Season 1 in HD quality with dual audio (Hindi-Eng) on&nbsp;Rare Toon India.",
     "releaseYear": 2023,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Fantasy",
@@ -618,7 +640,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -741,7 +763,7 @@
     "title": "Horimiya: The Missing Pieces",
     "alternateTitle": "Horimiya",
     "synopsis": "Horimiya The Missing Pieces Season 2 is now available in dual audio (Hindi + English) with all 13 episodes in WEB-DL HD quality. You can watch them in 480p,",
-    "releaseYear": 2021,
+    "releaseYear": 2023,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -771,7 +793,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/horimiya-the-missing-pieces-season-1-hindi-dubbed-episodes/",
-        "episodeCount": 13,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -784,7 +806,7 @@
         "seasonNumber": 2,
         "title": "Season 2",
         "canonicalUrl": "https://www.rareanimes.mov/horimiya-the-missing-pieces-season-2-hindi-dubbed-episodes/",
-        "episodeCount": 13,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -801,6 +823,14 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "ホリミヤ -piece-",
+    "seasonsCount": 2,
+    "relatedAnime": [
+      "Horimiya"
+    ],
+    "franchiseRelationships": [
+      "PARENT: Horimiya (TV)"
     ]
   },
   {
@@ -837,7 +867,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/the-daily-life-of-the-immortal-king-season-1-hindi-dubbed-download-hd/",
-        "episodeCount": 15,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -847,13 +877,23 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 15,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "仙王的日常生活",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "The Daily Life of the Immortal King Season 2",
+      "Dawang Bu Gaoxing"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: The Daily Life of the Immortal King Season 2 (ONA)",
+      "CHARACTER: Dawang Bu Gaoxing (ONA)"
     ]
   },
   {
@@ -899,7 +939,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -943,7 +983,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/haikyu-season-1-hindi-dubbed-episodes-download/",
-        "episodeCount": 25,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -960,6 +1000,24 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "ハイキュー!!",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Haikyu!! the Movie: The End and the Beginning",
+      "Haikyuu!! the Movie: The Winner and the Loser",
+      "HAIKYU!! 2nd Season",
+      "Haikyuu!! Ningyou Anime",
+      "HAIKYU!!: Lev Appears!",
+      "Haikyuu!! Quest Picture Drama"
+    ],
+    "franchiseRelationships": [
+      "SUMMARY: Haikyu!! the Movie: The End and the Beginning (MOVIE)",
+      "SUMMARY: Haikyuu!! the Movie: The Winner and the Loser (MOVIE)",
+      "SEQUEL: HAIKYU!! 2nd Season (TV)",
+      "OTHER: Haikyuu!! Ningyou Anime (OVA)",
+      "SIDE STORY: HAIKYU!!: Lev Appears! (OVA)",
+      "OTHER: Haikyuu!! Quest Picture Drama (OVA)"
     ]
   },
   {
@@ -996,7 +1054,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/black-clover-season-1-hindi-dubbed-episodes/",
-        "episodeCount": 51,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1006,13 +1064,31 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 51,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "ブラッククローバー",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Squishy! Black Clover",
+      "Black Clover: The All Magic Knights Thanksgiving Festa",
+      "Black Clover: Jump Festa 2016 Special",
+      "Petit Clover Advance",
+      "Black Clover: Sword of the Wizard King",
+      "Black Clover Season 2"
+    ],
+    "franchiseRelationships": [
+      "SPIN OFF: Squishy! Black Clover (ONA)",
+      "OTHER: Black Clover: The All Magic Knights Thanksgiving Festa (SPECIAL)",
+      "ALTERNATIVE: Black Clover: Jump Festa 2016 Special (SPECIAL)",
+      "OTHER: Petit Clover Advance (SPECIAL)",
+      "SIDE STORY: Black Clover: Sword of the Wizard King (MOVIE)",
+      "SEQUEL: Black Clover Season 2 (TV)"
     ]
   },
   {
@@ -1048,7 +1124,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/sakamoto-days-season-1-hindi-dubbed-episodes/",
-        "episodeCount": 12,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1058,13 +1134,21 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "SAKAMOTO DAYS",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "SAKAMOTO DAYS Part 2"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: SAKAMOTO DAYS Part 2 (ONA)"
     ]
   },
   {
@@ -1100,7 +1184,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/zenshu-season-1-hindi-dubbed-episodes-download-hd/",
-        "episodeCount": 12,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1117,7 +1201,9 @@
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "japaneseTitle": "全修。",
+    "seasonsCount": 1
   },
   {
     "id": "anivault_rt_assassination_classroom",
@@ -1154,7 +1240,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/assassination-classroom-season-1-hindi-dubbed/",
-        "episodeCount": 22,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1164,13 +1250,33 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 22,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "暗殺教室",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Assassination Classroom Second Season",
+      "Assassination Classroom: Meeting Time",
+      "Koro-sensei Q!",
+      "Assassination Classroom the Movie: 365 Days‘ Time",
+      "Koro Sensei Quest!",
+      "Ansatsu Kyoushitsu: Jump Festa 2013 Special",
+      "Assassination Classroom the Movie: Our Time"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Assassination Classroom Second Season (TV)",
+      "SIDE STORY: Assassination Classroom: Meeting Time (SPECIAL)",
+      "SPIN OFF: Koro-sensei Q! (MOVIE)",
+      "SUMMARY: Assassination Classroom the Movie: 365 Days‘ Time (MOVIE)",
+      "SPIN OFF: Koro Sensei Quest! (ONA)",
+      "ALTERNATIVE: Ansatsu Kyoushitsu: Jump Festa 2013 Special (SPECIAL)",
+      "SIDE STORY: Assassination Classroom the Movie: Our Time (MOVIE)"
     ]
   },
   {
@@ -1180,7 +1286,7 @@
     "synopsis": "Watch and Download Baki Hanma Season 2 Series (Hindi-English)&nbsp;480p & 720p & 1080p Qualities. This is a Netflix Hindi Dubbed Series and Available",
     "releaseYear": 2021,
     "status": "Completed",
-    "type": "TV",
+    "type": "ONA",
     "genres": [
       "Action",
       "Martial Arts",
@@ -1208,7 +1314,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/baki-hanma-season-1-hindi-dubbed-episodes-download/",
-        "episodeCount": 12,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1221,7 +1327,7 @@
         "seasonNumber": 2,
         "title": "Season 2",
         "canonicalUrl": "https://www.rareanimes.mov/baki-hanma-season-2-hindi-dubbed-episodes-download/",
-        "episodeCount": 27,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1239,6 +1345,20 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "範馬刃牙",
+    "seasonsCount": 2,
+    "relatedAnime": [
+      "Baki: The Great Raitai Tournament Saga",
+      "Baki Hanma Season 2",
+      "Dongitsune Season 2",
+      "Baki Hanma VS Kengan Ashura"
+    ],
+    "franchiseRelationships": [
+      "PREQUEL: Baki: The Great Raitai Tournament Saga (ONA)",
+      "SEQUEL: Baki Hanma Season 2 (ONA)",
+      "CHARACTER: Dongitsune Season 2 (SPECIAL)",
+      "CHARACTER: Baki Hanma VS Kengan Ashura (ONA)"
     ]
   },
   {
@@ -1275,7 +1395,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/tokyo-revengers-season-1-hindi-dubbed-episodes/",
-        "episodeCount": 24,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1285,13 +1405,25 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 24,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "東京リベンジャーズ",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Tokyo Revengers: Chibi Reve",
+      "Tokyo Revengers Season 2",
+      "Coffee Kousou"
+    ],
+    "franchiseRelationships": [
+      "SPIN OFF: Tokyo Revengers: Chibi Reve (ONA)",
+      "SEQUEL: Tokyo Revengers Season 2 (TV)",
+      "CHARACTER: Coffee Kousou (ONA)"
     ]
   },
   {
@@ -1329,7 +1461,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/death-note-season-1-hindi-dubbed-episodes-download/",
-        "episodeCount": 37,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1346,6 +1478,16 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "japaneseTitle": "DEATH NOTE",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Death Note: Relight",
+      "Death Parade"
+    ],
+    "franchiseRelationships": [
+      "SUMMARY: Death Note: Relight (SPECIAL)",
+      "CHARACTER: Death Parade (TV)"
     ]
   },
   {
@@ -1409,7 +1551,7 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136430-gsBsJjA7hGh9.jpg"
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 48,
     "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
@@ -1454,7 +1596,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/gintama-season-1-hindi-dubbed-episodes-download/",
-        "episodeCount": 201,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -1470,6 +1612,28 @@
     "languages": [
       "Hindi",
       "Japanese"
+    ],
+    "japaneseTitle": "銀魂",
+    "seasonsCount": 1,
+    "relatedAnime": [
+      "Gintama Season 2",
+      "Gintama: Jump Festa 2005 Special",
+      "Gintama: Jump Festa 2008 Special",
+      "Gintama: Dai Hanseikai",
+      "Gintama - The Movie",
+      "Gintama: Yorinuki Gintama-san on Theater 2D",
+      "Gintama: The Final Chapter - Be Forever Yorozuya",
+      "Gintama: Monster Strike-hen"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Gintama Season 2 (TV)",
+      "SIDE STORY: Gintama: Jump Festa 2005 Special (SPECIAL)",
+      "SIDE STORY: Gintama: Jump Festa 2008 Special (SPECIAL)",
+      "SIDE STORY: Gintama: Dai Hanseikai (SPECIAL)",
+      "ALTERNATIVE: Gintama - The Movie (MOVIE)",
+      "ALTERNATIVE: Gintama: Yorinuki Gintama-san on Theater 2D (MOVIE)",
+      "OTHER: Gintama: The Final Chapter - Be Forever Yorozuya (MOVIE)",
+      "CHARACTER: Gintama: Monster Strike-hen (ONA)"
     ]
   },
   {
@@ -1516,7 +1680,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 6,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -1717,7 +1881,7 @@
         ]
       }
     ],
-    "totalEpisodes": 8,
+    "totalEpisodes": 171,
     "totalSeasons": 8,
     "provider": "RareToon India",
     "languages": [
@@ -1810,7 +1974,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 50,
     "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
@@ -2252,7 +2416,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 125,
     "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
@@ -2316,7 +2480,7 @@
   },
   {
     "id": "anivault_rt_doraemon_nobita_and_the_steel_troops_hd",
-    "title": "Doraemon Nobita And The Steel Troops Download Hindi Dubbed 720P",
+    "title": "Doraemon Nobita And The Steel Troops Download",
     "alternateTitle": null,
     "synopsis": "Doraemon Nobita And The Steel Troops Download Hindi Dubbed Movie.",
     "releaseYear": 2020,
@@ -2423,9 +2587,9 @@
   {
     "id": "anivault_rt_doraemon_nobita_and_the_birth_of_japan_hd",
     "title": "Doraemon Nobita and the Birth of Japan",
-    "alternateTitle": null,
+    "alternateTitle": "Doraemon: Nobita no Nippon Tanjou",
     "synopsis": "Doraemon Nobita and the Birth of Japan Hindi Dubbed Download, Doraemon Nobita and the Birth of Japan Hindi Dubbed Watch Online.",
-    "releaseYear": 2020,
+    "releaseYear": 1989,
     "status": "Completed",
     "type": "Movie",
     "genres": [
@@ -2471,6 +2635,15 @@
     "languages": [
       "Hindi",
       "Japanese"
+    ],
+    "japaneseTitle": "ドラえもん のび太の日本誕生",
+    "relatedAnime": [
+      "Doraemon",
+      "Doraemon: Shin Nobita no Nippon Tanjou"
+    ],
+    "franchiseRelationships": [
+      "PARENT: Doraemon (TV_SHORT)",
+      "ALTERNATIVE: Doraemon: Shin Nobita no Nippon Tanjou (MOVIE)"
     ]
   },
   {
@@ -3644,7 +3817,7 @@
   },
   {
     "id": "anivault_rt_doraemon_the_movie_nobita_aur_jadooi_tapu",
-    "title": "Doraemon The Movie Nobita Aur Jadooi Tapu Download Hindi Dubbed 720p",
+    "title": "Doraemon The Movie Nobita Aur Jadooi Tapu Download",
     "alternateTitle": null,
     "synopsis": "Doraemon The Movie Nobita Aur Jadooi Tapu Download Hindi Dubbed, Download and Watch at 720p",
     "releaseYear": 2021,
@@ -3890,7 +4063,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-1-hindi-dubbed-episodes/",
-        "episodeCount": 32,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3903,7 +4076,7 @@
         "seasonNumber": 2,
         "title": "Season 2",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-2-hindi-dubbed-episodes/",
-        "episodeCount": 21,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3916,7 +4089,7 @@
         "seasonNumber": 3,
         "title": "Season 3",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-3-hindi-dubbed-episodes/",
-        "episodeCount": 18,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3929,7 +4102,7 @@
         "seasonNumber": 4,
         "title": "Season 4",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-4-hindi-dubbed-episodes/",
-        "episodeCount": 17,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3942,7 +4115,7 @@
         "seasonNumber": 5,
         "title": "Season 5",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-5-hindi-dubbed-episodes/",
-        "episodeCount": 24,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3955,7 +4128,7 @@
         "seasonNumber": 6,
         "title": "Season 6",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-6-hindi-dubbed-episodes/",
-        "episodeCount": 31,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3981,7 +4154,7 @@
         "seasonNumber": 8,
         "title": "Season 8",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-8-hindi-dubbed-episodes/",
-        "episodeCount": 24,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -3994,7 +4167,7 @@
         "seasonNumber": 9,
         "title": "Season 9",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-9-hindi-dubbed-episodes/",
-        "episodeCount": 21,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4007,7 +4180,7 @@
         "seasonNumber": 10,
         "title": "Season 10",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-10-hindi-dubbed-episodes/",
-        "episodeCount": 25,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4020,7 +4193,7 @@
         "seasonNumber": 11,
         "title": "Season 11",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-11-hindi-dubbed-episodes/",
-        "episodeCount": 21,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4059,7 +4232,7 @@
         "seasonNumber": 14,
         "title": "Season 14",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-14-hindi-dubbed-episodes/",
-        "episodeCount": 25,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4072,7 +4245,7 @@
         "seasonNumber": 15,
         "title": "Season 15",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-15-hindi-dubbed-episodes/",
-        "episodeCount": 28,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4085,7 +4258,7 @@
         "seasonNumber": 16,
         "title": "Season 16",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-shippuden-season-16-hindi-dubbed-episodes/",
-        "episodeCount": 212,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4103,7 +4276,8 @@
       "Tamil",
       "Telugu",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 16
   },
   {
     "id": "anivault_rt_all_doraemon_movies_in",
@@ -4243,7 +4417,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 87,
     "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
@@ -4424,7 +4598,7 @@
     "alternateTitle": "Jujutsu Kaisen",
     "synopsis": "Jujutsu Kaisen 0 Hindi Dubbed Download HD, Jujutsu Kaisen 0 Download and Watch. Originally aired on the Sony Yay TV channel, this action-packed anime blends",
     "releaseYear": 2020,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -4745,7 +4919,7 @@
         "seasonNumber": 1,
         "title": "Season 1",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-1-episodes-hindi-dubbed-download/",
-        "episodeCount": 35,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4758,7 +4932,7 @@
         "seasonNumber": 2,
         "title": "Season 2",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-2-episodes-hindi-dubbed-download/",
-        "episodeCount": 48,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4771,7 +4945,7 @@
         "seasonNumber": 3,
         "title": "Season 3",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-3-episodes-hindi-dubbed-download/",
-        "episodeCount": 48,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4784,7 +4958,7 @@
         "seasonNumber": 4,
         "title": "Season 4",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-4-episodes-hindi-dubbed-download/",
-        "episodeCount": 26,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4797,7 +4971,7 @@
         "seasonNumber": 5,
         "title": "Season 5",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-5-episodes-hindi-dubbed-download/",
-        "episodeCount": 28,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4810,7 +4984,7 @@
         "seasonNumber": 6,
         "title": "Season 6",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-6-episodes-hindi-dubbed-download/",
-        "episodeCount": 26,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4823,7 +4997,7 @@
         "seasonNumber": 7,
         "title": "Season 7",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-7-episodes-hindi-dubbed-download/",
-        "episodeCount": 26,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4836,7 +5010,7 @@
         "seasonNumber": 8,
         "title": "Season 8",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-8-episodes-hindi-dubbed-download/",
-        "episodeCount": 26,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4849,7 +5023,7 @@
         "seasonNumber": 9,
         "title": "Season 9",
         "canonicalUrl": "https://www.rareanimes.mov/naruto-season-9-episodes-hindi-dubbed-download/",
-        "episodeCount": 7,
+        "episodeCount": 1,
         "episodes": [
           {
             "episodeNumber": 1,
@@ -4865,7 +5039,8 @@
     "languages": [
       "Hindi",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 9
   },
   {
     "id": "anivault_rt_demon_slayer",
@@ -4950,7 +5125,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 63,
     "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
@@ -4965,7 +5140,7 @@
     "alternateTitle": "Na Honjaman Rebeleop",
     "synopsis": "Download or Watch Solo Leveling Season 2 Crunchyroll Dual Audio {Hindi} Complete All Episodes WEB-DL HD In 480p & 720p & 1080p of each mkv file is",
     "releaseYear": 2024,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -5183,59 +5358,6 @@
             "episodeNumber": 1,
             "title": "Full Movie",
             "canonicalUrl": "https://www.rareanimes.mov/shin-chan-movie-bungle-in-the-jungle/"
-          }
-        ]
-      }
-    ],
-    "totalEpisodes": 1,
-    "totalSeasons": 1,
-    "provider": "RareToon India",
-    "languages": [
-      "Hindi",
-      "Japanese"
-    ]
-  },
-  {
-    "id": "anivault_rt_shin_chan_movie_action_kamen_vs_higure_rakshas",
-    "title": "Shin Chan Movie Action Kamen vs Higure Rakshas",
-    "alternateTitle": null,
-    "synopsis": "Shin Chan Movie Action Kamen vs Higure Rakshas Hindi Download, Shinchan Movie Action Kamen vs Leotard Devil Hindi Dubbed Download.",
-    "releaseYear": 2021,
-    "status": "Completed",
-    "type": "Movie",
-    "genres": [
-      "Comedy",
-      "Slice of Life",
-      "Adventure",
-      "School"
-    ],
-    "artwork": {
-      "verifiedArtworkUrl": "https://raretoonindia.in/wp-content/uploads/2023/08/zyro-image.jpg",
-      "isVerified": true,
-      "verificationSource": "provider_verified",
-      "aspectRatio": "16:9",
-      "verificationStatus": "verified"
-    },
-    "providers": {
-      "raretoonIndia": {
-        "providerAnimeId": "shin-chan-movie-action-kamen-vs-higure-rakshas",
-        "canonicalUrl": "https://www.rareanimes.mov/shin-chan-movie-action-kamen-vs-higure-rakshas/",
-        "verificationStatus": "VERIFIED",
-        "dubLanguage": "Hindi Dubbed",
-        "quality": "1080p FHD"
-      }
-    },
-    "seasons": [
-      {
-        "seasonNumber": 1,
-        "title": "Full Movie",
-        "canonicalUrl": "https://www.rareanimes.mov/shin-chan-movie-action-kamen-vs-higure-rakshas/",
-        "episodeCount": 1,
-        "episodes": [
-          {
-            "episodeNumber": 1,
-            "title": "Full Movie",
-            "canonicalUrl": "https://www.rareanimes.mov/shin-chan-movie-action-kamen-vs-higure-rakshas/"
           }
         ]
       }
@@ -5832,7 +5954,7 @@
   },
   {
     "id": "anivault_rt_suzume_no_tojimari_2022_english_subbed_download",
-    "title": "Suzume no Tojimari (2022) English Subbed Download [480p/720p/1080p]",
+    "title": "Suzume no Tojimari (2022)",
     "alternateTitle": "Suzume no Tojimari",
     "synopsis": "Excited to watch &quot;Suzume no Tojimari&quot; (2022) but need English subtitles? No worries! This article has got you covered with easy-to-download...",
     "releaseYear": 2022,
@@ -5928,7 +6050,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -5939,10 +6061,10 @@
   {
     "id": "anivault_rt_daemons_of_the_shadow_realm",
     "title": "Daemons of the Shadow Realm",
-    "alternateTitle": null,
+    "alternateTitle": "Daemons of the Shadow Realm",
     "synopsis": "Daemons of the Shadow Realm Season 1 is now available to watch and download on RareToonIndia. This popular Animation, Action & Adventure, Sci-Fi &",
     "releaseYear": 2026,
-    "status": "Upcoming",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -6071,7 +6193,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 69,
     "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
@@ -6126,7 +6248,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -6193,7 +6315,7 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182300-IYkq5KrkQq1V.jpg"
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
@@ -6290,14 +6412,15 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185874-aU3e6tBT6wwA.jpg"
       }
     ],
-    "totalEpisodes": 4,
-    "totalSeasons": 3,
+    "totalEpisodes": 51,
+    "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 4
   },
   {
     "id": "anivault_rt_doraemon_nobitas_sky_utopia",
@@ -6463,7 +6586,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
@@ -6475,10 +6598,10 @@
   {
     "id": "anivault_rt_release_that_witch",
     "title": "Release That Witch",
-    "alternateTitle": null,
+    "alternateTitle": "Release That Witch",
     "synopsis": "Release that Witch Season 1 is now available to watch and download on RareToonIndia. This popular Animation, Action & Adventure, Sci-Fi & Fantasy",
     "releaseYear": 2025,
-    "status": "Upcoming",
+    "status": "Completed",
     "type": "TV",
     "genres": [
       "Fantasy",
@@ -6530,7 +6653,7 @@
     "alternateTitle": "Mushoku Tensei: Isekai Ittara Honki Dasu",
     "synopsis": "A 34-year-old underachiever gets run over by a truck and is reincarnated into a magical world as Rudeus Greyrat, a newborn with memories of his past life.",
     "releaseYear": 2021,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Isekai",
@@ -7381,14 +7504,15 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182205-q2AeO1owuQbO.jpg"
       }
     ],
-    "totalEpisodes": 73,
-    "totalSeasons": 3,
+    "totalEpisodes": 84,
+    "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 4
   },
   {
     "id": "anivault_rt_blue_lock",
@@ -7396,7 +7520,7 @@
     "alternateTitle": "Blue Lock",
     "synopsis": "After a disastrous defeat at the 2018 World Cup, Japan struggles to regroup. Jinpachi Ego creates Blue Lock, a prison-like facility where 300 talented strikers are isolated to create the worlds greatest striker.",
     "releaseYear": 2022,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Sports",
@@ -8045,14 +8169,15 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx189046-yaHWtS5FII46.jpg"
       }
     ],
-    "totalEpisodes": 67,
-    "totalSeasons": 3,
+    "totalEpisodes": 78,
+    "totalSeasons": 4,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 4
   },
   {
     "id": "anivault_rt_sword_art_online",
@@ -8235,14 +8360,15 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx20594-FhRgZ1H9Istt.jpg"
       }
     ],
-    "totalEpisodes": 26,
-    "totalSeasons": 1,
+    "totalEpisodes": 37,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_no_game_no_life",
@@ -8523,7 +8649,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 366,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -8638,7 +8764,7 @@
         "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21699-Fkbnkl9ZC6fW.png"
       }
     ],
-    "totalEpisodes": 11,
+    "totalEpisodes": 22,
     "languages": [
       "Hindi",
       "Tamil",
@@ -8714,7 +8840,7 @@
     "alternateTitle": "Tate no Yuusha no Nariagari",
     "synopsis": "Naofumi Iwatani, an uncharismatic Otaku who spends his days on games and manga, suddenly finds himself summoned to a parallel universe! He discovers he is one of four heroes equipped with legendary weapons and tasked with saving the world from its prophesied destruction. As the Shield Hero, the weakest of the heroes, all is not as it seems. Naofumi is soon alone, penniless, and betrayed. With no one to turn to, and nowhere to run, he is left with only his shield. Now, Naofumi must rise to become the legendary Shield Hero and save the world! Note: - The first episode was pre-aired on December 27th, 2018. Regular broadcast began on January 9th, 2019. - The first episode aired with a runtime of ~47 minutes as opposed to the standard 24 minute long episode.",
     "releaseYear": 2019,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -9287,15 +9413,16 @@
         ]
       }
     ],
-    "totalEpisodes": 14,
-    "totalSeasons": 1,
+    "totalEpisodes": 25,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Tamil",
       "Telugu",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_the_devil_is_a_part_timer",
@@ -9697,7 +9824,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 175,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -10037,8 +10164,8 @@
     "title": "That Time I Got Reincarnated as a Slime Season 2",
     "alternateTitle": "Tensei Shitara Slime Datta Ken 2nd Season",
     "synopsis": "Now that the Jura Tempest Alliance is growing even further, they will now be meeting the animal kingdom of Eurazania, reuniting with King Gazel, rising tensions between monsters and humans, and Rimuru encountering the strongest enemy he’s ever faced. (Source: Funimation)",
-    "releaseYear": 2021,
-    "status": "Completed",
+    "releaseYear": 2018,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -10150,7 +10277,7 @@
     "alternateTitle": "Kage no Jitsuryokusha ni Naritakute!",
     "synopsis": "Some people just aren’t suited to playing the part of the flashy, in-your-face hero or the dastardly, mustache-twirling villain with larger-than-life panache. Instead, they operate in the shadows and pull the strings of society through wit and cleverness. That’s the role Cid wants to play when he’s transported to another world. Cid spins a yarn or three and becomes the unlikely leader of the underground Shadow Garden organization that fights against a menacing cult (which he totally made up). However, there’s a catch even his wild imagination didn’t see coming: the cult he concocted actually exists, and they’re beyond displeased that his power fantasy just got in the way of their evil plans! (Source: HIDIVE)",
     "releaseYear": 2022,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -11191,7 +11318,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 51,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -11205,8 +11332,8 @@
     "title": "Mushoku Tensei: Jobless Reincarnation Season 2",
     "alternateTitle": "Mushoku Tensei II: Isekai Ittara Honki Dasu",
     "synopsis": "After his relationship with Eris Boreas Greyrat reaches new heights, Rudeus Greyrat is ecstatic. Unfortunately, his joy is short-lived, as Eris suddenly abandons him to embark on her own journey. Believing that Eris has lost all interest in him, a heartbroken and depressed Rudeus sets forth to the Northern Territories. With his sole goal being to locate his mother on the vast continent, Rudeus wonders if persisting through daily life is worth the pain, falling into a robotic routine as he endlessly ruminates on his lost love. However, the dangers of the North soon prove that one cannot survive with a dulled mind. While on a quest with the party Counter Arrow, with whom he recently became acquainted, Rudeus has a brush with death—an experience that forces him to finally snap out of his despair. With his newfound teammates, Rudeus rediscovers the pleasure of daily adventuring and moves forward with his original goal of living his second lease on life to the fullest. (Source: MAL Rewrite) Note: Includes episode 0, Shugo Jutsushi Fitz.",
-    "releaseYear": 2023,
-    "status": "Completed",
+    "releaseYear": 2021,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Adventure",
@@ -11434,8 +11561,8 @@
     "title": "The Rising of the Shield Hero Season 2",
     "alternateTitle": "Tate no Yuusha no Nariagari Season 2",
     "synopsis": "With another Wave happening in a week, Naofumi Iwatani and his party have no time to waste. However, when bat familiars raid Lurolona Village and the Wave countdown comes to a halt, the Four Cardinal Heroes reconvene with the queen, Mirelia Q Melromarc, for a quick briefing. The queen presumes that the odd occurrences are linked to the Spirit Tortoise—a threatening creature that has awakened from its slumber, back to cause havoc once again. A plan to put the Spirit Tortoise to rest is devised—but out of the four men, only the cursed Shield Hero agrees to help. (Source: MAL Rewrite)",
-    "releaseYear": 2022,
-    "status": "Completed",
+    "releaseYear": 2019,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -11616,7 +11743,7 @@
     "alternateTitle": "ログ・ホライズン",
     "synopsis": "The online fantasy game Elder Tales is a worldwide phenomenon, immersing millions of players in its intricately conceived virtual world. However, the release of the game's twelfth expansion pack makes that immersion all too literal, as players from around the world are suddenly pulled into the game's no-longer-fictional universe! Now, eight-year ET veteran Shiroe, his friend Naotsugu, the beautiful assassin Akatsuki, and 30,000 other players are faced with the daunting task of learning how to deal with an entirely new reality, one where the Non-Player Characters are actually alive, and the tips and tricks learned while playing with a keyboard no longer apply. (Source: Sentai Filmworks)",
     "releaseYear": 2013,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -12192,7 +12319,7 @@
     "alternateTitle": "Isekai Maou to Shoukan Shoujo no Dorei Majutsu",
     "synopsis": "In the MMORPG Cross Reverie, Takuma Sakamoto is so powerful that he is lauded as the “Demon Lord” by other players. One day, he is summoned to another world – but with the same appearance he had in the game! There, he meets two girls who both proclaim themselves to be his Summoner. They had performed an Enslavement Ritual to turn him into their Summon... but that's when Takuma's passive ability <> activated! Instead, it was the girls who had become enslaved! Though Takuma may have been the strongest Sorcerer there was, he had no idea how to talk with other people. That's when he makes his choice: to act based on his persona from the game! “Amazing? But of course... I am Diablo, the being known and feared as the Demon Lord!” So begins a tale of adventure with an earth-shakingly powerful Demon Lord (or at least someone who acts like one) taking on another world! (Source: J-Novel Club)",
     "releaseYear": 2018,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Comedy",
@@ -12303,7 +12430,7 @@
     "alternateTitle": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru",
     "synopsis": "The world's number one assassin has been reincarnated as the eldest son of a family of aristocrat assassins. In exchange for being reincarnated in another world, a goddess has imposed upon him one condition. \"Kill the Hero who is prophesied to destroy the world.\"  This was to be the mission in his new life. The synergistic effect of the vast knowledge and experience he gained that made all manner of assassinations possible in the modern world, and the secret techniques and magic of the fantasy world's most powerful family of assassins turn him into the greatest assassin of all time. (Source: Crunchyroll)",
     "releaseYear": 2021,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -12875,7 +13002,7 @@
     "alternateTitle": "Kage no Jitsuryokusha ni Naritakute! 2nd season",
     "synopsis": "Everything has been going according to plan, but the hour of awakening draws near. Cid Kagenou and Shadow Garden investigate the Lawless City, a cesspool where the red moon hangs low in the sky and three powerful monarchs rule the streets. The true draw for Cid, however, is one who can draw blood–the Blood Queen, a vampire who has slumbered in her coffin for eons. Her awakening approaches, and Cid could finally face a day of reckoning.  (Source: HIDIVE, edited) Note: A world premiere screening of Episode 1 was shown in the The Eminence in Shadow 2nd Season panel at Anime Expo on July 1, 2023.",
     "releaseYear": 2023,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -13045,8 +13172,8 @@
     "title": "That Time I Got Reincarnated as a Slime Season 3",
     "alternateTitle": "Tensei Shitara Slime Datta Ken 3rd Season",
     "synopsis": "Rimuru has officially become a Demon Lord after defeating Clayman. Following Walpurgis, the Demon Lords' banquet, Rimuru's domain is expanded to include the entire Great Forest of Jura. Anticipating a flood of representatives from all races showing up to pay their respects, Rimuru decides to throw a festival to commemorate the opening of Tempest, using it as an opportunity to gain new citizens and present Demon Lord Rimuru to the world. Meanwhile, in the Holy Empire of Lubelius, home base of the monster-hating cult of Luminism, Holy Knight Captain Hinata receives a message from Rimuru. But the message is actually a fabricated declaration of war sent by some unknown party. Upon learning that Hinata is heading for Tempest, Rimuru makes a decision... Thus begins a new challenge for Rimuru, striving to distinguish friend from foe in his pursuit of the ideal nation where humans and monsters can prosper together.  (Source: Crunchyroll)",
-    "releaseYear": 2024,
-    "status": "Completed",
+    "releaseYear": 2018,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -13882,13 +14009,14 @@
         ]
       }
     ],
-    "totalEpisodes": 13,
-    "totalSeasons": 1,
+    "totalEpisodes": 24,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_the_promised_neverland",
@@ -14007,7 +14135,7 @@
     "alternateTitle": "チェンソーマン",
     "synopsis": "Denji is a teenage boy living with a Chainsaw Devil named Pochita. Due to the debt his father left behind, he has been living a rock-bottom life while repaying his debt by harvesting devil corpses with Pochita. One day, Denji is betrayed and killed. As his consciousness fades, he makes a contract with Pochita and gets revived as \"Chainsaw Man\" — a man with a devil's heart. (Source: Crunchyroll)",
     "releaseYear": 2022,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -14460,7 +14588,7 @@
     "title": "The Future Diary",
     "alternateTitle": "Mirai Nikki",
     "synopsis": "This psychological thriller, based on the manga written and illustrated by Sakae Esuno, is about Yuki, a loner who's not very good with people. He prefers to write a diary on his cell phone and talk to his imaginary friend, Deus Ex Machina &ndash; The God of Time and Space. However, Yuki soon learns that Deus is more than a figment of his imagination when he makes Yuki participate in a battle royale with eleven others. The contestants are given special diaries that can predict the future, each diary possessing unique features that give it both advantages and disadvantages. Within the next 90 days, the contestants must try to survive until there is only one left standing. The winner will become the new God of Time and Space. (Source: FUNimation)",
-    "releaseYear": 2011,
+    "releaseYear": 2021,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -14623,7 +14751,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -14750,7 +14878,7 @@
     "alternateTitle": "メイドインアビス",
     "synopsis": "The \"Abyss\" is the last unexplored place in the world. Strange and wonderful creatures roam within, and it is full of precious relics that present humans can't recreate. Those that dare to explore the depths are known as \"Cave Raiders.\" An orphan girl named Riko lives on the rim. Her dream is to become a Cave Raider like her mother and solve the mysteries of the cave system. One day, Riko starts exploring the caves and discovers a robot who resembles a human boy. (Source: Anime News Network, edited) Note: The last episode aired with a runtime of ~48 minutes as opposed to the standard 24 minute long episode.",
     "releaseYear": 2017,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Adventure",
@@ -15244,7 +15372,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 74,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -15258,7 +15386,7 @@
     "title": "The Promised Neverland Season 2",
     "alternateTitle": "Yakusoku no Neverland 2",
     "synopsis": "Fifteen children escape Grace Field House, a false paradise, hoping for a chance at freedom. Instead, they encounter plants and animals they have never before seen, and are chased by demons. The outside world is so beautiful, and yet is almost too cruel to face. Even so, the children refuse to give up. They are guided in their search for better lives only by a message from Minerva and a pen Norman left behind in order to fulfill their promise to return to the House to save those of their family who are still trapped within. (Source: Aniplex of America) Note: Episode 1 streamed early on Amazon Prime on Jan 7, 2021. The regular TV broadcast started on Jan 8, 2021.",
-    "releaseYear": 2021,
+    "releaseYear": 2019,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -15713,9 +15841,9 @@
     "title": "Perfect Blue",
     "alternateTitle": "PERFECT BLUE",
     "synopsis": "Rising pop star Mima has quit singing to pursue a career as an actress and model, but her fans aren’t ready to see her go... Encouraged by her managers, Mima takes on a recurring role on a popular TV show, when suddenly her handlers and collaborators begin turning up murdered. Harboring feelings of guilt and haunted by visions of her former self, Mima’s reality and fantasy meld into a frenzied paranoia. As her stalker closes in, in person and online, the threat he poses is more real than even Mima knows, in this iconic psychological thriller that has frequently been hailed as one of the most important animated films of all time. (Source: Shout! Factory) Note: The film received an early premiere at the Fantasia Film Festival on August 5, 1997.",
-    "releaseYear": 1998,
+    "releaseYear": 2012,
     "status": "Completed",
-    "type": "Movie",
+    "type": "TV",
     "genres": [
       "Drama",
       "Horror",
@@ -16229,7 +16357,7 @@
     "title": "Angels of Death",
     "alternateTitle": "Satsuriku no Tenshi",
     "synopsis": "13-year old Rachel awakens to find herself trapped in the basement of an abandoned building. Without any memories, or even a clue as to where she could be, she wanders the building, lost and dizzy. In her search, she comes across a man covered in bandages. He introduces himself as Zack and he wields a grim-reaper like sickle. A strange bond is struck between them, strengthened by strange, crazy promises… These two, trapped in this strange building, don't know why fate has placed them there. But they will work together desperately to find a way out…",
-    "releaseYear": 2018,
+    "releaseYear": 2021,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -16451,7 +16579,7 @@
     "alternateTitle": "ドロヘドロ",
     "synopsis": "The story revolves around Kaiman, who does not remember who he was before he was transfigured by a Magic user. This transformation left him with a reptile's head, and a desire to find out the truth about who he really is. Accompanied by Nikaido, his female companion, he tracks down Magic Users in \"The Hole\" and unceremoniously chomps down on their head, hoping to find out who it was that put him in this state. One by one, they witness this \"second man\" inside the head of Kaiman, and after pulling them back out of his mouth he asks them all a question... \"What did the guy inside my head say?\"",
     "releaseYear": 2020,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -17183,7 +17311,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -18595,7 +18723,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -18722,7 +18850,7 @@
     "alternateTitle": "Shadows House",
     "synopsis": "High atop a cliff sits the mansion known as Shadows House, home to a faceless clan that pretends to live like nobles. They express their emotions through living dolls that also endlessly clean the home of soot. One such servant, Emilico, aids her master Kate as they learn more about themselves and the mysteries of the house. (Source: Funimation)",
     "releaseYear": 2021,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Fantasy",
@@ -20383,11 +20511,12 @@
       "Sports"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100922-uxEhaCsqMMp3.png",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199111-gBSuBG61ElcW.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
+      "verificationSource": "anilist",
       "aspectRatio": "3:4",
-      "verificationStatus": "verified"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100922-uxEhaCsqMMp3.png"
     },
     "providers": {
       "raretoonIndia": {
@@ -20478,16 +20607,18 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/grand-blue-dreaming-season-3-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199111-gBSuBG61ElcW.jpg"
       }
     ],
-    "totalEpisodes": 13,
-    "totalSeasons": 1,
+    "totalEpisodes": 24,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_sk8_the_infinity",
@@ -21507,7 +21638,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 75,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -21521,8 +21652,8 @@
     "title": "BLUE LOCK Season 2",
     "alternateTitle": "Blue Lock VS. U-20 JAPAN",
     "synopsis": "The hottest soccer matches start again as the U-20 Japan National Team makes their debut! (Source: Crunchyroll News)",
-    "releaseYear": 2024,
-    "status": "Completed",
+    "releaseYear": 2022,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -21798,7 +21929,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -22535,7 +22666,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -24063,7 +24194,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 101,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "canonicalProviderUrl": "https://www.rareanimes.mov/slam-dunk-hindi-dubbed-download/",
@@ -24082,7 +24213,7 @@
     "title": "Grand Blue Dreaming Season 2",
     "alternateTitle": "Grand Blue Season 2",
     "synopsis": "University is back in session for Iori, and so are the booze-fueled parties! Between diving club shenanigans, a surprise from his sister, and wild tests of courage, normal college life is anything but. Dive back into the madness with Iori and his beloved crew of lively splash artists. (Source: Crunchyroll)",
-    "releaseYear": 2025,
+    "releaseYear": 2018,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -24183,6 +24314,9 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Grand Blue Dreaming Season 2 (TV)"
     ]
   },
   {
@@ -24522,13 +24656,21 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 127,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Inazuma Eleven GO (TV)",
+      "SIDE STORY: Inazuma Eleven: Saikyou Gundan Ogre Shuurai (MOVIE)",
+      "SIDE STORY: Inazuma Eleven: Choujigen Dream Match (MOVIE)",
+      "SPIN OFF: Inazuma Eleven Ares (TV)",
+      "SPIN OFF: Inazuma Eleven: Outer Code (ONA)",
+      "ALTERNATIVE: Inazuma Eleven: Soushuuhen - Densetsu no Kickoff (MOVIE)"
     ]
   },
   {
@@ -24695,13 +24837,17 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "PREQUEL: Hajime no Ippo: The Fighting! - Mashiba vs Kimura (OVA)",
+      "SEQUEL: Hajime No Ippo: The Fighting! - Rising - (TV)"
     ]
   },
   {
@@ -24816,6 +24962,10 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: Tsurune: For Better or Worse (OVA)",
+      "SUMMARY: Tsurune The Movie - The First Shot - (MOVIE)"
     ]
   },
   {
@@ -24929,6 +25079,13 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "PREQUEL: Initial D 1st Stage (TV)",
+      "SEQUEL: Initial D 3rd Stage (MOVIE)",
+      "SUMMARY: Initial D BATTLE STAGE (OVA)",
+      "SUMMARY: Initial D to the Next Stage: Project D e Mukete (SPECIAL)",
+      "SIDE STORY: Initial D Extra Stage (OVA)"
     ]
   },
   {
@@ -25095,7 +25252,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 50,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -25275,6 +25432,9 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "PREQUEL: Hajime no Ippo: The Fighting! New Challenger (TV)"
     ]
   },
   {
@@ -25451,6 +25611,10 @@
       "Hindi",
       "English",
       "Japanese"
+    ],
+    "franchiseRelationships": [
+      "SEQUEL: AIR GEAR: Kuro no Hane to Nemuri no Mori - Break on the Sky (OVA)",
+      "SIDE STORY: Air Gear: Special Trick (SPECIAL)"
     ]
   },
   {
@@ -25867,11 +26031,12 @@
       "School"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21507-6YUSbh2m0N1p.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx140439-bPKmhe1wNxc9.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
+      "verificationSource": "anilist",
       "aspectRatio": "3:4",
-      "verificationStatus": "verified"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21507-6YUSbh2m0N1p.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -25962,16 +26127,18 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/mob-psycho-100-season-3-hindi-dubbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx140439-bPKmhe1wNxc9.jpg"
       }
     ],
-    "totalEpisodes": 13,
-    "totalSeasons": 1,
+    "totalEpisodes": 24,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_erased",
@@ -26818,7 +26985,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -28050,7 +28217,7 @@
     "alternateTitle": "Fumetsu no Anata e",
     "synopsis": "In the beginning, an \"orb\" is cast unto Earth. \"It\" can do two things: change into the form of the thing that stimulates \"it\"; and come back to life after death. \"It\" morphs from orb to rock, then to wolf, and finally to boy, but roams about like a newborn who knows nothing. As a boy, \"it\" becomes Fushi. Through encounters with human kindness, Fushi not only gains survival skills but grows as a \"person\". But his journey is darkened by the inexplicable and destructive enemy Nokker and cruel partings with the people he loves. (Source: Crunchyroll)",
     "releaseYear": 2021,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Adventure",
@@ -28589,7 +28756,7 @@
     "alternateTitle": "Yofukashi no Uta",
     "synopsis": "Wracked by insomnia and wanderlust, Kou Yamori is driven onto the moonlit streets every night in an aimless search for something he can’t seem to name. His nightly ritual is marked by purposeless introspection — until he meets Nazuna, who might just be a vampire! Kou’s new companion could offer him dark gifts and a vampire’s immortality. But there are conditions that must be met before Kou can sink his teeth into vampirism, and he’ll have to discover just how far he’s willing to go to satisfy his desires before he can heed the Call of the Night! (Source: Sentai Filmworks)",
     "releaseYear": 2022,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Comedy",
@@ -28815,8 +28982,8 @@
     "title": "Classroom of the Elite Season 2",
     "alternateTitle": "Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e 2nd Season",
     "synopsis": "Tokyo Metropolitan Advanced Nurturing High School seems like a paradise, but in reality, it is an extreme meritocracy. In the class of underachievers, Kiyotaka has begun working with Suzune, who seeks to ascend higher. After a survival test on an uninhabited island, they get to enjoy a luxury liner, but a new class-scrambling test will begin. (Source: Anime News Network)",
-    "releaseYear": 2022,
-    "status": "Completed",
+    "releaseYear": 2017,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Drama",
@@ -30330,7 +30497,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "canonicalProviderUrl": "https://www.rareanimes.mov/mushishi-hindi-dubbed-download/",
@@ -30349,8 +30516,8 @@
     "title": "Classroom of the Elite Season 3",
     "alternateTitle": "Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e 3rd Season",
     "synopsis": "The third semester kicks off in high gear with a special boot camp deep in the mountains. Forcibly separated into groups along grade and gender lines, the first, second and third years alike must work together to survive the rugged terrain. Even worse? The leader of the group that comes in last will be expelled. Can Class D make it back to campus intact, or is this where they finally say goodbye to one of their own? (Source: Seven Seas Entertainment)",
-    "releaseYear": 2024,
-    "status": "Completed",
+    "releaseYear": 2017,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Drama",
@@ -31421,7 +31588,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -31826,7 +31993,7 @@
     "title": "Attack on Titan Season 2",
     "alternateTitle": "Shingeki no Kyojin Season 2",
     "synopsis": "Eren Jaeger swore to wipe out every last Titan, but in a battle for his life he wound up becoming the thing he hates most. With his new powers, he fights for humanity's freedom facing the monsters that threaten his home. After a bittersweet victory against the Female Titan, Eren finds no time to rest—a horde of Titans is approaching Wall Rose and the battle for humanity continues! (Source: Funimation)",
-    "releaseYear": 2017,
+    "releaseYear": 2013,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -32102,7 +32269,7 @@
     "title": "Attack on Titan Season 3",
     "alternateTitle": "Shingeki no Kyojin Season 3",
     "synopsis": "Eren and his companions in the 104th are assigned to the newly-formed Levi Squad, whose assignment is to keep Eren and Historia safe given Eren's newly-discovered power and Historia's knowledge and pedigree. Levi and Erwin have good reason to be concerned, because the priest of the Church that Hanji had hidden away was found tortured to death, making it clear that the Military Police are involved with the cover-up. Things get more harrowing when the MPs make a move on Erwin and the Levi Squad narrowly avoids capture. Eren is also having problems with his Titan transformation, and a deadly killer has been hired to secure Eren and Historia, one Levi knows all too well from his youth. (Source: Anime News Network)",
-    "releaseYear": 2018,
+    "releaseYear": 2013,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -33005,7 +33172,7 @@
     "alternateTitle": "Bungou Stray Dogs",
     "synopsis": "Stalked by a beastly white tiger, Atsushi Nakajima has no idea that the menace lives inside him—a power that catches the attention of the Armed Detective Agency. Using inhuman abilities to combat crime, this team takes Atsushi under the wing of their most eccentric member, Dazai. Together, they tear through mafia-muddled mysteries while enemies keep an eye on the tiger’s lofty bounty. (Source: Funimation)",
     "releaseYear": 2016,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -33707,7 +33874,7 @@
     "alternateTitle": "Kusuriya no Hitorigoto",
     "synopsis": "Maomao lived a peaceful life with her apothecary father. Until one day, she’s sold as a lowly servant to the emperor’s palace. But she wasn’t meant for a compliant life among royalty. So when imperial heirs fall ill, she decides to step in and find a cure! This catches the eye of Jinshi, a handsome palace official who promotes her. Now, she’s making a name for herself solving medical mysteries! (Source: Crunchyroll)",
     "releaseYear": 2023,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Drama",
@@ -34041,7 +34208,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 39,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -34216,7 +34383,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 39,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -34399,7 +34566,7 @@
     "alternateTitle": "Kuroshitsuji",
     "synopsis": "In Victorian-era Europe, a young boy loses everything he once held near and dear to a vicious plot. In his moment of death, he strikes a deal with a demon: his soul, in exchange for revenge. Ciel Phantomhive is now the head of the Phantomhive corporation, handling all business affairs as well as the underground work for the Queen of England. His new partner is a demon butler, Sebastian Michaelis, whose powers as a butler is only surpassed by his strength as a demon. The story follows the two along with their other servants, as they work to unravel the plot behind Ciel's parents' murder, and the horrendous tragedies that befell Ciel in the month directly after.",
     "releaseYear": 2008,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -34684,7 +34851,7 @@
     "alternateTitle": "Jibaku Shounen Hanako-kun",
     "synopsis": "\"Hanako-san, Hanako-san... are you there?\" At Kamome Academy, rumors abound about the school's Seven Mysteries, one of which is Hanako-san. Said to occupy the third stall of the third floor girls' bathroom in the old school building, Hanako-san grants any wish when summoned. Nene Yashiro, an occult-loving high school girl who dreams of romance, ventures into this haunted bathroom... but the Hanako-san she meets there is nothing like she imagined! Kamome Academy's Hanako-san... is a boy! (Source: Yen Press)",
     "releaseYear": 2020,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -35194,8 +35361,8 @@
     "title": "The Apothecary Diaries Season 2",
     "alternateTitle": "Kusuriya no Hitorigoto 2nd Season",
     "synopsis": "Using her wit and vast knowledge of medicines and poisons alike, Maomao played a pivotal role in solving a series of mysteries and conspiracies that plagued the imperial court. Having recently come to terms with the secrets of her parents, she returns to fulfill her normal duties on behalf of the emperor's highest-ranking consorts. Maomao also works alongside the eunuch Jinshi to better the consorts' many ladies-in-waiting, including helping them learn to read. However, with the arrival of a merchant caravan comes a new wave of intrigue. A pattern of strange coincidences involving the visitors and their wares unsettles Maomao, driving her to investigate the puzzling circumstances behind the convoy. As dangers from both outside and within threaten the balance between the imperial concubines, Maomao continues to utilize her cunning and medical expertise to keep the women safe from harm. (Source: MAL Rewrite)",
-    "releaseYear": 2025,
-    "status": "Completed",
+    "releaseYear": 2023,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Drama",
@@ -35361,7 +35528,7 @@
     "title": "The Melancholy of Haruhi Suzumiya",
     "alternateTitle": "Suzumiya Haruhi no Yuuutsu",
     "synopsis": "Kyon, your typical high school student, has long given up his belief in the supernatural. However, upon meeting Haruhi Suzumiya, he quickly finds out that it is the supernatural that she is interested in; aliens, time travelers and espers among other things. When Haruhi laments about the lack of intriguing clubs around school, Kyon inspires Haruhi to form her own club. As a result, the SOS Brigade is formed, a club which specializes in all that is the supernatural. Much to his chagrin, Kyon, along with the silent bookworm, Yuki Nagato, the shy and timid Mikuru Asahina, and the perpetually smiling Itsuki Koizumi, are recruited as members. The story follows the crazy adventures that these four endure under their whimsical leader, Haruhi. The story is based on the light novels by Nagaru Tanigawa. Note: This entry is for the original 14-episode 2006 airing. The series was further expanded and reordered into a 28-episode series in 2009.",
-    "releaseYear": 2006,
+    "releaseYear": 2009,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -35828,7 +35995,7 @@
     "title": "Yamada and the Seven Witches",
     "alternateTitle": "Yamada-kun to 7-nin no Majo",
     "synopsis": "Ryu Yamada is a second year student at Suzaku High. Ryu is always late for school, naps in class and gets abysmal grades. His life is a dead bore. The beautiful Urara Shiraishi, on the other hand, is Suzaku High's brightest student. One day, without explanation, their bodies are swapped! Ryu ends up in Urara's body, and Urara in Ryu's.",
-    "releaseYear": 2015,
+    "releaseYear": 2013,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -36113,7 +36280,7 @@
     "alternateTitle": "Shiguang Dailiren",
     "synopsis": "In a corner of a bustling city, there is a small shop called \"Time Photo Studio\"  operating as usual. Although the entrance looks abandoned, it's actually run by two men with special abilities: Cheng Xiaoshi and Lu Guang. In order to fulfil customers' requests, Lu Guang and Cheng Xiaoshi work together and use their special abilities to enter photos. However, things don't go as planned... (Source: bilibili, translated) Note: The final episode aired with a runtime of ~31 minutes.",
     "releaseYear": 2021,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Drama",
@@ -36436,7 +36603,7 @@
     "title": "Hell’s Paradise Season 2",
     "alternateTitle": "Jigokuraku 2nd Season",
     "synopsis": "Seeking the key to the elixir of immortality, the group arrives at the fortress of the island's monstrous ruler, the \"Tensen.\" To survive and escape the island, cooperation becomes essential—regardless of whether one is a condemned criminal or an executioner. Meanwhile, the shogunate orders additional landings on the island of the Immortal Realm, led by Shugen Yamada Asayemon. Among them are the Ishigakure clan, who share a past with Gabimaru. Desperate to find the elixir and escape the island, Gabimaru and his companions face the Tensen in a battle that escalates into an all-out confrontation between humans and immortals! (Source: Twin Engine, edited)",
-    "releaseYear": 2026,
+    "releaseYear": 2023,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -38153,7 +38320,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 27,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -39394,7 +39561,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -40396,7 +40563,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -40800,7 +40967,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -43622,8 +43789,8 @@
     "title": "JUJUTSU KAISEN Season 2",
     "alternateTitle": "Jujutsu Kaisen 2nd Season",
     "synopsis": "The past comes to light when second-year students Satoru Gojou and Suguru Getou are tasked with escorting young Riko Amanai to Master Tengen. But when a non-sorcerer user tries to kill them, their mission to protect the Star Plasma Vessel threatens to turn them into bitter enemies and cement their destinies—one as the world’s strongest sorcerer, and the other its most twisted curse user! (Source: Crunchyroll)",
-    "releaseYear": 2023,
-    "status": "Completed",
+    "releaseYear": 2020,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -44221,7 +44388,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -44743,7 +44910,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 51,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -45374,7 +45541,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 120,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -47400,7 +47567,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -47954,7 +48121,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 47,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -49414,7 +49581,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 64,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -49428,7 +49595,7 @@
     "title": "My Hero Academia Season 3",
     "alternateTitle": "Boku no Hero Academia 3",
     "synopsis": "Summer is here, and the heroes of Class 1-A and 1-B are in for the toughest training camp of their lives! A group of seasoned pros pushes everyone's Quirks to new heights as the students face one overwhelming challenge after another. Braving the elements in this secret location becomes the least of their worries when routine training turns into a critical struggle for survival. (Source: Crunchyroll)",
-    "releaseYear": 2018,
+    "releaseYear": 2016,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -49604,7 +49771,7 @@
     "title": "My Hero Academia Season 4",
     "alternateTitle": "Boku no Hero Academia 4",
     "synopsis": "The villain world teeters on the brink of war now that All For One is out of the picture. Shigaraki of the League of Villains squares off with Overhaul of the yakuza, vying for total control of the shadows. Meanwhile, Deku gets tangled in another dangerous internship as he struggles to keep pace with his upperclassman—Mirio. (Source: Crunchyroll)",
-    "releaseYear": 2019,
+    "releaseYear": 2016,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -49792,11 +49959,12 @@
       "Thriller"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1575-hsmWM2ydNm1m.jpg",
+      "verifiedArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2904-Fet9Q33suC7G.jpg",
       "isVerified": true,
-      "verificationSource": "official_cdn",
+      "verificationSource": "anilist",
       "aspectRatio": "3:4",
-      "verificationStatus": "verified"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1575-hsmWM2ydNm1m.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -49939,7 +50107,8 @@
             "title": "Episode 25",
             "canonicalUrl": "https://www.rareanimes.mov/code-geass-lelouch-of-the-rebellion/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101811-pRfRiEvgZn4T.png"
       },
       {
         "seasonNumber": 2,
@@ -49952,16 +50121,18 @@
             "title": "Episode 1",
             "canonicalUrl": "https://www.rareanimes.mov/hindi/code-geass-lelouch-of-the-rebellion-season-2-hindi-subbed-episodes-download-hd/"
           }
-        ]
+        ],
+        "artworkUrl": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2904-Fet9Q33suC7G.jpg"
       }
     ],
-    "totalEpisodes": 26,
-    "totalSeasons": 1,
+    "totalEpisodes": 37,
+    "totalSeasons": 2,
     "provider": "RareToon India",
     "languages": [
       "Hindi Subbed",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 2
   },
   {
     "id": "anivault_rt_cowboy_bebop",
@@ -50128,7 +50299,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -50477,7 +50648,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 148,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -51375,13 +51546,14 @@
         ]
       }
     ],
-    "totalEpisodes": 33,
-    "totalSeasons": 1,
+    "totalEpisodes": 387,
+    "totalSeasons": 9,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 9
   },
   {
     "id": "anivault_rt_gachiakuta",
@@ -51557,7 +51729,7 @@
     "title": "My Hero Academia Season 5",
     "alternateTitle": "Boku no Hero Academia 5",
     "synopsis": "The rivalry between Class 1-A and Class 1-B heats up in a joint training battle. Eager to be a part of the hero course, brainwashing buff Shinso is tasked with competing on both sides. But as each team faces their own weaknesses and discovers new strengths, this showdown might just become a toss-up. (Source: Funimation)",
-    "releaseYear": 2021,
+    "releaseYear": 2016,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -52213,7 +52385,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 153,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -52502,15 +52674,16 @@
         ]
       }
     ],
-    "totalEpisodes": 29,
-    "totalSeasons": 1,
+    "totalEpisodes": 179,
+    "totalSeasons": 5,
     "provider": "RareToon India",
     "languages": [
       "Hindi",
       "Tamil",
       "Telugu",
       "Japanese"
-    ]
+    ],
+    "seasonsCount": 5
   },
   {
     "id": "anivault_rt_flcl",
@@ -53771,7 +53944,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "languages": [
@@ -54283,7 +54456,7 @@
     "alternateTitle": "Kaijuu 8-gou 2nd Season",
     "synopsis": "Following the massive operation that led to the confinement of recent recruit Kafka Hibino, otherwise known as Kaiju No. 8, the Defense Force has been puzzled by how to deal with him. Kafka is the first kaiju to side with humans, and after careful consideration, he is eventually transferred to the Defense Force's First Division in the hope of adding his power to the strongest division, capable of handling any threat. However, some people are still doubtful about Kafka, and he must prove his worth in the next mission. Kafka and the First Division are soon dispatched when a massive horde of ant-like kaiju begins wreaking havoc. Thanks to the combined strength of Kafka's friend Kikoru Shinomiya and their captain, Gen Narumi, the mission seems to progress as it should. However, when Kafka fails to transform into his kaiju form, the dreadful Kaiju No. 9 joins the battle with only one goal—to eliminate him and steal his power. Although the situation is looking grim, Kafka must overcome his most difficult trial yet with the others if he wants to keep pursuing his dream: fighting side by side with his childhood friend and Third Division captain, Mina Ashiro. (Source: MAL Rewrite)",
     "releaseYear": 2025,
-    "status": "Completed",
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -55109,7 +55282,7 @@
         ]
       }
     ],
-    "totalEpisodes": 25,
+    "totalEpisodes": 26,
     "totalSeasons": 1,
     "provider": "RareToon India",
     "canonicalProviderUrl": "https://www.rareanimes.mov/samurai-champloo-hindi-dubbed-download/",
@@ -55128,8 +55301,8 @@
     "title": "Vinland Saga Season 2",
     "alternateTitle": "VINLAND SAGA SEASON 2",
     "synopsis": "After his father's death and the destruction of his village at the hands of English raiders, Einar wishes for a peaceful life with his family on their newly rebuilt farms. However, fate has other plans: his village is invaded once again. Einar watches helplessly as the marauding Danes burn his lands and slaughter his family. The invaders capture Einar and take him back to Denmark as a slave. Einar clings to his mother's final words to survive. He is purchased by Ketil, a kind slave owner and landlord who promises that Einar can regain his freedom in return for working in the fields. Soon, Einar encounters his new partner in farm cultivation—Thorfinn, a dejected and melancholic slave. As Einar and Thorfinn work together toward their freedom, they are haunted by both sins of the past and the ploys of the present. Yet they carry on, grasping for a glimmer of hope, redemption, and peace in a world that is nothing but unjust and unforgiving. (Source: MAL Rewrite)",
-    "releaseYear": 2023,
-    "status": "Completed",
+    "releaseYear": 2019,
+    "status": "Ongoing",
     "type": "TV",
     "genres": [
       "Action",
@@ -55298,7 +55471,7 @@
     "title": "My Hero Academia Season 6",
     "alternateTitle": "Boku no Hero Academia 6",
     "synopsis": "With Tomura Shigaraki at its helm, the former Liberation Army is now known as the Paranormal Liberation Front. This organized criminal group poses an immense threat to the Hero Association, not only because of its sheer size and strength, but also the overpowering quirks of Jin \"Twice\" Bubaigawara and Gigantomachia. As new intel from the covert hero Keigo \"Hawks\" Takami confirms that Shigaraki is nowhere to be seen, the Hero Association decides to strike the enemy headquarters with a surprise attack using the entirety of its assets—and the UA students find themselves on the battlefield once again. As the fight rages on, the unsuspecting villains must regroup and push back, but the brave heroes are determined to eradicate every last one of them. (Source: MAL Rewrite)",
-    "releaseYear": 2022,
+    "releaseYear": 2016,
     "status": "Completed",
     "type": "TV",
     "genres": [
@@ -58392,7 +58565,7 @@
     ],
     "synopsis": "Gintoki, Takasugi, and Katsura unite with the rest of the Yorozuya and Edo allies to make their final stand against Utsuro.",
     "artwork": {
-      "verifiedArtworkUrl": "https://kitsu-production-media.s3.us-west-002.backblazeb2.com/anime/43683/poster_image/47b7a8cedd4fc7638a4474e2079ffcc8.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=002d6013655cdc00000000003%2F20260926%2Fus-west-002%2Fs3%2Faws4_request&X-Amz-Date=20260926T154255Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=021563ca75ca7d4d0416d42cdee9479f7cf42ef921f1531b90ca4211e589e2ad",
+      "verifiedArtworkUrl": "https://media.kitsu.app/anime/poster_images/43829/original.jpg",
       "isVerified": true,
       "verificationSource": "thetvdb",
       "aspectRatio": "3:4",
@@ -62966,7 +63139,7 @@
         ]
       }
     ],
-    "totalEpisodes": 23,
+    "totalEpisodes": 276,
     "languages": [
       "Hindi",
       "English",
@@ -63018,7 +63191,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -63071,7 +63244,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -63122,7 +63295,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -63173,7 +63346,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -63224,7 +63397,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -64252,7 +64425,7 @@
       "isVerified": false,
       "verificationSource": "provider_verified",
       "aspectRatio": "3:4",
-      "verificationStatus": "needs_review"
+      "verificationStatus": "unable_to_verify"
     },
     "providers": {
       "raretoonIndia": {
@@ -64833,7 +65006,7 @@
   },
   {
     "id": "anivault_rt_hindi_dragon_ball_z_movie_9_bojack_unbound_hindi_download_hd",
-    "title": "Dragon Ball Z Movie 9 Bojack Unbound Hindi Watch Download (OLD CN DUB)",
+    "title": "Dragon Ball Z Movie 9 Bojack Unbound",
     "alternateTitle": null,
     "synopsis": "Dragon Ball Z Movie 9 Bojack Unbound Hindi Dubbed Download/Watch Online Dragon Ball Z Movie 9 Bojack Unbound Hindi Dubbed Full Movie Download (576p HQ) Dragon Ball Z Movie 9 Bojack Unbound Hindi…",
     "releaseYear": 2022,
@@ -64882,7 +65055,7 @@
   },
   {
     "id": "anivault_rt_hindi_dragon_ball_z_movie_10_broly_second_coming_hindi_watch_download_fhd",
-    "title": "Dragon Ball Z Movie 10 Broly – Second Coming Hindi Watch Download FHD",
+    "title": "Dragon Ball Z Movie 10 Broly – Second Coming",
     "alternateTitle": null,
     "synopsis": "Dragon Ball Z Movie 10 Broly – Second Coming Hindi Dubbed Download/Watch Online Dragon Ball Z Movie 10 Broly – Second Coming Hindi Dubbed Full Movie Download (576p HQ) Dragon Ball Z Movie 10 Broly…",
     "releaseYear": 2022,
@@ -65194,7 +65367,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65243,7 +65416,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65291,7 +65464,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65340,7 +65513,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65389,7 +65562,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65438,7 +65611,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65487,7 +65660,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65535,7 +65708,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65583,7 +65756,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -65634,7 +65807,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -65685,7 +65858,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -65736,7 +65909,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65785,7 +65958,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -65834,7 +66007,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -66169,7 +66342,7 @@
         ]
       }
     ],
-    "totalEpisodes": 15,
+    "totalEpisodes": 180,
     "languages": [
       "Hindi",
       "English",
@@ -66456,7 +66629,7 @@
         ]
       }
     ],
-    "totalEpisodes": 11,
+    "totalEpisodes": 132,
     "languages": [
       "Hindi",
       "Japanese"
@@ -66557,7 +66730,7 @@
         ]
       }
     ],
-    "totalEpisodes": 5,
+    "totalEpisodes": 60,
     "languages": [
       "Hindi",
       "Tamil",
@@ -66608,7 +66781,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -66657,7 +66830,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -66665,7 +66838,7 @@
   },
   {
     "id": "anivault_rt_hindi_kochikame_the_movie_hindi_subbed_download_in_hd",
-    "title": "Kochikame The Movie Hindi Subbed Download in HD",
+    "title": "Kochikame The Movie",
     "alternateTitle": null,
     "synopsis": "Kochikame The Movie in Hindi, Kochikame Movie 1 Hindi Subbed Download, Kochikame The Movie in Hindi Download Kochikame The Movie Hindi Subbed Download [720p HD] 📰 Full Name: Kochira Katsushika-ku…",
     "releaseYear": 2022,
@@ -66756,7 +66929,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -66807,7 +66980,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -66858,7 +67031,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -66909,7 +67082,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -66958,7 +67131,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -67021,7 +67194,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -67084,7 +67257,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -67143,7 +67316,7 @@
   },
   {
     "id": "anivault_rt_hindi_big_hero_6_baymax_returns_2017_movie_hindi_tamil_download_in_hd",
-    "title": "Big Hero 6 Baymax Returns 2017 Movie Hindi – Tamil Download in HD",
+    "title": "Big Hero 6 Baymax Returns 2017 Movie Hindi",
     "alternateTitle": null,
     "synopsis": "Big Hero 6: Baymax Returns (2017) WEB-DL Multi Audio [Hindi+Eng] 720p HD ESub 720p HD / Animated Movies / Disney Channel India / Hindi dubbed / English Dub / Big Hero 6: Baymax Returns (2017) WEB-DL…",
     "releaseYear": 2017,
@@ -67376,7 +67549,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Japanese"
@@ -67384,7 +67557,7 @@
   },
   {
     "id": "anivault_rt_hindi_phineas_and_ferb_movie_across_the_2nd_dimension_hindi_tamil_telugu_download_fhd",
-    "title": "Phineas And Ferb Movie Across the 2nd Dimension Hindi – Tamil – Telugu Download FHD",
+    "title": "Phineas And Ferb Movie Across the 2nd Dimension",
     "alternateTitle": null,
     "synopsis": "Phineas and Ferb the Movie Across the 2nd Dimension Special Episode Hindi,Tamil,Telugu Dubbed Download, Phineas and Ferb the Movie Across the 2nd Dimension Movie in Hindi,Tamil,Telugu Download…",
     "releaseYear": 2022,
@@ -67435,7 +67608,7 @@
   },
   {
     "id": "anivault_rt_hindi_phineas_and_ferb_star_wars_movie_hindi_tamil_telugu_download_fhd",
-    "title": "Phineas and Ferb Star Wars Movie Hindi – Tamil – Telugu Download FHD",
+    "title": "Phineas and Ferb Star Wars Movie",
     "alternateTitle": null,
     "synopsis": "Phineas and Ferb: Star Wars HINDI Special Episode [HD] Phineas and Ferb Star Wars Special Episode Hindi Dubbed Download, Phineas and Ferb Star Wars Movie in Hindi Download, Phineas and Ferb Star Wars…",
     "releaseYear": 2022,
@@ -67576,7 +67749,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -67639,7 +67812,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -67702,7 +67875,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -67751,7 +67924,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -67951,7 +68124,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68013,7 +68186,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -68063,7 +68236,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -68113,7 +68286,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -68180,7 +68353,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Tamil",
@@ -68244,7 +68417,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Tamil",
@@ -68345,7 +68518,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -68395,7 +68568,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -68445,7 +68618,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -68497,7 +68670,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68546,7 +68719,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68647,7 +68820,7 @@
         ]
       }
     ],
-    "totalEpisodes": 5,
+    "totalEpisodes": 60,
     "languages": [
       "Hindi",
       "English",
@@ -68697,7 +68870,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -68773,7 +68946,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68835,7 +69008,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Tamil",
@@ -68899,7 +69072,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68948,7 +69121,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -68996,7 +69169,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69045,7 +69218,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -69095,7 +69268,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -69145,7 +69318,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -69195,7 +69368,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69285,7 +69458,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69335,7 +69508,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69399,7 +69572,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -69451,7 +69624,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -69504,7 +69677,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69553,7 +69726,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69571,9 +69744,9 @@
       "Action"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://kitsu-production-media.s3.us-west-002.backblazeb2.com/anime/43804/poster_image/0399121a79979a355b075849d26d4638.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=002d6013655cdc00000000003%2F20260926%2Fus-west-002%2Fs3%2Faws4_request&X-Amz-Date=20260926T155016Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=ead0ff9fafa4f2825b4694c2a420fbcc2b44f93e7a8ebecc54c8b1cd1a642cca",
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/353/884619.jpg",
       "isVerified": true,
-      "verificationSource": "thetvdb",
+      "verificationSource": "tvmaze",
       "aspectRatio": "3:4",
       "verificationStatus": "verified",
       "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2020/02/Star-Wars-Rebels-Season-1-Multi-Audio-Hindi-Eng-Tamil-Telugu-720p-1080p-HD-WEB-DL-ESub.jpg"
@@ -69628,7 +69801,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69690,7 +69863,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -69814,7 +69987,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Tamil",
@@ -69905,7 +70078,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Tamil",
@@ -69970,7 +70143,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70214,7 +70387,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70262,7 +70435,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70310,7 +70483,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -70359,7 +70532,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -70449,7 +70622,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Tamil",
@@ -70513,7 +70686,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -70665,7 +70838,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70713,7 +70886,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70761,7 +70934,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70809,7 +70982,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70861,7 +71034,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70909,7 +71082,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -70961,7 +71134,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71013,7 +71186,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71065,7 +71238,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71117,7 +71290,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71169,7 +71342,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71221,7 +71394,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71273,7 +71446,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71325,7 +71498,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71377,7 +71550,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71429,7 +71602,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71481,7 +71654,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71533,7 +71706,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71585,7 +71758,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71637,7 +71810,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71689,7 +71862,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71741,7 +71914,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71793,7 +71966,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71845,7 +72018,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71863,11 +72036,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/SAMU.jpg",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
-      "aspectRatio": "16:9",
-      "verificationStatus": "unable_to_verify"
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/15520.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/02/SAMU.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -71893,7 +72067,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71941,7 +72115,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -71990,7 +72164,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -72078,7 +72252,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Tamil",
@@ -72128,7 +72302,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -72178,7 +72352,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -72476,7 +72650,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -72551,7 +72725,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -72652,7 +72826,7 @@
         ]
       }
     ],
-    "totalEpisodes": 5,
+    "totalEpisodes": 60,
     "languages": [
       "Hindi",
       "English",
@@ -72701,7 +72875,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -72770,11 +72944,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Ben-10-Classic-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-FHD.jpg",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
-      "aspectRatio": "16:9",
-      "verificationStatus": "unable_to_verify"
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2021/09/Ben-10-Classic-Season-1-Hindi-–-Tamil-–-Telugu-Episodes-Download-FHD.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -72839,7 +73014,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Tamil",
@@ -72916,7 +73091,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -72991,7 +73166,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73009,11 +73184,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/b10dsa.jpg",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
-      "aspectRatio": "16:9",
-      "verificationStatus": "unable_to_verify"
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/6/16288.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
+      "aspectRatio": "3:4",
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2019/07/b10dsa.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -73039,7 +73215,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73047,7 +73223,7 @@
   },
   {
     "id": "anivault_rt_hindi_ben_10_omniverse_all_episodes_hindi_tamil_telugu_download_hd",
-    "title": "Ben 10 Omniverse All Episodes Hindi – Tamil – Telugu",
+    "title": "Ben 10 Omniverse",
     "alternateTitle": null,
     "synopsis": "Watch & Download All Seasons & Episodes of Ben 10 Omniverse in Hindi| 480p 720p 1080p, BEN 10 OMNIVERSE ALL EPISODES DOWNLOAD IN HINDI IN 720P [480P,720P,1080P], BEN 10 Omniverse All Hindi Episodes In…",
     "releaseYear": 2021,
@@ -73088,7 +73264,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -73138,7 +73314,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -73188,7 +73364,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73276,7 +73452,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "English",
@@ -73325,7 +73501,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -73375,7 +73551,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73437,7 +73613,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -73513,7 +73689,7 @@
         ]
       }
     ],
-    "totalEpisodes": 3,
+    "totalEpisodes": 36,
     "languages": [
       "Hindi",
       "English",
@@ -73562,7 +73738,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73611,7 +73787,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -73700,7 +73876,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73761,7 +73937,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73810,7 +73986,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73859,7 +74035,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -73986,7 +74162,7 @@
         ]
       }
     ],
-    "totalEpisodes": 7,
+    "totalEpisodes": 84,
     "languages": [
       "Hindi",
       "Japanese"
@@ -74087,7 +74263,7 @@
         ]
       }
     ],
-    "totalEpisodes": 5,
+    "totalEpisodes": 60,
     "languages": [
       "Hindi",
       "Japanese"
@@ -74136,7 +74312,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -74684,7 +74860,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -74827,7 +75003,7 @@
         ]
       }
     ],
-    "totalEpisodes": 8,
+    "totalEpisodes": 96,
     "languages": [
       "Hindi Subbed",
       "Japanese"
@@ -74876,7 +75052,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -74924,7 +75100,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -74973,7 +75149,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -75022,7 +75198,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75072,7 +75248,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -75090,11 +75266,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Toy-Story-5-2026-Movie-English-Dubbed-Download-HD-470x264.webp",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/399/998235.jpg",
+      "isVerified": true,
+      "verificationSource": "anidb",
       "aspectRatio": "3:4",
-      "verificationStatus": "unable_to_verify"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/Toy-Story-5-2026-Movie-English-Dubbed-Download-HD-470x264.webp"
     },
     "providers": {
       "raretoonIndia": {
@@ -75169,7 +75346,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -75220,7 +75397,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -75319,7 +75496,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75369,7 +75546,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75419,7 +75596,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75569,7 +75746,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -75617,7 +75794,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75667,7 +75844,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75717,7 +75894,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75767,7 +75944,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75817,7 +75994,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -75915,7 +76092,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -75964,7 +76141,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -76014,7 +76191,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76064,7 +76241,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76114,7 +76291,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76164,7 +76341,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76214,7 +76391,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76264,7 +76441,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76316,7 +76493,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76366,7 +76543,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76416,7 +76593,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76465,7 +76642,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76515,7 +76692,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -76564,7 +76741,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -76613,7 +76790,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -76665,7 +76842,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -76683,11 +76860,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/LEGO-Scooby-Doo-Knight-Time-Terror-2015-Movie-Hindi-Download-HD-1-300x200.jpg",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/231/578285.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
       "aspectRatio": "3:4",
-      "verificationStatus": "unable_to_verify"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/08/LEGO-Scooby-Doo-Knight-Time-Terror-2015-Movie-Hindi-Download-HD-1-300x200.jpg"
     },
     "providers": {
       "raretoonIndia": {
@@ -76826,7 +77004,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "Japanese"
@@ -76844,11 +77022,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/05/Migration-2023-Movie-Hindi-Dubbed-Download-HD-300x200.webp",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/154/385556.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
       "aspectRatio": "3:4",
-      "verificationStatus": "unable_to_verify"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2026/05/Migration-2023-Movie-Hindi-Dubbed-Download-HD-300x200.webp"
     },
     "providers": {
       "raretoonIndia": {
@@ -76972,7 +77151,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -77123,7 +77302,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -77173,7 +77352,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -77271,7 +77450,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -77321,7 +77500,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -77384,7 +77563,7 @@
         ]
       }
     ],
-    "totalEpisodes": 2,
+    "totalEpisodes": 24,
     "languages": [
       "Hindi",
       "English",
@@ -77484,7 +77663,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Tamil",
@@ -77640,7 +77819,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -77728,7 +77907,7 @@
         ]
       }
     ],
-    "totalEpisodes": 4,
+    "totalEpisodes": 48,
     "languages": [
       "Hindi",
       "English",
@@ -77778,7 +77957,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -77926,7 +78105,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -78074,7 +78253,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -78124,7 +78303,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -78225,7 +78404,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "English",
@@ -78244,11 +78423,12 @@
       "Adventure"
     ],
     "artwork": {
-      "verifiedArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/04/Happy-Halloween-Scooby-Doo-2020-English-Download-HD-Movie-34-470x264.webp",
-      "isVerified": false,
-      "verificationSource": "provider_verified",
+      "verifiedArtworkUrl": "https://static.tvmaze.com/uploads/images/original_untouched/231/578285.jpg",
+      "isVerified": true,
+      "verificationSource": "tvmaze",
       "aspectRatio": "3:4",
-      "verificationStatus": "unable_to_verify"
+      "verificationStatus": "verified",
+      "originalArtworkUrl": "https://www.rareanimes.mov/wp-content/uploads/2025/04/Happy-Halloween-Scooby-Doo-2020-English-Download-HD-Movie-34-470x264.webp"
     },
     "providers": {
       "raretoonIndia": {
@@ -78323,7 +78503,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -78567,7 +78747,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -78616,7 +78796,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
@@ -78665,7 +78845,7 @@
         ]
       }
     ],
-    "totalEpisodes": 1,
+    "totalEpisodes": 12,
     "languages": [
       "Hindi",
       "Japanese"
