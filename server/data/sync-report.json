@@ -3,9 +3,9 @@
   "totalRareAnimesUrlsDiscovered": 848,
   "totalUniqueAnime": 848,
   "animeAdded": 0,
-  "animeUpdated": 1,
+  "animeUpdated": 848,
   "episodesAdded": 6671,
-  "authoritativeTotalEpisodes": 13776,
+  "authoritativeTotalEpisodes": 8689,
   "verifiedArtworkCount": 848,
   "genresBreakdown": {
     "Comedy": 243,
@@ -35,6 +35,6 @@
     "Mecha": 11,
     "Mahou Shoujo": 1
   },
-  "timestamp": "2026-09-28T08:50:46.362Z",
+  "timestamp": "2026-09-29T01:17:53.550Z",
   "sourceUrl": "https://www.rareanimes.mov/home/"
 }

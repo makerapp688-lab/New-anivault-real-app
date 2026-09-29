@@ -1,5 +1,311 @@
 [
   {
+    "id": "LOG-1790647806703-7655",
+    "timestamp": "2026-09-29T02:10:06.703Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647806666-9360",
+    "timestamp": "2026-09-29T02:10:06.666Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647806631-5595",
+    "timestamp": "2026-09-29T02:10:06.631Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790647754539-8621",
+    "timestamp": "2026-09-29T02:09:14.539Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647754487-5812",
+    "timestamp": "2026-09-29T02:09:14.487Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647754458-9192",
+    "timestamp": "2026-09-29T02:09:14.458Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790647712979-2051",
+    "timestamp": "2026-09-29T02:08:32.979Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647712932-4963",
+    "timestamp": "2026-09-29T02:08:32.932Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790647712907-1066",
+    "timestamp": "2026-09-29T02:08:32.907Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790646741548-2504",
+    "timestamp": "2026-09-29T01:52:21.548Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790646741482-4280",
+    "timestamp": "2026-09-29T01:52:21.482Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790646741461-1590",
+    "timestamp": "2026-09-29T01:52:21.461Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790645710648-9637",
+    "timestamp": "2026-09-29T01:35:10.648Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790645710556-9606",
+    "timestamp": "2026-09-29T01:35:10.556Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790645710539-6040",
+    "timestamp": "2026-09-29T01:35:10.539Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790645675749-1454",
+    "timestamp": "2026-09-29T01:34:35.749Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790645675708-8541",
+    "timestamp": "2026-09-29T01:34:35.708Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790645675690-7907",
+    "timestamp": "2026-09-29T01:34:35.690Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790644867566-7804",
+    "timestamp": "2026-09-29T01:21:07.566Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790644867520-9987",
+    "timestamp": "2026-09-29T01:21:07.520Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790644867497-3135",
+    "timestamp": "2026-09-29T01:21:07.497Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790612036532-7106",
+    "timestamp": "2026-09-28T16:13:56.532Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790612036503-8196",
+    "timestamp": "2026-09-28T16:13:56.503Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790609972824-4668",
+    "timestamp": "2026-09-28T15:39:32.824Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790609972777-5389",
+    "timestamp": "2026-09-28T15:39:32.777Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790602109395-1079",
+    "timestamp": "2026-09-28T13:28:29.395Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790602109339-2023",
+    "timestamp": "2026-09-28T13:28:29.339Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790602109311-4918",
+    "timestamp": "2026-09-28T13:28:29.311Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790595577622-7701",
+    "timestamp": "2026-09-28T11:39:37.622Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790595577586-7945",
+    "timestamp": "2026-09-28T11:39:37.586Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790595577561-3370",
+    "timestamp": "2026-09-28T11:39:37.561Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
+    "id": "LOG-1790595324894-3401",
+    "timestamp": "2026-09-28T11:35:24.894Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Safety Check | Fields: verified"
+  },
+  {
+    "id": "LOG-1790595324842-7124",
+    "timestamp": "2026-09-28T11:35:24.842Z",
+    "action": "Information Manager: Update \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Source: Owner Review Resolution | Fields: verified"
+  },
+  {
+    "id": "LOG-1790595324824-7994",
+    "timestamp": "2026-09-28T11:35:24.824Z",
+    "action": "Information Manager: Mark Needs Review \"Haikyu!!\"",
+    "operator": "Owner",
+    "result": "success",
+    "recordId": "anivault_rt_haikyu",
+    "details": "Test manual review flag"
+  },
+  {
     "id": "LOG-1790588228823-5952",
     "timestamp": "2026-09-28T09:37:08.823Z",
     "action": "Information Manager: Update \"Haikyu!!\"",

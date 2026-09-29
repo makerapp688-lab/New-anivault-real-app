@@ -246,8 +246,8 @@ async function main() {
           genres.push('Isekai');
         }
 
-        const releaseYear = m.seasonYear || m.startDate?.year || (m.status === 'NOT_YET_RELEASED' ? 2026 : 2020);
-        const episodeCount = m.episodes || (type === 'Movie' ? 1 : 12);
+        const releaseYear = m.seasonYear || m.startDate?.year || null;
+        const episodeCount = m.episodes || (type === 'Movie' ? 1 : null);
         const artworkUrl = m.coverImage?.extraLarge || m.coverImage?.large;
 
         const providerSlug = baseSlug.replace(/_/g, '-');

@@ -39,7 +39,9 @@ import {
   RARETOON_BASE_URL,
   RARETOON_PROVIDER_NAME,
   calculateTotalEpisodes,
-  resolveWatchUrl
+  resolveWatchUrl,
+  getAnimeDetailsPath,
+  parseAnimeIdFromLocation
 } from './utils/provider.ts';
 import { useUserData } from './hooks/useUserData.ts';
 import {
@@ -71,7 +73,17 @@ export function App() {
   const [selectedAudioFilter, setSelectedAudioFilter] = useState<string>('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'title' | 'year' | 'seasons'>('popular');
-  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const routeId = parseAnimeIdFromLocation(
+      window.location.pathname,
+      window.location.search,
+      window.location.hash
+    );
+    if (!routeId) return null;
+    return (fallbackCatalogue as Anime[]).find(a => a.id === routeId) || null;
+  });
+  const [notFoundAnimeId, setNotFoundAnimeId] = useState<string | null>(null);
   const [isFromSurprise, setIsFromSurprise] = useState<boolean>(false);
 
   // Modals & Navigation
@@ -385,25 +397,114 @@ export function App() {
     return filteredAnime.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredAnime, currentPage]);
 
+  const syncUrlToAnime = (animeId: string | null) => {
+    if (typeof window === 'undefined' || !window.history?.pushState) return;
+    const targetPath = animeId ? getAnimeDetailsPath(animeId) : '/';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(animeId ? { animeId } : {}, '', targetPath);
+    }
+  };
+
+  // Resolve direct /anime/{anime-id} shared links on load, catalogue refresh, and browser back/forward
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const resolveCurrentLocationAnime = async () => {
+      const routeId = parseAnimeIdFromLocation(
+        window.location.pathname,
+        window.location.search,
+        window.location.hash
+      );
+
+      if (!routeId) {
+        setNotFoundAnimeId(null);
+        return;
+      }
+
+      const foundInCatalogue = allAnime.find(a => a.id === routeId);
+      if (foundInCatalogue) {
+        setSelectedAnime(foundInCatalogue);
+        setNotFoundAnimeId(null);
+        addToHistory(foundInCatalogue.id);
+        return;
+      }
+
+      if (!catalogueLoaded) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/anime/${encodeURIComponent(routeId)}`);
+        if (res.ok) {
+          const item = await res.json();
+          if (item && item.id) {
+            setSelectedAnime(item);
+            setNotFoundAnimeId(null);
+            addToHistory(item.id);
+            return;
+          }
+        }
+      } catch {}
+
+      setSelectedAnime(null);
+      setNotFoundAnimeId(routeId);
+    };
+
+    resolveCurrentLocationAnime();
+
+    const handlePopState = () => {
+      const routeId = parseAnimeIdFromLocation(
+        window.location.pathname,
+        window.location.search,
+        window.location.hash
+      );
+      if (!routeId) {
+        setSelectedAnime(null);
+        setNotFoundAnimeId(null);
+        setIsFromSurprise(false);
+      } else {
+        resolveCurrentLocationAnime();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [allAnime, catalogueLoaded]);
+
   const handleSelectAnime = (anime: Anime) => {
     setIsFromSurprise(false);
+    setNotFoundAnimeId(null);
     setSelectedAnime(anime);
     addToHistory(anime.id);
+    syncUrlToAnime(anime.id);
   };
 
   const handleSurpriseSelectAnime = (anime: Anime) => {
     setIsFromSurprise(true);
+    setNotFoundAnimeId(null);
     setSelectedAnime(anime);
     addToHistory(anime.id);
+    syncUrlToAnime(anime.id);
   };
 
   const handleSurpriseRollAgain = () => {
     if (allAnime.length > 0) {
       const randomIndex = Math.floor(Math.random() * allAnime.length);
       const randomItem = allAnime[randomIndex];
+      setNotFoundAnimeId(null);
       setSelectedAnime(randomItem);
       addToHistory(randomItem.id);
+      syncUrlToAnime(randomItem.id);
     }
+  };
+
+  const handleCloseAnimeDetails = () => {
+    setSelectedAnime(null);
+    setNotFoundAnimeId(null);
+    setIsFromSurprise(false);
+    syncUrlToAnime(null);
   };
 
   const handleTriggerSync = async () => {
@@ -994,12 +1095,49 @@ export function App() {
       {selectedAnime && (
         <AnimeDetailsModal
           anime={selectedAnime}
-          onClose={() => {
-            setSelectedAnime(null);
-            setIsFromSurprise(false);
-          }}
+          allAnime={allAnime}
+          onClose={handleCloseAnimeDetails}
+          onSelectAnime={handleSelectAnime}
           onRollAgain={isFromSurprise ? handleSurpriseRollAgain : undefined}
         />
+      )}
+
+      {/* Missing / Invalid Shared Anime Link Modal */}
+      {notFoundAnimeId && !selectedAnime && (
+        <div
+          id="anime-not-found-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={handleCloseAnimeDetails}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-slate-900 dark:bg-slate-900 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 p-6 text-center space-y-4 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+              <X className="w-6 h-6" />
+            </div>
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-bold text-white dark:text-white light:text-slate-900">
+                Anime Not Found
+              </h2>
+              <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 leading-relaxed">
+                No verified anime entry with ID{' '}
+                <code className="px-1.5 py-0.5 rounded bg-slate-800 text-rose-300 font-mono">
+                  {notFoundAnimeId}
+                </code>{' '}
+                was found in the Zenime catalogue.
+              </p>
+            </div>
+            <button
+              type="button"
+              id="btn-not-found-return-browse"
+              onClick={handleCloseAnimeDetails}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer"
+            >
+              Return to Zenime Browse
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Production Catalogue Report Modal */}

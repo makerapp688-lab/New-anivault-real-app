@@ -534,15 +534,7 @@ for (const anime of catalogue) {
         }
       ];
     } else {
-      // General TV series or collection
-      // For general TV series without explicit verified registry, check status
-      // If release year is before 2024 and was marked Ongoing, verify
-      if (anime.releaseYear && anime.releaseYear < 2023 && anime.status === 'Ongoing') {
-        // e.g. Baki, Stranger Things, etc.
-        statusAuditLog.push({ id, title, from: anime.status, to: 'Completed', reason: 'Historical Release Concluded' });
-        anime.status = 'Completed';
-        statusesCorrectedCount++;
-      }
+      // General TV series or collection: preserve existing status unless reliable evidence exists (never use releaseYear < 2023 rule)
     }
   }
 

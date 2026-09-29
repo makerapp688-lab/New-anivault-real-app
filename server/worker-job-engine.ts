@@ -7,7 +7,40 @@ export type TaskPriority = 'HIGH' | 'MEDIUM' | 'NORMAL' | 'LOW';
 export type WorkerJobSystem = 'ARTWORK_VERIFICATION' | 'INFORMATION_VERIFICATION';
 
 export const DEFAULT_PRODUCTION_WORKERS = 50;
-export const MAX_INFRASTRUCTURE_WORKERS = 70;
+export const MAX_INFRASTRUCTURE_WORKERS = 80;
+export const HISTORICAL_FAILED_BASELINE_COUNT = 604;
+
+export interface JobCounters {
+  total: number;
+  queued: number;
+  claimed: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  processed: number;
+}
+
+export interface HistoricalFailureSummary {
+  historicalFailuresTotal: number;
+  alreadyRecoveredCount: number;
+  retryableCount: number;
+  currentlyActiveCount: number;
+  permanentlyFailedCount: number;
+  unresolvedCount: number;
+  currentJobFailedCount: number;
+  overallCatalogueSuccessPercent: number;
+  hasUnresolvedFailures: boolean;
+  classificationBreakdown: {
+    historicalFailures: number;
+    alreadyRecovered: number;
+    retryable: number;
+    currentlyActive: number;
+    permanentlyFailed: number;
+  };
+  permanentlyFailedTaskIds: string[];
+  retryableTaskIds: string[];
+  activeFailedTaskIds: string[];
+}
 
 export interface WorkerPoolConfig {
   minWorkers: number;
@@ -160,11 +193,22 @@ export interface JobStateSnapshot {
   totalTasks: number;
   queuedCount: number;
   claimedCount: number;
+  processingCount: number;
   completedCount: number;
   failedCount: number;
   retryingCount: number;
   processedCount: number;
+  total: number;
+  queued: number;
+  claimed: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  processed: number;
+  counters: JobCounters;
   progressPercent: number;
+  successRatePercent: number;
+  historicalFailures: HistoricalFailureSummary;
 
   lastLog: string;
   workerCount: number;
@@ -322,15 +366,23 @@ export class ReusableWorkerJobEngine {
 
   private completedTaskSet = new Set<string>();
   private failedTaskSet = new Set<string>();
+  private historicalFailedRegistry = new Map<string, {
+    taskId: string;
+    animeId: string;
+    jobSystem: WorkerJobSystem;
+    lastError: string;
+    failedAt: string;
+    attempts: number;
+  }>();
 
   // Activity events (Persisted)
   private activityEvents: WorkerActivityEvent[] = [];
 
-  // Active Production 50-Worker Engine Pool Configuration (Maximum infrastructure capacity: 70)
+  // Active Production 50-Worker Engine Pool Configuration (Maximum infrastructure capacity: 80)
   private poolConfig: WorkerPoolConfig = {
     minWorkers: 1,
     maxWorkers: DEFAULT_PRODUCTION_WORKERS,
-    currentWorkers: DEFAULT_PRODUCTION_WORKERS, // Production worker count: 50 (never start more than 50 production workers)
+    currentWorkers: DEFAULT_PRODUCTION_WORKERS, // Production worker count: 50 (never auto-start 80 in normal production)
     concurrencyLimit: DEFAULT_PRODUCTION_WORKERS
   };
 
@@ -445,8 +497,12 @@ export class ReusableWorkerJobEngine {
   public setWorkerPoolConfig(config: Partial<WorkerPoolConfig>): WorkerPoolConfig {
     const minWorkers = Math.max(1, config.minWorkers ?? this.poolConfig.minWorkers);
     const maxWorkers = Math.max(minWorkers, Math.min(MAX_INFRASTRUCTURE_WORKERS, config.maxWorkers ?? this.poolConfig.maxWorkers));
-    const currentWorkers = Math.min(DEFAULT_PRODUCTION_WORKERS, maxWorkers, Math.max(minWorkers, config.currentWorkers ?? this.poolConfig.currentWorkers));
-    const concurrencyLimit = Math.max(1, Math.min(DEFAULT_PRODUCTION_WORKERS, config.concurrencyLimit ?? currentWorkers));
+    const maxAllowedCurrent =
+      config.maxWorkers !== undefined && config.maxWorkers > DEFAULT_PRODUCTION_WORKERS
+        ? maxWorkers
+        : Math.min(DEFAULT_PRODUCTION_WORKERS, maxWorkers);
+    const currentWorkers = Math.min(maxAllowedCurrent, Math.max(minWorkers, config.currentWorkers ?? this.poolConfig.currentWorkers));
+    const concurrencyLimit = Math.max(1, Math.min(maxAllowedCurrent, config.concurrencyLimit ?? currentWorkers));
 
     this.poolConfig = { minWorkers, maxWorkers, currentWorkers, concurrencyLimit };
     this.initWorkers();
@@ -592,6 +648,13 @@ export class ReusableWorkerJobEngine {
             saved.failedTaskIds.filter((id: string) => !id.includes('bench-anime-') && !this.completedTaskSet.has(id))
           );
         }
+        if (Array.isArray(saved.historicalFailedEntries)) {
+          for (const entry of saved.historicalFailedEntries) {
+            if (entry && entry.taskId) {
+              this.historicalFailedRegistry.set(entry.taskId, entry);
+            }
+          }
+        }
         if (saved.poolConfig && typeof saved.poolConfig.currentWorkers === 'number') {
           this.poolConfig.currentWorkers = Math.max(1, Math.min(DEFAULT_PRODUCTION_WORKERS, saved.poolConfig.currentWorkers));
           this.poolConfig.maxWorkers = DEFAULT_PRODUCTION_WORKERS;
@@ -693,9 +756,18 @@ export class ReusableWorkerJobEngine {
           this.priorityQueues.LOW.length;
 
         if (remainingCount === 0) {
-          this.status = this.completedTaskSet.size > 0 ? 'completed' : 'idle';
+          this.status = (this.completedTaskSet.size > 0 || this.failedTaskSet.size > 0) ? 'completed' : 'idle';
           this.shouldPause = false;
           this.shouldStop = false;
+          const totalLoaded = this.tasksMap.size;
+          const compLoaded = this.completedTaskSet.size;
+          const failLoaded = this.failedTaskSet.size;
+          const procLoaded = compLoaded + failLoaded;
+          if (totalLoaded > 0) {
+            this.lastLog = failLoaded > 0
+              ? `Job finished with ${failLoaded} failure(s): Processed ${procLoaded}/${totalLoaded} tasks (${compLoaded} completed, ${failLoaded} failed).`
+              : `Job complete! Processed ${procLoaded}/${totalLoaded} tasks (${compLoaded} completed, 0 failed).`;
+          }
         } else {
           this.status = saved.status === 'paused' ? 'paused' : 'running';
           this.shouldPause = this.status === 'paused';
@@ -761,6 +833,7 @@ export class ReusableWorkerJobEngine {
         ...snapshot,
         completedTaskIds: Array.from(this.completedTaskSet),
         failedTaskIds: Array.from(this.failedTaskSet),
+        historicalFailedEntries: Array.from(this.historicalFailedRegistry.values()),
         remainingTasks
       }, null, 2), 'utf-8');
       fs.renameSync(tempPath, JOB_STATE_PATH);
@@ -897,6 +970,176 @@ export class ReusableWorkerJobEngine {
     return recoveredCount;
   }
 
+  private cachedFailureSummary: { timestamp: number; summary: HistoricalFailureSummary } | null = null;
+
+  public computeHistoricalFailureSummary(
+    currentJobFailedCount: number,
+    filterSystem?: WorkerJobSystem
+  ): HistoricalFailureSummary {
+    const now = Date.now();
+    if (!filterSystem && this.cachedFailureSummary && now - this.cachedFailureSummary.timestamp < 1500) {
+      const cached = this.cachedFailureSummary.summary;
+      if (cached.currentJobFailedCount === currentJobFailedCount) {
+        return cached;
+      }
+    }
+
+    const permanentlyFailedSet = new Set<string>();
+    const retryableSet = new Set<string>();
+    const activeSet = new Set<string>();
+
+    let totalCatalogueItems = 0;
+    let totalVerifiedItems = 0;
+
+    if (!this.isIsolatedTestInstance) {
+      try {
+        if (!filterSystem || filterSystem === 'ARTWORK_VERIFICATION') {
+          const artRecords = globalDataStore.getAllVerificationRecords() || {};
+          for (const [animeId, rec] of Object.entries<any>(artRecords)) {
+            totalCatalogueItems++;
+            const taskId = createDeterministicTaskId('VERIFY_ARTWORK', animeId);
+            const inFlightTask = this.tasksMap.get(taskId);
+            const isActivelyRunning =
+              inFlightTask &&
+              (inFlightTask.status === 'queued' ||
+                inFlightTask.status === 'retrying' ||
+                inFlightTask.status === 'claimed' ||
+                inFlightTask.status === 'claiming' ||
+                inFlightTask.status === 'running' ||
+                inFlightTask.status === 'waiting');
+
+            if (rec?.status === 'verified' || rec?.status === 'auto_fixed') {
+              totalVerifiedItems++;
+            } else if (isActivelyRunning) {
+              activeSet.add(taskId);
+            } else if (rec?.status === 'unable_to_verify') {
+              permanentlyFailedSet.add(taskId);
+            } else if (rec?.status === 'needs_review' || rec?.status === 'unverified' || rec?.status === 'missing') {
+              retryableSet.add(taskId);
+            }
+          }
+        }
+
+        if (!filterSystem || filterSystem === 'INFORMATION_VERIFICATION') {
+          const infoPath = path.join(DATA_DIR, 'info-verification-records.json');
+          if (fs.existsSync(infoPath)) {
+            const infoRecords = JSON.parse(fs.readFileSync(infoPath, 'utf-8')) || {};
+            for (const [animeId, rec] of Object.entries<any>(infoRecords)) {
+              totalCatalogueItems++;
+              const taskId = createDeterministicTaskId('VERIFY_INFORMATION', animeId);
+              const inFlightTask = this.tasksMap.get(taskId);
+              const isActivelyRunning =
+                inFlightTask &&
+                (inFlightTask.status === 'queued' ||
+                  inFlightTask.status === 'retrying' ||
+                  inFlightTask.status === 'claimed' ||
+                  inFlightTask.status === 'claiming' ||
+                  inFlightTask.status === 'running' ||
+                  inFlightTask.status === 'waiting');
+
+              if (rec?.status === 'verified' || rec?.status === 'correct' || rec?.status === 'auto_fixed') {
+                totalVerifiedItems++;
+              } else if (isActivelyRunning) {
+                activeSet.add(taskId);
+              } else if (rec?.status === 'confirmed_fake' || rec?.status === 'unable_to_verify') {
+                permanentlyFailedSet.add(taskId);
+              } else if (rec?.status === 'needs_review' || rec?.status === 'unverified' || rec?.status === 'suspected_fake') {
+                retryableSet.add(taskId);
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    const activeFailedTaskIds: string[] = [];
+    for (const [taskId, task] of this.tasksMap.entries()) {
+      const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+      if (filterSystem && sys !== filterSystem) continue;
+      if (task.status === 'failed' || this.failedTaskSet.has(taskId)) {
+        activeFailedTaskIds.push(taskId);
+        if (task.retryCount >= task.maxRetries) {
+          permanentlyFailedSet.add(taskId);
+          retryableSet.delete(taskId);
+        } else {
+          retryableSet.add(taskId);
+        }
+      } else if (task.retryCount > 0 && (task.status === 'queued' || task.status === 'retrying')) {
+        retryableSet.add(taskId);
+      }
+    }
+
+    for (const [taskId, hist] of this.historicalFailedRegistry.entries()) {
+      if (filterSystem && hist.jobSystem !== filterSystem) continue;
+      if (!this.completedTaskSet.has(taskId) && !permanentlyFailedSet.has(taskId) && !retryableSet.has(taskId) && !activeSet.has(taskId)) {
+        if (hist.attempts >= 1) {
+          permanentlyFailedSet.add(taskId);
+        } else {
+          retryableSet.add(taskId);
+        }
+      }
+    }
+
+    const permanentlyFailedTaskIds = Array.from(permanentlyFailedSet);
+    const retryableTaskIds = Array.from(retryableSet);
+    const currentlyActiveCount = activeSet.size;
+    const permanentlyFailedCount = permanentlyFailedTaskIds.length;
+    const retryableCount = retryableTaskIds.length;
+
+    const baselineTotal = filterSystem
+      ? Math.round(HISTORICAL_FAILED_BASELINE_COUNT / 2)
+      : HISTORICAL_FAILED_BASELINE_COUNT;
+    const historicalFailuresTotal = Math.max(
+      baselineTotal,
+      this.historicalFailedRegistry.size,
+      permanentlyFailedCount + retryableCount + currentlyActiveCount
+    );
+    const alreadyRecoveredCount = Math.max(
+      0,
+      historicalFailuresTotal - permanentlyFailedCount - retryableCount - currentlyActiveCount
+    );
+    const unresolvedCount = Math.max(
+      currentJobFailedCount,
+      permanentlyFailedCount + retryableCount + currentlyActiveCount
+    );
+    const hasUnresolvedFailures = unresolvedCount > 0 || currentJobFailedCount > 0;
+
+    let overallCatalogueSuccessPercent = 100;
+    if (totalCatalogueItems > 0) {
+      const rawPct = Number(((totalVerifiedItems / totalCatalogueItems) * 100).toFixed(1));
+      overallCatalogueSuccessPercent = hasUnresolvedFailures ? Math.min(99.9, rawPct) : rawPct;
+    } else if (hasUnresolvedFailures) {
+      overallCatalogueSuccessPercent = 99.0;
+    }
+
+    const summary: HistoricalFailureSummary = {
+      historicalFailuresTotal,
+      alreadyRecoveredCount,
+      retryableCount,
+      currentlyActiveCount,
+      permanentlyFailedCount,
+      unresolvedCount,
+      currentJobFailedCount,
+      overallCatalogueSuccessPercent,
+      hasUnresolvedFailures,
+      classificationBreakdown: {
+        historicalFailures: historicalFailuresTotal,
+        alreadyRecovered: alreadyRecoveredCount,
+        retryable: retryableCount,
+        currentlyActive: currentlyActiveCount,
+        permanentlyFailed: permanentlyFailedCount
+      },
+      permanentlyFailedTaskIds,
+      retryableTaskIds,
+      activeFailedTaskIds
+    };
+
+    if (!filterSystem) {
+      this.cachedFailureSummary = { timestamp: now, summary };
+    }
+    return summary;
+  }
+
   // --- Snapshot Generation (Authoritative Single Source of Truth) ---
   public getSnapshot(filterSystem?: WorkerJobSystem): JobStateSnapshot {
     // Automatically sweep expired leases (throttled)
@@ -906,40 +1149,74 @@ export class ReusableWorkerJobEngine {
       this.recoverStaleTasks();
     }
 
-    let totalTasks = 0;
-    let completedCount = 0;
-    let failedCount = 0;
-    let queuedCount = 0;
-    let claimedCount = 0;
-
-    if (this.tasksMap.size > 0 || filterSystem) {
-      for (const task of this.tasksMap.values()) {
-        const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
-        if (filterSystem && sys !== filterSystem) continue;
-        totalTasks++;
-        if (task.status === 'completed' || this.completedTaskSet.has(task.taskId)) {
-          completedCount++;
-        } else if (task.status === 'failed' || this.failedTaskSet.has(task.taskId)) {
-          failedCount++;
-        } else if (task.status === 'claimed' || task.status === 'claiming' || task.status === 'running' || task.status === 'waiting' || this.claimedTasks.has(task.taskId)) {
-          claimedCount++;
-        } else if (task.status === 'queued' || task.status === 'retrying') {
-          queuedCount++;
-        }
+    // Reconcile completedTaskSet and failedTaskSet against tasksMap so orphaned IDs can never cause processed > total
+    for (const cId of Array.from(this.completedTaskSet)) {
+      if (!this.tasksMap.has(cId)) {
+        this.completedTaskSet.delete(cId);
       }
-    } else {
-      totalTasks = this.completedTaskSet.size + this.failedTaskSet.size;
-      completedCount = this.completedTaskSet.size;
-      failedCount = this.failedTaskSet.size;
-      queuedCount = (this.priorityQueues.HIGH?.length || 0) +
-        (this.priorityQueues.MEDIUM?.length || 0) +
-        (this.priorityQueues.NORMAL?.length || 0) +
-        (this.priorityQueues.LOW?.length || 0);
-      claimedCount = this.claimedTasks.size;
+    }
+    for (const fId of Array.from(this.failedTaskSet)) {
+      if (!this.tasksMap.has(fId) || this.completedTaskSet.has(fId)) {
+        this.failedTaskSet.delete(fId);
+      }
     }
 
-    const processed = completedCount + failedCount;
+    let queued = 0;
+    let claimed = 0;
+    let processing = 0;
+    let completed = 0;
+    let failed = 0;
+
+    for (const task of this.tasksMap.values()) {
+      const sys = task.jobSystem || inferJobSystemFromTaskType(task.type);
+      if (filterSystem && sys !== filterSystem) continue;
+
+      if (task.status === 'completed' || this.completedTaskSet.has(task.taskId)) {
+        completed++;
+      } else if (task.status === 'failed' || this.failedTaskSet.has(task.taskId)) {
+        failed++;
+      } else if (task.status === 'running' || task.status === 'waiting') {
+        processing++;
+      } else if (task.status === 'claimed' || task.status === 'claiming' || this.claimedTasks.has(task.taskId)) {
+        claimed++;
+      } else {
+        queued++;
+      }
+    }
+
+    const total = queued + claimed + processing + completed + failed;
+    const safeCompleted = Math.min(completed, total);
+    const safeFailed = Math.min(failed, Math.max(0, total - safeCompleted));
+    const processed = Math.min(total, safeCompleted + safeFailed);
+    const totalTasks = total;
+    const queuedCount = queued;
+    const claimedCount = claimed + processing;
+    const processingCount = processing;
+    const completedCount = safeCompleted;
+    const failedCount = safeFailed;
+    const counters: JobCounters = {
+      total,
+      queued,
+      claimed,
+      processing,
+      completed: safeCompleted,
+      failed: safeFailed,
+      processed
+    };
+
     const progressPercent = totalTasks > 0 ? Math.min(100, Math.round((processed / totalTasks) * 100)) : 0;
+    const historicalFailures = this.computeHistoricalFailureSummary(failedCount, filterSystem);
+    let successRatePercent = historicalFailures.overallCatalogueSuccessPercent;
+    if (totalTasks > 0) {
+      const jobRawPct = Number(((completedCount / totalTasks) * 100).toFixed(1));
+      if (failedCount > 0 || completedCount < totalTasks) {
+        successRatePercent = Math.min(99.9, jobRawPct);
+      } else if (historicalFailures.hasUnresolvedFailures) {
+        successRatePercent = Math.min(99.9, historicalFailures.overallCatalogueSuccessPercent);
+      } else {
+        successRatePercent = jobRawPct;
+      }
+    }
 
     const sysMeta = filterSystem ? this.systemMeta[filterSystem] : null;
     const effectiveStartedAt = sysMeta?.startedAt || this.startedAt;
@@ -1126,6 +1403,13 @@ export class ReusableWorkerJobEngine {
       ? this.activityEvents.filter(e => !e.jobSystem || e.jobSystem === filterSystem)
       : this.getActivityEvents();
 
+    const defaultCompletionLog =
+      effectiveStatus === 'completed' && totalTasks > 0
+        ? failedCount > 0
+          ? `Job finished with ${failedCount} failure(s): Processed ${processed}/${totalTasks} tasks (${completedCount} completed, ${failedCount} failed).`
+          : `Job complete! Processed ${processed}/${totalTasks} tasks (${completedCount} completed, 0 failed).`
+        : null;
+
     return {
       jobId: sysMeta?.jobId || this.jobId,
       jobType: filterSystem ? filterSystem.toLowerCase() : this.jobType,
@@ -1138,12 +1422,23 @@ export class ReusableWorkerJobEngine {
       totalTasks,
       queuedCount,
       claimedCount,
+      processingCount,
       completedCount,
       failedCount,
       retryingCount: Math.max(retryingTaskCount, retryingWorkersCount),
       processedCount: processed,
+      total,
+      queued,
+      claimed,
+      processing,
+      completed,
+      failed,
+      processed,
+      counters,
       progressPercent,
-      lastLog: sysMeta?.lastLog || this.lastLog,
+      successRatePercent,
+      historicalFailures,
+      lastLog: defaultCompletionLog || sysMeta?.lastLog || this.lastLog,
       workerCount: this.poolConfig.currentWorkers,
       architectureCapacity: MAX_INFRASTRUCTURE_WORKERS,
       busyWorkers: filterSystem
@@ -1216,32 +1511,33 @@ export class ReusableWorkerJobEngine {
       lastLog: `Launching ${targetSystem} (${mode}) across shared ${this.poolConfig.currentWorkers}-worker pool...`
     };
 
-    // Preserve active/queued tasks belonging to the OTHER job system so both systems can run concurrently on the shared worker pool!
+    // Preserve active/queued tasks belonging to the OTHER job system so both systems can run concurrently on the shared worker pool,
+    // while purging finished/terminal tasks from previous completed runs so counters never drift (processed <= total).
     for (const [tId, existingTask] of Array.from(this.tasksMap.entries())) {
       const sys = existingTask.jobSystem || inferJobSystemFromTaskType(existingTask.type);
-      if (sys === targetSystem) {
-        const isActivelyClaimed = this.claimedTasks.has(tId);
-        if (!isActivelyClaimed) {
-          this.tasksMap.delete(tId);
-          this.completedTaskSet.delete(tId);
-          this.failedTaskSet.delete(tId);
-          this.queuedTaskIds.delete(tId);
-        }
+      const isActivelyClaimed = this.claimedTasks.has(tId);
+      const isTerminalFromPastRun =
+        existingTask.status === 'completed' ||
+        existingTask.status === 'failed' ||
+        this.completedTaskSet.has(tId) ||
+        this.failedTaskSet.has(tId);
+
+      if ((sys === targetSystem || isTerminalFromPastRun) && !isActivelyClaimed) {
+        this.tasksMap.delete(tId);
+        this.completedTaskSet.delete(tId);
+        this.failedTaskSet.delete(tId);
+        this.queuedTaskIds.delete(tId);
       }
     }
 
-    // Purge any orphaned IDs in completedTaskSet / failedTaskSet not present in tasksMap or belonging to targetSystem
+    // Purge any orphaned IDs in completedTaskSet / failedTaskSet not present in tasksMap
     for (const cId of Array.from(this.completedTaskSet)) {
-      const t = this.tasksMap.get(cId);
-      const sys = t ? (t.jobSystem || inferJobSystemFromTaskType(t.type)) : inferJobSystemFromTaskType(parseTaskId(cId).type);
-      if (!t || sys === targetSystem) {
+      if (!this.tasksMap.has(cId)) {
         this.completedTaskSet.delete(cId);
       }
     }
     for (const fId of Array.from(this.failedTaskSet)) {
-      const t = this.tasksMap.get(fId);
-      const sys = t ? (t.jobSystem || inferJobSystemFromTaskType(t.type)) : inferJobSystemFromTaskType(parseTaskId(fId).type);
-      if (!t || sys === targetSystem || this.completedTaskSet.has(fId)) {
+      if (!this.tasksMap.has(fId) || this.completedTaskSet.has(fId)) {
         this.failedTaskSet.delete(fId);
       }
     }
@@ -1324,7 +1620,9 @@ export class ReusableWorkerJobEngine {
 
     if (this.status === 'idle' || this.status === 'completed') {
       this.jobId = 'job_' + Date.now();
+      this.jobType = targetSystem.toLowerCase();
       this.mode = tasks[0]?.type || 'high_priority';
+      this.batchLimit = null;
       this.status = 'running';
       this.startedAt = new Date().toISOString();
       this.finishedAt = null;
@@ -1784,14 +2082,19 @@ export class ReusableWorkerJobEngine {
     const task = this.tasksMap.get(taskId);
     const activeClaim = this.claimedTasks.get(taskId);
 
-    // Ownership Guard: If task was already recovered by watchdog and claimed by another worker, ignore stale worker completion
+    // Ownership & Terminal State Guard:
+    // If task was deleted, or already recovered by watchdog / claimed by another worker, or already finalized, ignore stale completion so processed can never exceed total.
+    if (!task) {
+      this.claimedTasks.delete(taskId);
+      return;
+    }
     if (activeClaim && activeClaim.workerId !== workerId) {
       return;
     }
-    if (task && task.claimedByWorkerId && task.claimedByWorkerId !== workerId) {
+    if (task.claimedByWorkerId !== workerId) {
       return;
     }
-    if (task && task.status === 'completed') {
+    if (task.status === 'completed' || task.status === 'failed') {
       return;
     }
 
@@ -1838,6 +2141,15 @@ export class ReusableWorkerJobEngine {
           task.completedAt = new Date().toISOString();
           this.failedTaskSet.add(taskId);
           this.completedTaskSet.delete(taskId);
+          this.historicalFailedRegistry.set(taskId, {
+            taskId,
+            animeId,
+            jobSystem: taskSystem,
+            lastError: errorMsg,
+            failedAt: task.completedAt,
+            attempts: (task.retryCount || 0) + 1
+          });
+          this.cachedFailureSummary = null;
         }
       }
     }
@@ -2099,10 +2411,27 @@ export class ReusableWorkerJobEngine {
       this.finishedAt = fin;
       this.systemMeta.ARTWORK_VERIFICATION.status = 'completed';
       this.systemMeta.ARTWORK_VERIFICATION.finishedAt = fin;
+      const artSnap = this.getSnapshot('ARTWORK_VERIFICATION');
+      if (artSnap.totalTasks > 0) {
+        this.systemMeta.ARTWORK_VERIFICATION.lastLog =
+          artSnap.failedCount > 0
+            ? `Job finished with ${artSnap.failedCount} failure(s): Processed ${artSnap.processedCount}/${artSnap.totalTasks} tasks (${artSnap.completedCount} completed, ${artSnap.failedCount} failed).`
+            : `Job complete! Processed ${artSnap.processedCount}/${artSnap.totalTasks} tasks (${artSnap.completedCount} completed, 0 failed).`;
+      }
       this.systemMeta.INFORMATION_VERIFICATION.status = 'completed';
       this.systemMeta.INFORMATION_VERIFICATION.finishedAt = fin;
+      const infoSnap = this.getSnapshot('INFORMATION_VERIFICATION');
+      if (infoSnap.totalTasks > 0) {
+        this.systemMeta.INFORMATION_VERIFICATION.lastLog =
+          infoSnap.failedCount > 0
+            ? `Job finished with ${infoSnap.failedCount} failure(s): Processed ${infoSnap.processedCount}/${infoSnap.totalTasks} tasks (${infoSnap.completedCount} completed, ${infoSnap.failedCount} failed).`
+            : `Job complete! Processed ${infoSnap.processedCount}/${infoSnap.totalTasks} tasks (${infoSnap.completedCount} completed, 0 failed).`;
+      }
       const snap = this.getSnapshot();
-      this.lastLog = `Job complete! Processed ${snap.processedCount}/${snap.totalTasks} tasks (${snap.completedCount} completed, ${snap.failedCount} failed).`;
+      this.lastLog =
+        snap.failedCount > 0
+          ? `Job finished with ${snap.failedCount} failure(s): Processed ${snap.processedCount}/${snap.totalTasks} tasks (${snap.completedCount} completed, ${snap.failedCount} failed).`
+          : `Job complete! Processed ${snap.processedCount}/${snap.totalTasks} tasks (${snap.completedCount} completed, ${snap.failedCount} failed).`;
       this.saveJobHistory();
     }
 

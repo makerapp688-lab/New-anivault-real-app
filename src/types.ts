@@ -1,4 +1,4 @@
-export type AnimeStatus = 'Completed' | 'Ongoing' | 'Upcoming';
+export type AnimeStatus = 'Completed' | 'Ongoing' | 'Upcoming' | 'Unknown';
 export type AnimeType = 'TV' | 'Movie' | 'OVA' | 'ONA' | 'Special' | 'Collection';
 
 export interface Artwork {
@@ -24,17 +24,18 @@ export interface Episode {
   canonicalUrl: string;
 }
 
-export type EpisodeListStatus = 'complete' | 'partial' | 'empty';
+export type EpisodeListStatus = 'complete' | 'partial' | 'empty' | 'unknown';
 
 export interface Season {
   seasonNumber: number;
   title: string;
   canonicalUrl: string;
-  episodeCount: number;
-  authoritativeEpisodeCount?: number;
+  episodeCount: number | null;
+  authoritativeEpisodeCount?: number | null;
   importedEpisodeCount?: number;
   isEpisodeListComplete?: boolean;
   episodeListStatus?: EpisodeListStatus;
+  episodeImportStatus?: EpisodeListStatus;
   episodes: Episode[];
 }
 
@@ -46,18 +47,21 @@ export interface Anime {
   alternateTitle: string | null;
   japaneseTitle?: string | null;
   synopsis: string;
-  releaseYear: number;
+  releaseYear: number | null;
   releaseDate?: string | null;
   status: AnimeStatus;
   type: AnimeType;
   genres: string[];
   artwork: Artwork;
   bannerArtwork?: string | null;
-  totalEpisodes?: number;
-  authoritativeTotalEpisodes?: number;
+  totalEpisodes?: number | null;
+  authoritativeTotalEpisodes?: number | null;
+  authoritativeEpisodeCount?: number | null;
   importedEpisodesCount?: number;
+  importedEpisodeCount?: number;
   isEpisodeListComplete?: boolean;
   episodeListStatus?: EpisodeListStatus;
+  episodeImportStatus?: EpisodeListStatus;
   totalSeasons?: number;
   seasonsCount?: number;
   runtime?: string | null;

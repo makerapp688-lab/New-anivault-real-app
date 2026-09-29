@@ -362,38 +362,133 @@ class InformationManagerEngine {
       errors: string[];
     }
   >();
+  private jikanInflightRequests = new Map<string, Promise<any>>();
+  private lastJikanRequestAt = 0;
 
   /**
-   * Sanitize persisted candidates by removing non-anime TVMaze fallback noise and backfilling cached AniList identity
+   * Execute a Jikan/MyAnimeList metadata request with shared cache lookup, singleflight deduplication,
+   * rate-limit pacing, and automatic backoff retry on transient HTTP 429/5xx or network failures.
+   */
+  private async executeJikanMetadataRequest<T = any>(
+    cacheKey: string,
+    fetcher: () => Promise<{ success: boolean; matches: T[]; statusCode?: number; error?: string }>
+  ): Promise<{ success: boolean; matches: T[]; statusCode?: number; error?: string }> {
+    const cached = globalSourceGateway.getCached<T[]>(cacheKey);
+    if (cached !== null) {
+      return { success: true, matches: cached, statusCode: 200 };
+    }
+
+    const existingInflight = this.jikanInflightRequests.get(cacheKey);
+    if (existingInflight) {
+      return existingInflight;
+    }
+
+    const runPromise = (async () => {
+      const maxAttempts = 3;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const now = Date.now();
+        const waitMs = Math.max(0, this.lastJikanRequestAt + 420 - now);
+        if (waitMs > 0) {
+          await new Promise(r => setTimeout(r, waitMs));
+        }
+        this.lastJikanRequestAt = Date.now();
+
+        const res = await fetcher();
+        if (res.success) {
+          globalSourceGateway.setCached(cacheKey, res.matches);
+          return res;
+        }
+
+        const isTransient =
+          !res.statusCode ||
+          res.statusCode === 408 ||
+          res.statusCode === 429 ||
+          res.statusCode >= 500;
+        if (!isTransient || attempt === maxAttempts) {
+          return res;
+        }
+        const backoffMs = 500 * attempt;
+        await new Promise(r => setTimeout(r, backoffMs));
+      }
+      return { success: false, matches: [], error: 'Jikan metadata request exhausted retries' };
+    })();
+
+    this.jikanInflightRequests.set(cacheKey, runPromise);
+    try {
+      return await runPromise;
+    } finally {
+      this.jikanInflightRequests.delete(cacheKey);
+    }
+  }
+
+  /**
+   * Extract and validate cached AniList match from artwork-verification-records.
+   * Only accepts matches with strong identity agreement (confidence >= 0.80) and no season/format contradiction.
+   */
+  private extractValidatedArtMatchCandidate(anime: any): InfoMetadataCandidate | null {
+    if (!anime?.id) return null;
+    const artMatch = this.artworkAniListMatches.get(anime.id);
+    if (!artMatch || !artMatch.id) return null;
+
+    const rawScore =
+      typeof artMatch.score === 'number'
+        ? artMatch.score
+        : typeof artMatch.similarityScore === 'number'
+        ? artMatch.similarityScore
+        : 0;
+    if (rawScore > 0 && rawScore < 0.78) return null;
+
+    const eng =
+      (typeof artMatch.englishTitle === 'string' && artMatch.englishTitle.trim()) ||
+      (typeof artMatch.title?.english === 'string' && artMatch.title.english.trim()) ||
+      (typeof artMatch.title === 'string' && artMatch.title.trim()) ||
+      '';
+    const rom =
+      (typeof artMatch.romajiTitle === 'string' && artMatch.romajiTitle.trim()) ||
+      (typeof artMatch.title?.romaji === 'string' && artMatch.title.romaji.trim()) ||
+      '';
+    const titles = Array.from(new Set([eng, rom].filter(Boolean)));
+    if (titles.length === 0) return null;
+
+    const cleanedInfo = cleanAnimeTitle(anime.title || '');
+    const searchQuery = cleanedInfo.cleaned || anime.title || '';
+    const mappedType = artMatch.format ? mapAniListFormat(artMatch.format) : (anime.type || 'TV');
+    const releaseYear = Number(artMatch.year || artMatch.seasonYear || 0) || undefined;
+
+    const confidence = this.scoreCandidateConfidence(anime, searchQuery, {
+      sourceId: artMatch.id,
+      titles,
+      type: mappedType,
+      releaseYear
+    });
+
+    if (confidence < 0.80) return null;
+
+    return {
+      source: 'AniList',
+      sourceId: artMatch.id,
+      confidence,
+      title: eng || rom,
+      alternateTitle: rom && rom !== eng ? rom : null,
+      japaneseTitle: rom || null,
+      type: mappedType,
+      releaseYear
+    };
+  }
+
+  /**
+   * Sanitize persisted candidates by removing non-anime TVMaze fallback noise while preserving
+   * any weak AniList/MyAnimeList candidates so weak evidence is never hidden or overwritten.
    */
   private sanitizePersistedCandidates(anime: any, existingCandidates: InfoMetadataCandidate[] = []): InfoMetadataCandidate[] {
     const trusted = existingCandidates.filter(c => c && c.source !== 'TVMaze');
-    if (trusted.length === 0 && anime?.id) {
-      const artMatch = this.artworkAniListMatches.get(anime.id);
-      if (artMatch && artMatch.id) {
-        const cleanedInfo = cleanAnimeTitle(anime.title || '');
-        const searchQuery = cleanedInfo.cleaned || anime.title || '';
-        const eng = artMatch.title?.english || '';
-        const rom = artMatch.title?.romaji || '';
-        const mappedType = mapAniListFormat(artMatch.format);
-        const confidence = this.scoreCandidateConfidence(anime, searchQuery, {
-          sourceId: artMatch.id,
-          titles: [eng, rom].filter(Boolean),
-          type: mappedType,
-          releaseYear: artMatch.seasonYear || undefined
-        });
-        trusted.push({
-          source: 'AniList',
-          sourceId: artMatch.id,
-          confidence,
-          title: eng || rom || anime.title,
-          alternateTitle: rom && rom !== eng ? rom : null,
-          japaneseTitle: rom || null,
-          type: mappedType,
-          releaseYear: artMatch.seasonYear || anime.releaseYear || undefined
-        });
+    if (trusted.length === 0) {
+      const validArtCand = this.extractValidatedArtMatchCandidate(anime);
+      if (validArtCand) {
+        trusted.push(validArtCand);
       }
     }
+    trusted.sort((a, b) => b.confidence - a.confidence);
     return trusted;
   }
 
@@ -814,7 +909,9 @@ class InformationManagerEngine {
     };
 
     const topCandidate = candidates.length > 0 ? candidates[0] : null;
-    const secondCandidate = candidates.length > 1 ? candidates[1] : null;
+    const secondCandidate =
+      candidates.find(c => topCandidate && c.source !== topCandidate.source) ||
+      (candidates.length > 1 ? candidates[1] : null);
     const cleanedTitleInfo = cleanAnimeTitle(anime.title || '');
 
     // 1. Anime Title Check (Allow valid 1-letter alphanumeric titles such as "K")
@@ -947,8 +1044,10 @@ class InformationManagerEngine {
     // A. authoritative episode count (s.authoritativeEpisodeCount || s.episodeCount)
     // B. imported episode records (s.importedEpisodeCount ?? s.episodes.length)
     // C. whether the episode list is complete (isEpisodeListComplete)
-    // Only flag discrepancy if authoritative count <= 0 and imported count <= 0, OR if imported count exceeds declared authoritative count.
+    // Also detect uncertain season mapping where a multi-season TV series has every season collapsed to <= 1 episode
+    // (e.g. Naruto 9 seasons x 1 ep = 9 vs 220, Naruto: Shippuden 16 seasons x 1 ep = 16 vs 500, Horimiya: The Missing Pieces 2 seasons x 1 ep = 2 vs 13).
     let sumSeasonEpisodes = 0;
+    let seasonsWithAtMostOneEp = 0;
     const brokenSeasons: string[] = [];
     for (const s of seasonsArr) {
       const epListLen = Array.isArray(s.episodes) ? s.episodes.length : 0;
@@ -958,13 +1057,30 @@ class InformationManagerEngine {
           : typeof s.episodeCount === 'number' && s.episodeCount > 0
           ? s.episodeCount
           : epListLen;
-      sumSeasonEpisodes += sCount > 0 ? sCount : epListLen;
+      const effectiveSeasonEp = sCount > 0 ? sCount : epListLen;
+      sumSeasonEpisodes += effectiveSeasonEp;
+      if (effectiveSeasonEp <= 1) seasonsWithAtMostOneEp++;
       if (sCount <= 0 && epListLen <= 0) {
         brokenSeasons.push(`Season ${s.seasonNumber || '?'}`);
       } else if (epListLen > sCount) {
         brokenSeasons.push(`Season ${s.seasonNumber} (declared ${sCount} < ${epListLen} imported episodes)`);
       }
     }
+
+    const isMultiSeasonCollapsedToSingleEpisodes =
+      anime.type === 'TV' &&
+      actualSeasonsLen >= 2 &&
+      seasonsWithAtMostOneEp === actualSeasonsLen &&
+      sumSeasonEpisodes === actualSeasonsLen;
+
+    if (isMultiSeasonCollapsedToSingleEpisodes) {
+      brokenSeasons.push(
+        `All ${actualSeasonsLen} seasons have only 1 episode recorded (total ${sumSeasonEpisodes} episodes${
+          topCandidate?.totalEpisodes ? ` vs ${topCandidate.totalEpisodes} on ${topCandidate.source}` : ''
+        }); per-season episode distribution is uncertain`
+      );
+    }
+
     if (brokenSeasons.length > 0) {
       checkedFields.seasonEpisodes = 'mismatch';
       discrepancies.push({
@@ -972,9 +1088,11 @@ class InformationManagerEngine {
         label: 'Season Episode Counts',
         severity: 'medium',
         currentValue: brokenSeasons.join('; '),
-        suggestedValue: 'Synchronize season episode counts with episode list',
-        source: 'Season Structure Audit',
-        message: `Season-specific episode count discrepancy in: ${brokenSeasons.join(', ')}`
+        suggestedValue: topCandidate?.totalEpisodes
+          ? `Review season mapping (${topCandidate.source} reports ${topCandidate.totalEpisodes} total episodes across series)`
+          : 'Review season-specific episode counts',
+        source: topCandidate?.source || 'Season Structure Audit',
+        message: `Season-specific episode count discrepancy: ${brokenSeasons.join(', ')}`
       });
     }
 
@@ -982,7 +1100,7 @@ class InformationManagerEngine {
     const currentTotalEp = typeof anime.totalEpisodes === 'number' ? anime.totalEpisodes : 0;
     if (currentTotalEp <= 0) {
       checkedFields.totalEpisodes = 'missing';
-      const suggestedEp = sumSeasonEpisodes > 0 ? sumSeasonEpisodes : (topCandidate?.totalEpisodes || (anime.type === 'Movie' ? 1 : 12));
+      const suggestedEp = sumSeasonEpisodes > 0 ? sumSeasonEpisodes : (topCandidate?.totalEpisodes || null);
       discrepancies.push({
         field: 'totalEpisodes',
         label: 'Total Episode Count',
@@ -990,7 +1108,7 @@ class InformationManagerEngine {
         currentValue: currentTotalEp,
         suggestedValue: suggestedEp,
         source: topCandidate?.source || 'Episode Counter',
-        message: `Total episode count is ${currentTotalEp}. Suggested: ${suggestedEp}.`
+        message: `Total episode count is ${currentTotalEp}.${suggestedEp ? ` Suggested: ${suggestedEp}.` : ''}`
       });
     } else if (sumSeasonEpisodes > 0 && currentTotalEp !== sumSeasonEpisodes) {
       checkedFields.totalEpisodes = 'mismatch';
@@ -1004,11 +1122,11 @@ class InformationManagerEngine {
         message: `Total episodes (${currentTotalEp}) does not match sum of season episodes (${sumSeasonEpisodes}).`
       });
     } else if (
-      topCandidate?.totalEpisodes &&
-      topCandidate.confidence >= 0.88 &&
-      actualSeasonsLen <= 1 &&
-      Math.abs(currentTotalEp - topCandidate.totalEpisodes) > 0 &&
-      sumSeasonEpisodes === 0
+      isMultiSeasonCollapsedToSingleEpisodes ||
+      (topCandidate?.totalEpisodes &&
+        topCandidate.confidence >= 0.88 &&
+        actualSeasonsLen <= 1 &&
+        Math.abs(currentTotalEp - topCandidate.totalEpisodes) > 0)
     ) {
       checkedFields.totalEpisodes = 'mismatch';
       discrepancies.push({
@@ -1016,9 +1134,11 @@ class InformationManagerEngine {
         label: 'Total Episode Count',
         severity: 'medium',
         currentValue: currentTotalEp,
-        suggestedValue: topCandidate.totalEpisodes,
-        source: topCandidate.source,
-        message: `${topCandidate.source} reports ${topCandidate.totalEpisodes} episodes vs catalogue ${currentTotalEp}.`
+        suggestedValue: topCandidate?.totalEpisodes || null,
+        source: topCandidate?.source || 'Season Episode Audit',
+        message: topCandidate?.totalEpisodes
+          ? `${topCandidate.source} reports ${topCandidate.totalEpisodes} episodes vs catalogue ${currentTotalEp} (${actualSeasonsLen} season(s)).`
+          : `Multi-season TV entry has only ${currentTotalEp} total episodes across ${actualSeasonsLen} seasons (1 episode per season).`
       });
     }
 
@@ -1278,24 +1398,63 @@ class InformationManagerEngine {
     }
 
     // Determine overall status, real multi-factor confidence, & clear human-readable statusLabel
-    // Identity Priority: 1. MAL/Jikan ID -> 2. AniList ID -> 3. Rare Toon canonical URL/provider ID -> 4. title + year + type
-    const artMatch = this.artworkAniListMatches.get(anime.id);
+    // Rule 1: An external ID ALONE must NEVER be enough for Verified.
+    // Rule 2: Verified requires strong identity match, reliable evidence, sufficient core metadata support, and no unresolved strong source conflict.
+    // Rule 9: Identity Priority: 1. Strong MAL/Jikan ID -> 2. Strong AniList ID -> 3. Rare Toon canonical URL/provider ID -> 4. Strong title + year + type.
+    const validArtCandidate = candidates.length === 0 ? this.extractValidatedArtMatchCandidate(anime) : null;
+
+    let bestTopCandidateTitleSim = 0;
+    if (topCandidate) {
+      const refTitles = [cleanedTitleInfo.cleaned, anime.title, anime.alternateTitle, anime.japaneseTitle]
+        .filter((t): t is string => Boolean(t && typeof t === 'string' && t.trim()))
+        .map(t => t.trim());
+      const candTitles = [topCandidate.title, topCandidate.alternateTitle, topCandidate.japaneseTitle]
+        .filter((t): t is string => Boolean(t && typeof t === 'string' && t.trim()))
+        .map(t => t.trim());
+      for (const ct of candTitles) {
+        for (const rt of refTitles) {
+          const sim = calculateStringSimilarity(rt, ct);
+          if (sim > bestTopCandidateTitleSim) bestTopCandidateTitleSim = sim;
+        }
+      }
+    }
+
+    const effectiveTopConfidence = topCandidate
+      ? bestTopCandidateTitleSim > 0 && bestTopCandidateTitleSim < 0.75
+        ? Math.min(topCandidate.confidence, bestTopCandidateTitleSim)
+        : topCandidate.confidence
+      : 0;
+
+    const hasStrongCandidateAgreement = Boolean(
+      candidates.length > 0 &&
+      topCandidate &&
+      effectiveTopConfidence >= 0.80 &&
+      bestTopCandidateTitleSim >= 0.75
+    );
+    const hasWeakCandidateOnly = Boolean(candidates.length > 0 && !hasStrongCandidateAgreement);
+
     const resolvedAniListId =
-      Number(anime.aniListId || anime.anilistId || (topCandidate?.source === 'AniList' ? topCandidate.sourceId : 0) || artMatch?.id || 0) || null;
+      Number(
+        (hasStrongCandidateAgreement && topCandidate?.source === 'AniList' ? topCandidate.sourceId : 0) ||
+        (!hasWeakCandidateOnly && validArtCandidate?.sourceId ? validArtCandidate.sourceId : 0) ||
+        (hasStrongCandidateAgreement ? (anime.aniListId || anime.anilistId || 0) : 0)
+      ) || null;
     const resolvedMalId =
       Number(
-        anime.malId ||
-        topCandidate?.malId ||
-        (topCandidate?.source === 'MyAnimeList' ? topCandidate.sourceId : 0) ||
-        (anime.id?.startsWith('mal_') ? anime.id.replace('mal_', '') : 0)
+        (hasStrongCandidateAgreement && topCandidate?.malId ? topCandidate.malId : 0) ||
+        (hasStrongCandidateAgreement && topCandidate?.source === 'MyAnimeList' ? topCandidate.sourceId : 0) ||
+        (hasStrongCandidateAgreement ? (anime.malId || (anime.id?.startsWith('mal_') ? anime.id.replace('mal_', '') : 0)) : 0)
       ) || null;
     const resolvedTvmazeId =
-      Number(topCandidate?.source === 'TVMaze' ? topCandidate.sourceId : (secondCandidate?.source === 'TVMaze' ? secondCandidate.sourceId : 0)) || null;
+      Number(
+        hasStrongCandidateAgreement && topCandidate?.source === 'TVMaze'
+          ? topCandidate.sourceId
+          : hasStrongCandidateAgreement && secondCandidate?.source === 'TVMaze'
+          ? secondCandidate.sourceId
+          : 0
+      ) || null;
 
-    const hasVerifiedExternalId = Boolean(resolvedMalId || resolvedAniListId);
     const hasVerifiedRareToonIdentity = Boolean(hasCanonicalUrl && hasProviderId && !isGibberishTitle);
-    const hasWeakCandidateOnly = Boolean(candidates.length > 0 && topCandidate && topCandidate.confidence < 0.75);
-    const hasStrongCandidateAgreement = Boolean(candidates.length > 0 && topCandidate && topCandidate.confidence >= 0.75);
 
     let status: InfoVerificationStatus = 'verified';
     let statusLabel = 'Verified';
@@ -1309,10 +1468,6 @@ class InformationManagerEngine {
       status = 'needs_review';
       statusLabel = 'Needs Review';
       decisionReason = 'Explicitly marked Needs Review by Owner.';
-    } else if (preserveStatus === 'auto_fixed' && discrepancies.length === 0) {
-      status = 'auto_fixed';
-      statusLabel = 'Verified (Auto-Fixed)';
-      decisionReason = 'High-confidence metadata fields repaired and verified.';
     } else if (checkedFields.suspectedFake === 'mismatch') {
       status = 'suspected_fake';
       statusLabel = suspectedFakeStrongEvidence ? 'Suspected Fake' : 'Suspected Fake / Needs Review';
@@ -1334,35 +1489,40 @@ class InformationManagerEngine {
       const hasMissing = Object.values(checkedFields).some(v => v === 'missing');
       const hasMismatch = Object.values(checkedFields).some(v => v === 'mismatch');
 
-      if (hasWeakCandidateOnly && !hasVerifiedExternalId) {
+      // Rule 1 & Rule 10: Weak candidate evidence (< 0.80) MUST NEVER become Verified, even if an external ID exists!
+      if (hasWeakCandidateOnly && topCandidate) {
         discrepancies.push({
           field: 'title',
           label: 'Insufficient External Evidence',
           severity: 'low',
           currentValue: anime.title,
-          suggestedValue: topCandidate!.title,
-          source: topCandidate!.source,
-          message: `Only a weak candidate match (${Math.round(topCandidate!.confidence * 100)}%) was returned by ${topCandidate!.source}. Needs Owner review before marking Verified.`
+          suggestedValue: topCandidate.title,
+          source: topCandidate.source,
+          message: `Only a weak candidate match (${Math.round(effectiveTopConfidence * 100)}%) was returned by ${topCandidate.source}. An external ID or weak match alone is never enough for Verified.`
         });
       }
 
-      if (hasMismatch || (hasWeakCandidateOnly && !hasVerifiedExternalId)) {
+      if (hasMismatch || hasWeakCandidateOnly) {
         status = 'needs_review';
         statusLabel = 'Needs Review';
         decisionReason = hasWeakCandidateOnly
-          ? `Uncertain anime identity: weak candidate confidence (${Math.round((topCandidate?.confidence || 0) * 100)}%) on ${topCandidate?.source} requires Owner review.`
+          ? `Uncertain anime identity: weak candidate confidence (${Math.round(effectiveTopConfidence * 100)}%) on ${topCandidate?.source} requires Owner review.`
           : `Field discrepancy detected (${discrepancies.map(d => d.label).join(', ')}).`;
       } else if (hasMissing) {
         status = 'missing_info';
         statusLabel = 'Missing Information';
         decisionReason = `Missing required metadata field(s): ${discrepancies.map(d => d.label).join(', ')}.`;
-      } else if (hasStrongCandidateAgreement || hasVerifiedExternalId) {
+      } else if (preserveStatus === 'auto_fixed' && hasStrongCandidateAgreement) {
+        status = 'auto_fixed';
+        statusLabel = 'Verified (Auto-Fixed)';
+        decisionReason = `High-confidence metadata fields repaired and verified against ${topCandidate!.source} (${Math.round(effectiveTopConfidence * 100)}% agreement).`;
+      } else if (hasStrongCandidateAgreement) {
         status = 'verified';
         statusLabel = 'Verified';
-        decisionReason = hasStrongCandidateAgreement
-          ? `Verified against ${topCandidate!.source} (${Math.round(topCandidate!.confidence * 100)}% agreement) and Rare Toon mapping.`
-          : `Verified with canonical external ID (${resolvedMalId ? `MAL #${resolvedMalId}` : `AniList #${resolvedAniListId}`}) and complete Rare Toon metadata.`;
-      } else if (Boolean((anime as any)._externalSourcesQueried) && candidates.length === 0 && !hasVerifiedExternalId && !hasVerifiedRareToonIdentity) {
+        decisionReason = `Verified against ${topCandidate!.source} (${Math.round(effectiveTopConfidence * 100)}% agreement)${
+          resolvedMalId ? ` [MAL #${resolvedMalId}]` : resolvedAniListId ? ` [AniList #${resolvedAniListId}]` : ''
+        } and Rare Toon mapping.`;
+      } else if (Boolean((anime as any)._externalSourcesQueried) && candidates.length === 0) {
         discrepancies.push({
           field: 'title',
           label: 'Insufficient External Evidence',
@@ -1370,33 +1530,33 @@ class InformationManagerEngine {
           currentValue: anime.title,
           suggestedValue: anime.title,
           source: 'External Metadata Verifier',
-          message: 'Uncertain anime identity: no external candidate matches and no canonical Rare Toon identity linked.'
+          message: 'Uncertain anime identity: external metadata sources returned 0 corroborated candidate matches.'
         });
         status = 'needs_review';
         statusLabel = 'Needs Review';
-        decisionReason = 'Uncertain anime identity: external sources returned 0 candidates and no external or Rare Toon canonical ID is linked.';
+        decisionReason = 'Uncertain anime identity: external sources returned 0 corroborated candidates; an external ID or local record alone is not enough for Verified.';
       } else {
+        // Rule 1: Without corroborated candidate evidence (hasStrongCandidateAgreement), an external ID alone cannot make the record 'verified'
         status = 'correct';
         statusLabel = 'Correct';
         decisionReason = 'Existing catalogue metadata and Rare Toon canonical identity are internally consistent.';
       }
     }
 
-    // Calculate real multi-factor evidence confidence (0.0 to 0.99)
+    // Calculate real multi-factor evidence confidence (0.05 to 0.99)
+    // Never inflate confidence from an uncorroborated external ID alone!
     let realConfidence = 0.50;
     if (topCandidate) {
-      realConfidence = topCandidate.confidence;
+      realConfidence = effectiveTopConfidence;
       if (secondCandidate && secondCandidate.source !== topCandidate.source) {
-        if (!hasSourceConflict && secondCandidate.confidence >= 0.75) {
+        if (!hasSourceConflict && hasStrongCandidateAgreement && secondCandidate.confidence >= 0.80) {
           realConfidence = Math.min(0.99, realConfidence + 0.04);
         } else if (hasSourceConflict) {
           realConfidence = Math.min(0.65, realConfidence - 0.18);
         }
       }
-    } else if (artMatch && typeof artMatch.similarityScore === 'number') {
-      realConfidence = Math.min(0.97, Math.max(0.75, Number(artMatch.similarityScore)));
-    } else if (hasVerifiedExternalId && hasProviderId && hasCanonicalUrl) {
-      realConfidence = 0.92;
+    } else if (validArtCandidate) {
+      realConfidence = validArtCandidate.confidence;
     } else if (hasProviderId && hasCanonicalUrl) {
       realConfidence = 0.84;
     }
@@ -1412,7 +1572,7 @@ class InformationManagerEngine {
     } else if (status === 'conflict') {
       realConfidence = Math.min(realConfidence, 0.62);
     } else if (status === 'needs_review' && hasWeakCandidateOnly) {
-      realConfidence = Math.min(realConfidence, topCandidate?.confidence || 0.55);
+      realConfidence = Math.min(realConfidence, effectiveTopConfidence || 0.55);
     }
     realConfidence = Number(Math.max(0.05, Math.min(0.99, realConfidence)).toFixed(2));
 
@@ -1512,37 +1672,107 @@ class InformationManagerEngine {
 
     let score = bestSim;
 
-    // External ID exact agreement bonus (Identity Priority: 1. MAL/Jikan ID, 2. AniList ID)
-    const hasExactMalId = Boolean(
-      anime.malId &&
-      ((candidate.malId && Number(anime.malId) === Number(candidate.malId)) ||
-        (candidate.sourceId && Number(anime.malId) === Number(candidate.sourceId)))
-    );
-    const hasExactAniListId = Boolean(anime.aniListId && candidate.sourceId && Number(anime.aniListId) === Number(candidate.sourceId));
-    if (hasExactMalId) {
-      score = Math.max(score, 0.92) + 0.06;
-    } else if (hasExactAniListId) {
-      score = Math.max(score, 0.91) + 0.06;
+    // Detect explicit season / installment mismatch (e.g. "Season 2" or "Season 3" vs Season 1 candidate)
+    const animeSeasonMatch = (anime.title || '').match(/\b(?:season|part|cour)\s*([2-9]|\d{2,})\b/i);
+    const reqSeasonNum = animeSeasonMatch ? animeSeasonMatch[1] : null;
+    let hasInstallmentMismatch = false;
+    if (reqSeasonNum) {
+      const romanMap: Record<string, string> = { '2': 'ii', '3': 'iii', '4': 'iv', '5': 'v' };
+      const roman = romanMap[reqSeasonNum] || '';
+      const candHasSeason = candidate.titles.some(t => {
+        if (!t) return false;
+        if (new RegExp(`\\b(?:season|part|cour|s)?\\s*${reqSeasonNum}(?:st|nd|rd|th)?\\b`, 'i').test(t)) return true;
+        if (roman && new RegExp(`\\b${roman}\\b`, 'i').test(t)) return true;
+        return false;
+      });
+      if (!candHasSeason) {
+        hasInstallmentMismatch = true;
+        score -= 0.35;
+      }
+    } else {
+      // Base title does not request a numbered sequel season; slightly deprioritize explicit Season 2+ candidates when Season 1 exists
+      const primaryCandTitle = candidate.titles[0] || '';
+      if (/\b(?:season|part|cour)\s*([2-9]|\d{2,})\b/i.test(primaryCandTitle)) {
+        score -= 0.14;
+      }
+    }
+
+    // Deprioritize un-aired Upcoming entries when the catalogue anime was already released in a past year
+    const currentYear = new Date().getFullYear();
+    if (
+      candidate.status === 'Upcoming' &&
+      anime.status !== 'Upcoming' &&
+      anime.releaseYear &&
+      Number(anime.releaseYear) < currentYear
+    ) {
+      score -= 0.25;
     }
 
     // Release year agreement / disagreement (penalize wrong decade/original when title is a Remake)
     const titleIsExplicitRemakeOrYear = /\b(?:remake|19\d\d|20\d\d)\b/i.test(anime.title || '');
+    const hasYearAgreement = Boolean(
+      anime.releaseYear &&
+      candidate.releaseYear &&
+      Math.abs(Number(anime.releaseYear) - Number(candidate.releaseYear)) <= 1
+    );
+    const hasYearConflict = Boolean(
+      anime.releaseYear &&
+      candidate.releaseYear &&
+      Math.abs(Number(anime.releaseYear) - Number(candidate.releaseYear)) >= 3
+    );
     if (anime.releaseYear && candidate.releaseYear) {
       const yrDiff = Math.abs(Number(anime.releaseYear) - Number(candidate.releaseYear));
       if (yrDiff === 0) score += 0.05;
       else if (yrDiff === 1) score += 0.02;
-      else if (yrDiff >= 3 && titleIsExplicitRemakeOrYear && !hasExactMalId && !hasExactAniListId) score -= 0.30;
-      else if (yrDiff >= 10 && (!Array.isArray(anime.seasons) || anime.seasons.length <= 1) && !hasExactMalId && !hasExactAniListId) score -= 0.22;
+      else if (yrDiff >= 3 && titleIsExplicitRemakeOrYear) score -= 0.30;
+      else if (yrDiff >= 10 && (!Array.isArray(anime.seasons) || anime.seasons.length <= 1)) score -= 0.22;
       else if (yrDiff >= 4 && (!Array.isArray(anime.seasons) || anime.seasons.length <= 1)) score -= 0.10;
     }
 
     // Format / Type agreement
+    const hasTypeAgreement = Boolean(anime.type && candidate.type && anime.type === candidate.type);
+    const hasTypeConflict = Boolean(
+      anime.type &&
+      candidate.type &&
+      ((anime.type === 'Movie' && candidate.type === 'TV') || (anime.type === 'TV' && candidate.type === 'Movie'))
+    );
     if (anime.type && candidate.type) {
       if (anime.type === candidate.type) {
         score += 0.03;
-      } else if ((anime.type === 'Movie' && candidate.type === 'TV') || (anime.type === 'TV' && candidate.type === 'Movie')) {
-        score -= 0.12;
+      } else if (hasTypeConflict) {
+        score -= 0.15;
       }
+    }
+
+    // Rule 1 & Rule 9: External ID exact agreement is NEVER proof of identity by itself and NEVER jumps a weak score.
+    // It only adds a small corroboration bonus (+0.03) when title similarity is already strong (>= 0.85) and there is no year/type/season conflict.
+    const hasExactMalId = Boolean(
+      bestSim >= 0.85 &&
+      !hasInstallmentMismatch &&
+      !hasYearConflict &&
+      !hasTypeConflict &&
+      (hasYearAgreement || hasTypeAgreement) &&
+      anime.malId &&
+      ((candidate.malId && Number(anime.malId) === Number(candidate.malId)) ||
+        (candidate.sourceId && Number(anime.malId) === Number(candidate.sourceId)))
+    );
+    const hasExactAniListId = Boolean(
+      bestSim >= 0.85 &&
+      !hasInstallmentMismatch &&
+      !hasYearConflict &&
+      !hasTypeConflict &&
+      (hasYearAgreement || hasTypeAgreement) &&
+      anime.aniListId &&
+      candidate.sourceId &&
+      Number(anime.aniListId) === Number(candidate.sourceId)
+    );
+    if (hasExactMalId || hasExactAniListId) {
+      score += 0.03;
+    }
+
+    // Rule 10: Never treat weak or uncorroborated title-only matching as strong identity, even if an external ID exists
+    if (!hasYearAgreement && !hasTypeAgreement) {
+      score = Math.min(score, 0.74);
     }
 
     return Number(Math.max(0.05, Math.min(0.99, score)).toFixed(2));
@@ -1707,16 +1937,22 @@ class InformationManagerEngine {
       diag.errors.push(`AniList error: ${err.message}`);
     }
 
-    // 2. Cross-check with Jikan / MyAnimeList (preferring malId when available, or searchQuery)
+    // Sort AniList candidates first so only a strong top AniList match provides a fallback malId
+    candidates.sort((a, b) => b.confidence - a.confidence);
+
+    // 2. Cross-check with Jikan / MyAnimeList (preferring malId when available from strong match, or searchQuery)
     diag.sourcesAttempted.push('MyAnimeList');
     try {
-      const knownMalId = Number(anime.malId || (candidates[0]?.malId ?? 0)) || null;
+      const strongAniListMalId =
+        candidates[0] && candidates[0].confidence >= 0.85 && candidates[0].malId
+          ? Number(candidates[0].malId)
+          : 0;
+      const knownMalId = Number(anime.malId || strongAniListMalId) || null;
       const jikanCacheKey = knownMalId
         ? `info_jikan_id:${knownMalId}`
         : `info_jikan_q:${searchQuery.toLowerCase().trim()}`;
 
-      const jikanRes = await globalSourceGateway.executeRequest<any>(
-        'jikan',
+      const jikanRes = await this.executeJikanMetadataRequest<any>(
         jikanCacheKey,
         async () => {
           const controller = new AbortController();
@@ -1730,6 +1966,9 @@ class InformationManagerEngine {
               signal: controller.signal
             });
             clearTimeout(timer);
+            if (res.status === 404) {
+              return { success: true, matches: [], statusCode: 404 };
+            }
             if (!res.ok) {
               return { success: false, matches: [], statusCode: res.status, error: `Jikan HTTP ${res.status}` };
             }
@@ -1767,7 +2006,7 @@ class InformationManagerEngine {
             totalEpisodes,
             status: mappedStatus
           });
-          if (confidence < 0.50) continue;
+          if (!knownMalId && confidence < 0.50 && candidates.some(c => c.confidence >= 0.50)) continue;
 
           const genres = Array.isArray(m.genres)
             ? m.genres.map((g: any) => g?.name).filter(Boolean)
@@ -1801,27 +2040,9 @@ class InformationManagerEngine {
 
     // 3. Always include cached verified AniList match from artwork-verification-records if no AniList candidate was returned
     if (!candidates.some(c => c.source === 'AniList')) {
-      const artMatch = this.artworkAniListMatches.get(anime.id);
-      if (artMatch && artMatch.id) {
-        const eng = artMatch.title?.english || '';
-        const rom = artMatch.title?.romaji || '';
-        const mappedType = mapAniListFormat(artMatch.format);
-        const confidence = this.scoreCandidateConfidence(anime, searchQuery, {
-          sourceId: artMatch.id,
-          titles: [eng, rom].filter(Boolean),
-          type: mappedType,
-          releaseYear: artMatch.seasonYear || undefined
-        });
-        candidates.push({
-          source: 'AniList',
-          sourceId: artMatch.id,
-          confidence,
-          title: eng || rom || anime.title,
-          alternateTitle: rom && rom !== eng ? rom : null,
-          japaneseTitle: rom || null,
-          type: mappedType,
-          releaseYear: artMatch.seasonYear || anime.releaseYear || undefined
-        });
+      const validArtCand = this.extractValidatedArtMatchCandidate(anime);
+      if (validArtCand) {
+        candidates.push(validArtCand);
       }
     }
 
@@ -2052,13 +2273,11 @@ class InformationManagerEngine {
     const fetchDiag = this.lastFetchDiagnostics.get(animeId);
     const prevRec = this.recordsMap.get(animeId);
 
-    // Rule 1: Temporary API/network/timeout/rate-limit failure -> RETRY -> NEVER immediately mark Needs Review!
+    // Rule 1 & Rule 5: Temporary API/network/timeout/rate-limit failure -> RETRY -> NEVER immediately mark Needs Review!
     if (
       candidates.length === 0 &&
       fetchDiag?.hadTransientFailure &&
-      fetchDiag.sourcesSucceeded.length === 0 &&
-      !anime.aniListId &&
-      !anime.malId
+      fetchDiag.sourcesSucceeded.length === 0
     ) {
       const transientErrorMsg =
         fetchDiag.errors.join('; ') || 'Temporary metadata API timeout/rate-limit — scheduled for retry.';
@@ -2080,7 +2299,7 @@ class InformationManagerEngine {
     }
 
     const top = candidates[0];
-    const second = candidates[1];
+    const second = candidates.find(c => top && c.source !== top.source);
 
     // Check if two high-confidence sources genuinely conflict on release year or status
     const hasHighConfidenceSourceConflict = Boolean(
@@ -2114,13 +2333,15 @@ class InformationManagerEngine {
       });
     }
 
-    // Confidence-based Smart Auto-Resolution (Rule 7: Strong evidence of an incorrect field -> safely AUTO-FIX that field):
+    // Confidence-based Smart Auto-Resolution (Rule 3: Strong identity + reliable evidence showing existing value is incorrect + clearly supported replacement + no guessing):
     let didAutoFix = false;
     const updates: Record<string, any> = {};
+    const repairedCoreFields: string[] = [];
     const cleanedTitleInfo = cleanAnimeTitle(anime.title || '');
+    const hasStrongTopIdentity = Boolean(top && top.confidence >= 0.85 && !hasHighConfidenceSourceConflict);
 
     // 0. Link verified external IDs (Identity Priority: 1. MAL/Jikan ID, 2. AniList ID)
-    if (top && top.confidence >= 0.85) {
+    if (hasStrongTopIdentity && top) {
       if (!anime.malId && top.malId) {
         updates.malId = Number(top.malId);
       } else if (!anime.malId && top.source === 'MyAnimeList' && top.sourceId) {
@@ -2128,6 +2349,9 @@ class InformationManagerEngine {
       }
       if (!anime.aniListId && top.source === 'AniList' && top.sourceId) {
         updates.aniListId = Number(top.sourceId);
+      } else if (!anime.aniListId) {
+        const aniCand = candidates.find(c => c.source === 'AniList' && c.confidence >= 0.85 && c.sourceId);
+        if (aniCand?.sourceId) updates.aniListId = Number(aniCand.sourceId);
       }
     }
 
@@ -2139,12 +2363,13 @@ class InformationManagerEngine {
       cleanedTitleInfo.cleaned !== anime.title &&
       dupIds.length === 0
     ) {
-      updates.title = top && top.confidence >= 0.88 ? top.title : cleanedTitleInfo.cleaned;
+      updates.title = hasStrongTopIdentity && top && top.confidence >= 0.88 ? top.title : cleanedTitleInfo.cleaned;
+      repairedCoreFields.push('title');
     }
 
-    // 2. Fill missing Japanese / Alternate title only when a trusted source provides a distinct title
+    // 2. Fill missing Japanese / Alternate title only when a trusted source with strong identity provides a distinct title
     const hasAlt = Boolean((anime.alternateTitle && anime.alternateTitle.trim()) || (anime.japaneseTitle && anime.japaneseTitle.trim()));
-    if (!hasAlt && top && top.confidence >= 0.75 && (top.alternateTitle || top.japaneseTitle)) {
+    if (!hasAlt && hasStrongTopIdentity && top && (top.alternateTitle || top.japaneseTitle)) {
       const candidateAlt = String(top.alternateTitle || top.japaneseTitle).trim();
       if (candidateAlt && candidateAlt.toLowerCase() !== (anime.title || '').trim().toLowerCase()) {
         updates.alternateTitle = candidateAlt;
@@ -2159,9 +2384,11 @@ class InformationManagerEngine {
     const seasonsArr = Array.isArray(anime.seasons) ? anime.seasons : [];
     if (seasonsArr.length > 0 && anime.totalSeasons !== seasonsArr.length) {
       updates.totalSeasons = seasonsArr.length;
+      repairedCoreFields.push('totalSeasons');
     }
     if (seasonsArr.length > 0) {
       let seasonsChanged = false;
+      let seasonEpisodeCountRepaired = false;
       const fixedSeasons = seasonsArr.map((s: any) => {
         const epLen = Array.isArray(s.episodes) ? s.episodes.length : 0;
         const currentAuth =
@@ -2173,6 +2400,9 @@ class InformationManagerEngine {
         const nextAuth = Math.max(currentAuth, epLen);
         const isComplete = nextAuth > 0 && epLen >= nextAuth;
         const listStatus = epLen === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+        if (s.episodeCount !== nextAuth) {
+          seasonEpisodeCountRepaired = true;
+        }
         if (
           s.episodeCount !== nextAuth ||
           s.authoritativeEpisodeCount !== nextAuth ||
@@ -2194,34 +2424,50 @@ class InformationManagerEngine {
       });
       if (seasonsChanged) {
         updates.seasons = fixedSeasons;
+        if (seasonEpisodeCountRepaired) {
+          repairedCoreFields.push('seasons');
+        }
       }
     }
 
-    // 4. Synchronize totalEpisodes from seasons sum or high-confidence candidate
+    // 4. Synchronize totalEpisodes from seasons sum or high-confidence candidate (only when not a collapsed multi-season uncertainty)
     const effectiveSeasons = updates.seasons || seasonsArr;
+    let seasonsWithAtMostOne = 0;
     const seasonEpSum = effectiveSeasons.reduce((acc: number, s: any) => {
       const c = typeof s.episodeCount === 'number' && s.episodeCount > 0
         ? s.episodeCount
         : (Array.isArray(s.episodes) ? s.episodes.length : 0);
+      if (c <= 1) seasonsWithAtMostOne++;
       return acc + c;
     }, 0);
+    const isCollapsedMultiSeason =
+      anime.type === 'TV' &&
+      effectiveSeasons.length >= 2 &&
+      seasonsWithAtMostOne === effectiveSeasons.length &&
+      seasonEpSum === effectiveSeasons.length;
 
-    if ((!anime.totalEpisodes || anime.totalEpisodes <= 0) && (seasonEpSum > 0 || (top && top.confidence >= 0.78 && top.totalEpisodes))) {
-      updates.totalEpisodes = seasonEpSum > 0 ? seasonEpSum : top!.totalEpisodes;
-    } else if (seasonEpSum > 0 && anime.totalEpisodes !== seasonEpSum) {
-      updates.totalEpisodes = seasonEpSum;
-    } else if (
-      seasonEpSum === 0 &&
-      effectiveSeasons.length <= 1 &&
-      top &&
-      top.confidence >= 0.88 &&
-      top.totalEpisodes &&
-      anime.totalEpisodes !== top.totalEpisodes
-    ) {
-      updates.totalEpisodes = top.totalEpisodes;
+    if (!isCollapsedMultiSeason) {
+      if ((!anime.totalEpisodes || anime.totalEpisodes <= 0) && (seasonEpSum > 0 || (hasStrongTopIdentity && top?.totalEpisodes))) {
+        updates.totalEpisodes = seasonEpSum > 0 ? seasonEpSum : top!.totalEpisodes;
+        repairedCoreFields.push('totalEpisodes');
+      } else if (seasonEpSum > 0 && anime.totalEpisodes !== seasonEpSum) {
+        updates.totalEpisodes = seasonEpSum;
+        repairedCoreFields.push('totalEpisodes');
+      } else if (
+        seasonEpSum === 0 &&
+        effectiveSeasons.length <= 1 &&
+        hasStrongTopIdentity &&
+        top &&
+        top.confidence >= 0.88 &&
+        top.totalEpisodes &&
+        anime.totalEpisodes !== top.totalEpisodes
+      ) {
+        updates.totalEpisodes = top.totalEpisodes;
+        repairedCoreFields.push('totalEpisodes');
+      }
     }
 
-    // 5. High-confidence Airing Status resolution (STATUS RULE: never use year alone; auto-fix when reliable sources agree without conflict)
+    // 5. High-confidence Airing Status resolution (STATUS RULE: never use year alone; never guess 'Completed' without reliable source evidence)
     const currentYear = new Date().getFullYear();
     const yr = Number(anime.releaseYear);
     const isTopReliableAnimeSource = Boolean(top && (top.source === 'AniList' || top.source === 'MyAnimeList'));
@@ -2230,75 +2476,98 @@ class InformationManagerEngine {
       (anime.totalEpisodes || 0) <= 100 &&
       (!top?.releaseYear || !yr || Math.abs(yr - top.releaseYear) <= 2)
     );
-    if (!hasHighConfidenceSourceConflict) {
+    if (!hasHighConfidenceSourceConflict && hasStrongTopIdentity && top?.status) {
       if (!['Completed', 'Ongoing', 'Upcoming'].includes(anime.status)) {
-        updates.status = top?.status || 'Completed';
+        updates.status = top.status;
+        repairedCoreFields.push('status');
       } else if (
         isTopReliableAnimeSource &&
         matchesSameEraAndScope &&
-        top &&
         top.confidence >= 0.88 &&
-        top.status &&
         anime.status !== top.status &&
         (!second || second.status === top.status)
       ) {
         updates.status = top.status;
+        repairedCoreFields.push('status');
       }
     }
 
     // 6. High-confidence Release Year resolution (when no cross-source conflict and title doesn't specify its own remake year)
     const titleHasExplicitYear = Boolean(yr && new RegExp(`\\b${yr}\\b`).test(anime.title || ''));
-    if (!hasHighConfidenceSourceConflict) {
-      if ((!yr || isNaN(yr) || yr < 1950 || yr > currentYear + 2) && top?.releaseYear) {
+    if (!hasHighConfidenceSourceConflict && hasStrongTopIdentity && top?.releaseYear) {
+      if (!yr || isNaN(yr) || yr < 1950 || yr > currentYear + 2) {
         updates.releaseYear = top.releaseYear;
+        repairedCoreFields.push('releaseYear');
       } else if (
         isTopReliableAnimeSource &&
         !titleHasExplicitYear &&
         effectiveSeasons.length <= 1 &&
-        top &&
         top.confidence >= 0.88 &&
-        top.releaseYear &&
         Math.abs(yr - top.releaseYear) >= 2
       ) {
         updates.releaseYear = top.releaseYear;
+        repairedCoreFields.push('releaseYear');
       }
     }
 
-    // 7. High-confidence Anime Type resolution
+    // 7. High-confidence Anime Type resolution (never guess 'TV' without strong source or title evidence)
     const titleIndicatesMovie = /\b(?:movie|film)\b/i.test(anime.title || '') && !/\b(?:series|season)\b/i.test(anime.title || '');
     const titleIndicatesOva = /\b(?:ova|oad)\b/i.test(anime.title || '');
     const isCompatibleStreamingSeries = Boolean(
       top?.type && ((anime.type === 'TV' && top.type === 'ONA') || (anime.type === 'ONA' && top.type === 'TV'))
     );
     if (!['TV', 'Movie', 'OVA', 'ONA', 'Special'].includes(anime.type)) {
-      updates.type = top?.type || (titleIndicatesMovie ? 'Movie' : 'TV');
+      if (hasStrongTopIdentity && top?.type) {
+        updates.type = top.type;
+        repairedCoreFields.push('type');
+      } else if (titleIndicatesMovie) {
+        updates.type = 'Movie';
+        repairedCoreFields.push('type');
+      } else if (titleIndicatesOva) {
+        updates.type = 'OVA';
+        repairedCoreFields.push('type');
+      }
     } else if (titleIndicatesMovie && anime.type === 'TV' && (anime.totalEpisodes || 0) <= 1) {
       updates.type = 'Movie';
+      repairedCoreFields.push('type');
     } else if (titleIndicatesOva && anime.type !== 'OVA') {
       updates.type = 'OVA';
-    } else if (isTopReliableAnimeSource && !isCompatibleStreamingSeries && top && top.confidence >= 0.90 && top.type && anime.type !== top.type && !titleIndicatesMovie) {
+      repairedCoreFields.push('type');
+    } else if (
+      hasStrongTopIdentity &&
+      isTopReliableAnimeSource &&
+      !isCompatibleStreamingSeries &&
+      top &&
+      top.confidence >= 0.90 &&
+      top.type &&
+      anime.type !== top.type &&
+      !titleIndicatesMovie
+    ) {
       updates.type = top.type;
+      repairedCoreFields.push('type');
     }
 
     // 8. Missing Genres, Languages, Synopsis, Franchise Relationships
-    if ((!Array.isArray(anime.genres) || anime.genres.length === 0) && top && top.confidence >= 0.75 && Array.isArray(top.genres) && top.genres.length > 0) {
+    if ((!Array.isArray(anime.genres) || anime.genres.length === 0) && hasStrongTopIdentity && top && Array.isArray(top.genres) && top.genres.length > 0) {
       updates.genres = top.genres;
+      repairedCoreFields.push('genres');
     }
     const detectedLangs = extractLanguagesFromAnime(anime);
     if ((!Array.isArray(anime.languages) || anime.languages.length === 0) && detectedLangs.length > 0) {
       updates.languages = detectedLangs;
     }
     const syn = (anime.synopsis || '').trim();
-    if ((!syn || syn.length < 30 || /no synopsis available|description coming soon|placeholder/i.test(syn)) && top && top.confidence >= 0.75 && top.synopsis && top.synopsis.length >= 30) {
+    if ((!syn || syn.length < 30 || /no synopsis available|description coming soon|placeholder/i.test(syn)) && hasStrongTopIdentity && top && top.synopsis && top.synopsis.length >= 30) {
       updates.synopsis = top.synopsis;
+      repairedCoreFields.push('synopsis');
     }
-    if ((!Array.isArray(anime.relatedAnime) || anime.relatedAnime.length === 0) && top && top.confidence >= 0.78 && Array.isArray(top.relatedAnime) && top.relatedAnime.length > 0) {
+    if ((!Array.isArray(anime.relatedAnime) || anime.relatedAnime.length === 0) && hasStrongTopIdentity && top && Array.isArray(top.relatedAnime) && top.relatedAnime.length > 0) {
       updates.relatedAnime = top.relatedAnime;
     }
     if (
       (!Array.isArray(anime.franchiseRelationships) || anime.franchiseRelationships.length === 0) &&
+      hasStrongTopIdentity &&
       top &&
-      top.confidence >= 0.78 &&
       Array.isArray(top.franchiseRelationships) &&
       top.franchiseRelationships.length > 0
     ) {
@@ -2309,20 +2578,24 @@ class InformationManagerEngine {
     const rtProv = anime.providers?.raretoonIndia;
     if ((!rtProv?.providerAnimeId || !String(rtProv.providerAnimeId).trim()) && cleanedTitleInfo.cleaned) {
       updates.providerAnimeId = `rt-${cleanedTitleInfo.cleaned.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      repairedCoreFields.push('providerAnimeId');
     }
 
-    if (autoFixMissing && Object.keys(updates).length > 0 && dupIds.length === 0) {
+    if (autoFixMissing && hasStrongTopIdentity && Object.keys(updates).length > 0 && dupIds.length === 0) {
+      const isGenuineFieldRepair = repairedCoreFields.length > 0;
       const sourceName = top ? `${top.source} (${Math.round(top.confidence * 100)}% match)` : 'Internal Consistency Verifier';
       this.applyMetadataUpdate(
         animeId,
         updates,
         operatorEmail,
-        `High-confidence worker verification & auto-repair (${Object.keys(updates).join(', ')})`,
+        isGenuineFieldRepair
+          ? `High-confidence worker verification & auto-repair (${repairedCoreFields.join(', ')})`
+          : `Linked verified external identity (${Object.keys(updates).join(', ')})`,
         sourceName,
-        'auto_fixed'
+        isGenuineFieldRepair ? 'auto_fixed' : 'verified'
       );
-      didAutoFix = true;
-      if (workerId) {
+      didAutoFix = isGenuineFieldRepair;
+      if (workerId && isGenuineFieldRepair) {
         globalWorkerJobEngine.recordActivityEvent({
           workerId,
           jobSystem: 'INFORMATION_VERIFICATION',
@@ -2332,7 +2605,7 @@ class InformationManagerEngine {
           eventType: 'info_saved',
           source: top?.source || 'Internal Verifier',
           step: 'Saved high-confidence metadata corrections',
-          details: `Auto-resolved fields: ${Object.keys(updates).join(', ')}`
+          details: `Auto-resolved fields: ${repairedCoreFields.join(', ')}`
         });
       }
     }
@@ -2467,17 +2740,22 @@ class InformationManagerEngine {
       }
       if (
         typeof updates.status === 'string' &&
-        ['Completed', 'Ongoing', 'Upcoming'].includes(updates.status) &&
+        ['Completed', 'Ongoing', 'Upcoming', 'Unknown'].includes(updates.status) &&
         updates.status !== item.status
       ) {
         item.status = updates.status;
         changedFields.push('status');
       }
       if (updates.releaseYear !== undefined) {
-        const yr = parseInt(String(updates.releaseYear), 10);
-        if (!isNaN(yr) && yr >= 1950 && yr <= 2035 && yr !== item.releaseYear) {
-          item.releaseYear = yr;
+        if (updates.releaseYear === null && item.releaseYear !== null) {
+          item.releaseYear = null;
           changedFields.push('releaseYear');
+        } else {
+          const yr = parseInt(String(updates.releaseYear), 10);
+          if (!isNaN(yr) && yr >= 1950 && yr <= 2035 && yr !== item.releaseYear) {
+            item.releaseYear = yr;
+            changedFields.push('releaseYear');
+          }
         }
       }
       if (updates.releaseDate !== undefined && updates.releaseDate !== item.releaseDate) {
@@ -2493,11 +2771,19 @@ class InformationManagerEngine {
         }
       }
       if (updates.totalEpisodes !== undefined) {
-        const te = parseInt(String(updates.totalEpisodes), 10);
-        if (!isNaN(te) && te >= 0 && te !== item.totalEpisodes) {
-          item.totalEpisodes = te;
-          item.authoritativeTotalEpisodes = te;
+        if (updates.totalEpisodes === null) {
+          item.totalEpisodes = null;
+          item.authoritativeTotalEpisodes = null;
+          item.authoritativeEpisodeCount = null;
           changedFields.push('totalEpisodes');
+        } else {
+          const te = parseInt(String(updates.totalEpisodes), 10);
+          if (!isNaN(te) && te > 0 && te !== item.totalEpisodes) {
+            item.totalEpisodes = te;
+            item.authoritativeTotalEpisodes = te;
+            item.authoritativeEpisodeCount = te;
+            changedFields.push('totalEpisodes');
+          }
         }
       }
       if (Array.isArray(updates.seasons)) {
@@ -2508,27 +2794,50 @@ class InformationManagerEngine {
       }
       if (Array.isArray(item.seasons)) {
         let sumAuth = 0;
+        let allSeasonsKnown = item.seasons.length > 0;
         let sumImp = 0;
         let allComp = item.seasons.length > 0;
         for (const s of item.seasons) {
           const imp = Array.isArray(s.episodes) ? s.episodes.length : 0;
-          const auth = Math.max(s.authoritativeEpisodeCount || s.episodeCount || 1, imp);
-          const comp = auth > 0 && imp >= auth;
+          const rawAuth = s.authoritativeEpisodeCount !== undefined ? s.authoritativeEpisodeCount : s.episodeCount;
+          const auth =
+            typeof rawAuth === 'number' && rawAuth > 0
+              ? Math.max(rawAuth, imp)
+              : item.type === 'Movie' && item.seasons.length === 1
+              ? 1
+              : null;
+          const comp = auth !== null && auth > 0 && imp >= auth;
+          const st = imp === 0 ? 'empty' : comp ? 'complete' : 'partial';
           s.episodeCount = auth;
           s.authoritativeEpisodeCount = auth;
           s.importedEpisodeCount = imp;
           s.isEpisodeListComplete = comp;
-          s.episodeListStatus = imp === 0 ? 'empty' : comp ? 'complete' : 'partial';
-          sumAuth += auth;
+          s.episodeListStatus = st;
+          s.episodeImportStatus = st;
+          if (auth !== null) sumAuth += auth;
+          else allSeasonsKnown = false;
           sumImp += imp;
           if (!comp) allComp = false;
         }
-        const finalAuth = Math.max(item.totalEpisodes || 0, sumAuth);
+        const declaredTotal =
+          typeof item.totalEpisodes === 'number' && item.totalEpisodes > 0 ? item.totalEpisodes : null;
+        const finalAuth = allSeasonsKnown
+          ? Math.max(declaredTotal || 0, sumAuth, sumImp)
+          : declaredTotal !== null
+          ? Math.max(declaredTotal, sumImp)
+          : item.type === 'Movie'
+          ? 1
+          : null;
+        const isComp = allComp && finalAuth !== null && finalAuth > 0 && sumImp >= finalAuth;
+        const animeSt = sumImp === 0 ? 'empty' : isComp ? 'complete' : 'partial';
         item.totalEpisodes = finalAuth;
         item.authoritativeTotalEpisodes = finalAuth;
+        item.authoritativeEpisodeCount = finalAuth;
         item.importedEpisodesCount = sumImp;
-        item.isEpisodeListComplete = allComp && finalAuth > 0 && sumImp >= finalAuth;
-        item.episodeListStatus = sumImp === 0 ? 'empty' : item.isEpisodeListComplete ? 'complete' : 'partial';
+        item.importedEpisodeCount = sumImp;
+        item.isEpisodeListComplete = isComp;
+        item.episodeListStatus = animeSt;
+        item.episodeImportStatus = animeSt;
       }
       if (Array.isArray(updates.genres)) {
         const cleanGenres = updates.genres.map((g: any) => String(g).trim()).filter(Boolean);
@@ -2659,7 +2968,7 @@ class InformationManagerEngine {
       evaluated.statusLabel = 'Verified';
       evaluated.discrepancies = [];
       evaluated.summaryMessage = `Verified and updated by ${operatorEmail} (${source}).`;
-    } else if (targetStatus === 'auto_fixed') {
+    } else if (targetStatus === 'auto_fixed' && evaluated.discrepancies.length === 0 && evaluated.confidence >= 0.80) {
       evaluated.status = 'auto_fixed';
       evaluated.statusLabel = 'Verified (Auto-Fixed)';
     }
@@ -3079,11 +3388,16 @@ class InformationManagerEngine {
       }
 
       const top = rec.candidates?.[0];
-      const hasHighConfidenceCandidate = Boolean(top && top.confidence >= 0.78);
+      const hasHighConfidenceCandidate = Boolean(top && top.confidence >= 0.85);
       const updates: Record<string, any> = {};
 
       for (const d of rec.discrepancies || []) {
-        if (d.field === 'duplicate' || d.field === 'suspectedFake' || d.field === 'conflictingInformation') {
+        if (
+          d.field === 'duplicate' ||
+          d.field === 'suspectedFake' ||
+          d.field === 'conflictingInformation' ||
+          d.field === 'seasonEpisodes'
+        ) {
           continue;
         }
         // Deterministic internal fixes or high-confidence candidate fixes
@@ -3094,7 +3408,7 @@ class InformationManagerEngine {
           d.source === 'RareToon Mapping Audit' ||
           d.source === 'Title Cleaner';
 
-        if (!hasHighConfidenceCandidate && !isDeterministicInternal && rec.confidence < 0.78) {
+        if (!hasHighConfidenceCandidate && !isDeterministicInternal && rec.confidence < 0.85) {
           continue;
         }
 

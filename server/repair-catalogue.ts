@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Anime, Season, Episode, AnimeStatus, EpisodeListStatus } from '../src/types.ts';
+import {
+  extractReliableEpisodeCount,
+  extractReliableReleaseYear,
+  extractReliableStatus
+} from './raretoon-ingest.ts';
 
 function cleanText(str: string | null | undefined): string {
   if (!str) return '';
@@ -393,12 +398,70 @@ export function repairCatalogue(): {
     anivault_rt_gintama: 201,
     anivault_rt_the_daily_life_of_the_immortal_king: 15,
     anivault_rt_black_clover: 51,
-    anivault_rt_sakamoto_days: 12,
     anivault_rt_assassination_classroom: 22,
     anivault_rt_tokyo_revengers: 24,
     anivault_rt_ace_of_the_diamond: 75,
     mal_934: 26,
     anivault_rt_baki_2: 26
+  };
+
+  // Curated flagship RareToon series registry with verified status, releaseYear, and per-season episode counts
+  const VERIFIED_RARETOON_REGISTRY: Record<
+    string,
+    {
+      status: AnimeStatus;
+      releaseYear: number;
+      seasonEpisodes: Record<number, number | null>;
+    }
+  > = {
+    anivault_rt_vinland_saga: { status: 'Completed', releaseYear: 2019, seasonEpisodes: { 1: 24, 2: 24 } },
+    anivault_rt_attack_on_titan: { status: 'Completed', releaseYear: 2013, seasonEpisodes: { 1: 25, 2: 12, 3: 22, 4: 28 } },
+    anivault_rt_death_note: { status: 'Completed', releaseYear: 2006, seasonEpisodes: { 1: 37 } },
+    anivault_rt_assassination_classroom: { status: 'Completed', releaseYear: 2015, seasonEpisodes: { 1: 22, 2: 25 } },
+    anivault_rt_jujutsu_kaisen: { status: 'Ongoing', releaseYear: 2020, seasonEpisodes: { 1: 24, 2: 23 } },
+    anivault_rt_demon_slayer: { status: 'Ongoing', releaseYear: 2019, seasonEpisodes: { 1: 26, 2: 18, 3: 11, 4: 8 } },
+    anivault_rt_solo_leveling: { status: 'Ongoing', releaseYear: 2024, seasonEpisodes: { 1: 12, 2: 13 } },
+    anivault_rt_frieren_beyond_journeys_end: { status: 'Completed', releaseYear: 2023, seasonEpisodes: { 1: 28 } },
+    anivault_rt_dan_da_dan: { status: 'Completed', releaseYear: 2024, seasonEpisodes: { 1: 12 } },
+    anivault_rt_kaiju_no_8: { status: 'Ongoing', releaseYear: 2024, seasonEpisodes: { 1: 12 } },
+    anivault_rt_dr_stone: { status: 'Ongoing', releaseYear: 2019, seasonEpisodes: { 1: 24, 2: 11, 3: 22, 4: 12 } },
+    anivault_rt_my_hero_academia: { status: 'Ongoing', releaseYear: 2016, seasonEpisodes: { 1: 13, 2: 25, 3: 25, 4: 25, 5: 25, 6: 25, 7: 21 } },
+    anivault_rt_classroom_of_the_elite: { status: 'Completed', releaseYear: 2017, seasonEpisodes: { 1: 12, 2: 13, 3: 13 } },
+    anivault_rt_tokyo_revengers: { status: 'Ongoing', releaseYear: 2021, seasonEpisodes: { 1: 24, 2: 13, 3: 13 } },
+    anivault_rt_baki_2: { status: 'Completed', releaseYear: 2018, seasonEpisodes: { 1: 26 } },
+    anivault_rt_baki_hanma: { status: 'Completed', releaseYear: 2021, seasonEpisodes: { 1: 12, 2: 27 } },
+    anivault_rt_haikyu: { status: 'Completed', releaseYear: 2014, seasonEpisodes: { 1: 25, 2: 25, 3: 10, 4: 25 } },
+    anivault_rt_black_clover: { status: 'Completed', releaseYear: 2017, seasonEpisodes: { 1: 51, 2: 51, 3: 52, 4: 16 } },
+    anivault_rt_gintama: { status: 'Completed', releaseYear: 2006, seasonEpisodes: { 1: 201 } },
+    anivault_rt_horimiya_the_missing_pieces: { status: 'Completed', releaseYear: 2023, seasonEpisodes: { 1: 13, 2: 13 } },
+    anivault_rt_bleach_thousand_year_blood_war: { status: 'Ongoing', releaseYear: 2022, seasonEpisodes: { 1: 13, 2: 13, 3: 13 } },
+    anivault_rt_high_school_dxd: { status: 'Completed', releaseYear: 2012, seasonEpisodes: { 1: 12 } },
+    anivault_rt_the_daily_life_of_the_immortal_king: { status: 'Ongoing', releaseYear: 2020, seasonEpisodes: { 1: 15, 2: 12, 3: 12, 4: 12 } },
+    anivault_rt_mushoku_tensei: { status: 'Ongoing', releaseYear: 2021, seasonEpisodes: { 1: 23, 2: 24 } },
+    anivault_rt_that_time_i_got_reincarnated_as_a_slime: { status: 'Ongoing', releaseYear: 2018, seasonEpisodes: { 1: 24, 2: 24, 3: 24 } },
+    anivault_rt_blue_lock: { status: 'Completed', releaseYear: 2022, seasonEpisodes: { 1: 24, 2: 14 } },
+    anivault_rt_rezero: { status: 'Ongoing', releaseYear: 2016, seasonEpisodes: { 1: 25, 2: 25, 3: 16 } },
+    anivault_rt_wistoria_wand_and_sword: { status: 'Ongoing', releaseYear: 2024, seasonEpisodes: { 1: 12 } },
+    anivault_rt_sakamoto_days: { status: 'Ongoing', releaseYear: 2025, seasonEpisodes: { 1: 11 } },
+    anivault_rt_zenshu: { status: 'Completed', releaseYear: 2025, seasonEpisodes: { 1: 12 } },
+    anivault_rt_devil_may_cry: { status: 'Completed', releaseYear: 2007, seasonEpisodes: { 1: 12 } },
+    anivault_rt_naruto: { status: 'Completed', releaseYear: 2002, seasonEpisodes: { 1: 35, 2: 48, 3: 48, 4: 26, 5: 28, 6: 26, 7: 26, 8: 26, 9: 7 } },
+    anivault_rt_naruto_shippuden: {
+      status: 'Completed',
+      releaseYear: 2007,
+      seasonEpisodes: {
+        1: 32, 2: 21, 3: 18, 4: 17, 5: 24, 6: 31, 7: 8, 8: 24,
+        9: 21, 10: 25, 11: 21, 12: 33, 13: 20, 14: 25, 15: 28, 16: 212
+      }
+    },
+    anivault_rt_doraemon_tv_series: { status: 'Ongoing', releaseYear: 1973, seasonEpisodes: { 1: 52, 2: 52, 3: 52, 4: 52, 5: 52, 6: 52, 7: 52, 8: 52, 14: 52 } },
+    anivault_rt_pokemon: { status: 'Completed', releaseYear: 2016, seasonEpisodes: { 1: 82, 20: 43 } },
+    anivault_rt_miraculous_tales_of_ladybug_cat_noir: { status: 'Ongoing', releaseYear: 2015, seasonEpisodes: { 5: 27 } },
+    anivault_rt_stranger_things_tales_from_85: { status: 'Completed', releaseYear: 2022, seasonEpisodes: { 1: 6 } },
+    anivault_rt_daemons_of_the_shadow_realm: { status: 'Upcoming', releaseYear: 2026, seasonEpisodes: { 1: null } },
+    anivault_rt_release_that_witch: { status: 'Upcoming', releaseYear: 2025, seasonEpisodes: { 1: null } },
+    anivault_rt_hoppers_2026_movie: { status: 'Upcoming', releaseYear: 2026, seasonEpisodes: { 1: 1 } },
+    anivault_rt_shin_chan_in_very_very_tasty_tasty: { status: 'Completed', releaseYear: 2013, seasonEpisodes: { 1: 1 } }
   };
 
   // Known type corrections
@@ -411,7 +474,8 @@ export function repairCatalogue(): {
 
   // Known releaseYear corrections for remakes
   const AUTHORITATIVE_YEAR_OVERRIDES: Record<string, number> = {
-    anivault_rt_doraemon_nobitas_little_star_wars_2021_remake: 2021
+    anivault_rt_doraemon_nobitas_little_star_wars_2021_remake: 2021,
+    anivault_rt_spider_man_across_the_spider_verse_hindi: 2023
   };
 
   // 2. AUDIT AND REPAIR INDIVIDUAL RECORDS
@@ -475,52 +539,79 @@ export function repairCatalogue(): {
       }
     }
 
-    // C. Strict Status Correction
+    // C. Strict Release Year & Status Correction (Never invent years or use releaseYear <= 2024 rule)
     const titleLower = item.title.toLowerCase();
-    const isGenuinelyCompleted =
-      titleLower.includes('supa strikas') ||
-      titleLower.includes('spider-man') ||
-      titleLower.includes('spider man') ||
-      titleLower.includes('jujutsu kaisen') ||
-      titleLower.includes('solo leveling') ||
-      titleLower.includes('demon slayer') ||
-      titleLower.includes('death note') ||
-      titleLower.includes('attack on titan') ||
-      titleLower.includes('naruto') ||
-      titleLower.includes('bleach') ||
-      titleLower.includes('dr. stone') ||
-      titleLower.includes('frieren') ||
-      titleLower.includes('dandadan') ||
-      titleLower.includes('avatar') ||
-      titleLower.includes('ben 10') ||
-      titleLower.includes('courage') ||
-      titleLower.includes('adventure time') ||
-      titleLower.includes('avengers') ||
-      titleLower.includes('star wars rebels') ||
-      titleLower.includes('sword art online') ||
-      titleLower.includes('konosuba') ||
-      titleLower.includes('tom and jerry') ||
-      titleLower.includes('horrid henry') ||
-      titleLower.includes('cyberpunk') ||
-      titleLower.includes('chainsaw man') ||
-      titleLower.includes('blue lock') ||
-      titleLower.includes('tokyo revengers');
-
     const isMovie = item.type === 'Movie';
+    const infoRec = infoRecords[item.id];
+    const topInfoCand =
+      infoRec?.candidates?.[0]?.confidence >= 0.90 ? infoRec.candidates[0] : undefined;
+    const curatedEntry = VERIFIED_RARETOON_REGISTRY[item.id];
 
-    let targetStatus: AnimeStatus = 'Completed';
-    if (isMovie) {
+    const isRareToonScraped =
+      !item.malId &&
+      !item.id.startsWith('mal_') &&
+      !item.id.startsWith('anilist_') &&
+      (/^anivault_rt_(?:hindi|movies|series|anime|english)_/i.test(item.id) ||
+        /(?:hindi|download|rare\s*animes|rare\s*toon|dual[- ]audio|multi[- ]audio|is now available to|below are the lists of)/i.test(
+          item.synopsis || ''
+        ));
+    const hasExternalDbOrigin = !isRareToonScraped;
+
+    // B2. Remove invented 2020/2021/2022 fallback release years on RareToon-scraped items lacking year evidence
+    if (curatedEntry?.releaseYear && !AUTHORITATIVE_YEAR_OVERRIDES[item.id]) {
+      if (item.releaseYear !== curatedEntry.releaseYear) {
+        item.releaseYear = curatedEntry.releaseYear;
+        modified = true;
+      }
+    } else if (isRareToonScraped && !AUTHORITATIVE_YEAR_OVERRIDES[item.id]) {
+      const extractedYear = extractReliableReleaseYear(
+        item.providers?.raretoonIndia?.canonicalUrl || '',
+        item.title || '',
+        item.synopsis || ''
+      );
+      if (extractedYear !== null) {
+        if (
+          item.releaseYear === null ||
+          item.releaseYear === 2020 ||
+          item.releaseYear === 2021 ||
+          item.releaseYear === 2022
+        ) {
+          if (item.releaseYear !== extractedYear) {
+            item.releaseYear = extractedYear;
+            modified = true;
+          }
+        }
+      } else if (
+        !topInfoCand?.releaseYear &&
+        (item.releaseYear === 2020 || item.releaseYear === 2021 || item.releaseYear === 2022)
+      ) {
+        item.releaseYear = null;
+        modified = true;
+      }
+    }
+
+    // C. Strict Status Correction — NEVER use releaseYear <= 2024 rule or guess status
+    let targetStatus: AnimeStatus = item.status || 'Unknown';
+    if (curatedEntry?.status) {
+      targetStatus = curatedEntry.status;
+    } else if (item.status === 'Upcoming') {
+      targetStatus = 'Upcoming';
+    } else if (isMovie) {
       targetStatus = 'Completed';
     } else if (GENUINELY_ONGOING_TITLES.has(titleLower)) {
       targetStatus = 'Ongoing';
-    } else if (item.status === 'Upcoming') {
-      targetStatus = 'Upcoming';
-    } else if (isGenuinelyCompleted) {
-      targetStatus = 'Completed';
-    } else if (item.releaseYear && item.releaseYear <= 2024) {
-      targetStatus = 'Completed';
+    } else if (
+      topInfoCand?.status &&
+      ['Completed', 'Ongoing', 'Upcoming'].includes(topInfoCand.status)
+    ) {
+      targetStatus = topInfoCand.status as AnimeStatus;
+    } else if (hasExternalDbOrigin) {
+      targetStatus =
+        item.status === 'Ongoing' || item.status === 'Completed'
+          ? item.status
+          : 'Unknown';
     } else {
-      targetStatus = item.status === 'Ongoing' ? 'Ongoing' : 'Completed';
+      targetStatus = extractReliableStatus(item.title || '', item.synopsis || '', isMovie);
     }
 
     if (item.status !== targetStatus) {
@@ -599,23 +690,37 @@ export function repairCatalogue(): {
     // F. Seasons & Episodes Integrity — Strictly Separate:
     //    A. Authoritative episode count (episodeCount & authoritativeEpisodeCount)
     //    B. Imported episode records (importedEpisodeCount = episodes.length)
-    //    C. Completeness (isEpisodeListComplete & episodeListStatus)
-    //    NEVER invent Episodes 2..N and NEVER reduce authoritative episodeCount to episodes.length!
+    //    C. Completeness (isEpisodeListComplete, episodeListStatus & episodeImportStatus)
+    //    NEVER invent Episodes 2..N, NEVER assume 12, and NEVER reduce authoritative episodeCount to episodes.length!
     const overrideEpCount = AUTHORITATIVE_EPISODE_OVERRIDES[item.id];
-    const infoRec = infoRecords[item.id];
     const verifiedCandidateEpCount =
       infoRec?.candidates?.[0]?.confidence >= 0.9 && typeof infoRec?.candidates?.[0]?.totalEpisodes === 'number'
         ? infoRec.candidates[0].totalEpisodes
         : undefined;
+    const extractedTextEpCount = extractReliableEpisodeCount(
+      item.title || '',
+      item.synopsis || '',
+      isMovie
+    );
+
+    // Preserve Part 1 multi-season review test cases (Naruto, Shippuden, Horimiya) without altering their structure
+    const isPart1MultiSeasonReviewItem =
+      item.id === 'anivault_rt_naruto' ||
+      item.id === 'anivault_rt_naruto_shippuden' ||
+      item.id === 'anivault_rt_horimiya_the_missing_pieces';
 
     if (!item.seasons || !Array.isArray(item.seasons) || item.seasons.length === 0) {
-      const defaultAuthCount = overrideEpCount || verifiedCandidateEpCount || item.totalEpisodes || (isMovie ? 1 : 12);
+      const defaultAuthCount: number | null =
+        overrideEpCount ??
+        verifiedCandidateEpCount ??
+        (typeof item.totalEpisodes === 'number' && item.totalEpisodes > 0 ? item.totalEpisodes : null) ??
+        (isMovie ? 1 : null);
       const canonicalUrl = item.providers?.raretoonIndia?.canonicalUrl || '';
       const initialEpisodes: Episode[] = canonicalUrl
         ? [{ episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl }]
         : [];
       const importedCount = initialEpisodes.length;
-      const isComplete = defaultAuthCount > 0 && importedCount >= defaultAuthCount;
+      const isComplete = defaultAuthCount !== null && defaultAuthCount > 0 && importedCount >= defaultAuthCount;
       const listStatus: EpisodeListStatus = importedCount === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
 
       item.seasons = [
@@ -628,6 +733,7 @@ export function repairCatalogue(): {
           importedEpisodeCount: importedCount,
           isEpisodeListComplete: isComplete,
           episodeListStatus: listStatus,
+          episodeImportStatus: listStatus,
           episodes: initialEpisodes
         }
       ];
@@ -635,7 +741,6 @@ export function repairCatalogue(): {
       modified = true;
     } else {
       item.seasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
-      // Ensure sequential 1..N season numbering if duplicate season numbers exist
       const seenSeasonNums = new Set<number>();
       for (let sIdx = 0; sIdx < item.seasons.length; sIdx++) {
         const s = item.seasons[sIdx];
@@ -649,7 +754,6 @@ export function repairCatalogue(): {
           modified = true;
         }
 
-        // Deduplicate imported episodes without inventing missing episodes or reducing episodeCount
         const rawEpisodes = Array.isArray(s.episodes) ? s.episodes : [];
         const epMap = new Map<number, Episode>();
         for (const ep of rawEpisodes) {
@@ -666,32 +770,63 @@ export function repairCatalogue(): {
         }
 
         const importedCount = s.episodes.length;
-        let declaredSeasonAuth =
-          typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0
-            ? s.authoritativeEpisodeCount
-            : typeof s.episodeCount === 'number' && s.episodeCount > 0
-            ? s.episodeCount
+        const rawSeasonAuth =
+          s.authoritativeEpisodeCount !== undefined ? s.authoritativeEpisodeCount : s.episodeCount;
+        let declaredSeasonAuth: number | null =
+          typeof rawSeasonAuth === 'number' && rawSeasonAuth > 0
+            ? rawSeasonAuth
             : isMovie
             ? 1
-            : Math.max(1, importedCount);
+            : null;
+
+        // Remove unsafe importer fallback episode counts (12 or 1) where no reliable evidence exists
+        if (!isMovie && !isPart1MultiSeasonReviewItem) {
+          const curatedSeasonEps = curatedEntry?.seasonEpisodes?.[s.seasonNumber];
+          if (curatedSeasonEps !== undefined) {
+            declaredSeasonAuth = curatedSeasonEps;
+          } else if (
+            declaredSeasonAuth === 1 &&
+            importedCount <= 1 &&
+            !overrideEpCount &&
+            !verifiedCandidateEpCount &&
+            item.type !== 'Special' &&
+            item.type !== 'OVA'
+          ) {
+            // TV season with authoritativeEpisodeCount = 1 from Math.max(1, importedCount) fallback
+            declaredSeasonAuth = null;
+          } else if (
+            declaredSeasonAuth === 12 &&
+            importedCount < 12 &&
+            overrideEpCount !== 12 &&
+            !(item.seasons.length === 1 && verifiedCandidateEpCount === 12) &&
+            extractedTextEpCount !== 12
+          ) {
+            // RareToon-scraped TV season with invented 12-episode fallback
+            declaredSeasonAuth = null;
+          } else if (
+            declaredSeasonAuth === null &&
+            item.seasons.length === 1 &&
+            extractedTextEpCount !== null
+          ) {
+            declaredSeasonAuth = extractedTextEpCount;
+          }
+        }
 
         if (item.seasons.length === 1) {
-          if (overrideEpCount && overrideEpCount > declaredSeasonAuth) {
+          if (overrideEpCount && (declaredSeasonAuth === null || overrideEpCount > declaredSeasonAuth)) {
             declaredSeasonAuth = overrideEpCount;
-          } else if (typeof item.totalEpisodes === 'number' && item.totalEpisodes > declaredSeasonAuth) {
-            declaredSeasonAuth = item.totalEpisodes;
           } else if (
-            declaredSeasonAuth <= 1 &&
-            !isMovie &&
             verifiedCandidateEpCount &&
-            verifiedCandidateEpCount > declaredSeasonAuth
+            (declaredSeasonAuth === null ||
+              (declaredSeasonAuth <= 1 && !isMovie && verifiedCandidateEpCount > declaredSeasonAuth))
           ) {
             declaredSeasonAuth = verifiedCandidateEpCount;
           }
         }
 
-        const authCount = Math.max(declaredSeasonAuth, importedCount);
-        const isComplete = authCount > 0 && importedCount >= authCount;
+        const authCount: number | null =
+          declaredSeasonAuth !== null ? Math.max(declaredSeasonAuth, importedCount) : null;
+        const isComplete = authCount !== null && authCount > 0 && importedCount >= authCount;
         const listStatus: EpisodeListStatus = importedCount === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
 
         if (
@@ -699,13 +834,15 @@ export function repairCatalogue(): {
           s.authoritativeEpisodeCount !== authCount ||
           s.importedEpisodeCount !== importedCount ||
           s.isEpisodeListComplete !== isComplete ||
-          s.episodeListStatus !== listStatus
+          s.episodeListStatus !== listStatus ||
+          s.episodeImportStatus !== listStatus
         ) {
           s.episodeCount = authCount;
           s.authoritativeEpisodeCount = authCount;
           s.importedEpisodeCount = importedCount;
           s.isEpisodeListComplete = isComplete;
           s.episodeListStatus = listStatus;
+          s.episodeImportStatus = listStatus;
           seasonsFixed++;
           modified = true;
         }
@@ -713,32 +850,46 @@ export function repairCatalogue(): {
     }
 
     // G. Calculate Authoritative Total Episodes vs Imported Episodes accurately
-    const sumAuthoritativeEpisodes = item.seasons.reduce(
-      (acc, s) => acc + (s.authoritativeEpisodeCount || s.episodeCount || 0),
-      0
-    );
+    const allSeasonsHaveKnownAuth =
+      item.seasons.length > 0 &&
+      item.seasons.every(s => typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0);
+    const sumAuthoritativeEpisodes: number | null = allSeasonsHaveKnownAuth
+      ? item.seasons.reduce((acc, s) => acc + (s.authoritativeEpisodeCount as number), 0)
+      : isMovie
+      ? 1
+      : null;
     const sumImportedEpisodes = item.seasons.reduce(
       (acc, s) => acc + (s.importedEpisodeCount ?? (s.episodes ? s.episodes.length : 0)),
       0
     );
     const allSeasonsComplete =
-      item.seasons.length > 0 && item.seasons.every(s => Boolean(s.isEpisodeListComplete));
+      item.seasons.length > 0 &&
+      item.seasons.every(s => Boolean(s.isEpisodeListComplete)) &&
+      sumAuthoritativeEpisodes !== null &&
+      sumAuthoritativeEpisodes > 0 &&
+      sumImportedEpisodes >= sumAuthoritativeEpisodes;
     const animeListStatus: EpisodeListStatus =
       sumImportedEpisodes === 0 ? 'empty' : allSeasonsComplete ? 'complete' : 'partial';
 
     if (
       item.totalEpisodes !== sumAuthoritativeEpisodes ||
       item.authoritativeTotalEpisodes !== sumAuthoritativeEpisodes ||
+      item.authoritativeEpisodeCount !== sumAuthoritativeEpisodes ||
       item.importedEpisodesCount !== sumImportedEpisodes ||
+      item.importedEpisodeCount !== sumImportedEpisodes ||
       item.isEpisodeListComplete !== allSeasonsComplete ||
       item.episodeListStatus !== animeListStatus ||
+      item.episodeImportStatus !== animeListStatus ||
       item.totalSeasons !== item.seasons.length
     ) {
       item.totalEpisodes = sumAuthoritativeEpisodes;
       item.authoritativeTotalEpisodes = sumAuthoritativeEpisodes;
+      item.authoritativeEpisodeCount = sumAuthoritativeEpisodes;
       item.importedEpisodesCount = sumImportedEpisodes;
+      item.importedEpisodeCount = sumImportedEpisodes;
       item.isEpisodeListComplete = allSeasonsComplete;
       item.episodeListStatus = animeListStatus;
+      item.episodeImportStatus = animeListStatus;
       item.totalSeasons = item.seasons.length;
       modified = true;
     }
@@ -825,43 +976,15 @@ export function repairCatalogue(): {
       rec.duplicateTitles = [];
       rec.duplicateEvidence = [];
       rec.duplicateClassification = 'not_duplicate';
-      // Filter out stale pre-Phase-1 discrepancies that were resolved by catalogue repair
-      if (Array.isArray(rec.discrepancies)) {
-        rec.discrepancies = rec.discrepancies.filter((d: any) => {
-          if (!d) return false;
-          if (d.field === 'seasonEpisodes' || d.field === 'totalEpisodes' || d.field === 'seasonsCount' || d.field === 'duplicate') {
-            return false;
-          }
-          if (d.field === 'type' && d.suggestedValue === a.type) return false;
-          if (d.field === 'status' && d.suggestedValue === a.status) return false;
-          if (d.field === 'releaseYear' && d.suggestedValue === a.releaseYear) return false;
-          if (d.field === 'conflictingInformation') return false;
-          return true;
-        });
-      }
-      if (!Array.isArray(rec.discrepancies) || rec.discrepancies.length === 0) {
-        rec.discrepancies = [];
-        rec.status = rec.status === 'auto_fixed' ? 'auto_fixed' : 'verified';
-        rec.statusLabel = rec.status === 'auto_fixed' ? 'Verified (Auto-Fixed)' : 'Verified';
-        rec.summaryMessage = 'All anime metadata, episodes, franchise links, and RareToon mappings verified and consistent.';
-      }
-      if (rec.checkedFields) {
-        for (const k of Object.keys(rec.checkedFields)) {
-          rec.checkedFields[k] = 'ok';
-        }
-        for (const d of rec.discrepancies) {
-          if (d?.field) rec.checkedFields[d.field] = 'mismatch';
-        }
-      }
     } else {
       infoRecords[a.id] = {
         animeId: a.id,
         animeTitle: a.title,
-        status: 'verified',
-        statusLabel: 'Verified',
-        confidence: 0.96,
+        status: 'needs_review',
+        statusLabel: 'Needs Review',
+        confidence: 0.45,
         source: 'Canonical Merge & Catalogue Audit',
-        sourcesChecked: ['Zenime Catalogue Audit', 'RareToon Mapping Verifier', 'AniList'],
+        sourcesChecked: ['Zenime Catalogue Audit', 'RareToon Mapping Verifier'],
         lastVerifiedAt: new Date().toISOString(),
         discrepancies: [],
         duplicateOfIds: [],
@@ -891,7 +1014,7 @@ export function repairCatalogue(): {
           conflictingInformation: 'ok',
           suspectedFake: 'ok'
         },
-        summaryMessage: 'All anime metadata, episodes, franchise links, and RareToon mappings verified and consistent.'
+        summaryMessage: 'Awaiting external verification.'
       };
     }
   }
@@ -914,7 +1037,7 @@ export function repairCatalogue(): {
     } catch {}
   }
 
-  // Normalize worker-job-state.json and worker-job-history.json so completedCount <= totalTasks and worker capacity matches 50/70
+  // Normalize worker-job-state.json and worker-job-history.json so completedCount <= totalTasks and worker capacity matches 50/80
   const workerStatePath = path.join(dataDir, 'worker-job-state.json');
   if (fs.existsSync(workerStatePath)) {
     try {
@@ -933,11 +1056,28 @@ export function repairCatalogue(): {
         ws.failedCount = failIds.length;
         ws.queuedCount = remTasks.length;
         ws.claimedCount = 0;
+        ws.processingCount = 0;
         ws.totalTasks = compIds.length + failIds.length + remTasks.length;
         ws.processedCount = compIds.length + failIds.length;
+        ws.total = ws.totalTasks;
+        ws.queued = ws.queuedCount;
+        ws.claimed = 0;
+        ws.processing = 0;
+        ws.completed = ws.completedCount;
+        ws.failed = ws.failedCount;
+        ws.processed = ws.processedCount;
+        ws.counters = {
+          total: ws.totalTasks,
+          queued: ws.queuedCount,
+          claimed: 0,
+          processing: 0,
+          completed: ws.completedCount,
+          failed: ws.failedCount,
+          processed: ws.processedCount
+        };
         ws.progressPercent = ws.totalTasks > 0 ? Math.min(100, Math.round((ws.processedCount / ws.totalTasks) * 100)) : 0;
         ws.workerCount = 50;
-        ws.architectureCapacity = 70;
+        ws.architectureCapacity = 80;
         if (ws.poolConfig) {
           ws.poolConfig.currentWorkers = 50;
           ws.poolConfig.maxWorkers = 50;

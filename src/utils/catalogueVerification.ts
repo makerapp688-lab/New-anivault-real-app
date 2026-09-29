@@ -53,12 +53,14 @@ export function verifyAnimeRecord(raw: Partial<Anime> & Record<string, unknown>)
   else if (raw.type === 'Special') type = 'Special';
   else if (raw.type === 'Collection') type = 'Collection';
 
-  // Status normalization
-  let status: AnimeStatus = 'Completed';
-  if (raw.status === 'Ongoing') status = 'Ongoing';
+  // Status normalization — preserve Unknown when no reliable status evidence is provided
+  let status: AnimeStatus = 'Unknown';
+  if (raw.status === 'Completed') status = 'Completed';
+  else if (raw.status === 'Ongoing') status = 'Ongoing';
   else if (raw.status === 'Upcoming') status = 'Upcoming';
+  else if (type === 'Movie') status = 'Completed';
 
-  const releaseYear = typeof raw.releaseYear === 'number' && raw.releaseYear > 1960 ? raw.releaseYear : 0;
+  const releaseYear = typeof raw.releaseYear === 'number' && raw.releaseYear > 1960 ? raw.releaseYear : null;
 
   // Genres verification
   const genres = Array.isArray(raw.genres) && raw.genres.length > 0
@@ -92,11 +94,12 @@ export function verifyAnimeRecord(raw: Partial<Anime> & Record<string, unknown>)
     aspectRatio: '3:4'
   };
 
-  // Seasons & Episodes
+  // Seasons & Episodes — never conflate partial imported episode records with authoritative totalEpisodes
   const seasons = Array.isArray(raw.seasons) ? raw.seasons : [];
-  const totalEpisodes = typeof raw.totalEpisodes === 'number'
+  const allSeasonsHaveCount = seasons.length > 0 && seasons.every(s => typeof s.episodeCount === 'number' && s.episodeCount > 0);
+  const totalEpisodes = typeof raw.totalEpisodes === 'number' && raw.totalEpisodes > 0
     ? raw.totalEpisodes
-    : (seasons.length > 0 ? seasons.reduce((sum, s) => sum + (s.episodeCount || (s.episodes?.length || 0)), 0) : (type === 'Movie' ? 1 : undefined));
+    : (allSeasonsHaveCount ? seasons.reduce((sum, s) => sum + (s.episodeCount || 0), 0) : (type === 'Movie' ? 1 : null));
 
   const isDoraemonOrShinchan = (
     title.toLowerCase().includes('doraemon') ||

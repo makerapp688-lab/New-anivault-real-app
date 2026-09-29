@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Anime, Season, Episode, CatalogueStats } from '../src/types.ts';
+import { Anime, Season, Episode, AnimeStatus, EpisodeListStatus, CatalogueStats } from '../src/types.ts';
 
 // Verified Active Provider Configuration
 export const RARETOON_BASE_URL = 'https://www.rareanimes.mov/';
@@ -184,12 +184,482 @@ function cleanDisplayTitle(rawTitle: string): string {
   return clean || rawTitle;
 }
 
-interface RawPostData {
+export interface RawPostData {
   canonicalUrl: string;
   title: string;
   imageUrl: string | null;
   description: string;
   source: string;
+  episodes?: Episode[];
+  authoritativeEpisodeCount?: number | null;
+}
+
+export function syncAnimeEpisodeIntegrity(anime: Anime): void {
+  const seasons = Array.isArray(anime.seasons) ? anime.seasons : [];
+  const season0HadExplicitNull =
+    seasons.length === 1 &&
+    anime.type !== 'Movie' &&
+    seasons[0].authoritativeEpisodeCount === null &&
+    seasons[0].episodeCount === null;
+
+  let sumAuth = 0;
+  let allSeasonsHaveKnownAuth = seasons.length > 0;
+  let sumImported = 0;
+  let allComplete = seasons.length > 0;
+
+  for (const s of seasons) {
+    const rawEps = Array.isArray(s.episodes) ? s.episodes : [];
+    const epMap = new Map<number, Episode>();
+    for (const ep of rawEps) {
+      if (ep && typeof ep.episodeNumber === 'number' && !epMap.has(ep.episodeNumber)) {
+        epMap.set(ep.episodeNumber, ep);
+      }
+    }
+    const eps = Array.from(epMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
+    s.episodes = eps;
+    const importedCount = eps.length;
+
+    const rawDeclaredAuth =
+      s.authoritativeEpisodeCount !== undefined ? s.authoritativeEpisodeCount : s.episodeCount;
+    const declaredAuth =
+      typeof rawDeclaredAuth === 'number' && rawDeclaredAuth > 0
+        ? rawDeclaredAuth
+        : anime.type === 'Movie' && seasons.length === 1
+        ? 1
+        : null;
+
+    const authCount = declaredAuth !== null ? Math.max(declaredAuth, importedCount) : null;
+    const isComplete = authCount !== null && authCount > 0 && importedCount >= authCount;
+    const listStatus: EpisodeListStatus =
+      importedCount === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+
+    s.episodeCount = authCount;
+    s.authoritativeEpisodeCount = authCount;
+    s.importedEpisodeCount = importedCount;
+    s.isEpisodeListComplete = isComplete;
+    s.episodeListStatus = listStatus;
+    s.episodeImportStatus = listStatus;
+
+    if (authCount !== null) {
+      sumAuth += authCount;
+    } else {
+      allSeasonsHaveKnownAuth = false;
+    }
+    sumImported += importedCount;
+    if (!isComplete) allComplete = false;
+  }
+
+  const rawAnimeAuth =
+    anime.authoritativeTotalEpisodes !== undefined
+      ? anime.authoritativeTotalEpisodes
+      : anime.authoritativeEpisodeCount !== undefined
+      ? anime.authoritativeEpisodeCount
+      : anime.totalEpisodes;
+  const declaredAnimeTotal =
+    typeof rawAnimeAuth === 'number' && rawAnimeAuth > 0 ? rawAnimeAuth : null;
+
+  let finalAuthTotal: number | null = null;
+  if (allSeasonsHaveKnownAuth) {
+    finalAuthTotal =
+      seasons.length === 1 && declaredAnimeTotal !== null
+        ? Math.max(sumAuth, declaredAnimeTotal, sumImported)
+        : Math.max(sumAuth, sumImported);
+  } else if (anime.type === 'Movie') {
+    finalAuthTotal = 1;
+  } else if (seasons.length === 1 && !season0HadExplicitNull && declaredAnimeTotal !== null) {
+    finalAuthTotal = Math.max(declaredAnimeTotal, sumImported);
+  } else {
+    finalAuthTotal = null;
+  }
+
+  if (
+    seasons.length === 1 &&
+    finalAuthTotal !== null &&
+    (seasons[0].authoritativeEpisodeCount === null ||
+      seasons[0].authoritativeEpisodeCount === undefined ||
+      seasons[0].authoritativeEpisodeCount < finalAuthTotal)
+  ) {
+    seasons[0].episodeCount = finalAuthTotal;
+    seasons[0].authoritativeEpisodeCount = finalAuthTotal;
+    seasons[0].isEpisodeListComplete = seasons[0].importedEpisodeCount! >= finalAuthTotal;
+    const sStatus: EpisodeListStatus =
+      seasons[0].importedEpisodeCount === 0
+        ? 'empty'
+        : seasons[0].isEpisodeListComplete
+        ? 'complete'
+        : 'partial';
+    seasons[0].episodeListStatus = sStatus;
+    seasons[0].episodeImportStatus = sStatus;
+    allComplete = Boolean(seasons[0].isEpisodeListComplete);
+  }
+
+  const isAnimeComplete =
+    allComplete && finalAuthTotal !== null && finalAuthTotal > 0 && sumImported >= finalAuthTotal;
+  const animeListStatus: EpisodeListStatus =
+    sumImported === 0 ? 'empty' : isAnimeComplete ? 'complete' : 'partial';
+
+  anime.totalEpisodes = finalAuthTotal;
+  anime.authoritativeTotalEpisodes = finalAuthTotal;
+  anime.authoritativeEpisodeCount = finalAuthTotal;
+  anime.importedEpisodesCount = sumImported;
+  anime.importedEpisodeCount = sumImported;
+  anime.isEpisodeListComplete = isAnimeComplete;
+  anime.episodeListStatus = animeListStatus;
+  anime.episodeImportStatus = animeListStatus;
+  anime.totalSeasons = seasons.length;
+}
+
+export function extractReliableEpisodeCount(
+  title: string,
+  description: string,
+  isMovie: boolean
+): number | null {
+  if (isMovie) return 1;
+  const text = `${title || ''} ${description || ''}`;
+  const epMatch =
+    text.match(/(?:episodes?\s*0*1\s*[-–to]+\s*)(\d{1,4})\b/i) ||
+    text.match(/(?:all|total|complete)\s+(\d{1,4})\s*episodes?\b/i) ||
+    text.match(/\(\s*(\d{1,4})\s*episodes?\s*\)/i) ||
+    text.match(/(?:🎞\s*)?episodes?\s*:\s*(\d{1,4})\b/i);
+  if (epMatch) {
+    const parsed = parseInt(epMatch[1], 10);
+    if (parsed > 0 && parsed <= 2000) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+export function extractReliableReleaseYear(
+  canonicalUrl: string,
+  title: string,
+  description: string = ''
+): number | null {
+  const sanitizedUrl = (canonicalUrl || '')
+    .replace(/\/wp-content\/uploads\/\d{4}\/\d{2}\//gi, '/')
+    .replace(/\/\d{4}\/\d{2}\//g, '/');
+  const yearMatch = `${sanitizedUrl} ${title || ''} ${description || ''}`.match(
+    /\b(19[6-9]\d|20[0-3]\d)\b/
+  );
+  if (yearMatch) {
+    return parseInt(yearMatch[1], 10);
+  }
+  return null;
+}
+
+export function extractReliableStatus(
+  title: string,
+  description: string,
+  isMovie: boolean
+): AnimeStatus {
+  const text = `${title || ''} ${description || ''}`;
+  if (/\b(upcoming|not\s+yet\s+aired|coming\s+soon|unreleased)\b/i.test(text)) {
+    return 'Upcoming';
+  }
+  if (isMovie) {
+    return 'Completed';
+  }
+  if (
+    /\b(complete[d]?\s+(?:series|anime|all\s+episodes)|status\s*:\s*(?:completed|finished)|finale|concluded)\b/i.test(
+      text
+    )
+  ) {
+    return 'Completed';
+  }
+  if (
+    /\b(ongoing|currently\s+airing|new\s+episodes?\s+weekly|airing\s+now|status\s*:\s*(?:ongoing|airing))\b/i.test(
+      text
+    )
+  ) {
+    return 'Ongoing';
+  }
+  return 'Unknown';
+}
+
+export function ingestRawRareToonItems(
+  rawItems: RawPostData[],
+  existingCatalogue: Anime[]
+): {
+  finalCatalogue: Anime[];
+  animeAdded: number;
+  animeUpdated: number;
+  episodesAdded: number;
+} {
+  const normalizeUrlKey = (u?: string | null): string => {
+    if (!u) return '';
+    return u.trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+  };
+
+  const catalogueById = new Map<string, Anime>();
+  const catalogueByUrl = new Map<string, Anime>();
+  const catalogueByProviderId = new Map<string, Anime>();
+  const catalogueByNormTitle = new Map<string, Anime>();
+
+  for (const rawItem of existingCatalogue) {
+    const item: Anime = JSON.parse(JSON.stringify(rawItem));
+    if (item.id) catalogueById.set(item.id, item);
+    if (item.title) catalogueByNormTitle.set(normalizeTitleForMatch(item.title), item);
+    if (item.alternateTitle) catalogueByNormTitle.set(normalizeTitleForMatch(item.alternateTitle), item);
+    if (item.providers?.raretoonIndia?.canonicalUrl) {
+      const uk = normalizeUrlKey(item.providers.raretoonIndia.canonicalUrl);
+      if (uk && uk !== 'rareanimes.mov') catalogueByUrl.set(uk, item);
+    }
+    if (item.providers?.raretoonIndia?.providerAnimeId) {
+      catalogueByProviderId.set(item.providers.raretoonIndia.providerAnimeId.trim().toLowerCase(), item);
+    }
+    if (Array.isArray(item.seasons)) {
+      for (const s of item.seasons) {
+        if (s.canonicalUrl) {
+          const sk = normalizeUrlKey(s.canonicalUrl);
+          if (sk && sk !== 'rareanimes.mov') catalogueByUrl.set(sk, item);
+        }
+      }
+    }
+  }
+
+  let animeAdded = 0;
+  let animeUpdated = 0;
+  let episodesAdded = 0;
+
+  for (const raw of rawItems) {
+    if (!raw.title && !raw.canonicalUrl) continue;
+
+    const pathSlug = raw.canonicalUrl
+      .replace(/https?:\/\/(?:www\.)?rareanimes\.mov\//, '')
+      .replace(/\/$/, '');
+    const cleanTitle = cleanDisplayTitle(raw.title || pathSlug.replace(/-/g, ' '));
+    const normTitle = normalizeTitleForMatch(cleanTitle);
+    const urlKey = normalizeUrlKey(raw.canonicalUrl);
+    const slugKey = pathSlug.trim().toLowerCase();
+
+    // Season extraction
+    let seasonNum = 1;
+    const seasonMatch = (raw.canonicalUrl + ' ' + (raw.title || '')).match(/season[- ]0?(\d+)/i);
+    if (seasonMatch) {
+      seasonNum = parseInt(seasonMatch[1], 10) || 1;
+    }
+
+    const isMovie = /\b(movie|film)\b/i.test(pathSlug.replace(/-/g, ' ') + ' ' + (raw.title || ''));
+
+    // Extract declared episode count ONLY when reliable evidence exists; never assume 12
+    const declaredEpCount =
+      typeof raw.authoritativeEpisodeCount === 'number' && raw.authoritativeEpisodeCount > 0
+        ? raw.authoritativeEpisodeCount
+        : extractReliableEpisodeCount(raw.title || '', raw.description || '', isMovie);
+
+    // Year extraction — only from reliable evidence, never invent 2021/2022 fallback
+    const year = extractReliableReleaseYear(
+      raw.canonicalUrl,
+      raw.title || '',
+      raw.description || ''
+    );
+
+    // Status extraction — only from reliable evidence, never use year <= 2024 rule
+    const reliableStatus = extractReliableStatus(
+      raw.title || '',
+      raw.description || '',
+      isMovie
+    );
+
+    // Audio format
+    const audio = detectAudio((raw.title || '') + ' ' + (raw.description || ''));
+
+    // Real imported episodes only — never invent fake episodes to match declaredEpCount
+    const providedEpisodes: Episode[] = Array.isArray(raw.episodes)
+      ? raw.episodes.filter(ep => ep && typeof ep.episodeNumber === 'number')
+      : [
+          {
+            episodeNumber: 1,
+            title: isMovie ? 'Full Movie' : 'Episode 1',
+            canonicalUrl: raw.canonicalUrl
+          }
+        ];
+
+    // Match existing anime using strong identity evidence (URL, providerAnimeId, normalized title)
+    const targetAnime: Anime | undefined =
+      (urlKey ? catalogueByUrl.get(urlKey) : undefined) ||
+      (slugKey ? catalogueByProviderId.get(slugKey) : undefined) ||
+      catalogueByNormTitle.get(normTitle);
+
+    if (targetAnime) {
+      animeUpdated++;
+
+      if (!targetAnime.providers || !targetAnime.providers.raretoonIndia) {
+        targetAnime.providers = {
+          raretoonIndia: {
+            providerAnimeId: pathSlug,
+            canonicalUrl: raw.canonicalUrl,
+            verificationStatus: 'VERIFIED',
+            dubLanguage: audio,
+            quality: '1080p FHD'
+          }
+        };
+      } else {
+        targetAnime.providers.raretoonIndia.canonicalUrl = raw.canonicalUrl;
+        targetAnime.providers.raretoonIndia.verificationStatus = 'VERIFIED';
+        if (audio) targetAnime.providers.raretoonIndia.dubLanguage = audio;
+      }
+
+      if (targetAnime.releaseYear === null && year !== null) {
+        targetAnime.releaseYear = year;
+      }
+      if (targetAnime.status === 'Unknown' && reliableStatus !== 'Unknown') {
+        targetAnime.status = reliableStatus;
+      }
+
+      if (!Array.isArray(targetAnime.seasons)) {
+        targetAnime.seasons = [];
+      }
+
+      const existingSeason = targetAnime.seasons.find(s => s.seasonNumber === seasonNum);
+      if (existingSeason) {
+        if (!existingSeason.canonicalUrl) {
+          existingSeason.canonicalUrl = raw.canonicalUrl;
+        }
+        if (
+          (existingSeason.authoritativeEpisodeCount === null ||
+            existingSeason.authoritativeEpisodeCount === undefined) &&
+          declaredEpCount !== null
+        ) {
+          existingSeason.episodeCount = declaredEpCount;
+          existingSeason.authoritativeEpisodeCount = declaredEpCount;
+        }
+        if (Array.isArray(raw.episodes) && raw.episodes.length > 0) {
+          const epMap = new Map<number, Episode>();
+          for (const ep of existingSeason.episodes || []) {
+            if (ep && typeof ep.episodeNumber === 'number') epMap.set(ep.episodeNumber, ep);
+          }
+          for (const ep of providedEpisodes) {
+            if (!epMap.has(ep.episodeNumber)) {
+              epMap.set(ep.episodeNumber, ep);
+              episodesAdded++;
+            }
+          }
+          existingSeason.episodes = Array.from(epMap.values()).sort(
+            (a, b) => a.episodeNumber - b.episodeNumber
+          );
+        }
+      } else {
+        const importedEpisodes: Episode[] = [...providedEpisodes];
+        const authSeasonCount =
+          declaredEpCount !== null ? Math.max(declaredEpCount, importedEpisodes.length) : null;
+        const isComplete =
+          authSeasonCount !== null && authSeasonCount > 0 && importedEpisodes.length >= authSeasonCount;
+        const listStatus: EpisodeListStatus =
+          importedEpisodes.length === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+
+        targetAnime.seasons.push({
+          seasonNumber: seasonNum,
+          title: isMovie ? 'Movie' : `Season ${seasonNum}`,
+          canonicalUrl: raw.canonicalUrl,
+          episodeCount: authSeasonCount,
+          authoritativeEpisodeCount: authSeasonCount,
+          importedEpisodeCount: importedEpisodes.length,
+          isEpisodeListComplete: isComplete,
+          episodeListStatus: listStatus,
+          episodeImportStatus: listStatus,
+          episodes: importedEpisodes
+        });
+        if (authSeasonCount === null) {
+          targetAnime.totalEpisodes = null;
+          targetAnime.authoritativeTotalEpisodes = null;
+          targetAnime.authoritativeEpisodeCount = null;
+        }
+        episodesAdded += importedEpisodes.length;
+        targetAnime.seasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
+      }
+      syncAnimeEpisodeIntegrity(targetAnime);
+    } else {
+      const autoId = `anivault_rt_${pathSlug.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+      if (catalogueById.has(autoId)) continue;
+
+      const genres = determineGenres(pathSlug, cleanTitle, raw.description);
+      const romaji = getRomaji(pathSlug);
+      const importedEpisodes: Episode[] = [...providedEpisodes];
+      const authSeasonCount =
+        declaredEpCount !== null ? Math.max(declaredEpCount, importedEpisodes.length) : null;
+      const isComplete =
+        authSeasonCount !== null && authSeasonCount > 0 && importedEpisodes.length >= authSeasonCount;
+      const listStatus: EpisodeListStatus =
+        importedEpisodes.length === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
+
+      const newAnime: Anime = {
+        id: autoId,
+        title: cleanTitle,
+        alternateTitle: romaji,
+        synopsis:
+          raw.description && raw.description.length > 15
+            ? raw.description
+            : `Watch ${cleanTitle} in high quality Hindi dubbing and dual audio on RareAnimes.`,
+        releaseYear: year,
+        status: reliableStatus,
+        type: isMovie ? 'Movie' : 'TV',
+        genres,
+        artwork: {
+          verifiedArtworkUrl: raw.imageUrl || '',
+          isVerified: Boolean(
+            raw.imageUrl && raw.imageUrl.startsWith('http') && !raw.imageUrl.includes('unsplash.com')
+          ),
+          verificationSource:
+            raw.imageUrl && raw.imageUrl.startsWith('http') && !raw.imageUrl.includes('unsplash.com')
+              ? 'provider_verified'
+              : 'unverified_fallback',
+          aspectRatio: isMovie ? '3:4' : '16:9'
+        },
+        providers: {
+          raretoonIndia: {
+            providerAnimeId: pathSlug,
+            canonicalUrl: raw.canonicalUrl,
+            verificationStatus: 'VERIFIED',
+            dubLanguage: audio,
+            quality: '1080p FHD'
+          }
+        },
+        seasons: [
+          {
+            seasonNumber: seasonNum,
+            title: isMovie ? 'Movie' : `Season ${seasonNum}`,
+            canonicalUrl: raw.canonicalUrl,
+            episodeCount: authSeasonCount,
+            authoritativeEpisodeCount: authSeasonCount,
+            importedEpisodeCount: importedEpisodes.length,
+            isEpisodeListComplete: isComplete,
+            episodeListStatus: listStatus,
+            episodeImportStatus: listStatus,
+            episodes: importedEpisodes
+          }
+        ],
+        totalEpisodes: authSeasonCount,
+        authoritativeTotalEpisodes: authSeasonCount,
+        authoritativeEpisodeCount: authSeasonCount,
+        importedEpisodesCount: importedEpisodes.length,
+        importedEpisodeCount: importedEpisodes.length,
+        isEpisodeListComplete: isComplete,
+        episodeListStatus: listStatus,
+        episodeImportStatus: listStatus,
+        totalSeasons: 1
+      };
+
+      syncAnimeEpisodeIntegrity(newAnime);
+      catalogueById.set(newAnime.id, newAnime);
+      catalogueByNormTitle.set(normTitle, newAnime);
+      if (urlKey) catalogueByUrl.set(urlKey, newAnime);
+      if (slugKey) catalogueByProviderId.set(slugKey, newAnime);
+      animeAdded++;
+      episodesAdded += importedEpisodes.length;
+    }
+  }
+
+  for (const anime of catalogueById.values()) {
+    syncAnimeEpisodeIntegrity(anime);
+  }
+
+  return {
+    finalCatalogue: Array.from(catalogueById.values()),
+    animeAdded,
+    animeUpdated,
+    episodesAdded
+  };
 }
 
 export interface IngestionReport {
@@ -357,275 +827,8 @@ export async function runIngestion(): Promise<IngestionReport> {
 
   console.log(`[RareToon Ingest] Existing baseline catalogue size: ${existingCatalogue.length} anime.`);
 
-  // Index existing catalogue by ID, normalized canonical URL, providerAnimeId, and normalized title
-  const normalizeUrlKey = (u?: string | null): string => {
-    if (!u) return '';
-    return u.trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
-  };
-
-  const catalogueById = new Map<string, Anime>();
-  const catalogueByUrl = new Map<string, Anime>();
-  const catalogueByProviderId = new Map<string, Anime>();
-  const catalogueByNormTitle = new Map<string, Anime>();
-
-  for (const item of existingCatalogue) {
-    if (item.id) catalogueById.set(item.id, item);
-    if (item.title) catalogueByNormTitle.set(normalizeTitleForMatch(item.title), item);
-    if (item.alternateTitle) catalogueByNormTitle.set(normalizeTitleForMatch(item.alternateTitle), item);
-    if (item.providers?.raretoonIndia?.canonicalUrl) {
-      const uk = normalizeUrlKey(item.providers.raretoonIndia.canonicalUrl);
-      if (uk && uk !== 'rareanimes.mov') catalogueByUrl.set(uk, item);
-    }
-    if (item.providers?.raretoonIndia?.providerAnimeId) {
-      catalogueByProviderId.set(item.providers.raretoonIndia.providerAnimeId.trim().toLowerCase(), item);
-    }
-    if (Array.isArray(item.seasons)) {
-      for (const s of item.seasons) {
-        if (s.canonicalUrl) {
-          const sk = normalizeUrlKey(s.canonicalUrl);
-          if (sk && sk !== 'rareanimes.mov') catalogueByUrl.set(sk, item);
-        }
-      }
-    }
-  }
-
-  const syncAnimeEpisodeIntegrity = (anime: Anime) => {
-    const seasons = Array.isArray(anime.seasons) ? anime.seasons : [];
-    let sumAuth = 0;
-    let sumImported = 0;
-    let allComplete = seasons.length > 0;
-
-    for (const s of seasons) {
-      const eps = Array.isArray(s.episodes) ? s.episodes : [];
-      s.episodes = eps;
-      const importedCount = eps.length;
-      const declaredAuth =
-        typeof s.authoritativeEpisodeCount === 'number' && s.authoritativeEpisodeCount > 0
-          ? s.authoritativeEpisodeCount
-          : typeof s.episodeCount === 'number' && s.episodeCount > 0
-          ? s.episodeCount
-          : anime.type === 'Movie'
-          ? 1
-          : Math.max(1, importedCount);
-      const authCount = Math.max(declaredAuth, importedCount);
-      const isComplete = authCount > 0 && importedCount >= authCount;
-      const listStatus = importedCount === 0 ? 'empty' : isComplete ? 'complete' : 'partial';
-
-      s.episodeCount = authCount;
-      s.authoritativeEpisodeCount = authCount;
-      s.importedEpisodeCount = importedCount;
-      s.isEpisodeListComplete = isComplete;
-      s.episodeListStatus = listStatus;
-
-      sumAuth += authCount;
-      sumImported += importedCount;
-      if (!isComplete) allComplete = false;
-    }
-
-    const declaredAnimeTotal =
-      typeof anime.authoritativeTotalEpisodes === 'number' && anime.authoritativeTotalEpisodes > 0
-        ? anime.authoritativeTotalEpisodes
-        : typeof anime.totalEpisodes === 'number' && anime.totalEpisodes > 0
-        ? anime.totalEpisodes
-        : sumAuth;
-    const finalAuthTotal = Math.max(declaredAnimeTotal, sumAuth, sumImported);
-    if (seasons.length === 1 && seasons[0].episodeCount < finalAuthTotal) {
-      seasons[0].episodeCount = finalAuthTotal;
-      seasons[0].authoritativeEpisodeCount = finalAuthTotal;
-      seasons[0].isEpisodeListComplete = seasons[0].importedEpisodeCount! >= finalAuthTotal;
-      seasons[0].episodeListStatus =
-        seasons[0].importedEpisodeCount === 0
-          ? 'empty'
-          : seasons[0].isEpisodeListComplete
-          ? 'complete'
-          : 'partial';
-      allComplete = Boolean(seasons[0].isEpisodeListComplete);
-    }
-
-    anime.totalEpisodes = finalAuthTotal;
-    anime.authoritativeTotalEpisodes = finalAuthTotal;
-    anime.importedEpisodesCount = sumImported;
-    anime.isEpisodeListComplete = allComplete && finalAuthTotal > 0 && sumImported >= finalAuthTotal;
-    anime.episodeListStatus =
-      sumImported === 0 ? 'empty' : anime.isEpisodeListComplete ? 'complete' : 'partial';
-    anime.totalSeasons = seasons.length;
-  };
-
-  let animeAdded = 0;
-  let animeUpdated = 0;
-  let episodesAdded = 0;
-
-  // 4. Process and match incoming items
-  for (const raw of rawItems) {
-    if (!raw.title && !raw.canonicalUrl) continue;
-
-    const pathSlug = raw.canonicalUrl.replace(/https?:\/\/(?:www\.)?rareanimes\.mov\//, '').replace(/\/$/, '');
-    const cleanTitle = cleanDisplayTitle(raw.title || pathSlug.replace(/-/g, ' '));
-    const normTitle = normalizeTitleForMatch(cleanTitle);
-    const urlKey = normalizeUrlKey(raw.canonicalUrl);
-    const slugKey = pathSlug.trim().toLowerCase();
-
-    // Season extraction
-    let seasonNum = 1;
-    const seasonMatch = (raw.canonicalUrl + ' ' + (raw.title || '')).match(/season[- ](\d+)/i);
-    if (seasonMatch) {
-      seasonNum = parseInt(seasonMatch[1], 10) || 1;
-    }
-
-    const isMovie = pathSlug.includes('movie') || (raw.title || '').toLowerCase().includes('movie');
-
-    // Extract declared episode count from title/description if explicitly stated; never invent episode records
-    let declaredEpCount = isMovie ? 1 : 12;
-    const epRangeMatch = ((raw.title || '') + ' ' + (raw.description || '')).match(/(?:episodes?\s*(?:1\s*[-–to]+\s*)?|all\s+)(\d{1,3})\s*episodes?/i);
-    if (epRangeMatch) {
-      const parsedEp = parseInt(epRangeMatch[1], 10);
-      if (parsedEp > 0 && parsedEp <= 500) {
-        declaredEpCount = parsedEp;
-      }
-    }
-
-    // Year extraction
-    let year: number | undefined = undefined;
-    const yearMatch = (raw.canonicalUrl + ' ' + (raw.title || '')).match(/\b(19\d\d|20\d\d)\b/);
-    if (yearMatch) {
-      year = parseInt(yearMatch[1], 10);
-    }
-
-    // Audio format
-    const audio = detectAudio((raw.title || '') + ' ' + (raw.description || ''));
-
-    // Match existing anime using strong identity evidence (URL, providerAnimeId, normalized title)
-    let targetAnime: Anime | undefined =
-      (urlKey ? catalogueByUrl.get(urlKey) : undefined) ||
-      (slugKey ? catalogueByProviderId.get(slugKey) : undefined) ||
-      catalogueByNormTitle.get(normTitle);
-
-    if (targetAnime) {
-      // UPDATE EXISTING ANIME SAFELY
-      animeUpdated++;
-
-      // Update provider link if missing or old
-      if (!targetAnime.providers || !targetAnime.providers.raretoonIndia) {
-        targetAnime.providers = {
-          raretoonIndia: {
-            providerAnimeId: pathSlug,
-            canonicalUrl: raw.canonicalUrl,
-            verificationStatus: 'VERIFIED',
-            dubLanguage: audio,
-            quality: '1080p FHD'
-          }
-        };
-      } else {
-        targetAnime.providers.raretoonIndia.canonicalUrl = raw.canonicalUrl;
-        targetAnime.providers.raretoonIndia.verificationStatus = 'VERIFIED';
-        if (audio) targetAnime.providers.raretoonIndia.dubLanguage = audio;
-      }
-
-      // Ensure seasons array exists
-      if (!Array.isArray(targetAnime.seasons)) {
-        targetAnime.seasons = [];
-      }
-
-      // Check if season exists
-      const existingSeason = targetAnime.seasons.find(s => s.seasonNumber === seasonNum);
-      if (existingSeason) {
-        if (!existingSeason.canonicalUrl) {
-          existingSeason.canonicalUrl = raw.canonicalUrl;
-        }
-      } else {
-        // Add new season with explicit separation of authoritative count vs imported records
-        const importedEpisodes = [
-          { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
-        ];
-        const isComplete = importedEpisodes.length >= declaredEpCount;
-        targetAnime.seasons.push({
-          seasonNumber: seasonNum,
-          title: `Season ${seasonNum}`,
-          canonicalUrl: raw.canonicalUrl,
-          episodeCount: declaredEpCount,
-          authoritativeEpisodeCount: declaredEpCount,
-          importedEpisodeCount: importedEpisodes.length,
-          isEpisodeListComplete: isComplete,
-          episodeListStatus: isComplete ? 'complete' : 'partial',
-          episodes: importedEpisodes
-        });
-        episodesAdded += importedEpisodes.length;
-        targetAnime.seasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
-      }
-      syncAnimeEpisodeIntegrity(targetAnime);
-    } else {
-      // NEW ANIME DISCOVERED
-      const autoId = `anivault_rt_${pathSlug.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
-      if (catalogueById.has(autoId)) continue;
-
-      const genres = determineGenres(pathSlug, cleanTitle, raw.description);
-      const romaji = getRomaji(pathSlug);
-      const importedEpisodes = [
-        { episodeNumber: 1, title: isMovie ? 'Full Movie' : 'Episode 1', canonicalUrl: raw.canonicalUrl }
-      ];
-      const isComplete = importedEpisodes.length >= declaredEpCount;
-
-      const newAnime: Anime = {
-        id: autoId,
-        title: cleanTitle,
-        alternateTitle: romaji,
-        synopsis: raw.description && raw.description.length > 15
-          ? raw.description
-          : `Watch ${cleanTitle} in high quality Hindi dubbing and dual audio on RareAnimes with complete streaming options.`,
-        releaseYear: year || (isMovie ? 2022 : 2021),
-        status: isMovie ? 'Completed' : ((year && year <= 2024) ? 'Completed' : 'Ongoing'),
-        type: isMovie ? 'Movie' : 'TV',
-        genres: genres,
-        artwork: {
-          verifiedArtworkUrl: raw.imageUrl || '',
-          isVerified: Boolean(raw.imageUrl && raw.imageUrl.startsWith('http') && !raw.imageUrl.includes('unsplash.com')),
-          verificationSource: (raw.imageUrl && raw.imageUrl.startsWith('http') && !raw.imageUrl.includes('unsplash.com')) ? 'provider_verified' : 'unverified_fallback',
-          aspectRatio: isMovie ? '3:4' : '16:9'
-        },
-        providers: {
-          raretoonIndia: {
-            providerAnimeId: pathSlug,
-            canonicalUrl: raw.canonicalUrl,
-            verificationStatus: 'VERIFIED',
-            dubLanguage: audio,
-            quality: '1080p FHD'
-          }
-        },
-        seasons: [
-          {
-            seasonNumber: seasonNum,
-            title: isMovie ? 'Movie' : `Season ${seasonNum}`,
-            canonicalUrl: raw.canonicalUrl,
-            episodeCount: declaredEpCount,
-            authoritativeEpisodeCount: declaredEpCount,
-            importedEpisodeCount: importedEpisodes.length,
-            isEpisodeListComplete: isComplete,
-            episodeListStatus: isComplete ? 'complete' : 'partial',
-            episodes: importedEpisodes
-          }
-        ],
-        totalEpisodes: declaredEpCount,
-        authoritativeTotalEpisodes: declaredEpCount,
-        importedEpisodesCount: importedEpisodes.length,
-        isEpisodeListComplete: isComplete,
-        episodeListStatus: isComplete ? 'complete' : 'partial',
-        totalSeasons: 1
-      };
-
-      catalogueById.set(newAnime.id, newAnime);
-      catalogueByNormTitle.set(normTitle, newAnime);
-      if (urlKey) catalogueByUrl.set(urlKey, newAnime);
-      if (slugKey) catalogueByProviderId.set(slugKey, newAnime);
-      animeAdded++;
-      episodesAdded += importedEpisodes.length;
-    }
-  }
-
-  for (const anime of catalogueById.values()) {
-    syncAnimeEpisodeIntegrity(anime);
-  }
-
-  const finalCatalogue = Array.from(catalogueById.values());
+  const { finalCatalogue, animeAdded, animeUpdated, episodesAdded } =
+    ingestRawRareToonItems(rawItems, existingCatalogue);
 
   // 5. VALIDATE FINAL CATALOGUE INTEGRITY (FETCH -> VALIDATE -> TRANSFORM -> VALIDATE -> UPDATE)
   if (finalCatalogue.length < existingCatalogue.length) {
